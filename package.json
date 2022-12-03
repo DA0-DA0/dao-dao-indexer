@@ -1,13 +1,18 @@
 {
-  "name": "exporter",
+  "name": "wasmd-indexer",
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "prebuild": "rm -r dist",
     "build": "tsc",
-    "export": "ts-node src/index.ts"
+    "build:watch": "tsc --watch",
+    "export": "node dist/export/index.js",
+    "formula": "node dist/formula/index.js",
+    "formula:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/formula/index.js\""
   },
   "author": "Noah Saso <noah@noah.zone>",
   "devDependencies": {
+    "@types/koa": "^2.13.5",
     "@types/node": "^18.11.10",
     "@types/prettier": "^2.7.1",
     "@types/validator": "^13.7.10",
@@ -18,12 +23,16 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-unused-imports": "^2.0.0",
+    "nodemon": "^2.0.20",
     "prettier": "^2.8.0",
     "sequelize-cli": "^6.5.2",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.3"
   },
   "dependencies": {
+    "@koa/router": "^12.0.0",
+    "@types/koa__router": "^12.0.0",
+    "koa": "^2.13.4",
     "pg": "^8.8.0",
     "pg-hstore": "^2.3.4",
     "reflect-metadata": "^0.1.13",

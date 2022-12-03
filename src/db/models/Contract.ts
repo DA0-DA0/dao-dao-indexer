@@ -2,7 +2,6 @@ import {
   AllowNull,
   Column,
   DataType,
-  HasMany,
   Model,
   PrimaryKey,
   Table,
@@ -21,7 +20,4 @@ export class Contract extends Model {
   @AllowNull(false)
   @Column(DataType.BIGINT({ unsigned: true }))
   codeId: bigint
-
-  @HasMany(() => Event)
-  events: Event[]
 }

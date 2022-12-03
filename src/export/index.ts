@@ -2,30 +2,23 @@ import * as fs from 'fs'
 import path from 'path'
 import readline from 'readline'
 
-import { makeExporter } from './db/exporter'
-import { Config, IndexerEvent } from './types'
+import { INDEXER_ROOT, loadConfig } from '../config'
+import { makeDbExporter } from './dbExporter'
+import { IndexerEvent } from './types'
 
-const INDEXER_ROOT = '/Users/noah/.juno/indexer'
 const EVENTS_FILE = path.join(INDEXER_ROOT, '.events.txt')
-const CONFIG_FILE = path.join(INDEXER_ROOT, 'config.json')
-
 const MAX_PARALLEL_EXPORTS = 200
 const LOADER_MAP = ['—', '\\', '|', '/']
 
 const main = async () => {
-  if (!fs.existsSync(CONFIG_FILE)) {
-    throw new Error(`Config not found (${CONFIG_FILE}).`)
-  }
-
-  const config: Config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'))
-
-  // Make exporter.
-  const exporter = await makeExporter(config)
-
-  // Export files.
+  // Ensure events file exists.
   if (!fs.existsSync(EVENTS_FILE)) {
     throw new Error(`Events file not found (${EVENTS_FILE}).`)
   }
+
+  // Make DB exporter.
+  const config = await loadConfig()
+  const dbExporter = await makeDbExporter(config)
 
   console.log('\nExporting events...')
 
@@ -70,7 +63,7 @@ const main = async () => {
       try {
         for await (const line of rl) {
           const event: IndexerEvent = JSON.parse(line)
-          parallelExports.push(exporter(event))
+          parallelExports.push(dbExporter(event))
 
           // If we have a lot of events, wait for them to finish before
           // continuing. This allows errors to be thrown but still lets us
