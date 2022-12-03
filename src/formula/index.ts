@@ -24,8 +24,21 @@ app.use(async (ctx, next) => {
 })
 
 // Add routes.
-router.get('/:formulaName/:targetContractAddress', async (ctx) => {
-  const { formulaName, targetContractAddress } = ctx.params
+router.get('/:targetContractAddress/(.+)', async (ctx) => {
+  const { blockHeight: _blockHeight } = ctx.query
+  const { targetContractAddress } = ctx.params
+  const formulaName = ctx.path.split('/').slice(2)
+
+  // If blockHeight passed, validate that it's a number.
+  let blockHeight: number | undefined
+  if (_blockHeight && typeof _blockHeight === 'string') {
+    blockHeight = parseInt(_blockHeight)
+    if (isNaN(blockHeight)) {
+      ctx.status = 400
+      ctx.body = 'blockHeight must be a number'
+      return
+    }
+  }
 
   // Validate that formula exists.
   const formula = getFormula(formulaName)
@@ -40,40 +53,6 @@ router.get('/:formulaName/:targetContractAddress', async (ctx) => {
   if (!contract) {
     ctx.status = 404
     ctx.body = 'contract not found'
-    return
-  }
-
-  ctx.body = await compute(formula, contract)
-})
-
-router.get('/:formulaName/:targetContractAddress/:blockHeight', async (ctx) => {
-  const {
-    formulaName,
-    targetContractAddress,
-    blockHeight: _blockHeight,
-  } = ctx.params
-
-  // Validate that formula exists.
-  const formula = getFormula(formulaName)
-  if (!formula) {
-    ctx.status = 404
-    ctx.body = `formula ${formulaName} not found`
-    return
-  }
-
-  // Validate that contract exists.
-  const contract = await Contract.findByPk(targetContractAddress)
-  if (!contract) {
-    ctx.status = 404
-    ctx.body = 'contract not found'
-    return
-  }
-
-  // Validate that blockHeight is a number.
-  const blockHeight = parseInt(_blockHeight)
-  if (isNaN(blockHeight)) {
-    ctx.status = 400
-    ctx.body = 'blockHeight must be a number'
     return
   }
 

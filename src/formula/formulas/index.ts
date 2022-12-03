@@ -3,14 +3,14 @@ import { Op } from 'sequelize'
 import { Contract, Event } from '../../db/models'
 import { Formula, FormulaGetter } from '../types'
 import { base64KeyForKeys } from '../utils'
-import { daoInfo } from './dao'
+import * as dao from './dao'
 
 export const formulas = {
-  daoInfo,
+  dao,
 }
 
-export const getFormula = (formulaName: string): Formula | undefined =>
-  formulas[formulaName]
+export const getFormula = (formulaName: string[]): Formula | undefined =>
+  formulaName.reduce((acc, key) => acc && acc[key], formulas)
 
 export const compute = async (
   formula: Formula,

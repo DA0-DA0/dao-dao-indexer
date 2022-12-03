@@ -1,33 +1,18 @@
 import { Formula } from '../types'
 
-interface DaoInfo {
+interface ContractInfo {
+  contract: string
+  version: string
+}
+
+interface Config {
   name: string
   description: string
-  imageUrl: string
+  image_url: string
 }
 
-export const daoInfo: Formula = async (targetContractAddress, get) => {
-  const config = await get<{
-    name: string
-    description: string
-    image_url: string
-  }>(targetContractAddress, 'config_v2')
+export const info: Formula = async (targetContractAddress, get) =>
+  await get<ContractInfo>(targetContractAddress, 'contract_info')
 
-  if (!config) {
-    return undefined
-  }
-
-  return {
-    name: config.name,
-    description: config.description,
-    imageUrl: config.image_url,
-  } as DaoInfo
-}
-
-export const contractInfo: Formula = async (targetContractAddress, get) => {
-  return await get<{
-    name: string
-    description: string
-    image_url: string
-  }>(targetContractAddress, 'contract_info')
-}
+export const config: Formula = async (targetContractAddress, get) =>
+  await get<Config>(targetContractAddress, 'config_v2')
