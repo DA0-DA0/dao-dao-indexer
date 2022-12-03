@@ -8,9 +8,9 @@ import { Config, IndexerEvent } from './types'
 const INDEXER_ROOT = '/Users/noah/.juno/indexer'
 const EVENTS_FILE = path.join(INDEXER_ROOT, '.events.txt')
 const CONFIG_FILE = path.join(INDEXER_ROOT, 'config.json')
-const MAX_PARALLEL_EXPORTS = 200
 
-const STATUS_MAP = ['—', '\\', '|', '/']
+const MAX_PARALLEL_EXPORTS = 200
+const LOADER_MAP = ['—', '\\', '|', '/']
 
 const main = async () => {
   if (!fs.existsSync(CONFIG_FILE)) {
@@ -31,39 +31,30 @@ const main = async () => {
 
   // Return promise that never resolves. Listen for file changes.
   return new Promise((_, reject) => {
-    // Read iterator state.
+    // Read state.
     let reading = false
     let pendingRead = false
     let bytesRead = 0
 
-    // Batched export group and statistics.
-    const exportGroup: Promise<boolean>[] = []
+    // Parallelized exports and statistics.
+    const parallelExports: Promise<boolean>[] = []
     let alreadyExistedCount = 0
     let newlyCreatedCount = 0
-    let groupsProcessed = 0
 
     // Wait for responses from export promises and update/display statistics.
     const waitForExportGroup = async () => {
-      const created = await Promise.all(exportGroup)
+      const created = await Promise.all(parallelExports)
 
-      // Compute statistics.
+      // Update statistics.
       const newlyCreated = created.filter(Boolean).length
       newlyCreatedCount += newlyCreated
       alreadyExistedCount += created.length - newlyCreated
-      groupsProcessed += 1
-
-      process.stdout.write(
-        `\r${
-          STATUS_MAP[groupsProcessed % STATUS_MAP.length]
-        }  ${alreadyExistedCount.toLocaleString()} exist. ${newlyCreatedCount.toLocaleString()} created. ${(
-          alreadyExistedCount + newlyCreatedCount
-        ).toLocaleString()} total.`
-      )
 
       // Clear promises.
-      exportGroup.length = 0
+      parallelExports.length = 0
     }
 
+    // Main logic.
     const read = async () => {
       reading = true
 
@@ -79,12 +70,12 @@ const main = async () => {
       try {
         for await (const line of rl) {
           const event: IndexerEvent = JSON.parse(line)
-          exportGroup.push(exporter(event))
+          parallelExports.push(exporter(event))
 
           // If we have a lot of events, wait for them to finish before
           // continuing. This allows errors to be thrown but still lets us
           // parallelize queries.
-          if (exportGroup.length === MAX_PARALLEL_EXPORTS) {
+          if (parallelExports.length === MAX_PARALLEL_EXPORTS) {
             await waitForExportGroup()
           }
         }
@@ -107,7 +98,8 @@ const main = async () => {
       }
     }
 
-    // Watch file for changes every second.
+    // Watch file for changes every second and intelligently re-activate read
+    // when more data is available.
     const file = fs.watchFile(EVENTS_FILE, { interval: 1000 }, (curr, prev) => {
       // If modified, read if not already reading, and store that there is data
       // to read otherwise.
@@ -123,6 +115,21 @@ const main = async () => {
 
     // Start reading file.
     read()
+
+    // Print latest statistics every 100ms.
+    let printLoaderCount = 0
+    const interval = setInterval(() => {
+      printLoaderCount = (printLoaderCount + 1) % LOADER_MAP.length
+      process.stdout.write(
+        `\r${
+          LOADER_MAP[printLoaderCount]
+        }  ${alreadyExistedCount.toLocaleString()} exist. ${newlyCreatedCount.toLocaleString()} created. ${(
+          alreadyExistedCount + newlyCreatedCount
+        ).toLocaleString()} total.`
+      )
+    }, 100)
+    // Allow process to exit even though this interval is alive.
+    interval.unref()
   })
 }
 
