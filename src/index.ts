@@ -33,7 +33,7 @@ const main = async () => {
     // Read iterator state.
     let reading = false
     let pendingRead = false
-    let allLinesProcessed = 0
+    let bytesRead = 0
 
     // Batched export group and statistics.
     const exportGroup: Promise<boolean>[] = []
@@ -63,21 +63,12 @@ const main = async () => {
       exportGroup.length = 0
     }
 
-    // If there are more events to read and we are not reading, read them.
-    const readIfPendingAndNotReading = () => {
-      if (pendingRead && !reading) {
-        pendingRead = false
-        read()
-      }
-    }
-
     const read = async () => {
-      if (reading) {
-        return
-      }
       reading = true
 
-      const fileStream = fs.createReadStream(EVENTS_FILE)
+      const fileStream = fs.createReadStream(EVENTS_FILE, {
+        start: bytesRead,
+      })
       const rl = readline.createInterface({
         input: fileStream,
         // Recognize all instances of CR LF ('\r\n') as a single line break.
@@ -85,17 +76,7 @@ const main = async () => {
       })
 
       try {
-        // Local cursor to skip ahead initially and update global cursor after.
-        let linesProcessed = 0
-
         for await (const line of rl) {
-          // Move line cursor to where we left off and skip lines before cursor
-          // start.
-          if (linesProcessed < allLinesProcessed) {
-            linesProcessed++
-            continue
-          }
-
           const event: IndexerEvent = JSON.parse(line)
           exportGroup.push(exporter(event))
 
@@ -105,20 +86,21 @@ const main = async () => {
           if (exportGroup.length === 200) {
             await waitForExportGroup()
           }
-
-          // Increment line cursor.
-          linesProcessed++
         }
 
         // Wait for remaining promises.
         await waitForExportGroup()
 
-        reading = false
-        // Update line cursor.
-        allLinesProcessed = linesProcessed
+        // Update bytes read.
+        bytesRead += fileStream.bytesRead
 
         // Read again if pending.
-        readIfPendingAndNotReading()
+        if (pendingRead) {
+          pendingRead = false
+          read()
+        } else {
+          reading = false
+        }
       } catch (err) {
         reject(err)
       }
@@ -126,10 +108,14 @@ const main = async () => {
 
     // Watch file for changes.
     const file = fs.watchFile(EVENTS_FILE, (curr, prev) => {
-      // If modified, store that we need to read and try to read.
+      // If modified, read if not already reading, and store that there is data
+      // to read otherwise.
       if (curr.mtime > prev.mtime) {
-        pendingRead = true
-        readIfPendingAndNotReading()
+        if (!reading) {
+          read()
+        } else {
+          pendingRead = true
+        }
       }
     })
     file.on('error', reject)
