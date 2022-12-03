@@ -125,7 +125,7 @@ const main = async () => {
           LOADER_MAP[printLoaderCount]
         }  ${alreadyExistedCount.toLocaleString()} exist. ${newlyCreatedCount.toLocaleString()} created. ${(
           alreadyExistedCount + newlyCreatedCount
-        ).toLocaleString()} total.`
+        ).toLocaleString()} total.\x1B[?25l`
       )
     }, 100)
     // Allow process to exit even though this interval is alive.
@@ -134,3 +134,24 @@ const main = async () => {
 }
 
 main()
+
+// Show cursor on exit.
+const showCursor = () => process.stdout.write('\x1B[?25h')
+
+process.on('exit', (code) => {
+  showCursor()
+  process.exit(code)
+})
+// Forward signals by only handling once and retriggering.
+process.once('SIGINT', () => {
+  showCursor()
+  process.kill(process.pid, 'SIGINT')
+})
+process.once('SIGUSR1', () => {
+  showCursor()
+  process.kill(process.pid, 'SIGUSR1')
+})
+process.once('SIGUSR2', () => {
+  showCursor()
+  process.kill(process.pid, 'SIGUSR2')
+})
