@@ -13,16 +13,23 @@ export const makeDbExporter: ExporterMaker = async ({ db }) => {
       defaults: { codeId: event.codeId },
     })
 
+    // Convert base64 key to comma-separated list of bytes. See explanation in
+    // `Event` model for more information.
+    const key = Buffer.from(event.key, 'base64').join(',')
+    // Convert base64 value to utf-8 string, if present.
+    const value =
+      event.value && Buffer.from(event.value, 'base64').toString('utf-8')
+
     // Create event only if [contractAddress, blockHeight, key] is unique.
     const [, created] = await Event.findOrCreate({
       where: {
         contractAddress: event.contractAddress,
         blockHeight: event.blockHeight,
-        key: event.key,
+        key,
       },
       defaults: {
         blockTimeUnixMicro: event.blockTimeUnixMs,
-        value: event.value,
+        value,
         delete: event.delete,
       },
     })

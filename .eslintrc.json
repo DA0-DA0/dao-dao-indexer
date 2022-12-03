@@ -1,5 +1,6 @@
 {
   "extends": ["plugin:prettier/recommended"],
+  "ignorePatterns": ["node_modules", "dist"],
   "parserOptions": {
     "ecmaVersion": "latest"
   },
@@ -8,8 +9,8 @@
   },
   "overrides": [
     {
-      "files": ["**/*.d.ts", "**/*.ts", "**/*.tsx"],
-      "excludedFiles": ["**/node_modules/**"],
+      "files": ["**/*.d.ts", "**/*.ts"],
+      "excludedFiles": ["**/node_modules/**", "**/dist/**"],
       "parser": "@typescript-eslint/parser",
       "plugins": ["@typescript-eslint", "import", "unused-imports"],
       "parserOptions": {

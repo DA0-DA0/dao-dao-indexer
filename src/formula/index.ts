@@ -3,7 +3,8 @@ import Koa from 'koa'
 
 import { loadConfig } from '../config'
 import { Contract, closeDb, loadDb } from '../db'
-import { compute, getFormula } from './formulas'
+import { computeFormula } from './compute'
+import { getFormula } from './formulas'
 
 const app = new Koa()
 const router = new Router()
@@ -15,7 +16,7 @@ app.use(async (ctx, next) => {
   console.log(`${ctx.method} ${ctx.url} - ${ctx.status} - ${rt}`)
 })
 
-// Add x-response-time header.
+// Add X-Response-Time header.
 app.use(async (ctx, next) => {
   const start = Date.now()
   await next()
@@ -23,7 +24,7 @@ app.use(async (ctx, next) => {
   ctx.set('X-Response-Time', `${ms}ms`)
 })
 
-// Add routes.
+// Main formula computer.
 router.get('/:targetContractAddress/(.+)', async (ctx) => {
   const { blockHeight: _blockHeight } = ctx.query
   const { targetContractAddress } = ctx.params
@@ -56,7 +57,12 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
     return
   }
 
-  ctx.body = await compute(formula, contract, blockHeight)
+  try {
+    ctx.body = await computeFormula(formula, contract, blockHeight)
+  } catch (err) {
+    ctx.status = 500
+    ctx.body = err instanceof Error ? err.message : `${err}`
+  }
 })
 
 // Enable router.

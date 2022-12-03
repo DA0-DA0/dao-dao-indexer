@@ -29,12 +29,10 @@ export const loadDb = async (db: Config['db']) => {
     console.error('Unable to connect to the database:', error)
   }
 
-  // Alter the database to match the model classes we defined.
-  try {
-    await sequelize.sync({ alter: true })
-  } catch (error) {
-    console.error('Unable to sync database:', error)
-  }
+  // Alter the database to match any changes.
+  // await sequelize.sync({ alter: true })
+  // Drop all tables and recreate them.
+  // await sequelize.sync({ force: true })
 }
 
 export const closeDb = async () => {
