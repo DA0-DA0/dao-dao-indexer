@@ -8,6 +8,7 @@ import { Config, IndexerEvent } from './types'
 const INDEXER_ROOT = '/Users/noah/.juno/indexer'
 const EVENTS_FILE = path.join(INDEXER_ROOT, '.events.txt')
 const CONFIG_FILE = path.join(INDEXER_ROOT, 'config.json')
+const MAX_PARALLEL_EXPORTS = 200
 
 const STATUS_MAP = ['—', '\\', '|', '/']
 
@@ -81,9 +82,9 @@ const main = async () => {
           exportGroup.push(exporter(event))
 
           // If we have a lot of events, wait for them to finish before
-          // continuing. This allows errors to be thrown but still lets us batch
-          // queries.
-          if (exportGroup.length === 200) {
+          // continuing. This allows errors to be thrown but still lets us
+          // parallelize queries.
+          if (exportGroup.length === MAX_PARALLEL_EXPORTS) {
             await waitForExportGroup()
           }
         }
@@ -106,8 +107,8 @@ const main = async () => {
       }
     }
 
-    // Watch file for changes.
-    const file = fs.watchFile(EVENTS_FILE, (curr, prev) => {
+    // Watch file for changes every second.
+    const file = fs.watchFile(EVENTS_FILE, { interval: 1000 }, (curr, prev) => {
       // If modified, read if not already reading, and store that there is data
       // to read otherwise.
       if (curr.mtime > prev.mtime) {
