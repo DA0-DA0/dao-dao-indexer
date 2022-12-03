@@ -74,8 +74,8 @@ const main = async () => {
   const { db } = await loadConfig()
   await loadDb(db)
 
-  app.listen(3000)
-  console.log('Listening on 3000...')
+  app.listen(3420)
+  console.log('Listening on 3420...')
 }
 
 main()

@@ -1,4 +1,3 @@
-import { Event } from '../../db/models'
 import { Formula } from '../types'
 import * as dao from './dao'
 
