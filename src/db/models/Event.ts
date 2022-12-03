@@ -37,7 +37,7 @@ export class Event extends Model {
 
   @AllowNull(false)
   @Column
-  blockTimeUnixMs: bigint
+  blockTimeUnixMicro: bigint
 
   @AllowNull(false)
   @Column(DataType.TEXT)

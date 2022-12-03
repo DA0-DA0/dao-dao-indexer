@@ -50,7 +50,7 @@ export const makeExporter: ExporterMaker = async ({ db }) => {
         key: event.key,
       },
       defaults: {
-        blockTimeUnixMs: event.blockTimeUnixMs,
+        blockTimeUnixMicro: event.blockTimeUnixMs,
         value: event.value,
         delete: event.delete,
       },
