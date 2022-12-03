@@ -26,28 +26,24 @@ const main = async () => {
     throw new Error(`Events file not found (${EVENTS_FILE}).`)
   }
 
-  const fileStream = fs.createReadStream(EVENTS_FILE)
-  const rl = readline.createInterface({
-    input: fileStream,
-    // Recognize all instances of CR LF ('\r\n') in as a single line break.
-    crlfDelay: Infinity,
-  })
+  console.log('\nExporting events...')
 
-  console.log(`\nExporting events...`)
+  // Return promise that never resolves. Listen for file changes.
+  return new Promise((_, reject) => {
+    // Read iterator state.
+    let reading = false
+    let pendingRead = false
+    let allLinesProcessed = 0
 
-  // Parse each line and dispatch exporter promise.
-  const exportPromises: Promise<boolean>[] = []
-  let alreadyExistedCount = 0
-  let newlyCreatedCount = 0
-  let groupsProcessed = 0
-  for await (const line of rl) {
-    const event: IndexerEvent = JSON.parse(line)
-    exportPromises.push(exporter(event))
+    // Batched export group and statistics.
+    const exportGroup: Promise<boolean>[] = []
+    let alreadyExistedCount = 0
+    let newlyCreatedCount = 0
+    let groupsProcessed = 0
 
-    // If we have a lot of events, wait for them to finish before continuing.
-    // This allows errors to be thrown but still lets us batch queries.
-    if (exportPromises.length === 100) {
-      const created = await Promise.all(exportPromises)
+    // Wait for responses from export promises and update/display statistics.
+    const waitForExportGroup = async () => {
+      const created = await Promise.all(exportGroup)
 
       // Compute statistics.
       const newlyCreated = created.filter(Boolean).length
@@ -58,13 +54,89 @@ const main = async () => {
       process.stdout.write(
         `\r${
           STATUS_MAP[groupsProcessed % STATUS_MAP.length]
-        }  ${alreadyExistedCount.toLocaleString()} already exist — ${newlyCreatedCount.toLocaleString()} created`
+        }  ${alreadyExistedCount.toLocaleString()} exist. ${newlyCreatedCount.toLocaleString()} created. ${(
+          alreadyExistedCount + newlyCreatedCount
+        ).toLocaleString()} total.`
       )
 
       // Clear promises.
-      exportPromises.length = 0
+      exportGroup.length = 0
     }
-  }
+
+    // If there are more events to read and we are not reading, read them.
+    const readIfPendingAndNotReading = () => {
+      if (pendingRead && !reading) {
+        pendingRead = false
+        read()
+      }
+    }
+
+    const read = async () => {
+      if (reading) {
+        return
+      }
+      reading = true
+
+      const fileStream = fs.createReadStream(EVENTS_FILE)
+      const rl = readline.createInterface({
+        input: fileStream,
+        // Recognize all instances of CR LF ('\r\n') as a single line break.
+        crlfDelay: Infinity,
+      })
+
+      try {
+        // Local cursor to skip ahead initially and update global cursor after.
+        let linesProcessed = 0
+
+        for await (const line of rl) {
+          // Move line cursor to where we left off and skip lines before cursor
+          // start.
+          if (linesProcessed < allLinesProcessed) {
+            linesProcessed++
+            continue
+          }
+
+          const event: IndexerEvent = JSON.parse(line)
+          exportGroup.push(exporter(event))
+
+          // If we have a lot of events, wait for them to finish before
+          // continuing. This allows errors to be thrown but still lets us batch
+          // queries.
+          if (exportGroup.length === 200) {
+            await waitForExportGroup()
+          }
+
+          // Increment line cursor.
+          linesProcessed++
+        }
+
+        // Wait for remaining promises.
+        await waitForExportGroup()
+
+        reading = false
+        // Update line cursor.
+        allLinesProcessed = linesProcessed
+
+        // Read again if pending.
+        readIfPendingAndNotReading()
+      } catch (err) {
+        reject(err)
+      }
+    }
+
+    // Watch file for changes.
+    const file = fs.watchFile(EVENTS_FILE, (curr, prev) => {
+      // If modified, store that we need to read and try to read.
+      if (curr.mtime > prev.mtime) {
+        pendingRead = true
+        readIfPendingAndNotReading()
+      }
+    })
+    file.on('error', reject)
+
+    // Start reading file.
+    read()
+  })
 }
 
 main()
