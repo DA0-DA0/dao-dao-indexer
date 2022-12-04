@@ -6,6 +6,7 @@ import { loadConfig } from '../config'
 import { loadDb } from '../db'
 import { dbExporter } from './dbExporter'
 import { IndexerEvent } from './types'
+import { objectMatchesStructure } from './utils'
 
 const BULK_INSERT_SIZE = 500
 const LOADER_MAP = ['—', '\\', '|', '/']
@@ -82,7 +83,26 @@ const main = async () => {
         })
 
         for await (const line of rl) {
-          const event: IndexerEvent = JSON.parse(line)
+          if (!line) {
+            continue
+          }
+
+          const event = JSON.parse(line)
+          // If event not of expected structure, skip.
+          if (
+            !objectMatchesStructure(event, {
+              blockHeight: {},
+              blockTimeUnixMicro: {},
+              contractAddress: {},
+              codeId: {},
+              key: {},
+              value: {},
+              delete: {},
+            })
+          ) {
+            continue
+          }
+
           pendingIndexerEvents.push(event)
 
           // If we have enough events, flush them to the DB.
