@@ -14,9 +14,13 @@ export const main = async () => {
     'Are you sure you want to drop all tables? (y/n) ',
     async (answer) => {
       if (answer === 'y') {
-        // Drop all tables and recreate them.
-        await sequelize.sync({ force: true })
-        console.log('Dropped and recreated all tables.')
+        try {
+          // Drop all tables and recreate them.
+          await sequelize.sync({ force: true })
+          console.log('Dropped and recreated all tables.')
+        } catch (err) {
+          console.error(err)
+        }
       } else {
         console.log('Aborted.')
       }
