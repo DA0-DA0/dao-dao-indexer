@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "prebuild": "rm -r dist",
+    "prebuild": "rm -rf dist",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "export": "node dist/export/index.js",
