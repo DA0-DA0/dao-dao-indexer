@@ -3,7 +3,7 @@ import path from 'path'
 import readline from 'readline'
 
 import { loadConfig } from '../config'
-import { makeDbExporter } from './dbExporter'
+import { dbExporter } from './dbExporter'
 import { IndexerEvent } from './types'
 
 const MAX_PARALLEL_EXPORTS = 200
@@ -12,7 +12,6 @@ const LOADER_MAP = ['—', '\\', '|', '/']
 const main = async () => {
   // Make DB exporter.
   const config = await loadConfig()
-  const dbExporter = await makeDbExporter(config)
 
   const eventsFile = path.join(config.indexerRoot, '.events.txt')
   // Ensure events file exists.

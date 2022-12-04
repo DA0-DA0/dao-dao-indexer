@@ -2,7 +2,6 @@ import cors from '@koa/cors'
 import Router from '@koa/router'
 import Koa from 'koa'
 
-import { loadConfig } from '../config'
 import { Contract, closeDb, loadDb } from '../db'
 import { computeFormula } from './compute'
 import { getFormula } from './formulas'
@@ -75,8 +74,7 @@ app.use(router.routes()).use(router.allowedMethods())
 // Start.
 const main = async () => {
   // Connect to DB.
-  const { db } = await loadConfig()
-  await loadDb(db)
+  await loadDb()
 
   app.listen(3420)
   console.log('Listening on 3420...')

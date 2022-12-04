@@ -1,13 +1,19 @@
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
-import { Config } from '../types'
+import { loadConfig } from '../config'
 import { Contract, Event } from './models'
 
 export * from './models'
 
-let sequelize: Sequelize
+let sequelize: Sequelize | undefined
 
-export const loadDb = async (db: Config['db']) => {
+export const loadDb = async () => {
+  if (sequelize) {
+    return sequelize
+  }
+
+  const { db } = await loadConfig()
+
   const options: SequelizeOptions = {
     // Allow options to override logging, but default to false.
     logging: false,
@@ -33,6 +39,8 @@ export const loadDb = async (db: Config['db']) => {
   // await sequelize.sync({ alter: true })
   // Drop all tables and recreate them.
   // await sequelize.sync({ force: true })
+
+  return sequelize
 }
 
 export const closeDb = async () => {
