@@ -15,7 +15,9 @@ interface ProposalModule {
 }
 
 export const config: Formula = async ({ contractAddress, get }) => {
-  const config = await get<Config>(contractAddress, 'config_v2')
+  const config =
+    (await get<Config>(contractAddress, 'config_v2')) ??
+    (await get<Config>(contractAddress, 'config'))
   return {
     ...config,
     image_url: undefined,
@@ -23,20 +25,36 @@ export const config: Formula = async ({ contractAddress, get }) => {
   }
 }
 
-export const activeProposalModules: Formula = async ({
-  contractAddress,
-  get,
-}) => {
+export const proposalModules: Formula = async ({ contractAddress, get }) => {
+  const proposalModules: ProposalModule[] = []
+
+  // V2.
   const proposalModuleMap = await get<Record<string, ProposalModule>>(
     contractAddress,
     'proposal_modules_v2'
   )
-  const activeProposalModules = Object.values(proposalModuleMap).filter(
-    ({ status }) => status === 'Enabled'
-  )
+
+  if (proposalModuleMap) {
+    proposalModules.push(...Object.values(proposalModuleMap))
+  }
+  // V1.
+  else {
+    const proposalModuleAddresses = Object.keys(
+      await get<Record<string, unknown>>(contractAddress, 'proposal_modules')
+    )
+    proposalModules.push(
+      ...proposalModuleAddresses.map((address) => ({
+        address,
+        // V1 modules don't have a prefix.
+        prefix: '',
+        // V1 modules are always enabled.
+        status: 'Enabled' as const,
+      }))
+    )
+  }
 
   return await Promise.all(
-    activeProposalModules.map(async (data) => {
+    proposalModules.map(async (data) => {
       const contractInfo = await info({ contractAddress: data.address, get })
 
       return {
@@ -45,6 +63,11 @@ export const activeProposalModules: Formula = async ({
       }
     })
   )
+}
+
+export const activeProposalModules: Formula = async (env) => {
+  const modules = await proposalModules(env)
+  return modules.filter((module) => module.status === 'Enabled')
 }
 
 export const dumpState: Formula = async ({ contractAddress, get }) => {
@@ -59,10 +82,10 @@ export const dumpState: Formula = async ({ contractAddress, get }) => {
     contractAddress: votingModuleAddress,
     get,
   })
-  const proposalModuleMap = await get<Record<string, ProposalModule>>(
+  const proposalModulesResponse = await proposalModules({
     contractAddress,
-    'proposal_modules_v2'
-  )
+    get,
+  })
   const activeProposalModuleCount = await get<number>(
     contractAddress,
     'active_proposal_module_count'
@@ -80,7 +103,7 @@ export const dumpState: Formula = async ({ contractAddress, get }) => {
       address: votingModuleAddress,
       info: votingModuleInfo,
     },
-    proposalModules: Object.values(proposalModuleMap),
+    proposalModules: proposalModulesResponse,
     activeProposalModuleCount,
     totalProposalModuleCount,
   }
