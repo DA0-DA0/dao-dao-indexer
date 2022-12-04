@@ -94,7 +94,7 @@ const main = async () => {
         // Flush remaining events.
         await flushToDb()
 
-        // Update bytes read.
+        // Update bytes read so we can start at this point in the next read.
         bytesRead += fileStream.bytesRead
 
         // Read again if pending.
