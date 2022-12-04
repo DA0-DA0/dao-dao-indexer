@@ -37,7 +37,7 @@ const main = async () => {
 
     // Wait for responses from export promises and update/display statistics.
     const flushToDb = async () => {
-      // Wait for export to finish.
+      // Export events to DB.
       await dbExporter(pendingIndexerEvents)
 
       // Update statistics.
@@ -49,18 +49,18 @@ const main = async () => {
 
     // Main logic.
     const read = async () => {
-      reading = true
-
-      const fileStream = fs.createReadStream(eventsFile, {
-        start: bytesRead,
-      })
-      const rl = readline.createInterface({
-        input: fileStream,
-        // Recognize all instances of CR LF ('\r\n') as a single line break.
-        crlfDelay: Infinity,
-      })
-
       try {
+        reading = true
+
+        const fileStream = fs.createReadStream(eventsFile, {
+          start: bytesRead,
+        })
+        const rl = readline.createInterface({
+          input: fileStream,
+          // Recognize all instances of CR LF ('\r\n') as a single line break.
+          crlfDelay: Infinity,
+        })
+
         for await (const line of rl) {
           const event: IndexerEvent = JSON.parse(line)
           pendingIndexerEvents.push(event)
