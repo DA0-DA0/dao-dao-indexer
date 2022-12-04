@@ -18,7 +18,7 @@ import { Contract } from './Contract'
     // multiple times.
     {
       unique: true,
-      fields: ['contractAddress', 'blockHeight', 'key'],
+      fields: ['blockHeight', 'contractAddress', 'key'],
     },
   ],
 })

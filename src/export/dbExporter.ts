@@ -32,9 +32,11 @@ export const dbExporter: Exporter = async (events) => {
     delete: event.delete,
   }))
 
-  // Unique index on [contractAddress, blockHeight, key] ensures that we don't
-  // insert duplicate events.
+  // Unique index on [blockHeight, contractAddress, key] ensures that we don't
+  // insert duplicate events. If we encounter a duplicate, we update the `value`
+  // and `delete` field in case event processing for a block was batched
+  // separately.
   await Event.bulkCreate(eventRecords, {
-    ignoreDuplicates: true,
+    updateOnDuplicate: ['value', 'delete'],
   })
 }

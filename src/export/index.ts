@@ -37,8 +37,21 @@ const main = async () => {
 
     // Wait for responses from export promises and update/display statistics.
     const flushToDb = async () => {
+      // For events with the same blockHeight, contractAddress, and key, only
+      // keep the last event. This is because the indexer guarantees that events
+      // are emitted in order, and the last event is the most up-to-date.
+      // Multiple events may occur if the value is updated multiple times across
+      // different messages. The indexer can only maintain uniqueness within a
+      // message and its submessages, but different messages in the same block
+      // can write to the same key, and the indexer emits all the messages.
+      const uniqueIndexerEvents = pendingIndexerEvents.reduce((acc, event) => {
+        const key = event.blockHeight + event.contractAddress + event.key
+        acc[key] = event
+        return acc
+      }, {} as Record<string, IndexerEvent>)
+
       // Export events to DB.
-      await dbExporter(pendingIndexerEvents)
+      await dbExporter(Object.values(uniqueIndexerEvents))
 
       // Update statistics.
       processed += pendingIndexerEvents.length
