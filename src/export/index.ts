@@ -6,7 +6,7 @@ import { loadConfig } from '../config'
 import { dbExporter } from './dbExporter'
 import { IndexerEvent } from './types'
 
-const MAX_PARALLEL_EXPORTS = 200
+const BULK_INSERT_SIZE = 500
 const LOADER_MAP = ['—', '\\', '|', '/']
 
 const main = async () => {
@@ -28,22 +28,20 @@ const main = async () => {
     let pendingRead = false
     let bytesRead = 0
 
-    // Parallelized exports and statistics.
-    const parallelExports: Promise<boolean>[] = []
-    let alreadyExistedCount = 0
-    let newlyCreatedCount = 0
+    // Pending events and statistics.
+    const pendingIndexerEvents: IndexerEvent[] = []
+    let processed = 0
 
     // Wait for responses from export promises and update/display statistics.
-    const waitForExportGroup = async () => {
-      const created = await Promise.all(parallelExports)
+    const flushToDb = async () => {
+      // Wait for export to finish.
+      await dbExporter(pendingIndexerEvents)
 
       // Update statistics.
-      const newlyCreated = created.filter(Boolean).length
-      newlyCreatedCount += newlyCreated
-      alreadyExistedCount += created.length - newlyCreated
+      processed += pendingIndexerEvents.length
 
-      // Clear promises.
-      parallelExports.length = 0
+      // Clear queue.
+      pendingIndexerEvents.length = 0
     }
 
     // Main logic.
@@ -62,18 +60,16 @@ const main = async () => {
       try {
         for await (const line of rl) {
           const event: IndexerEvent = JSON.parse(line)
-          parallelExports.push(dbExporter(event))
+          pendingIndexerEvents.push(event)
 
-          // If we have a lot of events, wait for them to finish before
-          // continuing. This allows errors to be thrown but still lets us
-          // parallelize queries.
-          if (parallelExports.length === MAX_PARALLEL_EXPORTS) {
-            await waitForExportGroup()
+          // If we have enough events, flush them to the DB.
+          if (pendingIndexerEvents.length === BULK_INSERT_SIZE) {
+            await flushToDb()
           }
         }
 
-        // Wait for remaining promises.
-        await waitForExportGroup()
+        // Flush remaining events.
+        await flushToDb()
 
         // Update bytes read.
         bytesRead += fileStream.bytesRead
@@ -115,9 +111,7 @@ const main = async () => {
       process.stdout.write(
         `\r${
           LOADER_MAP[printLoaderCount]
-        }  ${alreadyExistedCount.toLocaleString()} exist. ${newlyCreatedCount.toLocaleString()} created. ${(
-          alreadyExistedCount + newlyCreatedCount
-        ).toLocaleString()} total.`
+        }  ${processed.toLocaleString()} processed.`
       )
     }, 100)
     // Allow process to exit even though this interval is alive.

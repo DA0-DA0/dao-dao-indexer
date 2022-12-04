@@ -8,5 +8,4 @@ export interface IndexerEvent {
   delete: boolean
 }
 
-// Return whether or not the event did not exist in the DB and was created.
-export type Exporter = (event: IndexerEvent) => Promise<boolean>
+export type Exporter = (events: IndexerEvent[]) => Promise<void>
