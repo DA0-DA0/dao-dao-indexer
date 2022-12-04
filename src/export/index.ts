@@ -34,6 +34,7 @@ const main = async () => {
     // Pending events and statistics.
     const pendingIndexerEvents: IndexerEvent[] = []
     let processed = 0
+    let lastBlockHeight = 0
 
     // Wait for responses from export promises and update/display statistics.
     const flushToDb = async () => {
@@ -55,6 +56,8 @@ const main = async () => {
 
       // Update statistics.
       processed += pendingIndexerEvents.length
+      lastBlockHeight =
+        pendingIndexerEvents[pendingIndexerEvents.length - 1].blockHeight
 
       // Clear queue.
       pendingIndexerEvents.length = 0
@@ -127,7 +130,7 @@ const main = async () => {
       process.stdout.write(
         `\r${
           LOADER_MAP[printLoaderCount]
-        }  ${processed.toLocaleString()} processed.`
+        }  ${processed.toLocaleString()} processed. Last block height: ${lastBlockHeight}.`
       )
     }, 100)
     // Allow process to exit even though this interval is alive.
