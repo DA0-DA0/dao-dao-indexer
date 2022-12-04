@@ -76,8 +76,12 @@ const main = async () => {
   // Connect to DB.
   await loadDb()
 
-  app.listen(3420)
-  console.log('Listening on 3420...')
+  app.listen(3420, () => {
+    console.log('Listening on 3420...')
+
+    // Tell pm2 we're ready.
+    process.send('ready')
+  })
 }
 
 main()
