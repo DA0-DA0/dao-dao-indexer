@@ -38,6 +38,10 @@ const main = async () => {
 
     // Wait for responses from export promises and update/display statistics.
     const flushToDb = async () => {
+      if (pendingIndexerEvents.length === 0) {
+        return
+      }
+
       // For events with the same blockHeight, contractAddress, and key, only
       // keep the last event. This is because the indexer guarantees that events
       // are emitted in order, and the last event is the most up-to-date.
