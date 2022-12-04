@@ -1,0 +1,9 @@
+{
+  "indexerRoot": "/Users/user/.juno/indexer",
+  "db": {
+    "dialect": "postgres",
+    "host": "localhost",
+    "database": "db",
+    "username": "user"
+  }
+}

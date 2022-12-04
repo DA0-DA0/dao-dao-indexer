@@ -1,10 +1,7 @@
 import { SequelizeOptions } from 'sequelize-typescript'
 
 export interface Config {
-  filter?: {
-    codeIds?: number[]
-    contractAddresses?: string[]
-  }
+  indexerRoot: string
   db: { uri?: string } & Pick<
     SequelizeOptions,
     | 'dialect'

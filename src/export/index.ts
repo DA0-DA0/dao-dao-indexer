@@ -2,23 +2,23 @@ import * as fs from 'fs'
 import path from 'path'
 import readline from 'readline'
 
-import { INDEXER_ROOT, loadConfig } from '../config'
+import { loadConfig } from '../config'
 import { makeDbExporter } from './dbExporter'
 import { IndexerEvent } from './types'
 
-const EVENTS_FILE = path.join(INDEXER_ROOT, '.events.txt')
 const MAX_PARALLEL_EXPORTS = 200
 const LOADER_MAP = ['—', '\\', '|', '/']
 
 const main = async () => {
-  // Ensure events file exists.
-  if (!fs.existsSync(EVENTS_FILE)) {
-    throw new Error(`Events file not found (${EVENTS_FILE}).`)
-  }
-
   // Make DB exporter.
   const config = await loadConfig()
   const dbExporter = await makeDbExporter(config)
+
+  const eventsFile = path.join(config.indexerRoot, '.events.txt')
+  // Ensure events file exists.
+  if (!fs.existsSync(eventsFile)) {
+    throw new Error(`Events file not found (${eventsFile}).`)
+  }
 
   console.log('\nExporting events...')
 
@@ -51,7 +51,7 @@ const main = async () => {
     const read = async () => {
       reading = true
 
-      const fileStream = fs.createReadStream(EVENTS_FILE, {
+      const fileStream = fs.createReadStream(eventsFile, {
         start: bytesRead,
       })
       const rl = readline.createInterface({
@@ -93,7 +93,7 @@ const main = async () => {
 
     // Watch file for changes every second and intelligently re-activate read
     // when more data is available.
-    const file = fs.watchFile(EVENTS_FILE, { interval: 1000 }, (curr, prev) => {
+    const file = fs.watchFile(eventsFile, { interval: 1000 }, (curr, prev) => {
       // If modified, read if not already reading, and store that there is data
       // to read otherwise.
       if (curr.mtime > prev.mtime) {

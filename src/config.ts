@@ -4,8 +4,7 @@ import path from 'path'
 import { Config } from './types'
 
 // Constants.
-export const INDEXER_ROOT = '/Users/noah/.juno/indexer'
-export const CONFIG_FILE = path.join(INDEXER_ROOT, 'config.json')
+export const CONFIG_FILE = path.join(__dirname, '../config.json')
 
 // Config
 let config: Config
