@@ -28,7 +28,7 @@ export const makeDbExporter: ExporterMaker = async ({ db }) => {
         key,
       },
       defaults: {
-        blockTimeUnixMicro: event.blockTimeUnixMs,
+        blockTimeUnixMicro: event.blockTimeUnixMicro,
         value,
         delete: event.delete,
       },

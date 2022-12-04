@@ -2,7 +2,7 @@ import { Config } from '../types'
 
 export interface IndexerEvent {
   blockHeight: number
-  blockTimeUnixMs: number
+  blockTimeUnixMicro: number
   contractAddress: string
   codeId: number
   key: string
