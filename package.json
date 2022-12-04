@@ -9,7 +9,7 @@
     "db:setup": "node dist/db/setup.js",
     "db:alter": "node dist/db/alter.js",
     "export": "node dist/export/index.js",
-    "export:prod": "npm run build && pm2 start ecosystem.config.js --only exporter",
+    "export:prod": "pm2 stop ecosystem.config.js --only exporter && npm run build && pm2 start ecosystem.config.js --only exporter",
     "formula": "node dist/formula/index.js",
     "formula:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/formula/index.js\""
   },
