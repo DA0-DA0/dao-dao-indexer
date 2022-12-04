@@ -3,6 +3,7 @@ import path from 'path'
 import readline from 'readline'
 
 import { loadConfig } from '../config'
+import { loadDb } from '../db'
 import { dbExporter } from './dbExporter'
 import { IndexerEvent } from './types'
 
@@ -17,6 +18,9 @@ const main = async () => {
   if (!fs.existsSync(eventsFile)) {
     throw new Error(`Events file not found (${eventsFile}).`)
   }
+
+  // Load DB on start.
+  await loadDb()
 
   console.log(`\n\n[${new Date().toISOString()}] Exporting events...`)
 
