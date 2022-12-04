@@ -10,9 +10,9 @@
     "db:alter": "node dist/db/alter.js",
     "export": "node dist/export/index.js",
     "export:prod": "pm2 stop ecosystem.config.js --only exporter && npm run build && pm2 start ecosystem.config.js --only exporter",
-    "server": "node dist/server/index.js",
-    "server:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js\"",
-    "server:prod": "pm2 stop ecosystem.config.js --only server && npm run build && pm2 start ecosystem.config.js --only server"
+    "serve": "node dist/server/index.js",
+    "serve:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js\"",
+    "serve:prod": "pm2 stop ecosystem.config.js --only server && npm run build && pm2 start ecosystem.config.js --only server"
   },
   "author": "Noah Saso <noah@noah.zone>",
   "devDependencies": {
