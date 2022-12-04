@@ -19,7 +19,7 @@ const main = async () => {
     throw new Error(`Events file not found (${eventsFile}).`)
   }
 
-  console.log(`\n\n [${new Date().toISOString()}] Exporting events...`)
+  console.log(`\n\n[${new Date().toISOString()}] Exporting events...`)
 
   // Return promise that never resolves. Listen for file changes.
   return new Promise((_, reject) => {
