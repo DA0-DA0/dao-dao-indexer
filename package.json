@@ -7,6 +7,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "export": "node dist/export/index.js",
+    "export:prod": "npm run build && pm2 start ecosystem.config.js --only exporter",
     "formula": "node dist/formula/index.js",
     "formula:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/formula/index.js\""
   },
@@ -24,6 +25,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-unused-imports": "^2.0.0",
     "nodemon": "^2.0.20",
+    "pm2": "^5.2.2",
     "prettier": "^2.8.0",
     "sequelize-cli": "^6.5.2",
     "ts-node": "^10.9.1",
