@@ -130,7 +130,7 @@ const main = async () => {
       process.stdout.write(
         `\r${
           LOADER_MAP[printLoaderCount]
-        }  ${processed.toLocaleString()} processed. Last block height: ${lastBlockHeight}.`
+        }  ${processed.toLocaleString()} processed. Last block height: ${lastBlockHeight.toLocaleString()}.`
       )
     }, 100)
     // Allow process to exit even though this interval is alive.
