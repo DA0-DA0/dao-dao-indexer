@@ -10,7 +10,6 @@ const BULK_INSERT_SIZE = 500
 const LOADER_MAP = ['—', '\\', '|', '/']
 
 const main = async () => {
-  // Make DB exporter.
   const config = await loadConfig()
 
   const eventsFile = path.join(config.indexerRoot, '.events.txt')
