@@ -29,7 +29,7 @@ app.use(async (ctx, next) => {
 
 // Main formula computer.
 router.get('/:targetContractAddress/(.+)', async (ctx) => {
-  const { blockHeight: _blockHeight } = ctx.query
+  const { blockHeight: _blockHeight, ...args } = ctx.query
   const { targetContractAddress } = ctx.params
   const formulaName = ctx.path.split('/').slice(2)
 
@@ -61,7 +61,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
   }
 
   try {
-    ctx.body = await computeFormula(formula, contract, blockHeight)
+    ctx.body = await computeFormula(formula, contract, args, blockHeight)
   } catch (err) {
     ctx.status = 500
     ctx.body = err instanceof Error ? err.message : `${err}`

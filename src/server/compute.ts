@@ -7,6 +7,7 @@ import { dbKeyForKeys, dbKeyToString } from './utils'
 export const computeFormula = async (
   formula: Formula<any>,
   targetContract: Contract,
+  args: Record<string, any>,
   blockHeight?: number
 ): Promise<any> => {
   const get: FormulaGetter = async (contractAddress, ...keys) => {
@@ -72,6 +73,7 @@ export const computeFormula = async (
   const env: Env = {
     contractAddress: targetContract.address,
     get,
+    args,
   }
 
   return await formula(env)
