@@ -112,23 +112,35 @@ export const activeProposalModules: Formula<ProposalModuleWithInfo[]> = async (
 }
 
 export const dumpState: Formula<DumpState> = async (env) => {
-  const adminResponse = await admin(env)
-  const configResponse = await config(env)
-  const version = await info(env)
-  const votingModuleAddress = await votingModule(env)
-  const proposalModulesResponse = await proposalModules(env)
-
-  const votingModuleInfo = await info({
-    ...env,
-    contractAddress: votingModuleAddress,
-  })
+  const [
+    adminResponse,
+    configResponse,
+    version,
+    { address: voting_module, info: votingModuleInfo },
+    proposalModulesResponse,
+  ] = await Promise.all([
+    admin(env),
+    config(env),
+    info(env),
+    votingModule(env).then(async (contractAddress) => {
+      const infoResponse = await info({
+        ...env,
+        contractAddress,
+      })
+      return {
+        address: contractAddress,
+        info: infoResponse,
+      }
+    }),
+    proposalModules(env),
+  ])
 
   return {
     // Same as contract query.
     admin: adminResponse,
     config: configResponse,
     version,
-    voting_module: votingModuleAddress,
+    voting_module,
     proposal_modules: proposalModulesResponse,
     // Extra.
     votingModuleInfo,
