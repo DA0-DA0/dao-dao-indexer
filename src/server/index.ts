@@ -61,7 +61,20 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
   }
 
   try {
-    ctx.body = await computeFormula(formula, contract, args, blockHeight)
+    const computation = await computeFormula(
+      formula,
+      contract,
+      args,
+      blockHeight
+    )
+
+    // If string, encode as JSON.
+    if (typeof computation === 'string') {
+      ctx.body = JSON.stringify(computation)
+      ctx.set('Content-Type', 'application/json')
+    } else {
+      ctx.body = computation
+    }
   } catch (err) {
     ctx.status = 500
     ctx.body = err instanceof Error ? err.message : `${err}`
