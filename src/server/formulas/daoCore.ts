@@ -3,11 +3,11 @@ import { ContractInfo, info } from './common'
 import { balance } from './cw20'
 
 interface Config {
-  automaticallyAddCw20s: boolean
-  automaticallyAddCw721s: boolean
-  daoUri?: string | null
+  automatically_add_cw20s: boolean
+  automatically_add_cw721s: boolean
+  dao_uri?: string | null
   description: string
-  imageUrl?: string | null
+  image_url?: string | null
   name: string
 }
 
@@ -50,20 +50,9 @@ interface SubDao {
   charter?: string | null
 }
 
-export const config: Formula<Config> = async ({ contractAddress, get }) => {
-  const config =
-    (await get(contractAddress, 'config_v2')) ??
-    (await get(contractAddress, 'config'))
-
-  return {
-    automaticallyAddCw20s: config.automatically_add_cw20s,
-    automaticallyAddCw721s: config.automatically_add_cw721s,
-    daoUri: config.dao_uri,
-    description: config.description,
-    imageUrl: config.image_url,
-    name: config.name,
-  }
-}
+export const config: Formula<Config> = async ({ contractAddress, get }) =>
+  (await get(contractAddress, 'config_v2')) ??
+  (await get(contractAddress, 'config'))
 
 export const proposalModules: Formula<ProposalModuleWithInfo[]> = async (
   env
@@ -202,4 +191,4 @@ export const listSubDaos: Formula<SubDao[]> = async ({
 }
 
 export const daoUri: Formula<string> = async (env) =>
-  (await config(env)).daoUri ?? ''
+  (await config(env)).dao_uri ?? ''
