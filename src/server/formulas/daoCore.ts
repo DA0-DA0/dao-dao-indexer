@@ -179,16 +179,19 @@ export const item: Formula<string | false> = async ({
 }) => await get<Record<string, string>>(contractAddress, 'items')?.[item]
 
 export const listItems: Formula<string[]> = async ({ contractAddress, get }) =>
-  Object.keys(await get<Record<string, string>>(contractAddress, 'items'))
+  Object.keys(
+    (await get<Record<string, string>>(contractAddress, 'items')) ?? {}
+  )
 
 export const cw20List: Formula<string[]> = async ({ contractAddress, get }) =>
-  Object.keys(await get<Record<string, any>>(contractAddress, 'cw20s'))
+  Object.keys((await get<Record<string, any>>(contractAddress, 'cw20s')) ?? {})
 
 export const cw721List: Formula<string[]> = async ({ contractAddress, get }) =>
-  Object.keys(await get<Record<string, any>>(contractAddress, 'cw721s'))
+  Object.keys((await get<Record<string, any>>(contractAddress, 'cw721s')) ?? {})
 
 export const cw20Balances: Formula<Cw20Balance[]> = async (env) => {
   const cw20Addresses = await cw20List(env)
+
   return await Promise.all(
     cw20Addresses.map(async (addr): Promise<Cw20Balance> => {
       const balanceResponse = await balance({
@@ -215,6 +218,7 @@ export const listSubDaos: Formula<SubDao[]> = async ({
       contractAddress,
       'sub_daos'
     )) ?? {}
+
   return Object.entries(subDaoMap).map(([addr, charter]) => ({
     addr,
     charter,
