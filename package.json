@@ -12,7 +12,8 @@
     "export:prod": "npm run build && pm2 reload ecosystem.config.js --only exporter",
     "serve": "node dist/server/index.js",
     "serve:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js\"",
-    "serve:prod": "npm run build && pm2 reload ecosystem.config.js --only server"
+    "serve:prod": "npm run build && pm2 reload ecosystem.config.js --only server",
+    "deploy": "./scripts/deploy.sh"
   },
   "author": "Noah Saso <noah@noah.zone>",
   "devDependencies": {
