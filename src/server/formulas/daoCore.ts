@@ -121,4 +121,4 @@ export const dumpState: Formula = async ({ contractAddress, get }) => {
 }
 
 export const paused: Formula = async ({ contractAddress, get }) =>
-  await get<Expiration | undefined>(contractAddress, 'paused')
+  await get<Expiration>(contractAddress, 'paused')
