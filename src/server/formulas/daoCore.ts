@@ -164,7 +164,7 @@ export const paused: Formula<Expiration | false> = async ({
 export const admin: Formula<string> = async ({ contractAddress, get }) =>
   await get<string>(contractAddress, 'admin')
 
-export const adminNomination: Formula<string> = async ({
+export const adminNomination: Formula<string | undefined> = async ({
   contractAddress,
   get,
 }) => await get<string>(contractAddress, 'nominated_admin')
