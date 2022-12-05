@@ -10,17 +10,17 @@ export const computeFormula = async (
   args: Record<string, any>,
   blockHeight?: number
 ): Promise<any> => {
+  // Most recent event at or below this block height.
+  const blockHeightFilter = blockHeight
+    ? {
+        blockHeight: {
+          [Op.lte]: blockHeight,
+        },
+      }
+    : {}
+
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
-    // Most recent event at or below this block height.
-    const blockHeightFilter = blockHeight
-      ? {
-          blockHeight: {
-            [Op.lte]: blockHeight,
-          },
-        }
-      : {}
-
     const event = await Event.findOne({
       where: {
         contractAddress,
@@ -70,9 +70,36 @@ export const computeFormula = async (
     return JSON.parse(event.value)
   }
 
+  const getCreatedAt: FormulaGetter<Date> = async (
+    contractAddress,
+    ...keys
+  ) => {
+    const key = dbKeyForKeys(...keys)
+    const event = await Event.findOne({
+      where: {
+        contractAddress,
+        key,
+        ...blockHeightFilter,
+      },
+      order: [
+        ['blockHeight', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
+    })
+
+    if (!event) {
+      return undefined
+    }
+
+    // Convert block time to date.
+    const date = new Date(0)
+    date.setUTCSeconds(Number(event.blockTimeUnixMicro / BigInt(1e6)))
+  }
+
   const env: Env = {
     contractAddress: targetContract.address,
     get,
+    getCreatedAt,
     args,
   }
 
