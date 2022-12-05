@@ -90,7 +90,7 @@ export const computeFormula = async (
 
     // Convert block time to date.
     const date = new Date(0)
-    date.setUTCSeconds(Number(event.blockTimeUnixMicro / BigInt(1e6)))
+    date.setUTCSeconds(Number(event.blockTimeUnixMicro) / 1e6)
     return date
   }
 
