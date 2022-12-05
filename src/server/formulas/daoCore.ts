@@ -175,8 +175,8 @@ export const votingModule: Formula<string> = async ({ contractAddress, get }) =>
 export const item: Formula<string | false> = async ({
   contractAddress,
   get,
-  args: { item },
-}) => await get<Record<string, string>>(contractAddress, 'items')?.[item]
+  args: { key },
+}) => await get<Record<string, string>>(contractAddress, 'items')?.[key]
 
 export const listItems: Formula<string[]> = async ({ contractAddress, get }) =>
   Object.keys(
