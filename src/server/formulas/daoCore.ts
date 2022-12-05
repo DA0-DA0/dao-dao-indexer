@@ -88,7 +88,10 @@ export const proposalModules: Formula<ProposalModuleWithInfo[]> = async (
 
   return await Promise.all(
     proposalModules.map(async (data): Promise<ProposalModuleWithInfo> => {
-      const contractInfo = await info(env)
+      const contractInfo = await info({
+        ...env,
+        contractAddress: data.address,
+      })
 
       return {
         ...data,
