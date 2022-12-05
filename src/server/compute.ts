@@ -51,9 +51,9 @@ export const computeFormula = async (
         ],
       })
 
-      // If no events found, return null.
+      // If no events found, return undefined.
       if (!events.length) {
-        return null
+        return undefined
       }
 
       // If events found, return map of key to value.
