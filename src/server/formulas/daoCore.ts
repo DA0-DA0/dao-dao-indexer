@@ -25,13 +25,8 @@ interface DumpState {
   admin: string
   config: Config
   version: ContractInfo
-  votingModule: {
-    address: string
-    info: ContractInfo
-  }
-  proposalModules: ProposalModuleWithInfo[]
-  activeProposalModuleCount: number
-  totalProposalModuleCount: number
+  voting_module: string
+  proposal_modules: ProposalModuleWithInfo[]
 }
 
 type Expiration =
@@ -122,37 +117,18 @@ export const activeProposalModules: Formula<ProposalModuleWithInfo[]> = async (
 }
 
 export const dumpState: Formula<DumpState> = async (env) => {
-  const { contractAddress, get } = env
-
   const adminResponse = await admin(env)
   const configResponse = await config(env)
   const version = await info(env)
   const votingModuleAddress = await votingModule(env)
-  const votingModuleInfo = await info({
-    ...env,
-    contractAddress: votingModuleAddress,
-  })
   const proposalModulesResponse = await proposalModules(env)
-  const activeProposalModuleCount = await get<number>(
-    contractAddress,
-    'active_proposal_module_count'
-  )
-  const totalProposalModuleCount = await get<number>(
-    contractAddress,
-    'total_proposal_module_count'
-  )
 
   return {
     admin: adminResponse,
     config: configResponse,
     version,
-    votingModule: {
-      address: votingModuleAddress,
-      info: votingModuleInfo,
-    },
-    proposalModules: proposalModulesResponse,
-    activeProposalModuleCount,
-    totalProposalModuleCount,
+    voting_module: votingModuleAddress,
+    proposal_modules: proposalModulesResponse,
   }
 }
 
