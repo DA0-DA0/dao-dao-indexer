@@ -1,7 +1,7 @@
 import { Op } from 'sequelize'
 
 import { Contract, Event } from '../db/models'
-import { Env, Formula, FormulaGetter } from './types'
+import { Env, Formula, FormulaDateGetter, FormulaGetter } from './types'
 import { dbKeyForKeys, dbKeyToString } from './utils'
 
 export const computeFormula = async (
@@ -70,10 +70,7 @@ export const computeFormula = async (
     return JSON.parse(event.value)
   }
 
-  const getCreatedAt: FormulaGetter<Date> = async (
-    contractAddress,
-    ...keys
-  ) => {
+  const getCreatedAt: FormulaDateGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
     const event = await Event.findOne({
       where: {
@@ -94,6 +91,7 @@ export const computeFormula = async (
     // Convert block time to date.
     const date = new Date(0)
     date.setUTCSeconds(Number(event.blockTimeUnixMicro / BigInt(1e6)))
+    return date
   }
 
   const env: Env = {
