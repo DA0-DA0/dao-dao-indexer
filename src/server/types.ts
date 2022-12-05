@@ -9,5 +9,5 @@ export type Formula<R> = (env: Env) => Promise<R>
 export interface Env {
   contractAddress: string
   get: FormulaGetter
-  args: Record<string, any>
+  args?: Record<string, any>
 }
