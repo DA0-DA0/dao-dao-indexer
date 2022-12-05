@@ -9,5 +9,5 @@ export const formulas = {
   daoProposalSingle,
 }
 
-export const getFormula = (formulaName: string[]): Formula | undefined =>
+export const getFormula = (formulaName: string[]): Formula<any> | undefined =>
   formulaName.reduce((acc, key) => acc && acc[key], formulas)

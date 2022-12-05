@@ -5,7 +5,7 @@ import { Env, Formula, FormulaGetter } from './types'
 import { dbKeyForKeys, dbKeyToString } from './utils'
 
 export const computeFormula = async (
-  formula: Formula,
+  formula: Formula<any>,
   targetContract: Contract,
   blockHeight?: number
 ): Promise<any> => {

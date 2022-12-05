@@ -4,14 +4,30 @@ import { ContractInfo, info } from './common'
 interface Config {
   name: string
   description: string
-  image_url: string
+  imageUrl: string
 }
 
 interface ProposalModule {
   address: string
   prefix: string
   status: 'Enabled' | 'Disabled'
-  info?: ContractInfo
+}
+
+interface ProposalModuleWithInfo extends ProposalModule {
+  info: ContractInfo
+}
+
+interface DumpState {
+  admin: string
+  config: Config
+  version: ContractInfo
+  votingModule: {
+    address: string
+    info: ContractInfo
+  }
+  proposalModules: ProposalModuleWithInfo[]
+  activeProposalModuleCount: number
+  totalProposalModuleCount: number
 }
 
 type Expiration =
@@ -25,10 +41,11 @@ type Expiration =
       never: {}
     }
 
-export const config: Formula = async ({ contractAddress, get }) => {
+export const config: Formula<Config> = async ({ contractAddress, get }) => {
   const config =
-    (await get<Config>(contractAddress, 'config_v2')) ??
-    (await get<Config>(contractAddress, 'config'))
+    (await get(contractAddress, 'config_v2')) ??
+    (await get(contractAddress, 'config'))
+
   return {
     ...config,
     image_url: undefined,
@@ -36,7 +53,10 @@ export const config: Formula = async ({ contractAddress, get }) => {
   }
 }
 
-export const proposalModules: Formula = async ({ contractAddress, get }) => {
+export const proposalModules: Formula<ProposalModuleWithInfo[]> = async ({
+  contractAddress,
+  get,
+}) => {
   const proposalModules: ProposalModule[] = []
 
   // V2.
@@ -65,8 +85,11 @@ export const proposalModules: Formula = async ({ contractAddress, get }) => {
   }
 
   return await Promise.all(
-    proposalModules.map(async (data) => {
-      const contractInfo = await info({ contractAddress: data.address, get })
+    proposalModules.map(async (data): Promise<ProposalModuleWithInfo> => {
+      const contractInfo = await info({
+        contractAddress: data.address,
+        get,
+      })
 
       return {
         ...data,
@@ -76,12 +99,17 @@ export const proposalModules: Formula = async ({ contractAddress, get }) => {
   )
 }
 
-export const activeProposalModules: Formula = async (env) => {
+export const activeProposalModules: Formula<ProposalModuleWithInfo[]> = async (
+  env
+) => {
   const modules = await proposalModules(env)
   return modules.filter((module) => module.status === 'Enabled')
 }
 
-export const dumpState: Formula = async ({ contractAddress, get }) => {
+export const dumpState: Formula<DumpState> = async ({
+  contractAddress,
+  get,
+}) => {
   const admin = await get<string>(contractAddress, 'admin')
   const configResponse = await config({ contractAddress, get })
   const version = await info({ contractAddress, get })
@@ -120,5 +148,7 @@ export const dumpState: Formula = async ({ contractAddress, get }) => {
   }
 }
 
-export const paused: Formula = async ({ contractAddress, get }) =>
-  await get<Expiration | undefined>(contractAddress, 'paused')
+export const paused: Formula<Expiration | boolean> = async ({
+  contractAddress,
+  get,
+}) => (await get<Expiration | undefined>(contractAddress, 'paused')) ?? false

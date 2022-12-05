@@ -5,5 +5,5 @@ export interface ContractInfo {
   version: string
 }
 
-export const info: Formula = async ({ contractAddress, get }) =>
-  await get<ContractInfo>(contractAddress, 'contract_info')
+export const info: Formula<ContractInfo> = async ({ contractAddress, get }) =>
+  await get(contractAddress, 'contract_info')

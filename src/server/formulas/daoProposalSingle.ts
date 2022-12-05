@@ -10,5 +10,7 @@ type CreationPolicy =
       }
     }
 
-export const creationPolicy: Formula = async ({ contractAddress, get }) =>
-  await get<CreationPolicy>(contractAddress, 'creation_policy')
+export const creationPolicy: Formula<CreationPolicy> = async ({
+  contractAddress,
+  get,
+}) => await get(contractAddress, 'creation_policy')
