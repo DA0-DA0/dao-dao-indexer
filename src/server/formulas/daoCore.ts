@@ -22,11 +22,14 @@ interface ProposalModuleWithInfo extends ProposalModule {
 }
 
 interface DumpState {
+  // Same as contract query.
   admin: string
   config: Config
   version: ContractInfo
   voting_module: string
   proposal_modules: ProposalModuleWithInfo[]
+  // Extra.
+  votingModuleInfo: ContractInfo
 }
 
 type Expiration =
@@ -115,12 +118,20 @@ export const dumpState: Formula<DumpState> = async (env) => {
   const votingModuleAddress = await votingModule(env)
   const proposalModulesResponse = await proposalModules(env)
 
+  const votingModuleInfo = await info({
+    ...env,
+    contractAddress: votingModuleAddress,
+  })
+
   return {
+    // Same as contract query.
     admin: adminResponse,
     config: configResponse,
     version,
     voting_module: votingModuleAddress,
     proposal_modules: proposalModulesResponse,
+    // Extra.
+    votingModuleInfo,
   }
 }
 
