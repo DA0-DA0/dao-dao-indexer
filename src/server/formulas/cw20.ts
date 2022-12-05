@@ -7,8 +7,6 @@ interface TokenInfo {
   total_supply: string
 }
 
-interface MarketingInfo {}
-
 export const balance: Formula<string> = async ({
   contractAddress,
   get,
@@ -26,10 +24,8 @@ export const tokenInfo: Formula<TokenInfo> = async ({
   mint: undefined,
 })
 
-export const marketingInfo: Formula<MarketingInfo> = async ({
-  contractAddress,
-  get,
-}) => await get(contractAddress, 'marketing_info')
+export const marketingInfo: Formula<any> = async ({ contractAddress, get }) =>
+  await get(contractAddress, 'marketing_info')
 
 // Returns undefined if no logo URL found.
 export const logoUrl: Formula<string | undefined> = async ({
