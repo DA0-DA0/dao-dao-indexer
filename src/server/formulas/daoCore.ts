@@ -14,6 +14,17 @@ interface ProposalModule {
   info?: ContractInfo
 }
 
+type Expiration =
+  | {
+      at_height: number
+    }
+  | {
+      at_time: string
+    }
+  | {
+      never: {}
+    }
+
 export const config: Formula = async ({ contractAddress, get }) => {
   const config =
     (await get<Config>(contractAddress, 'config_v2')) ??
@@ -108,3 +119,6 @@ export const dumpState: Formula = async ({ contractAddress, get }) => {
     totalProposalModuleCount,
   }
 }
+
+export const paused: Formula = async ({ contractAddress, get }) =>
+  await get<Expiration | undefined>(contractAddress, 'paused')

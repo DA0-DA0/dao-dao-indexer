@@ -1,11 +1,11 @@
 import { Formula } from '../types'
 import * as common from './common'
-import * as dao from './dao'
+import * as daoCore from './daoCore'
 import * as daoProposalSingle from './daoProposalSingle'
 
 export const formulas = {
   ...common,
-  dao,
+  daoCore,
   daoProposalSingle,
 }
 
