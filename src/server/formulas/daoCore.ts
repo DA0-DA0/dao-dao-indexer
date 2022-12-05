@@ -1,5 +1,5 @@
 import { Formula } from '../types'
-import { ContractInfo, info } from './common'
+import { ContractInfo, info, instantiatedAt } from './common'
 import { balance } from './cw20'
 
 interface Config {
@@ -30,6 +30,7 @@ interface DumpState {
   proposal_modules: ProposalModuleWithInfo[]
   // Extra.
   votingModuleInfo: ContractInfo
+  createdAt: string
 }
 
 type Expiration =
@@ -117,7 +118,8 @@ export const dumpState: Formula<DumpState> = async (env) => {
     configResponse,
     version,
     { address: voting_module, info: votingModuleInfo },
-    proposalModulesResponse,
+    proposal_modules,
+    createdAt,
   ] = await Promise.all([
     admin(env),
     config(env),
@@ -133,6 +135,7 @@ export const dumpState: Formula<DumpState> = async (env) => {
       }
     }),
     proposalModules(env),
+    instantiatedAt(env),
   ])
 
   return {
@@ -141,9 +144,10 @@ export const dumpState: Formula<DumpState> = async (env) => {
     config: configResponse,
     version,
     voting_module,
-    proposal_modules: proposalModulesResponse,
+    proposal_modules,
     // Extra.
     votingModuleInfo,
+    createdAt,
   }
 }
 
