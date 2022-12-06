@@ -31,8 +31,13 @@ export const stakedValue: Formula<string, { address: string }> = async (
 export const totalValue: Formula<string> = async ({ contractAddress, get }) =>
   (await get<string | undefined>(contractAddress, 'balance')) || '0'
 
-export const config: Formula<any> = async ({ contractAddress, get }) =>
-  await get(contractAddress, 'config')
+export const config: Formula<any | undefined> = async ({
+  contractAddress,
+  get,
+}) => await get(contractAddress, 'config')
 
-export const claims: Formula<any[]> = async ({ contractAddress, get }) =>
-  (await get<any[]>(contractAddress, 'claims')) ?? []
+export const claims: Formula<any[] | undefined, { address: string }> = async ({
+  contractAddress,
+  get,
+  args: { address },
+}) => await get<any[]>(contractAddress, 'claims', address)
