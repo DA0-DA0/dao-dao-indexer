@@ -14,6 +14,7 @@ type Proposal = any
 interface ProposalResponse {
   id: number
   proposal: Proposal
+  createdAt?: string
 }
 
 export const config: Formula<any> = async ({ contractAddress, get }) =>
@@ -48,11 +49,13 @@ export const reverseProposals: Formula<
     limit?: string
     startBefore?: string
   }
-> = async ({
-  contractAddress,
-  getMap,
-  args: { limit = '10', startBefore },
-}) => {
+> = async (env) => {
+  const {
+    contractAddress,
+    getMap,
+    args: { limit = '10', startBefore },
+  } = env
+
   const proposals =
     (await getMap<number, Proposal>(contractAddress, 'proposals_v2', {
       numericKeys: true,
@@ -73,17 +76,33 @@ export const reverseProposals: Formula<
     .filter((id) => id < startBeforeNum)
     .slice(0, limitNum)
 
-  return reverseProposalIds.map((id) => ({
+  const proposalsCreatedAt = await Promise.all(
+    reverseProposalIds.map((id) =>
+      proposalCreatedAt({
+        ...env,
+        args: {
+          id: id.toString(),
+        },
+      })
+    )
+  )
+
+  return reverseProposalIds.map((id, index) => ({
     id,
     proposal: proposals[id],
+    createdAt: proposalsCreatedAt[index],
   }))
 }
 
-export const proposal: Formula<ProposalResponse, { id: string }> = async ({
-  contractAddress,
-  get,
-  args: { id },
-}) => {
+export const proposal: Formula<ProposalResponse, { id: string }> = async (
+  env
+) => {
+  const {
+    contractAddress,
+    get,
+    args: { id },
+  } = env
+
   const idNum = Number(id)
   const proposalResponse =
     (await get<Proposal>(contractAddress, 'proposals_v2', idNum)) ??
@@ -94,6 +113,7 @@ export const proposal: Formula<ProposalResponse, { id: string }> = async ({
     proposalResponse && {
       id: idNum,
       proposal: proposalResponse,
+      createdAt: await proposalCreatedAt(env),
     }
   )
 }
