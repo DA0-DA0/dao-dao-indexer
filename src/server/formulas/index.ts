@@ -3,6 +3,7 @@ import * as common from './common'
 import * as cw20 from './cw20'
 import * as cw20Stake from './cw20Stake'
 import * as daoCore from './daoCore'
+import * as daoPreProposeSingle from './daoPreProposeSingle'
 import * as daoProposalSingle from './daoProposalSingle'
 import * as daoVotingCw20Staked from './daoVotingCw20Staked'
 import * as daoVotingCw4 from './daoVotingCw4'
@@ -16,6 +17,7 @@ export const formulas: NestedFormulaMap = {
   cw20,
   cw20Stake,
   daoCore,
+  daoPreProposeSingle,
   daoProposalSingle,
   daoVotingCw20Staked,
   daoVotingCw4,
