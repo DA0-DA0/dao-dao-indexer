@@ -8,7 +8,5 @@ export const config: Formula<any | undefined> = async ({
 export const depositInfo: Formula<
   any | undefined,
   { proposalId: string }
-> = async ({ contractAddress, get, args: { proposalId } }) => {
-  const data = await get(contractAddress, 'deposits', Number(proposalId))
-  return data
-}
+> = async ({ contractAddress, get, args: { proposalId } }) =>
+  await get(contractAddress, 'deposits', Number(proposalId))
