@@ -5,20 +5,20 @@ export const groupContract: Formula<string> = async ({
   get,
 }) => await get(contractAddress, 'group_contract')
 
-export const votingPower: Formula<number, { address: string }> = async ({
+export const votingPower: Formula<string, { address: string }> = async ({
   contractAddress,
   get,
   args: { address },
 }) => {
-  const weight = await get<number | undefined>(
+  const weight = await get<string | undefined>(
     contractAddress,
     'user_weights',
     address
   )
-  return weight || 0
+  return weight || '0'
 }
 
-export const totalPower: Formula<number> = async ({ contractAddress, get }) => {
-  const weight = await get<number | undefined>(contractAddress, 'total_weight')
-  return weight || 0
+export const totalPower: Formula<string> = async ({ contractAddress, get }) => {
+  const weight = await get<string | undefined>(contractAddress, 'total_weight')
+  return weight || '0'
 }

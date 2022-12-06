@@ -231,7 +231,7 @@ export const listSubDaos: Formula<SubDao[]> = async ({
 export const daoUri: Formula<string> = async (env) =>
   (await config(env)).dao_uri ?? ''
 
-export const votingPower: Formula<number, { address: string }> = async (
+export const votingPower: Formula<string, { address: string }> = async (
   env
 ) => {
   const votingModuleAddress = await votingModule(env)
@@ -251,7 +251,7 @@ export const votingPower: Formula<number, { address: string }> = async (
   })
 }
 
-export const totalPower: Formula<number> = async (env) => {
+export const totalPower: Formula<string> = async (env) => {
   const votingModuleAddress = await votingModule(env)
   const votingModuleInfo = await info({
     ...env,
@@ -272,7 +272,7 @@ export const totalPower: Formula<number> = async (env) => {
 // Map contract name to voting power formula.
 const VOTING_POWER_MAP: Record<
   string,
-  Formula<number, { address: string }> | undefined
+  Formula<string, { address: string }> | undefined
 > = {
   'cw4-voting': daoVotingCw4VotingPower,
   'cwd-voting-cw4': daoVotingCw4VotingPower,
@@ -283,7 +283,7 @@ const VOTING_POWER_MAP: Record<
 }
 
 // Map contract name to total power formula.
-const TOTAL_POWER_MAP: Record<string, Formula<number> | undefined> = {
+const TOTAL_POWER_MAP: Record<string, Formula<string> | undefined> = {
   'cw4-voting': daoVotingCw4TotalPower,
   'cwd-voting-cw4': daoVotingCw4TotalPower,
   'dao-voting-cw4': daoVotingCw4TotalPower,
