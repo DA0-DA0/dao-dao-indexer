@@ -70,17 +70,23 @@ export const computeFormula = async (
     return JSON.parse(event.value)
   }
 
-  const getCreatedAt: FormulaDateGetter = async (contractAddress, ...keys) => {
+  // Gets the date of the first set event for the given key.
+  const getDateKeyFirstSet: FormulaDateGetter = async (
+    contractAddress,
+    ...keys
+  ) => {
     const key = dbKeyForKeys(...keys)
+    // Get first set event for this key.
     const event = await Event.findOne({
       where: {
         contractAddress,
         key,
+        delete: false,
         ...blockHeightFilter,
       },
       order: [
-        ['blockHeight', 'DESC'],
-        ['createdAt', 'DESC'],
+        ['blockHeight', 'ASC'],
+        ['createdAt', 'ASC'],
       ],
     })
 
@@ -97,7 +103,7 @@ export const computeFormula = async (
   const env: Env = {
     contractAddress: targetContract.address,
     get,
-    getCreatedAt,
+    getDateKeyFirstSet,
     args,
   }
 

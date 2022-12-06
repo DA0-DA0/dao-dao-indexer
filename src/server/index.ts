@@ -93,7 +93,9 @@ const main = async () => {
     console.log('Listening on 3420...')
 
     // Tell pm2 we're ready.
-    process.send('ready')
+    if (process.send) {
+      process.send('ready')
+    }
   })
 }
 

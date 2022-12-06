@@ -2,9 +2,10 @@
 // Recreate cw-storage-plus key nesting format. Output is a comma-separated list
 // of uint8 values that represents a byte array. See `Event` model for more
 // information.
-export const dbKeyForKeys = (...keys: string[]): string => {
-  const namespaces = keys.slice(0, -1)
-  const key = keys.slice(-1)[0]
+export const dbKeyForKeys = (...keys: (string | number)[]): string => {
+  const bufferKeys = keys.map(keyToBuffer)
+  const namespaces = bufferKeys.slice(0, -1)
+  const key = bufferKeys.slice(-1)[0]
 
   // Namespaces prefixed with 2-byte big endian length.
   const namespacesWithLengthBytes = namespaces.reduce(
@@ -17,12 +18,23 @@ export const dbKeyForKeys = (...keys: string[]): string => {
   for (const namespace of namespaces) {
     buffer.writeUInt16BE(namespace.length, offset)
     offset += 2
-    buffer.write(namespace, offset)
+    namespace.copy(buffer, offset)
     offset += namespace.length
   }
-  buffer.write(key, offset)
+  key.copy(buffer, offset)
 
   return buffer.join(',')
+}
+
+const keyToBuffer = (key: string | number): Buffer => {
+  if (typeof key === 'string') {
+    return Buffer.from(key)
+  }
+
+  // Convert number to 8-byte big endian buffer.
+  const buffer = Buffer.alloc(8)
+  buffer.writeBigUInt64BE(BigInt(key))
+  return buffer
 }
 
 // Convert comma-separated list of uint8 values to a string.

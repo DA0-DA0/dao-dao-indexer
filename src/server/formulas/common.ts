@@ -10,5 +10,6 @@ export const info: Formula<ContractInfo> = async ({ contractAddress, get }) =>
 
 export const instantiatedAt: Formula<string> = async ({
   contractAddress,
-  getCreatedAt,
-}) => (await getCreatedAt(contractAddress, 'contract_info'))?.toISOString()
+  getDateKeyFirstSet,
+}) =>
+  (await getDateKeyFirstSet(contractAddress, 'contract_info'))?.toISOString()
