@@ -62,9 +62,9 @@ export const reverseProposals: Formula<
     })) ??
     {}
 
-  const limitNum = Math.min(0, Math.max(Number(limit), 10))
+  const limitNum = Math.max(0, Math.min(Number(limit), 10))
   const startBeforeNum = startBefore
-    ? Math.min(0, Number(startBefore))
+    ? Math.max(0, Number(startBefore))
     : Infinity
 
   const reverseProposalIds = Object.keys(proposals)
