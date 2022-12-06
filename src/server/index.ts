@@ -3,7 +3,7 @@ import Router from '@koa/router'
 import Koa from 'koa'
 
 import { Contract, closeDb, loadDb } from '../db'
-import { computeFormula } from './compute'
+import { compute, computeRange } from './compute'
 import { getFormula } from './formulas'
 
 const app = new Koa()
@@ -29,17 +29,48 @@ app.use(async (ctx, next) => {
 
 // Main formula computer.
 router.get('/:targetContractAddress/(.+)', async (ctx) => {
-  const { blockHeight: _blockHeight, ...args } = ctx.query
+  const {
+    blockHeight: _blockHeight,
+    blockHeights: _blockHeights,
+    ...args
+  } = ctx.query
   const { targetContractAddress } = ctx.params
   const formulaName = ctx.path.split('/').slice(2)
 
   // If blockHeight passed, validate that it's a number.
   let blockHeight: number | undefined
   if (_blockHeight && typeof _blockHeight === 'string') {
-    blockHeight = parseInt(_blockHeight)
+    blockHeight = parseInt(_blockHeight, 10)
     if (isNaN(blockHeight)) {
       ctx.status = 400
       ctx.body = 'blockHeight must be a number'
+      return
+    }
+    if (blockHeight < 1) {
+      ctx.status = 400
+      ctx.body = 'blockHeight must be at least 1'
+      return
+    }
+  }
+
+  // If blockHeights passed, validate that it's a range of two numbers.
+  let blockHeights: [number, number] | undefined
+  if (_blockHeights && typeof _blockHeights === 'string') {
+    const [start, end] = _blockHeights.split('..').map((s) => parseInt(s, 10))
+    if (isNaN(start) || isNaN(end)) {
+      ctx.status = 400
+      ctx.body = 'blockHeights must be a range of two numbers'
+      return
+    }
+    blockHeights = [start, end]
+    if (blockHeights[0] >= blockHeights[1]) {
+      ctx.status = 400
+      ctx.body = 'the start blockHeight must be less than the end'
+      return
+    }
+    if (blockHeights[0] < 1) {
+      ctx.status = 400
+      ctx.body = 'blockHeights must be at least 1'
       return
     }
   }
@@ -61,20 +92,29 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
   }
 
   try {
-    const computation = await computeFormula(
-      formula,
-      contract,
-      args,
-      blockHeight
-    )
+    let computation
+    // If blockHeights passed, compute range.
+    if (blockHeights) {
+      computation = await computeRange(
+        formula,
+        contract,
+        args,
+        blockHeights[0],
+        blockHeights[1]
+      )
+    } else {
+      // Otherwise compute for single block.
+      computation = await compute(formula, contract, args, blockHeight)
+    }
 
     // If string, encode as JSON.
     if (typeof computation === 'string') {
       ctx.body = JSON.stringify(computation)
-      ctx.set('Content-Type', 'application/json')
     } else {
       ctx.body = computation
     }
+
+    ctx.set('Content-Type', 'application/json')
   } catch (err) {
     ctx.status = 500
     ctx.body = err instanceof Error ? err.message : `${err}`
