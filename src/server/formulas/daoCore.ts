@@ -241,7 +241,7 @@ export const votingPower: Formula<number, { address: string }> = async (
   })
 
   const votingPowerFormula =
-    VOTING_POWER_MAP['crates.io:' + votingModuleInfo.contract]
+    VOTING_POWER_MAP[votingModuleInfo.contract.replace('crates.io:', '')]
   if (!votingPowerFormula) {
     throw new Error(`Unexpected voting module: ${votingModuleInfo.contract}`)
   }
@@ -259,7 +259,7 @@ export const totalPower: Formula<number> = async (env) => {
   })
 
   const totalPowerFormula =
-    TOTAL_POWER_MAP['crates.io:' + votingModuleInfo.contract]
+    TOTAL_POWER_MAP[votingModuleInfo.contract.replace('crates.io:', '')]
   if (!totalPowerFormula) {
     throw new Error(`Unexpected voting module: ${votingModuleInfo.contract}`)
   }
