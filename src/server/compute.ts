@@ -39,8 +39,8 @@ export const computeFormula = async (
       ],
     })
 
-    // If no event found, return undefined.
-    if (!event) {
+    // If no event found or key was deleted, return undefined.
+    if (!event || event.delete) {
       return undefined
     }
 
@@ -73,9 +73,12 @@ export const computeFormula = async (
       return undefined
     }
 
+    // Remove delete events.
+    const undeletedEvents = events.filter((event) => !event.delete)
+
     // If events found, create map.
     const map: Record<string | number, any> = {}
-    for (const event of events) {
+    for (const event of undeletedEvents) {
       // Remove prefix from key and convert to expected format.
       const mapKey = numericKeys
         ? dbKeyToNumber(event.key.slice(keyPrefix.length))

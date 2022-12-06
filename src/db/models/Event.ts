@@ -20,6 +20,9 @@ import { Contract } from './Contract'
       unique: true,
       fields: ['blockHeight', 'contractAddress', 'key'],
     },
+    {
+      fields: ['contractAddress', 'key'],
+    },
   ],
 })
 export class Event extends Model {
