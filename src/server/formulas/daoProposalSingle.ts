@@ -16,6 +16,10 @@ interface ProposalResponse {
   proposal: Proposal
 }
 
+export const config: Formula<any> = async ({ contractAddress, get }) =>
+  (await get(contractAddress, 'config_v2')) ??
+  (await get(contractAddress, 'config'))
+
 export const creationPolicy: Formula<CreationPolicy> = async ({
   contractAddress,
   get,
