@@ -8,11 +8,13 @@ export type FormulaDateGetter = (
 ) => Promise<Date | undefined>
 
 // Formulas compute a value for the state at one block height.
-export type Formula<R> = (env: Env) => Promise<R>
+export type Formula<R, Args extends Record<string, any> = {}> = (
+  env: Env<Args>
+) => Promise<R>
 
-export interface Env {
+export interface Env<Args extends Record<string, any> = {}> {
   contractAddress: string
   get: FormulaGetter
   getCreatedAt: FormulaDateGetter
-  args?: Record<string, any>
+  args?: Args
 }

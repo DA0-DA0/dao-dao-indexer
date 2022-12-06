@@ -7,7 +7,7 @@ interface TokenInfo {
   total_supply: string
 }
 
-export const balance: Formula<string> = async ({
+export const balance: Formula<string, { address: string }> = async ({
   contractAddress,
   get,
   args: { address },

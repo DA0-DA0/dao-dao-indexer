@@ -1,6 +1,14 @@
 import { Formula } from '../types'
 import { ContractInfo, info, instantiatedAt } from './common'
 import { balance } from './cw20'
+import {
+  totalPower as daoVotingCw20StakedTotalPower,
+  votingPower as daoVotingCw20StakedVotingPower,
+} from './daoVotingCw20Staked'
+import {
+  totalPower as daoVotingCw4TotalPower,
+  votingPower as daoVotingCw4VotingPower,
+} from './daoVotingCw4'
 
 interface Config {
   automatically_add_cw20s: boolean
@@ -167,7 +175,7 @@ export const adminNomination: Formula<string | undefined> = async ({
 export const votingModule: Formula<string> = async ({ contractAddress, get }) =>
   await get<string>(contractAddress, 'voting_module')
 
-export const item: Formula<string | false> = async ({
+export const item: Formula<string | false, { key: string }> = async ({
   contractAddress,
   get,
   args: { key },
@@ -222,3 +230,64 @@ export const listSubDaos: Formula<SubDao[]> = async ({
 
 export const daoUri: Formula<string> = async (env) =>
   (await config(env)).dao_uri ?? ''
+
+export const votingPower: Formula<number, { address: string }> = async (
+  env
+) => {
+  const votingModuleAddress = await votingModule(env)
+  const votingModuleInfo = await info({
+    ...env,
+    contractAddress: votingModuleAddress,
+  })
+
+  const votingPowerFormula =
+    VOTING_POWER_MAP['crates.io:' + votingModuleInfo.contract]
+  if (!votingPowerFormula) {
+    throw new Error(`Unexpected voting module: ${votingModuleInfo.contract}`)
+  }
+  return await votingPowerFormula({
+    ...env,
+    contractAddress: votingModuleAddress,
+  })
+}
+
+export const totalPower: Formula<number> = async (env) => {
+  const votingModuleAddress = await votingModule(env)
+  const votingModuleInfo = await info({
+    ...env,
+    contractAddress: votingModuleAddress,
+  })
+
+  const totalPowerFormula =
+    TOTAL_POWER_MAP['crates.io:' + votingModuleInfo.contract]
+  if (!totalPowerFormula) {
+    throw new Error(`Unexpected voting module: ${votingModuleInfo.contract}`)
+  }
+  return await totalPowerFormula({
+    ...env,
+    contractAddress: votingModuleAddress,
+  })
+}
+
+// Map contract name to voting power formula.
+const VOTING_POWER_MAP: Record<
+  string,
+  Formula<number, { address: string }> | undefined
+> = {
+  'cw4-voting': daoVotingCw4VotingPower,
+  'cwd-voting-cw4': daoVotingCw4VotingPower,
+  'dao-voting-cw4': daoVotingCw4VotingPower,
+  'cw20-staked-balance-voting': daoVotingCw20StakedVotingPower,
+  'cwd-voting-cw20-staked': daoVotingCw20StakedVotingPower,
+  'dao-voting-cw20-staked': daoVotingCw20StakedVotingPower,
+}
+
+// Map contract name to total power formula.
+const TOTAL_POWER_MAP: Record<string, Formula<number> | undefined> = {
+  'cw4-voting': daoVotingCw4TotalPower,
+  'cwd-voting-cw4': daoVotingCw4TotalPower,
+  'dao-voting-cw4': daoVotingCw4TotalPower,
+  'cw20-staked-balance-voting': daoVotingCw20StakedTotalPower,
+  'cwd-voting-cw20-staked': daoVotingCw20StakedTotalPower,
+  'dao-voting-cw20-staked': daoVotingCw20StakedTotalPower,
+}
