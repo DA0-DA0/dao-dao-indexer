@@ -18,11 +18,17 @@ export const balance: Formula<string, { address: string }> = async ({
 export const tokenInfo: Formula<TokenInfo> = async ({
   contractAddress,
   get,
-}) => ({
-  ...(await get(contractAddress, 'token_info')),
-  // Not present in normal TokenInfoResponse.
-  mint: undefined,
-})
+}) => {
+  const tokenInfoResponse = await get<TokenInfo>(contractAddress, 'token_info')
+
+  return (
+    tokenInfoResponse && {
+      ...tokenInfoResponse,
+      // Not present in normal TokenInfoResponse.
+      mint: undefined,
+    }
+  )
+}
 
 export const marketingInfo: Formula<any> = async ({ contractAddress, get }) =>
   await get(contractAddress, 'marketing_info')

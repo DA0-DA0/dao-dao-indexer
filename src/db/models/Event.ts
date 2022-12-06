@@ -26,18 +26,18 @@ export class Event extends Model {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
-  contractAddress: string
+  contractAddress!: string
 
   @BelongsTo(() => Contract)
-  contract: Contract
+  contract!: Contract
 
   @AllowNull(false)
   @Column
-  blockHeight: bigint
+  blockHeight!: bigint
 
   @AllowNull(false)
   @Column
-  blockTimeUnixMicro: bigint
+  blockTimeUnixMicro!: bigint
 
   // Key is stored as a comma separated list of uint8 values that represents a
   // byte array. The byte array datatype doesn't allow for prefix queries, so we
@@ -46,14 +46,14 @@ export class Event extends Model {
   // prefixing so we can efficiently query for all values in a map.
   @AllowNull(false)
   @Column(DataType.TEXT)
-  key: string
+  key!: string
 
   // JSON encoded value.
   @AllowNull
   @Column(DataType.TEXT)
-  value: string
+  value!: string
 
   @AllowNull(false)
   @Column
-  delete: boolean
+  delete!: boolean
 }

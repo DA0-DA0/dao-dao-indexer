@@ -14,7 +14,7 @@ export const stakingContract: Formula<string> = async ({
 export const votingPower: Formula<string, { address: string }> = async (
   env
 ) => {
-  const stakingContractAddress = await stakingContract(env)
+  const stakingContractAddress = (await stakingContract(env)) ?? ''
   const power = await stakedBalance({
     ...env,
     contractAddress: stakingContractAddress,
@@ -24,7 +24,7 @@ export const votingPower: Formula<string, { address: string }> = async (
 }
 
 export const totalPower: Formula<string> = async (env) => {
-  const stakingContractAddress = await stakingContract(env)
+  const stakingContractAddress = (await stakingContract(env)) ?? ''
   const power = await totalStaked({
     ...env,
     contractAddress: stakingContractAddress,

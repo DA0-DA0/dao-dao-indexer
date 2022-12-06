@@ -44,5 +44,5 @@ export const loadDb = async () => {
 }
 
 export const closeDb = async () => {
-  await sequelize.close()
+  await sequelize?.close()
 }

@@ -26,19 +26,19 @@ interface ProposalModule {
 }
 
 interface ProposalModuleWithInfo extends ProposalModule {
-  info: ContractInfo
+  info?: ContractInfo
 }
 
 interface DumpState {
   // Same as contract query.
-  admin: string
-  config: Config
-  version: ContractInfo
-  voting_module: string
-  proposal_modules: ProposalModuleWithInfo[]
+  admin?: string
+  config?: Config
+  version?: ContractInfo
+  voting_module?: string
+  proposal_modules?: ProposalModuleWithInfo[]
   // Extra.
-  votingModuleInfo: ContractInfo
-  createdAt: string
+  votingModuleInfo?: ContractInfo
+  createdAt?: string
 }
 
 type Expiration =
@@ -54,7 +54,7 @@ type Expiration =
 
 interface Cw20Balance {
   addr: string
-  balance: string
+  balance?: string
 }
 
 interface SubDao {
@@ -69,12 +69,12 @@ export const config: Formula<Config> = async ({ contractAddress, get }) =>
 export const proposalModules: Formula<ProposalModuleWithInfo[]> = async (
   env
 ) => {
-  const { contractAddress, get } = env
+  const { contractAddress, getMap } = env
 
   const proposalModules: ProposalModule[] = []
 
   // V2.
-  const proposalModuleMap = await get<Record<string, ProposalModule>>(
+  const proposalModuleMap = await getMap<string, ProposalModule>(
     contractAddress,
     'proposal_modules_v2'
   )
@@ -85,7 +85,7 @@ export const proposalModules: Formula<ProposalModuleWithInfo[]> = async (
   // V1.
   else {
     const proposalModuleAddresses = Object.keys(
-      await get<Record<string, unknown>>(contractAddress, 'proposal_modules')
+      (await getMap<string, string>(contractAddress, 'proposal_modules')) ?? {}
     )
     proposalModules.push(
       ...proposalModuleAddresses.map((address) => ({
@@ -116,7 +116,7 @@ export const proposalModules: Formula<ProposalModuleWithInfo[]> = async (
 export const activeProposalModules: Formula<ProposalModuleWithInfo[]> = async (
   env
 ) => {
-  const modules = await proposalModules(env)
+  const modules = (await proposalModules(env)) ?? []
   return modules.filter((module) => module.status === 'Enabled')
 }
 
@@ -135,7 +135,7 @@ export const dumpState: Formula<DumpState> = async (env) => {
     votingModule(env).then(async (contractAddress) => {
       const infoResponse = await info({
         ...env,
-        contractAddress,
+        contractAddress: contractAddress ?? '',
       })
       return {
         address: contractAddress,
@@ -175,25 +175,32 @@ export const adminNomination: Formula<string | undefined> = async ({
 export const votingModule: Formula<string> = async ({ contractAddress, get }) =>
   await get<string>(contractAddress, 'voting_module')
 
-export const item: Formula<string | false, { key: string }> = async ({
+export const item: Formula<string, { key: string }> = async ({
   contractAddress,
   get,
   args: { key },
-}) => await get<Record<string, string>>(contractAddress, 'items')?.[key]
+}) => await get<string | undefined>(contractAddress, 'items', key)
 
-export const listItems: Formula<string[]> = async ({ contractAddress, get }) =>
-  Object.keys(
-    (await get<Record<string, string>>(contractAddress, 'items')) ?? {}
-  )
+export const listItems: Formula<string[]> = async ({
+  contractAddress,
+  getMap,
+}) =>
+  Object.keys((await getMap<string, string>(contractAddress, 'items')) ?? {})
 
-export const cw20List: Formula<string[]> = async ({ contractAddress, get }) =>
-  Object.keys((await get<Record<string, any>>(contractAddress, 'cw20s')) ?? {})
+export const cw20List: Formula<string[]> = async ({
+  contractAddress,
+  getMap,
+}) =>
+  Object.keys((await getMap<string, string>(contractAddress, 'cw20s')) ?? {})
 
-export const cw721List: Formula<string[]> = async ({ contractAddress, get }) =>
-  Object.keys((await get<Record<string, any>>(contractAddress, 'cw721s')) ?? {})
+export const cw721List: Formula<string[]> = async ({
+  contractAddress,
+  getMap,
+}) =>
+  Object.keys((await getMap<string, string>(contractAddress, 'cw721s')) ?? {})
 
 export const cw20Balances: Formula<Cw20Balance[]> = async (env) => {
-  const cw20Addresses = await cw20List(env)
+  const cw20Addresses = (await cw20List(env)) ?? []
 
   return await Promise.all(
     cw20Addresses.map(async (addr): Promise<Cw20Balance> => {
@@ -213,14 +220,12 @@ export const cw20Balances: Formula<Cw20Balance[]> = async (env) => {
 
 export const listSubDaos: Formula<SubDao[]> = async ({
   contractAddress,
-  get,
+  getMap,
 }) => {
-  // V2. V1 doesn't have sub DAOs, so use empty map.
+  // V2. V1 doesn't have sub DAOs; use empty map if undefined.
   const subDaoMap =
-    (await get<Record<string, string | undefined>>(
-      contractAddress,
-      'sub_daos'
-    )) ?? {}
+    (await getMap<string, string | undefined>(contractAddress, 'sub_daos')) ??
+    {}
 
   return Object.entries(subDaoMap).map(([addr, charter]) => ({
     addr,
@@ -229,21 +234,22 @@ export const listSubDaos: Formula<SubDao[]> = async ({
 }
 
 export const daoUri: Formula<string> = async (env) =>
-  (await config(env)).dao_uri ?? ''
+  (await config(env))?.dao_uri ?? ''
 
 export const votingPower: Formula<string, { address: string }> = async (
   env
 ) => {
-  const votingModuleAddress = await votingModule(env)
+  const votingModuleAddress = (await votingModule(env)) ?? ''
   const votingModuleInfo = await info({
     ...env,
     contractAddress: votingModuleAddress,
   })
 
   const votingPowerFormula =
+    votingModuleInfo &&
     VOTING_POWER_MAP[votingModuleInfo.contract.replace('crates.io:', '')]
   if (!votingPowerFormula) {
-    throw new Error(`Unexpected voting module: ${votingModuleInfo.contract}`)
+    throw new Error(`Unexpected voting module: ${votingModuleInfo?.contract}`)
   }
   return await votingPowerFormula({
     ...env,
@@ -252,16 +258,17 @@ export const votingPower: Formula<string, { address: string }> = async (
 }
 
 export const totalPower: Formula<string> = async (env) => {
-  const votingModuleAddress = await votingModule(env)
+  const votingModuleAddress = (await votingModule(env)) ?? ''
   const votingModuleInfo = await info({
     ...env,
     contractAddress: votingModuleAddress,
   })
 
   const totalPowerFormula =
+    votingModuleInfo &&
     TOTAL_POWER_MAP[votingModuleInfo.contract.replace('crates.io:', '')]
   if (!totalPowerFormula) {
-    throw new Error(`Unexpected voting module: ${votingModuleInfo.contract}`)
+    throw new Error(`Unexpected voting module: ${votingModuleInfo?.contract}`)
   }
   return await totalPowerFormula({
     ...env,

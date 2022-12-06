@@ -1,6 +1,6 @@
 import { Formula } from '../types'
 
-export const groupContract: Formula<string> = async ({
+export const groupContract: Formula<string | undefined> = async ({
   contractAddress,
   get,
 }) => await get(contractAddress, 'group_contract')

@@ -43,3 +43,11 @@ export const dbKeyToString = (key: string): string => {
     'utf-8'
   )
 }
+
+// Convert comma-separated list of uint8 values in big endian format to a
+// number.
+export const dbKeyToNumber = (key: string): number =>
+  parseInt(
+    Buffer.from(key.split(',').map((c) => parseInt(c, 10))).toString('hex'),
+    16
+  )

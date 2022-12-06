@@ -15,9 +15,9 @@ import { Event } from './Event'
 export class Contract extends Model {
   @PrimaryKey
   @Column
-  address: string
+  address!: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT({ unsigned: true }))
-  codeId: bigint
+  codeId!: bigint
 }
