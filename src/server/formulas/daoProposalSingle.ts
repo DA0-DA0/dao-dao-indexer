@@ -56,3 +56,22 @@ export const reverseProposals: Formula<ProposalResponse[]> = async ({
     proposal,
   }))
 }
+
+export const proposal: Formula<ProposalResponse, { id: string }> = async ({
+  contractAddress,
+  get,
+  args: { id },
+}) => {
+  const idNum = Number(id)
+  const proposalResponse =
+    (await get<Proposal>(contractAddress, 'proposals_v2', idNum)) ??
+    (await get<Proposal>(contractAddress, 'proposals', idNum)) ??
+    undefined
+
+  return (
+    proposalResponse && {
+      id: idNum,
+      proposal: proposalResponse,
+    }
+  )
+}
