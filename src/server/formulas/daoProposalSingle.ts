@@ -51,7 +51,7 @@ export const reverseProposals: Formula<
 > = async ({
   contractAddress,
   getMap,
-  args: { limit = '30', startBefore },
+  args: { limit = '10', startBefore },
 }) => {
   const proposals =
     (await getMap<number, Proposal>(contractAddress, 'proposals_v2', {
@@ -62,11 +62,16 @@ export const reverseProposals: Formula<
     })) ??
     {}
 
+  const limitNum = Math.min(0, Math.max(Number(limit), 10))
+  const startBeforeNum = startBefore
+    ? Math.min(0, Number(startBefore))
+    : Infinity
+
   const reverseProposalIds = Object.keys(proposals)
     .map(Number)
     .sort((a, b) => b - a)
-    .filter((id) => !startBefore || id < Number(startBefore))
-    .slice(0, Number(limit))
+    .filter((id) => id < startBeforeNum)
+    .slice(0, limitNum)
 
   return reverseProposalIds.map((id) => ({
     id,
