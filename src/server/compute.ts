@@ -93,9 +93,11 @@ export const computeRange = async (
       return await _getDateKeyFirstSet(contractAddress, ...keys)
     }
 
+    const value = await formula(env)
+
     return {
       nextChangedBlockHeight,
-      value: await formula(env),
+      value,
     }
   }
 
@@ -117,7 +119,7 @@ export const computeRange = async (
     // recently stored result, or the last block.
     if (
       !lastResult ||
-      lastResult.value !== result.value ||
+      result.value !== lastResult.value ||
       nextChangedBlockHeight === blockHeightEnd
     ) {
       results.push({
