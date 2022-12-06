@@ -22,7 +22,7 @@ export type FormulaDateGetter = (
 export type Formula<
   R,
   Args extends Record<string, string> | undefined = undefined
-> = (env: Env<Args>) => Promise<R | undefined>
+> = (env: Env<Args>) => Promise<R>
 
 export type Env<Args extends Record<string, string> | undefined = undefined> = {
   contractAddress: string

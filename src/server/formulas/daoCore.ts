@@ -62,7 +62,10 @@ interface SubDao {
   charter?: string | null
 }
 
-export const config: Formula<Config> = async ({ contractAddress, get }) =>
+export const config: Formula<Config | undefined> = async ({
+  contractAddress,
+  get,
+}) =>
   (await get(contractAddress, 'config_v2')) ??
   (await get(contractAddress, 'config'))
 
@@ -164,18 +167,22 @@ export const paused: Formula<Expiration | false> = async ({
   get,
 }) => (await get<Expiration | undefined>(contractAddress, 'paused')) ?? false
 
-export const admin: Formula<string> = async ({ contractAddress, get }) =>
-  await get<string>(contractAddress, 'admin')
+export const admin: Formula<string | undefined> = async ({
+  contractAddress,
+  get,
+}) => await get<string>(contractAddress, 'admin')
 
 export const adminNomination: Formula<string | undefined> = async ({
   contractAddress,
   get,
 }) => await get<string>(contractAddress, 'nominated_admin')
 
-export const votingModule: Formula<string> = async ({ contractAddress, get }) =>
-  await get<string>(contractAddress, 'voting_module')
+export const votingModule: Formula<string | undefined> = async ({
+  contractAddress,
+  get,
+}) => await get<string>(contractAddress, 'voting_module')
 
-export const item: Formula<string, { key: string }> = async ({
+export const item: Formula<string | undefined, { key: string }> = async ({
   contractAddress,
   get,
   args: { key },

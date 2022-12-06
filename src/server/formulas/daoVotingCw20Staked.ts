@@ -1,12 +1,12 @@
 import { Formula } from '../types'
 import { stakedBalance, totalStaked } from './cw20Stake'
 
-export const tokenContract: Formula<string> = async ({
+export const tokenContract: Formula<string | undefined> = async ({
   contractAddress,
   get,
 }) => await get(contractAddress, 'token')
 
-export const stakingContract: Formula<string> = async ({
+export const stakingContract: Formula<string | undefined> = async ({
   contractAddress,
   get,
 }) => await get(contractAddress, 'staking_contract')

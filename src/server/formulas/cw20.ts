@@ -15,7 +15,7 @@ export const balance: Formula<string, { address: string }> = async ({
   // If no balance is found, return 0.
   (await get<string>(contractAddress, 'balance', address)) ?? '0'
 
-export const tokenInfo: Formula<TokenInfo> = async ({
+export const tokenInfo: Formula<TokenInfo | undefined> = async ({
   contractAddress,
   get,
 }) => {

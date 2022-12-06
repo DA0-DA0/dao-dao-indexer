@@ -4,19 +4,35 @@ export const stakedBalance: Formula<string, { address: string }> = async ({
   contractAddress,
   get,
   args: { address },
-}) => {
-  const staked = await get<string | undefined>(
+}) =>
+  (await get<string | undefined>(
     contractAddress,
     'staked_balances',
     address
-  )
-  return staked || '0'
+  )) || '0'
+
+export const totalStaked: Formula<string> = async ({ contractAddress, get }) =>
+  (await get<string | undefined>(contractAddress, 'total_staked')) || '0'
+
+export const stakedValue: Formula<string, { address: string }> = async (
+  env
+) => {
+  const balance = Number(await totalValue(env))
+  const staked = Number(await stakedBalance(env))
+  const total = Number(await totalStaked(env))
+
+  if (balance === 0 || staked === 0 || total === 0) {
+    return '0'
+  }
+
+  return total === 0 ? '0' : Math.floor((staked * balance) / total).toString()
 }
 
-export const totalStaked: Formula<string> = async ({
-  contractAddress,
-  get,
-}) => {
-  const total = await get<string | undefined>(contractAddress, 'total_staked')
-  return total || '0'
-}
+export const totalValue: Formula<string> = async ({ contractAddress, get }) =>
+  (await get<string | undefined>(contractAddress, 'balance')) || '0'
+
+export const config: Formula<any> = async ({ contractAddress, get }) =>
+  await get(contractAddress, 'config')
+
+export const claims: Formula<any[]> = async ({ contractAddress, get }) =>
+  (await get<any[]>(contractAddress, 'claims')) ?? []

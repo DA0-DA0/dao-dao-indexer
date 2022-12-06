@@ -5,10 +5,12 @@ export interface ContractInfo {
   version: string
 }
 
-export const info: Formula<ContractInfo> = async ({ contractAddress, get }) =>
-  await get(contractAddress, 'contract_info')
+export const info: Formula<ContractInfo | undefined> = async ({
+  contractAddress,
+  get,
+}) => await get(contractAddress, 'contract_info')
 
-export const instantiatedAt: Formula<string> = async ({
+export const instantiatedAt: Formula<string | undefined> = async ({
   contractAddress,
   getDateKeyFirstSet,
 }) =>
