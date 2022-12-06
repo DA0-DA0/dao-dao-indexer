@@ -42,9 +42,16 @@ export const proposalCreatedAt: Formula<string, { id: string }> = async ({
     (await getDateKeyFirstSet(contractAddress, 'proposals', Number(id)))
   )?.toISOString()
 
-export const reverseProposals: Formula<ProposalResponse[]> = async ({
+export const reverseProposals: Formula<
+  ProposalResponse[],
+  {
+    limit?: string
+    startBefore?: string
+  }
+> = async ({
   contractAddress,
   getMap,
+  args: { limit = '30', startBefore = '0' },
 }) => {
   const proposals =
     (await getMap<number, Proposal>(contractAddress, 'proposals_v2', {
@@ -55,9 +62,15 @@ export const reverseProposals: Formula<ProposalResponse[]> = async ({
     })) ??
     {}
 
-  return Object.entries(proposals).map(([id, proposal]) => ({
-    id: Number(id),
-    proposal,
+  const reverseProposalIds = Object.keys(proposals)
+    .map(Number)
+    .sort((a, b) => b - a)
+    .filter((id) => id < Number(startBefore))
+    .slice(0, Number(limit))
+
+  return reverseProposalIds.map((id) => ({
+    id,
+    proposal: proposals[id],
   }))
 }
 
