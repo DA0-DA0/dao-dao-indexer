@@ -59,9 +59,9 @@ export const config: Formula<Config | undefined> = async ({
   (await get(contractAddress, 'config_v2')) ??
   (await get(contractAddress, 'config'))
 
-export const proposalModules: Formula<ProposalModuleWithInfo[]> = async (
-  env
-) => {
+export const proposalModules: Formula<
+  ProposalModuleWithInfo[] | undefined
+> = async (env) => {
   const { contractAddress, getMap } = env
 
   const proposalModules: ProposalModule[] = []
@@ -91,6 +91,11 @@ export const proposalModules: Formula<ProposalModuleWithInfo[]> = async (
     )
   }
 
+  // If no proposal modules, this must not be a DAO core contract.
+  if (!proposalModules.length) {
+    return undefined
+  }
+
   return await Promise.all(
     proposalModules.map(async (data): Promise<ProposalModuleWithInfo> => {
       const contractInfo = await info({
@@ -106,14 +111,14 @@ export const proposalModules: Formula<ProposalModuleWithInfo[]> = async (
   )
 }
 
-export const activeProposalModules: Formula<ProposalModuleWithInfo[]> = async (
-  env
-) => {
-  const modules = (await proposalModules(env)) ?? []
-  return modules.filter((module) => module.status === 'Enabled')
+export const activeProposalModules: Formula<
+  ProposalModuleWithInfo[] | undefined
+> = async (env) => {
+  const modules = await proposalModules(env)
+  return modules?.filter((module) => module.status === 'Enabled')
 }
 
-export const dumpState: Formula<DumpState> = async (env) => {
+export const dumpState: Formula<DumpState | undefined> = async (env) => {
   const [
     adminResponse,
     configResponse,
@@ -138,6 +143,11 @@ export const dumpState: Formula<DumpState> = async (env) => {
     proposalModules(env),
     instantiatedAt(env),
   ])
+
+  // If no config, this must not be a DAO core contract.
+  if (!configResponse) {
+    return undefined
+  }
 
   return {
     // Same as contract query.
@@ -181,20 +191,17 @@ export const item: Formula<string | undefined, { key: string }> = async ({
 export const listItems: Formula<string[]> = async ({
   contractAddress,
   getMap,
-}) =>
-  Object.keys((await getMap<string, string>(contractAddress, 'items')) ?? {})
+}) => Object.keys((await getMap<string>(contractAddress, 'items')) ?? {})
 
 export const cw20List: Formula<string[]> = async ({
   contractAddress,
   getMap,
-}) =>
-  Object.keys((await getMap<string, string>(contractAddress, 'cw20s')) ?? {})
+}) => Object.keys((await getMap<string>(contractAddress, 'cw20s')) ?? {})
 
 export const cw721List: Formula<string[]> = async ({
   contractAddress,
   getMap,
-}) =>
-  Object.keys((await getMap<string, string>(contractAddress, 'cw721s')) ?? {})
+}) => Object.keys((await getMap<string>(contractAddress, 'cw721s')) ?? {})
 
 export const cw20Balances: Formula<Cw20Balance[]> = async (env) => {
   const cw20Addresses = (await cw20List(env)) ?? []

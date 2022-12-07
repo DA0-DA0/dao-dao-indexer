@@ -53,66 +53,107 @@ export const proposal: Formula<
 export const creationPolicy: Formula = async ({ contractAddress, get }) =>
   await get(contractAddress, 'creation_policy')
 
-const listProposalsMaker =
-  (
-    sortFn: (a: number, b: number) => number
-  ): Formula<
-    ProposalResponse[],
-    {
-      limit?: string
-      startBefore?: string
-    }
-  > =>
-  async (env) => {
-    const {
-      contractAddress,
-      getMap,
-      args: { limit, startBefore },
-    } = env
-
-    const proposals =
-      (await getMap<number, Proposal>(contractAddress, 'proposals_v2', {
-        numericKeys: true,
-      })) ??
-      (await getMap<number, Proposal>(contractAddress, 'proposals', {
-        numericKeys: true,
-      })) ??
-      {}
-
-    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
-    const startBeforeNum = startBefore
-      ? Math.max(0, Number(startBefore))
-      : Infinity
-
-    const proposalIds = Object.keys(proposals)
-      .map(Number)
-      // Sort according to sortFn argument.
-      .sort(sortFn)
-      .filter((id) => id < startBeforeNum)
-      .slice(0, limitNum)
-
-    const proposalsCreatedAt = await Promise.all(
-      proposalIds.map((id) =>
-        proposalCreatedAt({
-          ...env,
-          args: {
-            id: id.toString(),
-          },
-        })
-      )
-    )
-
-    return proposalIds.map((id, index) => ({
-      id,
-      proposal: proposals[id],
-      createdAt: proposalsCreatedAt[index],
-    }))
+export const listProposals: Formula<
+  ProposalResponse[],
+  {
+    limit?: string
+    startAfter?: string
   }
+> = async (env) => {
+  const {
+    contractAddress,
+    getMap,
+    args: { limit, startAfter },
+  } = env
 
-// Ascending by proposal ID.
-export const listProposals = listProposalsMaker((a, b) => a - b)
-// Descending by proposal ID.
-export const reverseProposals = listProposalsMaker((a, b) => b - a)
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+  const startAfterNum = startAfter ? Math.max(0, Number(startAfter)) : -Infinity
+
+  const proposals =
+    (await getMap<number, Proposal>(contractAddress, 'proposals_v2', {
+      numericKeys: true,
+    })) ??
+    (await getMap<number, Proposal>(contractAddress, 'proposals', {
+      numericKeys: true,
+    })) ??
+    {}
+
+  const proposalIds = Object.keys(proposals)
+    .map(Number)
+    // Ascending by proposal ID.
+    .sort((a, b) => a - b)
+    .filter((id) => id > startAfterNum)
+    .slice(0, limitNum)
+
+  const proposalsCreatedAt = await Promise.all(
+    proposalIds.map((id) =>
+      proposalCreatedAt({
+        ...env,
+        args: {
+          id: id.toString(),
+        },
+      })
+    )
+  )
+
+  return proposalIds.map((id, index) => ({
+    id,
+    proposal: proposals[id],
+    createdAt: proposalsCreatedAt[index],
+  }))
+}
+
+export const reverseProposals: Formula<
+  ProposalResponse[],
+  {
+    limit?: string
+    startBefore?: string
+  }
+> = async (env) => {
+  const {
+    contractAddress,
+    getMap,
+    args: { limit, startBefore },
+  } = env
+
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+  const startBeforeNum = startBefore
+    ? Math.max(0, Number(startBefore))
+    : Infinity
+
+  const proposals =
+    (await getMap<number, Proposal>(contractAddress, 'proposals_v2', {
+      numericKeys: true,
+    })) ??
+    (await getMap<number, Proposal>(contractAddress, 'proposals', {
+      numericKeys: true,
+    })) ??
+    {}
+
+  const proposalIds = Object.keys(proposals)
+    .map(Number)
+    // Descending by proposal ID.
+    .sort((a, b) => b - a)
+    .filter((id) => id < startBeforeNum)
+    .slice(0, limitNum)
+
+  const proposalsCreatedAt = await Promise.all(
+    proposalIds.map((id) =>
+      proposalCreatedAt({
+        ...env,
+        args: {
+          id: id.toString(),
+        },
+      })
+    )
+  )
+
+  return proposalIds.map((id, index) => ({
+    id,
+    proposal: proposals[id],
+    createdAt: proposalsCreatedAt[index],
+  }))
+}
 
 export const proposalCount: Formula<number> = async ({
   contractAddress,
@@ -162,28 +203,25 @@ export const listVotes: Formula<
   {
     proposalId: string
     limit?: string
-    startBefore?: string
+    startAfter?: string
   }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    getDateKeyModified,
-    args: { proposalId, limit, startBefore },
-  } = env
+> = async ({
+  contractAddress,
+  getMap,
+  getDateKeyModified,
+  args: { proposalId, limit, startAfter },
+}) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const ballots =
     (await getMap<string, Ballot>(contractAddress, [
       'ballots',
       Number(proposalId),
     ])) ?? {}
-
-  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
-
   const voters = Object.keys(ballots)
     // Ascending by voter address.
     .sort((a, b) => a.localeCompare(b))
-    .filter((voter) => !startBefore || voter.localeCompare(startBefore) < 0)
+    .filter((voter) => !startAfter || voter.localeCompare(startAfter) > 0)
     .slice(0, limitNum)
 
   const votesCastAt = await Promise.all(

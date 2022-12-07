@@ -25,6 +25,9 @@ export const claims: Formula<any[] | undefined, { address: string }> = async ({
   args: { address },
 }) => await get<any[]>(contractAddress, 'claims', address)
 
+export const config: Formula = async ({ contractAddress, get }) =>
+  await get(contractAddress, 'config')
+
 export const listStakers: Formula<
   StakerBalance[],
   {

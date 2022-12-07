@@ -96,8 +96,8 @@ export const allOperators: Formula<
   }))
 }
 
-export const numTokens: Formula<string> = async ({ contractAddress, get }) =>
-  (await get<string>(contractAddress, 'num_tokens')) || '0'
+export const numTokens: Formula<number> = async ({ contractAddress, get }) =>
+  (await get<number>(contractAddress, 'num_tokens')) ?? 0
 
 export const tokens: Formula<
   string[],

@@ -35,6 +35,7 @@ export const pendingProposals: Formula<any[] | undefined> = async ({
       .map(([, proposal]) => proposal)
   )
 }
+
 export const reversePendingProposals: Formula<any[] | undefined> = async ({
   contractAddress,
   getMap,
