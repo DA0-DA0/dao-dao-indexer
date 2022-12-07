@@ -15,7 +15,7 @@ interface Ballot {
 
 interface VoteInfo extends Ballot {
   voter: string
-  votedAt?: Date
+  votedAt?: string
 }
 
 export const config: Formula = async ({ contractAddress, get }) =>
@@ -184,12 +184,14 @@ export const vote: Formula<
     return undefined
   }
 
-  const votedAt = await getDateKeyModified(
-    contractAddress,
-    'ballots',
-    Number(proposalId),
-    voter
-  )
+  const votedAt = (
+    await getDateKeyModified(
+      contractAddress,
+      'ballots',
+      Number(proposalId),
+      voter
+    )
+  )?.toISOString()
 
   return {
     voter,
@@ -233,7 +235,7 @@ export const listVotes: Formula<
   return voters.map((voter, index) => ({
     voter,
     ...ballots[voter],
-    votedAt: votesCastAt[index],
+    votedAt: votesCastAt[index]?.toISOString(),
   }))
 }
 
