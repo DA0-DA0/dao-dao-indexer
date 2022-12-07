@@ -64,7 +64,7 @@ const listProposalsMaker =
     const {
       contractAddress,
       getMap,
-      args: { limit = '30', startBefore },
+      args: { limit, startBefore },
     } = env
 
     const proposals =
@@ -72,7 +72,7 @@ const listProposalsMaker =
         numericKeys: true,
       })) ?? {}
 
-    const limitNum = Math.max(0, Math.min(Number(limit), 30))
+    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
     const startBeforeNum = startBefore
       ? Math.max(0, Number(startBefore))
       : Infinity
@@ -162,7 +162,7 @@ export const listVotes: Formula<
     contractAddress,
     getMap,
     getDateKeyModified,
-    args: { proposalId, limit = '30', startBefore },
+    args: { proposalId, limit, startBefore },
   } = env
 
   const ballots =
@@ -171,7 +171,7 @@ export const listVotes: Formula<
       Number(proposalId),
     ])) ?? {}
 
-  const limitNum = Math.max(0, Math.min(Number(limit), 30))
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const voters = Object.keys(ballots)
     // Ascending by voter address.

@@ -78,19 +78,12 @@ export const allNftInfo: Formula<
 export const allOperators: Formula<
   Approval[],
   { owner: string; limit?: string; startAfter?: string }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    args: { owner, limit = '30', startAfter },
-  } = env
+> = async ({ contractAddress, getMap, args: { owner, limit, startAfter } }) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const operatorsMap =
     (await getMap<string, Expiration>(contractAddress, ['operators', owner])) ??
     {}
-
-  const limitNum = Math.max(0, Math.min(Number(limit), 30))
-
   const approvals = Object.entries(operatorsMap)
     // Ascending by spender address.
     .sort(([a], [b]) => a.localeCompare(b))
@@ -109,18 +102,11 @@ export const numTokens: Formula<string> = async ({ contractAddress, get }) =>
 export const tokens: Formula<
   string[],
   { owner: string; limit?: string; startAfter?: string }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    args: { owner, limit = '30', startAfter },
-  } = env
+> = async ({ contractAddress, getMap, args: { owner, limit, startAfter } }) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const tokensMap =
     (await getMap<string>(contractAddress, ['tokens__owner', owner])) ?? {}
-
-  const limitNum = Math.max(0, Math.min(Number(limit), 30))
-
   const tokens = Object.keys(tokensMap)
     // Ascending by token ID.
     .sort(([a], [b]) => a.localeCompare(b))
@@ -133,17 +119,10 @@ export const tokens: Formula<
 export const allTokens: Formula<
   string[],
   { limit?: string; startAfter?: string }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    args: { limit = '30', startAfter },
-  } = env
+> = async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const tokensMap = (await getMap<string>(contractAddress, 'tokens')) ?? {}
-
-  const limitNum = Math.max(0, Math.min(Number(limit), 30))
-
   const tokens = Object.keys(tokensMap)
     // Ascending by token ID.
     .sort(([a], [b]) => a.localeCompare(b))

@@ -30,18 +30,15 @@ export const stakedNfts: Formula<
     limit?: string
     startAfter?: string
   }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    args: { address, limit = '30', startAfter },
-  } = env
+> = async ({
+  contractAddress,
+  getMap,
+  args: { address, limit, startAfter },
+}) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const stakedNfts =
     (await getMap<string, any>(contractAddress, ['snpw', address])) ?? {}
-
-  const limitNum = Math.max(0, Math.min(Number(limit), 30))
-
   const tokenIds = Object.keys(stakedNfts)
     // Ascending by token ID.
     .sort((a, b) => a.localeCompare(b))

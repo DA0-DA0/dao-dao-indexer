@@ -53,22 +53,36 @@ export const listStakers: Formula<
     limit?: string
     startAfter?: string
   }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    args: { limit = '30', startAfter },
-  } = env
+> = async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const stakers =
     (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
-
-  const limitNum = Math.max(0, Math.min(Number(limit), 30))
-
   const stakes = Object.entries(stakers)
     // Ascending by address.
     .sort(([a], [b]) => a.localeCompare(b))
     .filter(([address]) => !startAfter || address.localeCompare(startAfter) > 0)
+    .slice(0, limitNum)
+
+  return stakes.map(([address, balance]) => ({
+    address,
+    balance,
+  }))
+}
+
+export const topStakers: Formula<
+  StakerBalance[],
+  {
+    limit?: string
+  }
+> = async ({ contractAddress, getMap, args: { limit } }) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+
+  const stakers =
+    (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
+  const stakes = Object.entries(stakers)
+    // Descending by balance.
+    .sort(([, a], [, b]) => Number(b) - Number(a))
     .slice(0, limitNum)
 
   return stakes.map(([address, balance]) => ({

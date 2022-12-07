@@ -1,4 +1,5 @@
 import { Formula } from '../types'
+import { Expiration } from './types'
 
 interface TokenInfo {
   name: string
@@ -16,7 +17,7 @@ interface TokenInfoResponse extends TokenInfo {
 
 interface AllowanceResponse {
   allowance: string
-  expires: any
+  expires: Expiration
 }
 
 interface OwnerAllowanceInfo extends AllowanceResponse {
@@ -25,6 +26,11 @@ interface OwnerAllowanceInfo extends AllowanceResponse {
 
 interface SpenderAllowanceInfo extends AllowanceResponse {
   owner: string
+}
+
+interface AccountBalance {
+  address: string
+  balance: string
 }
 
 export const balance: Formula<string, { address: string }> = async ({
@@ -60,7 +66,15 @@ export const allowance: Formula<
   AllowanceResponse | undefined,
   { owner: string; spender: string }
 > = async ({ contractAddress, get, args: { owner, spender } }) =>
-  await get<AllowanceResponse>(contractAddress, 'allowance', owner, spender)
+  (await get<AllowanceResponse>(
+    contractAddress,
+    'allowance',
+    owner,
+    spender
+  )) ?? {
+    allowance: '0',
+    expires: { never: {} },
+  }
 
 export const ownerAllowances: Formula<
   OwnerAllowanceInfo[],
@@ -69,21 +83,14 @@ export const ownerAllowances: Formula<
     limit?: string
     startAfter?: string
   }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    args: { owner, limit = '30', startAfter },
-  } = env
+> = async ({ contractAddress, getMap, args: { owner, limit, startAfter } }) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const allowancesMap =
     (await getMap<string, AllowanceResponse>(contractAddress, [
       'allowance',
       owner,
     ])) ?? {}
-
-  const limitNum = Math.max(0, Math.min(Number(limit), 30))
-
   const allowances = Object.entries(allowancesMap)
     // Ascending by spender address.
     .sort(([a], [b]) => a.localeCompare(b))
@@ -103,21 +110,18 @@ export const spenderAllowances: Formula<
     limit?: string
     startAfter?: string
   }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    args: { spender, limit = '30', startAfter },
-  } = env
+> = async ({
+  contractAddress,
+  getMap,
+  args: { spender, limit, startAfter },
+}) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const allowancesMap =
     (await getMap<string, AllowanceResponse>(contractAddress, [
       'allowance_spender',
       spender,
     ])) ?? {}
-
-  const limitNum = Math.max(0, Math.min(Number(limit), 30))
-
   const allowances = Object.entries(allowancesMap)
     // Ascending by owner address.
     .sort(([a], [b]) => a.localeCompare(b))
@@ -130,8 +134,48 @@ export const spenderAllowances: Formula<
   }))
 }
 
+export const allAccounts: Formula<
+  string[],
+  {
+    limit?: string
+    startAfter?: string
+  }
+> = async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+
+  const balancesMap = (await getMap<string>(contractAddress, 'balance')) ?? {}
+  const accounts = Object.keys(balancesMap)
+    // Ascending by address.
+    .sort((a, b) => a.localeCompare(b))
+    .filter((address) => !startAfter || address.localeCompare(startAfter) > 0)
+    .slice(0, limitNum)
+
+  return accounts
+}
+
+export const topAccountBalances: Formula<
+  AccountBalance[],
+  {
+    limit?: string
+  }
+> = async ({ contractAddress, getMap, args: { limit } }) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+
+  const balancesMap =
+    (await getMap<string, string>(contractAddress, 'balance')) ?? {}
+  const accounts = Object.entries(balancesMap)
+    // Descending by balance.
+    .sort(([, a], [, b]) => Number(b) - Number(a))
+    .slice(0, limitNum)
+
+  return accounts.map(([address, balance]) => ({
+    address,
+    balance,
+  }))
+}
+
 export const marketingInfo: Formula = async ({ contractAddress, get }) =>
-  await get(contractAddress, 'marketing_info')
+  (await get(contractAddress, 'marketing_info')) ?? {}
 
 // Returns undefined if no logo URL found.
 export const logoUrl: Formula<string | undefined> = async ({

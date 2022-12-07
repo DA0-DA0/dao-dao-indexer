@@ -2,14 +2,14 @@ import { Formula } from '../types'
 
 interface Member {
   addr: string
-  weight: string
+  weight: number
 }
 
-export const member: Formula<string, { address: string }> = async ({
+export const member: Formula<number, { address: string }> = async ({
   contractAddress,
   get,
   args: { address },
-}) => (await get<string>(contractAddress, 'members', address)) || '0'
+}) => (await get<number>(contractAddress, 'members', address)) ?? 0
 
 export const listMembers: Formula<
   Member[],
@@ -17,12 +17,11 @@ export const listMembers: Formula<
     limit?: string
     startAfter?: string
   }
-> = async ({ contractAddress, getMap, args: { limit = '30', startAfter } }) => {
+> = async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
+  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+
   const membersMap =
-    (await getMap<string, string>(contractAddress, 'members')) ?? {}
-
-  const limitNum = Math.max(0, Math.min(Number(limit), 30))
-
+    (await getMap<string, number>(contractAddress, 'members')) ?? {}
   const members = Object.entries(membersMap)
     // Ascending by address.
     .sort(([a], [b]) => a.localeCompare(b))
@@ -35,8 +34,8 @@ export const listMembers: Formula<
   }))
 }
 
-export const totalWeight: Formula<string> = async ({ contractAddress, get }) =>
-  (await get<string>(contractAddress, 'total')) || '0'
+export const totalWeight: Formula<number> = async ({ contractAddress, get }) =>
+  (await get<number>(contractAddress, 'total')) ?? 0
 
 export const admin: Formula<string | undefined> = async ({
   contractAddress,
