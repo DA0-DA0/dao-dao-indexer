@@ -30,17 +30,17 @@ export const computeRange = async (
   const computeForBlockInRange = async (
     blockHeight: number
   ): Promise<{
-    nextChangedBlockHeight: number
+    nextPotentialBlockHeight: number | undefined
     value: any
   }> => {
-    // Store the next block height that may change the result. Start at the
-    // highest block we care about. Each getter below will update this value if
-    // it finds an earlier event (after the current blockHeight we're computing
-    // for) that may change the result.
-    let nextChangedBlockHeight = blockHeightEnd
+    // Store the next block height that has the potential to change the result.
+    // Each getter below will update this value if it finds a key change event
+    // after the current blockHeight we're computing. If it remains undefined,
+    // then we know that the result will not change because no inputs changed.
+    let nextPotentialBlockHeight: number | undefined
 
     // Find the next event that may change the result for the given key filter
-    // and update accordingly.
+    // and update accordingly. Ignore any events after the end block height.
     const updateNextChangedBlockHeight = async (
       contractAddress: string,
       keyFilter: string | object
@@ -49,18 +49,20 @@ export const computeRange = async (
         where: {
           contractAddress,
           key: keyFilter,
+          // After the current block height and at or before the end.
           blockHeight: {
             [Op.gt]: blockHeight,
+            [Op.lte]: blockHeightEnd,
           },
         },
         order: [['blockHeight', 'ASC']],
       })
 
       if (nextEvent) {
-        nextChangedBlockHeight = Math.min(
-          nextChangedBlockHeight,
-          Number(nextEvent.blockHeight)
-        )
+        nextPotentialBlockHeight =
+          nextPotentialBlockHeight === undefined
+            ? Number(nextEvent.blockHeight)
+            : Math.min(nextPotentialBlockHeight, Number(nextEvent.blockHeight))
       }
     }
 
@@ -96,7 +98,7 @@ export const computeRange = async (
     const value = await formula(env)
 
     return {
-      nextChangedBlockHeight,
+      nextPotentialBlockHeight,
       value,
     }
   }
@@ -110,30 +112,26 @@ export const computeRange = async (
   // will return with its value and the next block height that may change the
   // result. We can then start at that block height and compute again. We repeat
   // this until we reach the end block height.
-  let nextChangedBlockHeight = blockHeightStart
-  while (nextChangedBlockHeight <= blockHeightEnd) {
-    const result = await computeForBlockInRange(nextChangedBlockHeight)
+  let nextPotentialBlockHeight = blockHeightStart
+  while (nextPotentialBlockHeight <= blockHeightEnd) {
+    const result = await computeForBlockInRange(nextPotentialBlockHeight)
 
-    const lastResult = results[results.length - 1]
-    // Only store result if it's the first result, different from the most
-    // recently stored result, or the last block.
-    if (
-      !lastResult ||
-      result.value !== lastResult.value ||
-      nextChangedBlockHeight === blockHeightEnd
-    ) {
+    const previousResult = results[results.length - 1]
+    // Only store result if it's the first result or different from the most
+    // recently stored result.
+    if (!previousResult || result.value !== previousResult.value) {
       results.push({
-        blockHeight: nextChangedBlockHeight,
+        blockHeight: nextPotentialBlockHeight,
         value: result.value,
       })
     }
 
-    // If we have reached the end, break.
-    if (nextChangedBlockHeight === blockHeightEnd) {
+    // If no future block height may change the result, stop.
+    if (result.nextPotentialBlockHeight === undefined) {
       break
     }
 
-    nextChangedBlockHeight = result.nextChangedBlockHeight
+    nextPotentialBlockHeight = result.nextPotentialBlockHeight
   }
 
   return results
