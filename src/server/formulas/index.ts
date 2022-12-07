@@ -1,6 +1,8 @@
 import { Formula } from '../types'
 import * as common from './common'
 import * as cw20 from './cw20'
+import * as cw4Group from './cw4Group'
+import * as cw721 from './cw721'
 import * as daoCore from './daoCore'
 import * as cwTokenSwap from './external/cwTokenSwap'
 import * as daoPreProposeApprovalSingle from './prePropose/daoPreProposeApprovalSingle'
@@ -24,6 +26,8 @@ export const formulas: NestedFormulaMap = {
   ...common,
   cw20,
   cw20Stake,
+  cw4Group,
+  cw721,
   cwTokenSwap,
   daoCore,
   daoPreProposeApprovalSingle,

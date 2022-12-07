@@ -1,6 +1,7 @@
 import { Formula } from '../types'
 import { ContractInfo, info, instantiatedAt } from './common'
 import { balance } from './cw20'
+import { Expiration } from './types'
 import {
   totalPower as daoVotingCw20StakedTotalPower,
   votingPower as daoVotingCw20StakedVotingPower,
@@ -40,17 +41,6 @@ interface DumpState {
   votingModuleInfo?: ContractInfo
   createdAt?: string
 }
-
-type Expiration =
-  | {
-      at_height: number
-    }
-  | {
-      at_time: string
-    }
-  | {
-      never: {}
-    }
 
 interface Cw20Balance {
   addr: string

@@ -34,13 +34,13 @@ export const stakedNfts: Formula<
   const {
     contractAddress,
     getMap,
-    args: { address, limit = '10', startAfter },
+    args: { address, limit = '30', startAfter },
   } = env
 
   const stakedNfts =
     (await getMap<string, any>(contractAddress, ['snpw', address])) ?? {}
 
-  const limitNum = Math.max(0, Math.min(Number(limit), 10))
+  const limitNum = Math.max(0, Math.min(Number(limit), 30))
 
   const tokenIds = Object.keys(stakedNfts)
     // Ascending by token ID.

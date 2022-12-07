@@ -57,13 +57,13 @@ export const listStakers: Formula<
   const {
     contractAddress,
     getMap,
-    args: { limit = '10', startAfter },
+    args: { limit = '30', startAfter },
   } = env
 
   const stakers =
     (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
 
-  const limitNum = Math.max(0, Math.min(Number(limit), 10))
+  const limitNum = Math.max(0, Math.min(Number(limit), 30))
 
   const stakes = Object.entries(stakers)
     // Ascending by address.
