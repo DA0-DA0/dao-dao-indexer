@@ -1,4 +1,14 @@
-import { Formula } from '../types'
+import { Formula } from '../../types'
+
+export const proposalModule: Formula<string | undefined> = async ({
+  contractAddress,
+  get,
+}) => await get(contractAddress, 'proposal_module')
+
+export const dao: Formula<string | undefined> = async ({
+  contractAddress,
+  get,
+}) => await get(contractAddress, 'dao')
 
 export const config: Formula<any | undefined> = async ({
   contractAddress,

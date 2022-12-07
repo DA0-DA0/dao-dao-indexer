@@ -30,7 +30,7 @@ export const tokenInfo: Formula<TokenInfo | undefined> = async ({
   )
 }
 
-export const marketingInfo: Formula<any> = async ({ contractAddress, get }) =>
+export const marketingInfo: Formula = async ({ contractAddress, get }) =>
   await get(contractAddress, 'marketing_info')
 
 // Returns undefined if no logo URL found.

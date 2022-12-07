@@ -8,7 +8,7 @@ export type FormulaMapGetter = <
   V = any
 >(
   contractAddress: string,
-  name: string,
+  name: string | (string | number)[],
   options?: {
     numericKeys?: boolean
   }
@@ -20,7 +20,7 @@ export type FormulaDateGetter = (
 
 // Formulas compute a value for the state at one block height.
 export type Formula<
-  R,
+  R = any,
   Args extends Record<string, string> | undefined = undefined
 > = (env: Env<Args>) => Promise<R>
 
@@ -28,6 +28,7 @@ export type Env<Args extends Record<string, string> | undefined = undefined> = {
   contractAddress: string
   get: FormulaGetter
   getMap: FormulaMapGetter
+  getDateKeyModified: FormulaDateGetter
   getDateKeyFirstSet: FormulaDateGetter
   args: Args extends undefined ? Record<string, any> : Args
 } & (Args extends undefined ? Record<string, any> : { args: Args })

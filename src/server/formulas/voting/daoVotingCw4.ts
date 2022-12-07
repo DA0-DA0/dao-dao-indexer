@@ -1,9 +1,4 @@
-import { Formula } from '../types'
-
-export const groupContract: Formula<string | undefined> = async ({
-  contractAddress,
-  get,
-}) => await get(contractAddress, 'group_contract')
+import { Formula } from '../../types'
 
 export const votingPower: Formula<string, { address: string }> = async ({
   contractAddress,
@@ -22,3 +17,13 @@ export const totalPower: Formula<string> = async ({ contractAddress, get }) => {
   const weight = await get<string | undefined>(contractAddress, 'total_weight')
   return weight || '0'
 }
+
+export const groupContract: Formula<string | undefined> = async ({
+  contractAddress,
+  get,
+}) => await get(contractAddress, 'group_contract')
+
+export const dao: Formula<string | undefined> = async ({
+  contractAddress,
+  get,
+}) => await get(contractAddress, 'dao_address')

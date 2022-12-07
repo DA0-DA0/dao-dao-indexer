@@ -11,7 +11,7 @@ import {
 import { dbKeyForKeys, dbKeyToNumber, dbKeyToString } from './utils'
 
 export const compute = async (
-  formula: Formula<any>,
+  formula: Formula,
   targetContract: Contract,
   args: Record<string, any>,
   blockHeight?: number
@@ -21,7 +21,7 @@ export const compute = async (
 }
 
 export const computeRange = async (
-  formula: Formula<any>,
+  formula: Formula,
   targetContract: Contract,
   args: Record<string, any>,
   blockHeightStart: number,
@@ -79,12 +79,23 @@ export const computeRange = async (
 
     const _getMap = env.getMap
     env.getMap = async (contractAddress, name, options) => {
-      const keyPrefix = dbKeyForKeys(name, '') + ','
+      const keyPrefix =
+        (Array.isArray(name)
+          ? dbKeyForKeys(...name, '')
+          : dbKeyForKeys(name, '')) + ','
       await updateNextChangedBlockHeight(contractAddress, {
         [Op.like]: `${keyPrefix}%`,
       })
 
       return await _getMap(contractAddress, name, options)
+    }
+
+    const _getDateKeyModified = env.getDateKeyModified
+    env.getDateKeyModified = async (contractAddress, ...keys) => {
+      const key = dbKeyForKeys(...keys)
+      await updateNextChangedBlockHeight(contractAddress, key)
+
+      return await _getDateKeyModified(contractAddress, ...keys)
     }
 
     const _getDateKeyFirstSet = env.getDateKeyFirstSet
@@ -176,7 +187,10 @@ const getEnv = (
     name,
     { numericKeys = false } = {}
   ) => {
-    const keyPrefix = dbKeyForKeys(name, '') + ','
+    const keyPrefix =
+      (Array.isArray(name)
+        ? dbKeyForKeys(...name, '')
+        : dbKeyForKeys(name, '')) + ','
     const events = await Event.findAll({
       where: {
         contractAddress,
@@ -211,6 +225,32 @@ const getEnv = (
     return map
   }
 
+  // Gets the date of the most recent event for the given key.
+  const getDateKeyModified: FormulaDateGetter = async (
+    contractAddress,
+    ...keys
+  ) => {
+    const key = dbKeyForKeys(...keys)
+    // Get most recent event for this key.
+    const event = await Event.findOne({
+      where: {
+        contractAddress,
+        key,
+        ...blockHeightFilter,
+      },
+      order: [['blockHeight', 'DESC']],
+    })
+
+    if (!event) {
+      return undefined
+    }
+
+    // Convert block time to date.
+    const date = new Date(0)
+    date.setUTCSeconds(Number(event.blockTimeUnixMicro) / 1e6)
+    return date
+  }
+
   // Gets the date of the first set event for the given key.
   const getDateKeyFirstSet: FormulaDateGetter = async (
     contractAddress,
@@ -242,6 +282,7 @@ const getEnv = (
     contractAddress,
     get,
     getMap,
+    getDateKeyModified,
     getDateKeyFirstSet,
     args,
   }

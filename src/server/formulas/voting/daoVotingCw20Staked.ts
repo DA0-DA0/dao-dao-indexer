@@ -1,5 +1,5 @@
-import { Formula } from '../types'
-import { stakedBalance, totalStaked } from './cw20Stake'
+import { Formula } from '../../types'
+import { stakedBalance, totalStaked } from '../staking/cw20Stake'
 
 export const tokenContract: Formula<string | undefined> = async ({
   contractAddress,
@@ -32,3 +32,13 @@ export const totalPower: Formula<string> = async (env) => {
 
   return power || '0'
 }
+
+export const dao: Formula<string | undefined> = async ({
+  contractAddress,
+  get,
+}) => await get(contractAddress, 'dao')
+
+// TODO: isActive
+
+export const activeThreshold: Formula = async ({ contractAddress, get }) =>
+  await get(contractAddress, 'active_threshold')

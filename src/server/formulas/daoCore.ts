@@ -4,11 +4,11 @@ import { balance } from './cw20'
 import {
   totalPower as daoVotingCw20StakedTotalPower,
   votingPower as daoVotingCw20StakedVotingPower,
-} from './daoVotingCw20Staked'
+} from './voting/daoVotingCw20Staked'
 import {
   totalPower as daoVotingCw4TotalPower,
   votingPower as daoVotingCw4VotingPower,
-} from './daoVotingCw4'
+} from './voting/daoVotingCw4'
 
 interface Config {
   automatically_add_cw20s: boolean
