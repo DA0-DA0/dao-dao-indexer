@@ -165,7 +165,7 @@ export const vote: Formula<
 }) => {
   const ballot = await get<Ballot>(
     contractAddress,
-    'ballot',
+    'ballots',
     Number(proposalId),
     voter
   )
