@@ -16,7 +16,11 @@ app.use(cors())
 app.use(async (ctx, next) => {
   await next()
   const rt = ctx.response.get('X-Response-Time')
-  console.log(`${ctx.method} ${ctx.url} - ${ctx.status} - ${rt}`)
+  console.log(
+    `[${new Date().toISOString()}] ${ctx.method} ${ctx.url} - ${
+      ctx.status
+    } - ${rt}`
+  )
 })
 
 // Add X-Response-Time header.
