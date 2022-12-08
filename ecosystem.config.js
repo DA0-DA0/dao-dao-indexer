@@ -7,7 +7,7 @@ module.exports = {
     {
       name: 'server',
       script: 'dist/server/index.js',
-      instances: 1,
+      instances: 2,
       wait_ready: true,
       listen_timeout: 10000,
     },
