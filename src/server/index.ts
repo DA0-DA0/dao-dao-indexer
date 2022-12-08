@@ -41,23 +41,24 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
   const formulaName = ctx.path.split('/').slice(2)
 
   // If blockHeight passed, validate that it's a number.
-  let blockHeight: number | undefined
+  let blockHeight: bigint | undefined
   if (_blockHeight && typeof _blockHeight === 'string') {
-    blockHeight = parseInt(_blockHeight, 10)
-    if (isNaN(blockHeight)) {
+    const blockHeightInt = parseInt(_blockHeight, 10)
+    if (isNaN(blockHeightInt)) {
       ctx.status = 400
       ctx.body = 'blockHeight must be a number'
       return
     }
-    if (blockHeight < 1) {
+    if (blockHeightInt < 1) {
       ctx.status = 400
       ctx.body = 'blockHeight must be at least 1'
       return
     }
+    blockHeight = BigInt(blockHeightInt)
   }
 
   // If blockHeights passed, validate that it's a range of two numbers.
-  let blockHeights: [number, number] | undefined
+  let blockHeights: [bigint, bigint] | undefined
   if (_blockHeights && typeof _blockHeights === 'string') {
     const [start, end] = _blockHeights.split('..').map((s) => parseInt(s, 10))
     if (isNaN(start) || isNaN(end)) {
@@ -65,7 +66,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       ctx.body = 'blockHeights must be a range of two numbers'
       return
     }
-    blockHeights = [start, end]
+    blockHeights = [BigInt(start), BigInt(end)]
     if (blockHeights[0] >= blockHeights[1]) {
       ctx.status = 400
       ctx.body = 'the start blockHeight must be less than the end'
@@ -98,13 +99,21 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
     let computation
     // If blockHeights passed, compute range.
     if (blockHeights) {
-      computation = await computeRange(
-        formula,
-        contract,
-        args,
-        blockHeights[0],
-        blockHeights[1]
-      )
+      // TODO: Write docs explaining why this will return a blockHeight below
+      // the range.
+      computation = (
+        await computeRange(
+          formula,
+          contract,
+          args,
+          blockHeights[0],
+          blockHeights[1]
+        )
+      ).map(({ blockHeight, blockTimeUnixMicro, ...data }) => ({
+        ...data,
+        blockHeight: Number(blockHeight),
+        blockTimeUnixMicro: Number(blockTimeUnixMicro),
+      }))
     } else {
       // Otherwise compute for single block.
       computation = await compute(formula, contract, args, blockHeight)

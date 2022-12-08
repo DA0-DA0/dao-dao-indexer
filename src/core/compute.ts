@@ -7,6 +7,7 @@ import {
   FormulaDateGetter,
   FormulaGetter,
   FormulaMapGetter,
+  RangeComputation,
 } from './types'
 import { dbKeyForKeys, dbKeyToNumber, dbKeyToString } from './utils'
 
@@ -14,7 +15,7 @@ export const compute = async (
   formula: Formula,
   targetContract: Contract,
   args: Record<string, any>,
-  blockHeight?: number
+  blockHeight?: bigint
 ): Promise<any> => {
   const env = getEnv(targetContract.address, args, blockHeight)
   return await formula(env)
@@ -24,20 +25,22 @@ export const computeRange = async (
   formula: Formula,
   targetContract: Contract,
   args: Record<string, any>,
-  blockHeightStart: number,
-  blockHeightEnd: number
-): Promise<any[]> => {
+  blockHeightStart: bigint,
+  blockHeightEnd: bigint
+): Promise<RangeComputation[]> => {
   const computeForBlockInRange = async (
-    blockHeight: number
+    blockHeight: bigint
   ): Promise<{
-    nextPotentialBlockHeight: number | undefined
+    nextPotentialBlockHeight: bigint | undefined
+    latestBlockHeight: bigint | undefined
+    latestBlockTimeUnixMicro: bigint | undefined
     value: any
   }> => {
     // Store the next block height that has the potential to change the result.
     // Each getter below will update this value if it finds a key change event
     // after the current blockHeight we're computing. If it remains undefined,
     // then we know that the result will not change because no inputs changed.
-    let nextPotentialBlockHeight: number | undefined
+    let nextPotentialBlockHeight: bigint | undefined
 
     // Find the next event that may change the result for the given key filter
     // and update accordingly. Ignore any events after the end block height.
@@ -58,66 +61,64 @@ export const computeRange = async (
         order: [['blockHeight', 'ASC']],
       })
 
-      if (nextEvent) {
-        nextPotentialBlockHeight =
-          nextPotentialBlockHeight === undefined
-            ? Number(nextEvent.blockHeight)
-            : Math.min(nextPotentialBlockHeight, Number(nextEvent.blockHeight))
+      // If we found an event, and it's earlier than the current next potential
+      // block height (or if we haven't found one yet), update.
+      if (
+        nextEvent &&
+        (nextPotentialBlockHeight === undefined ||
+          nextEvent.blockHeight < nextPotentialBlockHeight)
+      ) {
+        nextPotentialBlockHeight = nextEvent.blockHeight
       }
     }
 
-    // Wrap env getters so that they update the next changed block height.
-    const env = getEnv(targetContract.address, args, blockHeight)
+    // Store the latest block height and time that we've seen for all keys
+    // accessed. This is the earliest this computation could have been made.
+    let latestBlockHeight: bigint | undefined
+    let latestBlockTimeUnixMicro: bigint | undefined
 
-    const _get = env.get
-    env.get = async (contractAddress, ...keys) => {
-      const key = dbKeyForKeys(...keys)
-      await updateNextChangedBlockHeight(contractAddress, key)
+    const updateLatestBlock = async (events: Event[]) => {
+      if (events.length === 0) {
+        return
+      }
 
-      return await _get<any>(contractAddress, ...keys)
+      const latestEvent = events.sort((a, b) =>
+        Number(b.blockHeight - a.blockHeight)
+      )[0]
+
+      // If latest is unset, or if we found a later block height, update.
+      if (
+        latestBlockHeight === undefined ||
+        latestEvent.blockHeight > latestBlockHeight
+      ) {
+        latestBlockHeight = latestEvent.blockHeight
+        latestBlockTimeUnixMicro = latestEvent.blockTimeUnixMicro
+      }
     }
 
-    const _getMap = env.getMap
-    env.getMap = async (contractAddress, name, options) => {
-      const keyPrefix =
-        (Array.isArray(name)
-          ? dbKeyForKeys(...name, '')
-          : dbKeyForKeys(name, '')) + ','
-      await updateNextChangedBlockHeight(contractAddress, {
-        [Op.like]: `${keyPrefix}%`,
-      })
-
-      return await _getMap(contractAddress, name, options)
-    }
-
-    const _getDateKeyModified = env.getDateKeyModified
-    env.getDateKeyModified = async (contractAddress, ...keys) => {
-      const key = dbKeyForKeys(...keys)
-      await updateNextChangedBlockHeight(contractAddress, key)
-
-      return await _getDateKeyModified(contractAddress, ...keys)
-    }
-
-    const _getDateKeyFirstSet = env.getDateKeyFirstSet
-    env.getDateKeyFirstSet = async (contractAddress, ...keys) => {
-      const key = dbKeyForKeys(...keys)
-      await updateNextChangedBlockHeight(contractAddress, key)
-
-      return await _getDateKeyFirstSet(contractAddress, ...keys)
-    }
+    // Add hook to env so that the getters update the latest block info and next
+    // changed block height.
+    const env = getEnv(
+      targetContract.address,
+      args,
+      blockHeight,
+      async (events, keyFilter) => {
+        await updateLatestBlock(events)
+        await updateNextChangedBlockHeight(targetContract.address, keyFilter)
+      }
+    )
 
     const value = await formula(env)
 
     return {
       nextPotentialBlockHeight,
+      latestBlockHeight,
+      latestBlockTimeUnixMicro,
       value,
     }
   }
 
-  const results: {
-    blockHeight: number
-    value: any
-  }[] = []
+  const results: RangeComputation[] = []
 
   // Start at the beginning block height and compute the value. Each computation
   // will return with its value and the next block height that may change the
@@ -132,7 +133,8 @@ export const computeRange = async (
     // recently stored result.
     if (!previousResult || result.value !== previousResult.value) {
       results.push({
-        blockHeight: nextPotentialBlockHeight,
+        blockHeight: result.latestBlockHeight ?? BigInt(-1),
+        blockTimeUnixMicro: result.latestBlockTimeUnixMicro ?? BigInt(-1),
         value: result.value,
       })
     }
@@ -152,7 +154,11 @@ export const computeRange = async (
 const getEnv = (
   contractAddress: string,
   args: Record<string, any>,
-  blockHeight?: number
+  blockHeight?: bigint,
+  onFetchEvents?: (
+    events: Event[],
+    keyFilter: string | object
+  ) => void | Promise<void>
 ): Env<{}> => {
   // Most recent event at or below this block height.
   const blockHeightFilter = blockHeight
@@ -174,6 +180,9 @@ const getEnv = (
       order: [['blockHeight', 'DESC']],
     })
 
+    // Call hook.
+    await onFetchEvents?.(event ? [event] : [], key)
+
     // If no event found or key was deleted, return undefined.
     if (!event || event.delete) {
       return undefined
@@ -191,17 +200,21 @@ const getEnv = (
       (Array.isArray(name)
         ? dbKeyForKeys(...name, '')
         : dbKeyForKeys(name, '')) + ','
+    const keyFilter = {
+      [Op.like]: `${keyPrefix}%`,
+    }
     const events = await Event.findAll({
       where: {
         contractAddress,
-        key: {
-          [Op.like]: `${keyPrefix}%`,
-        },
+        key: keyFilter,
         // Most recent event at or below this block height.
         ...blockHeightFilter,
       },
       order: [['blockHeight', 'DESC']],
     })
+
+    // Call hook.
+    await onFetchEvents?.(events, keyFilter)
 
     // If no events found, return empty map.
     if (!events.length) {
@@ -241,6 +254,9 @@ const getEnv = (
       order: [['blockHeight', 'DESC']],
     })
 
+    // Call hook.
+    await onFetchEvents?.(event ? [event] : [], key)
+
     if (!event) {
       return undefined
     }
@@ -267,6 +283,9 @@ const getEnv = (
       },
       order: [['blockHeight', 'ASC']],
     })
+
+    // Call hook.
+    await onFetchEvents?.(event ? [event] : [], key)
 
     if (!event) {
       return undefined
