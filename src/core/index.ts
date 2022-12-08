@@ -1,2 +1,3 @@
 export * from './compute'
-export * from './getFormula'
+export * from './preCompute'
+export * from './utils'

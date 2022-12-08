@@ -18,4 +18,10 @@ export interface Config {
     | 'pool'
     | 'schema'
   >
+  preCompute: {
+    contractAddresses?: string[]
+    codeIds?: number[]
+    formulaPrefixes?: string[]
+    formulas?: string[]
+  }[]
 }

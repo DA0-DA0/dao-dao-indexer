@@ -2,12 +2,12 @@ import { Op } from 'sequelize'
 
 import { Contract, Event } from '../db/models'
 import {
+  ComputationOutput,
   Env,
   Formula,
   FormulaDateGetter,
   FormulaGetter,
   FormulaMapGetter,
-  RangeComputation,
 } from './types'
 import { dbKeyForKeys, dbKeyToNumber, dbKeyToString } from './utils'
 
@@ -16,9 +16,45 @@ export const compute = async (
   targetContract: Contract,
   args: Record<string, any>,
   blockHeight?: bigint
-): Promise<any> => {
-  const env = getEnv(targetContract.address, args, blockHeight)
-  return await formula(env)
+): Promise<ComputationOutput> => {
+  // Store the latest block height and time that we've seen for all keys
+  // accessed. This is the earliest this computation could have been made.
+  let latestBlockHeight: bigint | undefined
+  let latestBlockTimeUnixMicro: bigint | undefined
+
+  const updateLatestBlock = async (events: Event[]) => {
+    if (events.length === 0) {
+      return
+    }
+
+    const latestEvent = events.sort((a, b) =>
+      Number(b.blockHeight - a.blockHeight)
+    )[0]
+
+    // If latest is unset, or if we found a later block height, update.
+    if (
+      latestBlockHeight === undefined ||
+      latestEvent.blockHeight > latestBlockHeight
+    ) {
+      latestBlockHeight = latestEvent.blockHeight
+      latestBlockTimeUnixMicro = latestEvent.blockTimeUnixMicro
+    }
+  }
+
+  const env = getEnv(
+    targetContract.address,
+    args,
+    blockHeight,
+    updateLatestBlock
+  )
+
+  const value = await formula(env)
+
+  return {
+    blockHeight: latestBlockHeight ?? BigInt(-1),
+    blockTimeUnixMicro: latestBlockTimeUnixMicro ?? BigInt(-1),
+    value,
+  }
 }
 
 export const computeRange = async (
@@ -27,7 +63,7 @@ export const computeRange = async (
   args: Record<string, any>,
   blockHeightStart: bigint,
   blockHeightEnd: bigint
-): Promise<RangeComputation[]> => {
+): Promise<ComputationOutput[]> => {
   const computeForBlockInRange = async (
     blockHeight: bigint
   ): Promise<{
@@ -118,7 +154,7 @@ export const computeRange = async (
     }
   }
 
-  const results: RangeComputation[] = []
+  const results: ComputationOutput[] = []
 
   // Start at the beginning block height and compute the value. Each computation
   // will return with its value and the next block height that may change the
@@ -188,7 +224,7 @@ const getEnv = (
       return undefined
     }
 
-    return JSON.parse(event.value)
+    return JSON.parse(event.value ?? 'null')
   }
 
   const getMap: FormulaMapGetter = async (
@@ -232,7 +268,7 @@ const getEnv = (
         ? dbKeyToNumber(event.key.slice(keyPrefix.length))
         : dbKeyToString(event.key.slice(keyPrefix.length))
 
-      map[mapKey] = JSON.parse(event.value)
+      map[mapKey] = JSON.parse(event.value ?? 'null')
     }
 
     return map

@@ -54,7 +54,7 @@ export class Event extends Model {
   // JSON encoded value.
   @AllowNull
   @Column(DataType.TEXT)
-  value!: string
+  value!: string | null
 
   @AllowNull(false)
   @Column

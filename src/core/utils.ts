@@ -1,3 +1,43 @@
+import * as formulas from './formulas'
+import { Formula, NestedFormulaMap } from './types'
+
+export const getFormula = (
+  formulaName: string
+): Formula<any, any> | undefined => {
+  const formulaPath = formulaName.split('/')
+  const formulaBase = formulaPath
+    .slice(0, -1)
+    .reduce(
+      (acc, key) =>
+        typeof acc === 'object' && acc[key] ? acc[key] : undefined,
+      formulas as NestedFormulaMap | Formula<any, any> | undefined
+    )
+
+  const formula =
+    typeof formulaBase === 'object'
+      ? formulaBase[formulaPath[formulaPath.length - 1]]
+      : undefined
+  return typeof formula === 'function' ? formula : undefined
+}
+
+export const getAllFormulaNames = (
+  formulaMap: NestedFormulaMap = formulas
+): string[] => {
+  const formulaNames = []
+  for (const [key, value] of Object.entries(formulaMap)) {
+    if (!value) {
+      continue
+    } else if (typeof value === 'function') {
+      formulaNames.push(key)
+    } else {
+      formulaNames.push(
+        ...getAllFormulaNames(value).map((name) => `${key}/${name}`)
+      )
+    }
+  }
+  return formulaNames
+}
+
 // https://github.com/CosmWasm/cw-storage-plus/blob/179bcd0dc2b769c787f411a7cf9a614a80e4dee0/src/helpers.rs#L57
 // Recreate cw-storage-plus key nesting format. Output is a comma-separated list
 // of uint8 values that represents a byte array. See `Event` model for more

@@ -33,8 +33,12 @@ export type Env<Args extends Record<string, string> | undefined = undefined> = {
   args: Args extends undefined ? Record<string, any> : Args
 } & (Args extends undefined ? Record<string, any> : { args: Args })
 
-export interface RangeComputation {
+export interface ComputationOutput {
   blockHeight: bigint
   blockTimeUnixMicro: bigint
   value: any
+}
+
+export type NestedFormulaMap = {
+  [key: string]: Formula<any, any> | NestedFormulaMap | undefined
 }

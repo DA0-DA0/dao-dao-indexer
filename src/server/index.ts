@@ -1,9 +1,10 @@
 import cors from '@koa/cors'
 import Router from '@koa/router'
 import Koa from 'koa'
+import { Op } from 'sequelize'
 
 import { compute, computeRange, getFormula } from '../core'
-import { Contract, closeDb, loadDb } from '../db'
+import { Computation, Contract, closeDb, loadDb } from '../db'
 
 const app = new Koa()
 const router = new Router()
@@ -38,7 +39,6 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
     ...args
   } = ctx.query
   const { targetContractAddress } = ctx.params
-  const formulaName = ctx.path.split('/').slice(2)
 
   // If blockHeight passed, validate that it's a number.
   let blockHeight: bigint | undefined
@@ -80,6 +80,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
   }
 
   // Validate that formula exists.
+  const formulaName = ctx.path.split('/').slice(2).join('/')
   const formula = getFormula(formulaName)
   if (!formula) {
     ctx.status = 404
@@ -97,26 +98,139 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
 
   try {
     let computation
-    // If blockHeights passed, compute range.
+
+    // If blockHeights passed, compute range. A range query will probably return
+    // with an initial blockHeight below the requested start blockHeight. This
+    // is because the formula output that's valid at the provided start
+    // blockHeight depends on key events that happened in the past. Each
+    // computation in the range indicates what blockHeight/blockTimeUnixMicro it
+    // was first valid at, so the first one should too.
     if (blockHeights) {
-      // TODO: Write docs explaining why this will return a blockHeight below
-      // the range.
-      computation = (
-        await computeRange(
+      // Find existing start and end computations.
+      const existingStartComputation = await Computation.findOne({
+        where: {
+          contractAddress: contract.address,
+          formula: formulaName,
+          args: JSON.stringify(args),
+          blockHeight: {
+            [Op.lte]: blockHeights[0],
+          },
+        },
+        order: [['blockHeight', 'DESC']],
+      })
+      const existingEndComputation = await Computation.findOne({
+        where: {
+          contractAddress: contract.address,
+          formula: formulaName,
+          args: JSON.stringify(args),
+          blockHeight: {
+            [Op.gt]: blockHeights[0],
+            [Op.lte]: blockHeights[1],
+          },
+        },
+        order: [['blockHeight', 'DESC']],
+      })
+
+      // If either computation bound exists, get all computations between them.
+      if (existingStartComputation || existingEndComputation) {
+        const middleComputations = await Computation.findAll({
+          where: {
+            contractAddress: contract.address,
+            formula: formulaName,
+            args: JSON.stringify(args),
+            blockHeight: {
+              ...(existingStartComputation && {
+                [Op.gt]: existingStartComputation.blockHeight,
+              }),
+              ...(existingEndComputation && {
+                [Op.lt]: existingEndComputation.blockHeight,
+              }),
+            },
+          },
+          order: [['blockHeight', 'ASC']],
+        })
+
+        // Use computations that exist.
+        const computations = [
+          ...(existingStartComputation ? [existingStartComputation] : []),
+          ...middleComputations,
+          ...(existingEndComputation ? [existingEndComputation] : []),
+        ]
+
+        computation = computations.map(
+          ({ blockHeight, blockTimeUnixMicro, output }) => ({
+            value: output && JSON.parse(output),
+            blockHeight: Number(blockHeight),
+            blockTimeUnixMicro: Number(blockTimeUnixMicro),
+          })
+        )
+      } else {
+        // Otherwise compute for range.
+        const rangeComputations = await computeRange(
           formula,
           contract,
           args,
           blockHeights[0],
           blockHeights[1]
         )
-      ).map(({ blockHeight, blockTimeUnixMicro, ...data }) => ({
-        ...data,
-        blockHeight: Number(blockHeight),
-        blockTimeUnixMicro: Number(blockTimeUnixMicro),
-      }))
+
+        computation = rangeComputations.map(
+          ({ blockHeight, blockTimeUnixMicro, ...data }) => ({
+            ...data,
+            blockHeight: Number(blockHeight),
+            blockTimeUnixMicro: Number(blockTimeUnixMicro),
+          })
+        )
+
+        // Cache computations for future queries.
+        await Computation.createFromComputationOutputs(
+          contract.address,
+          formulaName,
+          args,
+          ...rangeComputations
+        )
+      }
     } else {
       // Otherwise compute for single block.
-      computation = await compute(formula, contract, args, blockHeight)
+      const existingComputation = await Computation.findOne({
+        where: {
+          contractAddress: contract.address,
+          formula: formulaName,
+          args: JSON.stringify(args),
+          ...(blockHeight !== undefined
+            ? {
+                blockHeight: {
+                  [Op.lte]: blockHeight,
+                },
+              }
+            : undefined),
+        },
+        order: [['blockHeight', 'DESC']],
+      })
+
+      // If found existing computation, use that.
+      if (existingComputation) {
+        computation =
+          existingComputation.output && JSON.parse(existingComputation.output)
+      } else {
+        // Otherwise compute.
+        const computationOutput = await compute(
+          formula,
+          contract,
+          args,
+          blockHeight
+        )
+
+        computation = computationOutput.value
+
+        // Cache computation for future queries.
+        await Computation.createFromComputationOutputs(
+          contract.address,
+          formulaName,
+          args,
+          computationOutput
+        )
+      }
     }
 
     // If string, encode as JSON.
