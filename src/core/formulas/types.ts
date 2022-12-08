@@ -8,3 +8,8 @@ export type Expiration =
   | {
       never: {}
     }
+
+export interface ContractInfo {
+  contract: string
+  version: string
+}

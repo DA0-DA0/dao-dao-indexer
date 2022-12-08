@@ -2,9 +2,8 @@ import cors from '@koa/cors'
 import Router from '@koa/router'
 import Koa from 'koa'
 
+import { compute, computeRange, getFormula } from '../core'
 import { Contract, closeDb, loadDb } from '../db'
-import { compute, computeRange } from './compute'
-import { getFormula } from './formulas'
 
 const app = new Koa()
 const router = new Router()

@@ -1,4 +1,4 @@
-import { Formula } from '../types'
+import { Formula } from '../../types'
 
 interface Member {
   addr: string

@@ -1,5 +1,5 @@
-import { Formula } from '../types'
-import { Expiration } from './types'
+import { Formula } from '../../types'
+import { Expiration } from '../types'
 
 interface ContractInfo {
   name: string

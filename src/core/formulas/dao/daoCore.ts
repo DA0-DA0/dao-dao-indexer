@@ -1,15 +1,15 @@
-import { Formula } from '../types'
-import { ContractInfo, info, instantiatedAt } from './common'
-import { balance } from './cw20'
-import { Expiration } from './types'
+import { Formula } from '../../types'
+import { info, instantiatedAt } from '../common'
+import { balance } from '../external/cw20'
+import { ContractInfo, Expiration } from '../types'
 import {
   totalPower as daoVotingCw20StakedTotalPower,
   votingPower as daoVotingCw20StakedVotingPower,
-} from './voting/daoVotingCw20Staked'
+} from '../voting/daoVotingCw20Staked'
 import {
   totalPower as daoVotingCw4TotalPower,
   votingPower as daoVotingCw4VotingPower,
-} from './voting/daoVotingCw4'
+} from '../voting/daoVotingCw4'
 
 interface Config {
   automatically_add_cw20s: boolean

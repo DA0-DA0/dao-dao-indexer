@@ -1,9 +1,5 @@
 import { Formula } from '../types'
-
-export interface ContractInfo {
-  contract: string
-  version: string
-}
+import { ContractInfo } from './types'
 
 export const info: Formula<ContractInfo | undefined> = async ({
   contractAddress,
