@@ -240,9 +240,10 @@ export const listSubDaos: Formula<SubDao[]> = async ({
 export const daoUri: Formula<string> = async (env) =>
   (await config(env))?.dao_uri ?? ''
 
-export const votingPower: Formula<string, { address: string }> = async (
-  env
-) => {
+export const votingPower: Formula<
+  string | undefined,
+  { address: string }
+> = async (env) => {
   const votingModuleAddress = (await votingModule(env)) ?? ''
   const votingModuleInfo = await info({
     ...env,
@@ -252,16 +253,13 @@ export const votingPower: Formula<string, { address: string }> = async (
   const votingPowerFormula =
     votingModuleInfo &&
     VOTING_POWER_MAP[votingModuleInfo.contract.replace('crates.io:', '')]
-  if (!votingPowerFormula) {
-    throw new Error(`Unexpected voting module: ${votingModuleInfo?.contract}`)
-  }
-  return await votingPowerFormula({
+  return await votingPowerFormula?.({
     ...env,
     contractAddress: votingModuleAddress,
   })
 }
 
-export const totalPower: Formula<string> = async (env) => {
+export const totalPower: Formula<string | undefined> = async (env) => {
   const votingModuleAddress = (await votingModule(env)) ?? ''
   const votingModuleInfo = await info({
     ...env,
@@ -271,10 +269,7 @@ export const totalPower: Formula<string> = async (env) => {
   const totalPowerFormula =
     votingModuleInfo &&
     TOTAL_POWER_MAP[votingModuleInfo.contract.replace('crates.io:', '')]
-  if (!totalPowerFormula) {
-    throw new Error(`Unexpected voting module: ${votingModuleInfo?.contract}`)
-  }
-  return await totalPowerFormula({
+  return await totalPowerFormula?.({
     ...env,
     contractAddress: votingModuleAddress,
   })
