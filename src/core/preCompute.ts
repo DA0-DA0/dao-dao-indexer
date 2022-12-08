@@ -39,7 +39,7 @@ export const preCompute = async (
       formula,
       contract,
       args,
-      BigInt(1),
+      1,
       latestEvent.blockHeight
     )
 

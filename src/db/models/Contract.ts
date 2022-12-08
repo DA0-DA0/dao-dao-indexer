@@ -18,6 +18,6 @@ export class Contract extends Model {
   address!: string
 
   @AllowNull(false)
-  @Column(DataType.BIGINT({ unsigned: true }))
-  codeId!: bigint
+  @Column(DataType.BIGINT)
+  codeId!: number
 }

@@ -41,24 +41,23 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
   const { targetContractAddress } = ctx.params
 
   // If blockHeight passed, validate that it's a number.
-  let blockHeight: bigint | undefined
+  let blockHeight: number | undefined
   if (_blockHeight && typeof _blockHeight === 'string') {
-    const blockHeightInt = parseInt(_blockHeight, 10)
-    if (isNaN(blockHeightInt)) {
+    blockHeight = parseInt(_blockHeight, 10)
+    if (isNaN(blockHeight)) {
       ctx.status = 400
       ctx.body = 'blockHeight must be a number'
       return
     }
-    if (blockHeightInt < 1) {
+    if (blockHeight < 1) {
       ctx.status = 400
       ctx.body = 'blockHeight must be at least 1'
       return
     }
-    blockHeight = BigInt(blockHeightInt)
   }
 
   // If blockHeights passed, validate that it's a range of two numbers.
-  let blockHeights: [bigint, bigint] | undefined
+  let blockHeights: [number, number] | undefined
   if (_blockHeights && typeof _blockHeights === 'string') {
     const [start, end] = _blockHeights.split('..').map((s) => parseInt(s, 10))
     if (isNaN(start) || isNaN(end)) {
@@ -66,7 +65,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       ctx.body = 'blockHeights must be a range of two numbers'
       return
     }
-    blockHeights = [BigInt(start), BigInt(end)]
+    blockHeights = [start, end]
     if (blockHeights[0] >= blockHeights[1]) {
       ctx.status = 400
       ctx.body = 'the start blockHeight must be less than the end'

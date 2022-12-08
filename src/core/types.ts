@@ -34,8 +34,8 @@ export type Env<Args extends Record<string, string> | undefined = undefined> = {
 } & (Args extends undefined ? Record<string, any> : { args: Args })
 
 export interface ComputationOutput {
-  blockHeight: bigint
-  blockTimeUnixMicro: bigint
+  blockHeight: number
+  blockTimeUnixMicro: number
   value: any
 }
 

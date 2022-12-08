@@ -15,21 +15,19 @@ export const compute = async (
   formula: Formula,
   targetContract: Contract,
   args: Record<string, any>,
-  blockHeight?: bigint
+  blockHeight?: number
 ): Promise<ComputationOutput> => {
   // Store the latest block height and time that we've seen for all keys
   // accessed. This is the earliest this computation could have been made.
-  let latestBlockHeight: bigint | undefined
-  let latestBlockTimeUnixMicro: bigint | undefined
+  let latestBlockHeight: number | undefined
+  let latestBlockTimeUnixMicro: number | undefined
 
   const updateLatestBlock = async (events: Event[]) => {
     if (events.length === 0) {
       return
     }
 
-    const latestEvent = events.sort((a, b) =>
-      Number(b.blockHeight - a.blockHeight)
-    )[0]
+    const latestEvent = events.sort((a, b) => b.blockHeight - a.blockHeight)[0]
 
     // If latest is unset, or if we found a later block height, update.
     if (
@@ -51,8 +49,8 @@ export const compute = async (
   const value = await formula(env)
 
   return {
-    blockHeight: latestBlockHeight ?? BigInt(-1),
-    blockTimeUnixMicro: latestBlockTimeUnixMicro ?? BigInt(-1),
+    blockHeight: latestBlockHeight ?? -1,
+    blockTimeUnixMicro: latestBlockTimeUnixMicro ?? -1,
     value,
   }
 }
@@ -61,22 +59,22 @@ export const computeRange = async (
   formula: Formula,
   targetContract: Contract,
   args: Record<string, any>,
-  blockHeightStart: bigint,
-  blockHeightEnd: bigint
+  blockHeightStart: number,
+  blockHeightEnd: number
 ): Promise<ComputationOutput[]> => {
   const computeForBlockInRange = async (
-    blockHeight: bigint
+    blockHeight: number
   ): Promise<{
-    nextPotentialBlockHeight: bigint | undefined
-    latestBlockHeight: bigint | undefined
-    latestBlockTimeUnixMicro: bigint | undefined
+    nextPotentialBlockHeight: number | undefined
+    latestBlockHeight: number | undefined
+    latestBlockTimeUnixMicro: number | undefined
     value: any
   }> => {
     // Store the next block height that has the potential to change the result.
     // Each getter below will update this value if it finds a key change event
     // after the current blockHeight we're computing. If it remains undefined,
     // then we know that the result will not change because no inputs changed.
-    let nextPotentialBlockHeight: bigint | undefined
+    let nextPotentialBlockHeight: number | undefined
 
     // Find the next event that may change the result for the given key filter
     // and update accordingly. Ignore any events after the end block height.
@@ -110,16 +108,16 @@ export const computeRange = async (
 
     // Store the latest block height and time that we've seen for all keys
     // accessed. This is the earliest this computation could have been made.
-    let latestBlockHeight: bigint | undefined
-    let latestBlockTimeUnixMicro: bigint | undefined
+    let latestBlockHeight: number | undefined
+    let latestBlockTimeUnixMicro: number | undefined
 
     const updateLatestBlock = async (events: Event[]) => {
       if (events.length === 0) {
         return
       }
 
-      const latestEvent = events.sort((a, b) =>
-        Number(b.blockHeight - a.blockHeight)
+      const latestEvent = events.sort(
+        (a, b) => b.blockHeight - a.blockHeight
       )[0]
 
       // If latest is unset, or if we found a later block height, update.
@@ -169,8 +167,8 @@ export const computeRange = async (
     // recently stored result.
     if (!previousResult || result.value !== previousResult.value) {
       results.push({
-        blockHeight: result.latestBlockHeight ?? BigInt(-1),
-        blockTimeUnixMicro: result.latestBlockTimeUnixMicro ?? BigInt(-1),
+        blockHeight: result.latestBlockHeight ?? -1,
+        blockTimeUnixMicro: result.latestBlockTimeUnixMicro ?? -1,
         value: result.value,
       })
     }
@@ -190,7 +188,7 @@ export const computeRange = async (
 const getEnv = (
   contractAddress: string,
   args: Record<string, any>,
-  blockHeight?: bigint,
+  blockHeight?: number,
   onFetchEvents?: (
     events: Event[],
     keyFilter: string | object

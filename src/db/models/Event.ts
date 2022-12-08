@@ -35,12 +35,12 @@ export class Event extends Model {
   contract!: Contract
 
   @AllowNull(false)
-  @Column
-  blockHeight!: bigint
+  @Column(DataType.BIGINT)
+  blockHeight!: number
 
   @AllowNull(false)
-  @Column
-  blockTimeUnixMicro!: bigint
+  @Column(DataType.BIGINT)
+  blockTimeUnixMicro!: number
 
   // Key is stored as a comma separated list of uint8 values that represents a
   // byte array. The byte array datatype doesn't allow for prefix queries, so we

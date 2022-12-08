@@ -32,12 +32,12 @@ export class Computation extends Model {
   contract!: Contract
 
   @AllowNull(false)
-  @Column
-  blockHeight!: bigint
+  @Column(DataType.BIGINT)
+  blockHeight!: number
 
   @AllowNull(false)
-  @Column
-  blockTimeUnixMicro!: bigint
+  @Column(DataType.BIGINT)
+  blockTimeUnixMicro!: number
 
   @AllowNull(false)
   @Column(DataType.TEXT)

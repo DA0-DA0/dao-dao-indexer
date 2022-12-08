@@ -7,6 +7,9 @@ export * from './models'
 
 let sequelize: Sequelize | undefined
 
+// Tell Sequelize to parse int8 as BigInt instead of string.
+require('pg').defaults.parseInt8 = true
+
 export const loadDb = async () => {
   if (sequelize) {
     return sequelize
