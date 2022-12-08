@@ -105,7 +105,14 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
     // computation in the range indicates what blockHeight/blockTimeUnixMicro it
     // was first valid at, so the first one should too.
     if (blockHeights) {
-      // Find existing start and end computations.
+      // Find existing start and end computations. COMMENTING OUT FOR NOW since
+      // we can't yet determine if an entire range has been cached or not. This
+      // code below detects if any output in the range has been cached, and then
+      // assumes the whole range is cached. If we are going to cache one-off
+      // outputs (i.e. not ranges), then we can't detect if the whole range is
+      // cached or not. The solution may be to not cache one-off outputs, and
+      // instead only pre-compute ranges.
+
       // const existingStartComputation = await Computation.findOne({
       //   where: {
       //     contractAddress: contract.address,
