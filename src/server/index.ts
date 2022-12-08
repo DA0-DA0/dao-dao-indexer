@@ -183,12 +183,12 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
         )
 
         // Cache computations for future queries.
-        await Computation.createFromComputationOutputs(
-          contract.address,
-          formulaName,
-          args,
-          ...rangeComputations
-        )
+        // await Computation.createFromComputationOutputs(
+        //   contract.address,
+        //   formulaName,
+        //   args,
+        //   ...rangeComputations
+        // )
       }
     } else {
       // Otherwise compute for single block.
@@ -224,12 +224,12 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
         computation = computationOutput.value
 
         // Cache computation for future queries.
-        await Computation.createFromComputationOutputs(
-          contract.address,
-          formulaName,
-          args,
-          computationOutput
-        )
+        // await Computation.createFromComputationOutputs(
+        //   contract.address,
+        //   formulaName,
+        //   args,
+        //   computationOutput
+        // )
       }
     }
 
