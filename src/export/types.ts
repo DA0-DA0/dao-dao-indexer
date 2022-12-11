@@ -1,3 +1,5 @@
+import { Contract } from '../db'
+
 export interface IndexerEvent {
   blockHeight: number
   blockTimeUnixMicro: number
@@ -8,4 +10,4 @@ export interface IndexerEvent {
   delete: boolean
 }
 
-export type Exporter = (events: IndexerEvent[]) => Promise<void>
+export type Exporter = (events: IndexerEvent[]) => Promise<Contract[]>

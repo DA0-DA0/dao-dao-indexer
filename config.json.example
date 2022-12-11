@@ -5,5 +5,14 @@
     "host": "localhost",
     "database": "db",
     "username": "user"
+  },
+  "meilisearch": {
+    "host": "http://localhost:7700",
+    "apiKey": "masterKey",
+    "outputs": [{
+      index: "daos",
+      formula: "daoCore/config",
+      codeIds: [1]
+    }]
   }
 }

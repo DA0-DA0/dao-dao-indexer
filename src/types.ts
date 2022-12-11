@@ -19,9 +19,21 @@ export interface Config {
     | 'schema'
   >
   preCompute: {
-    contractAddresses?: string[]
     codeIds?: number[]
+    contractAddresses?: string[]
     formulaPrefixes?: string[]
     formulas?: string[]
   }[]
+  meilisearch: {
+    host: string
+    apiKey?: string
+    outputs: {
+      index: string
+      formula: string
+      args?: Record<string, any>
+      // One of these must be present.
+      codeIds?: number[]
+      contractAddresses?: string[]
+    }[]
+  }
 }

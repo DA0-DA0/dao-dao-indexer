@@ -39,4 +39,11 @@ export const dbExporter: Exporter = async (events) => {
   await Event.bulkCreate(eventRecords, {
     updateOnDuplicate: ['value', 'delete'],
   })
+
+  // Return updated contracts.
+  return Contract.findAll({
+    where: {
+      address: uniqueContracts,
+    },
+  })
 }

@@ -4,6 +4,7 @@ import readline from 'readline'
 
 import { loadConfig } from '../config'
 import { loadDb } from '../db'
+import { setupMeilisearch, updateIndexesForContracts } from '../meilisearch'
 import { dbExporter } from './dbExporter'
 import { IndexerEvent } from './types'
 import { objectMatchesStructure } from './utils'
@@ -22,6 +23,8 @@ const main = async () => {
 
   // Load DB on start.
   await loadDb()
+  // Setup meilisearch.
+  await setupMeilisearch()
 
   console.log(`\n\n[${new Date().toISOString()}] Exporting events...`)
 
@@ -59,7 +62,9 @@ const main = async () => {
       const eventsToExport = Object.values(uniqueIndexerEvents)
 
       // Export events to DB.
-      await dbExporter(eventsToExport)
+      const updatedContracts = await dbExporter(eventsToExport)
+      // Update meilisearch indexes.
+      await updateIndexesForContracts(updatedContracts)
 
       // Update statistics.
       processed += pendingIndexerEvents.length
