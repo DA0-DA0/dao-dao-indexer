@@ -6,7 +6,7 @@ import { loadMeilisearch } from './client'
 export const updateIndexesForContracts = async (contracts: Contract[]) => {
   const client = await loadMeilisearch()
   const {
-    meilisearch: { outputs },
+    meilisearch: { indexes },
   } = await loadConfig()
 
   for (const {
@@ -15,7 +15,7 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
     args = {},
     codeIds,
     contractAddresses,
-  } of outputs) {
+  } of indexes) {
     const formula = getFormula(formulaName)
     if (!formula) {
       throw new Error(`Formula ${formulaName} not found`)

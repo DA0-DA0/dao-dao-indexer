@@ -27,8 +27,9 @@ export interface Config {
   meilisearch: {
     host: string
     apiKey?: string
-    outputs: {
+    indexes: {
       index: string
+      filterableAttributes?: string[]
       formula: string
       args?: Record<string, any>
       // One of these must be present.

@@ -4,11 +4,11 @@ import { loadMeilisearch } from './client'
 export const setupMeilisearch = async () => {
   const client = await loadMeilisearch()
   const {
-    meilisearch: { outputs },
+    meilisearch: { indexes },
   } = await loadConfig()
 
-  // Create indexes if they don't exist and set primaryKey to `contractAddress`.
-  for (const { index } of outputs) {
+  // Create indexes if they don't exist.
+  for (const { index, filterableAttributes } of indexes) {
     try {
       const clientIndex = await client.getIndex(index)
       if (clientIndex.primaryKey !== 'contractAddress') {
@@ -21,5 +21,14 @@ export const setupMeilisearch = async () => {
         primaryKey: 'contractAddress',
       })
     }
+
+    await client
+      .index(index)
+      .updateFilterableAttributes([
+        'contractAddress',
+        'codeId',
+        'value',
+        ...(filterableAttributes || []),
+      ])
   }
 }
