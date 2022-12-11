@@ -22,13 +22,14 @@ export const setupMeilisearch = async () => {
       })
     }
 
-    await client
-      .index(index)
-      .updateFilterableAttributes([
-        'contractAddress',
-        'codeId',
-        'value',
-        ...(filterableAttributes || []),
-      ])
+    const clientIndex = client.index(index)
+
+    await clientIndex.updateFilterableAttributes([
+      'contractAddress',
+      'codeId',
+      'value',
+      ...(filterableAttributes || []),
+    ])
+    await clientIndex.updateSortableAttributes(['blockHeight'])
   }
 }
