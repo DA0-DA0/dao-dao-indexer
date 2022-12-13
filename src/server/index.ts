@@ -1,7 +1,6 @@
 import cors from '@koa/cors'
 import Router from '@koa/router'
 import Koa from 'koa'
-import { Op } from 'sequelize'
 
 import { compute, computeRange, getFormula } from '../core'
 import { Computation, Contract, closeDb, loadDb } from '../db'
@@ -198,45 +197,48 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       // }
     } else {
       // Otherwise compute for single block.
-      const existingComputation = await Computation.findOne({
-        where: {
-          contractAddress: contract.address,
-          formula: formulaName,
-          args: JSON.stringify(args),
-          ...(blockHeight !== undefined
-            ? {
-                blockHeight: {
-                  [Op.lte]: blockHeight,
-                },
-              }
-            : undefined),
-        },
-        order: [['blockHeight', 'DESC']],
-      })
+      // const existingComputation = await Computation.findOne({
+      //   where: {
+      //     contractAddress: contract.address,
+      //     formula: formulaName,
+      //     args: JSON.stringify(args),
+      //     ...(blockHeight !== undefined
+      //       ? {
+      //           blockHeight: {
+      //             [Op.lte]: blockHeight,
+      //           },
+      //         }
+      //       : undefined),
+      //   },
+      //   order: [['blockHeight', 'DESC']],
+      // })
 
-      // If found existing computation, use that.
-      if (existingComputation) {
-        computation =
-          existingComputation.output && JSON.parse(existingComputation.output)
-      } else {
-        // Otherwise compute.
-        const computationOutput = await compute(
-          formula,
-          contract,
-          args,
-          blockHeight
-        )
+      // COMMENTING OUT FOR NOW since we can't yet determine if the latest
+      // computation is up to date. It needs to be pre-computing on export to
+      // ensure that this value is up to date. TODO: Pre-compute on export.
+      // // If found existing computation, use that.
+      // if (existingComputation) {
+      //   computation =
+      //     existingComputation.output && JSON.parse(existingComputation.output)
+      // } else {
+      // Otherwise compute.
+      const computationOutput = await compute(
+        formula,
+        contract,
+        args,
+        blockHeight
+      )
 
-        computation = computationOutput.value
+      computation = computationOutput.value
 
-        // Cache computation for future queries.
-        await Computation.createFromComputationOutputs(
-          contract.address,
-          formulaName,
-          args,
-          computationOutput
-        )
-      }
+      // Cache computation for future queries.
+      await Computation.createFromComputationOutputs(
+        contract.address,
+        formulaName,
+        args,
+        computationOutput
+      )
+      // }
     }
 
     // If string, encode as JSON.
