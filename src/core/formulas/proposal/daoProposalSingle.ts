@@ -1,22 +1,7 @@
-import { Formula } from '../../types'
-
-type Proposal = any
-interface ProposalResponse {
-  id: number
-  proposal: Proposal
-  createdAt?: string
-}
-
-interface Ballot {
-  power: string
-  vote: string
-  rationale: string | null
-}
-
-interface VoteInfo extends Ballot {
-  voter: string
-  votedAt?: string
-}
+import { Env, Formula } from '../../types'
+import { isExpirationExpired } from '../utils'
+import { Ballot, Proposal, ProposalResponse, Status, VoteInfo } from './types'
+import { isPassed, isRejected } from './utils/status'
 
 export const config: Formula = async ({ contractAddress, get }) =>
   (await get(contractAddress, 'config_v2')) ??
@@ -36,18 +21,12 @@ export const proposal: Formula<
   } = env
 
   const idNum = Number(id)
-  const proposalResponse =
+  const _proposal =
     (await get<Proposal>(contractAddress, 'proposals_v2', idNum)) ??
     (await get<Proposal>(contractAddress, 'proposals', idNum)) ??
     undefined
 
-  return (
-    proposalResponse && {
-      id: idNum,
-      proposal: proposalResponse,
-      createdAt: await proposalCreatedAt(env),
-    }
-  )
+  return _proposal && intoResponse(env, _proposal, idNum)
 }
 
 export const creationPolicy: Formula = async ({ contractAddress, get }) =>
@@ -85,22 +64,11 @@ export const listProposals: Formula<
     .filter((id) => id > startAfterNum)
     .slice(0, limitNum)
 
-  const proposalsCreatedAt = await Promise.all(
-    proposalIds.map((id) =>
-      proposalCreatedAt({
-        ...env,
-        args: {
-          id: id.toString(),
-        },
-      })
-    )
+  const proposalResponses = await Promise.all(
+    proposalIds.map((id) => intoResponse(env, proposals[id], id))
   )
 
-  return proposalIds.map((id, index) => ({
-    id,
-    proposal: proposals[id],
-    createdAt: proposalsCreatedAt[index],
-  }))
+  return proposalResponses
 }
 
 export const reverseProposals: Formula<
@@ -137,22 +105,11 @@ export const reverseProposals: Formula<
     .filter((id) => id < startBeforeNum)
     .slice(0, limitNum)
 
-  const proposalsCreatedAt = await Promise.all(
-    proposalIds.map((id) =>
-      proposalCreatedAt({
-        ...env,
-        args: {
-          id: id.toString(),
-        },
-      })
-    )
+  const proposalResponses = await Promise.all(
+    proposalIds.map((id) => intoResponse(env, proposals[id], id))
   )
 
-  return proposalIds.map((id, index) => ({
-    id,
-    proposal: proposals[id],
-    createdAt: proposalsCreatedAt[index],
-  }))
+  return proposalResponses
 }
 
 export const proposalCount: Formula<number> = async ({
@@ -247,3 +204,36 @@ export const proposalCreatedAt: Formula<
     (await getDateKeyFirstSet(contractAddress, 'proposals_v2', Number(id))) ??
     (await getDateKeyFirstSet(contractAddress, 'proposals', Number(id)))
   )?.toISOString()
+
+// Helpers
+
+const intoResponse = async (
+  env: Env,
+  proposal: Proposal,
+  id: number
+): Promise<ProposalResponse> => {
+  // Update status.
+  if (proposal.status === Status.Open) {
+    if (isPassed(proposal, env.block)) {
+      proposal.status = Status.Passed
+    } else if (
+      isExpirationExpired(proposal.expiration, env.block) ||
+      isRejected(proposal, env.block)
+    ) {
+      proposal.status = Status.Rejected
+    }
+  }
+
+  const createdAt = await proposalCreatedAt({
+    ...env,
+    args: {
+      id: id.toString(),
+    },
+  })
+
+  return {
+    id,
+    proposal,
+    createdAt,
+  }
+}
