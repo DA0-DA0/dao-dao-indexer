@@ -26,6 +26,7 @@ export type Formula<
 
 export type Env<Args extends Record<string, string> | undefined = undefined> = {
   contractAddress: string
+  block: Block
   get: FormulaGetter
   getMap: FormulaMapGetter
   getDateKeyModified: FormulaDateGetter
@@ -34,11 +35,16 @@ export type Env<Args extends Record<string, string> | undefined = undefined> = {
 } & (Args extends undefined ? Record<string, any> : { args: Args })
 
 export interface ComputationOutput {
-  blockHeight: number
-  blockTimeUnixMicro: number
+  // Undefined if formula did not use any keys.
+  block: Block | undefined
   value: any
 }
 
 export type NestedFormulaMap = {
   [key: string]: Formula<any, any> | NestedFormulaMap | undefined
+}
+
+export type Block = {
+  height: number
+  timeUnixMs: number
 }

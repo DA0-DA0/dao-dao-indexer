@@ -8,6 +8,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { Block } from '../../core/types'
 import { Contract } from './Contract'
 
 @Table({
@@ -40,7 +41,7 @@ export class Event extends Model {
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMicro!: number
+  blockTimeUnixMs!: number
 
   // Key is stored as a comma separated list of uint8 values that represents a
   // byte array. The byte array datatype doesn't allow for prefix queries, so we
@@ -59,4 +60,11 @@ export class Event extends Model {
   @AllowNull(false)
   @Column
   delete!: boolean
+
+  get block(): Block {
+    return {
+      height: this.blockHeight,
+      timeUnixMs: this.blockTimeUnixMs,
+    }
+  }
 }

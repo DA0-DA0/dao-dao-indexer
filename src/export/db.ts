@@ -1,8 +1,11 @@
+import axios from 'axios'
+
+import { loadConfig } from '../config'
 import { loadDb } from '../db'
-import { Contract, Event } from '../db/models'
+import { Contract, Event, State } from '../db/models'
 import { Exporter } from './types'
 
-export const dbExporter: Exporter = async (events) => {
+export const exporter: Exporter = async (events) => {
   await loadDb()
 
   const uniqueContracts = [
@@ -23,7 +26,7 @@ export const dbExporter: Exporter = async (events) => {
   const eventRecords = events.map((event) => ({
     contractAddress: event.contractAddress,
     blockHeight: event.blockHeight,
-    blockTimeUnixMicro: event.blockTimeUnixMicro,
+    blockTimeUnixMs: Math.round(event.blockTimeUnixMicro / 1000),
     // Convert base64 key to comma-separated list of bytes. See explanation in
     // `Event` model for more information.
     key: Buffer.from(event.key, 'base64').join(','),
@@ -46,4 +49,24 @@ export const dbExporter: Exporter = async (events) => {
       address: uniqueContracts,
     },
   })
+}
+
+// Update db state. Returns latest block height for log.
+export const updateState = async (): Promise<number> => {
+  const { statusEndpoint } = await loadConfig()
+  const { data } = await axios.get(statusEndpoint)
+
+  const latestBlockHeight = Number(data.result.sync_info.latest_block_height)
+  const latestBlockTimeUnixMs = Date.parse(
+    data.result.sync_info.latest_block_time
+  )
+
+  // Update state singleton with latest information.
+  await State.upsert({
+    singleton: true,
+    latestBlockHeight,
+    latestBlockTimeUnixMs,
+  })
+
+  return latestBlockHeight
 }

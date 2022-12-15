@@ -8,7 +8,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { ComputationOutput } from '../../core/types'
+import { Block, ComputationOutput } from '../../core/types'
 import { Contract } from './Contract'
 
 @Table({
@@ -37,7 +37,7 @@ export class Computation extends Model {
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMicro!: number
+  blockTimeUnixMs!: number
 
   @AllowNull(false)
   @Column(DataType.TEXT)
@@ -60,12 +60,17 @@ export class Computation extends Model {
     ...computationOutputs: ComputationOutput[]
   ) {
     await Computation.bulkCreate(
-      computationOutputs.map(({ blockHeight, blockTimeUnixMicro, value }) => ({
+      computationOutputs.map(({ block, value }) => ({
         contractAddress,
         formula,
         args: JSON.stringify(args),
-        blockHeight,
-        blockTimeUnixMicro,
+        // If no block, the computation must not have accessed any keys. It may
+        // be a constant formula, in which case it doesn't have any block
+        // context and should thus use an invalid block below the first possible
+        // block in case the formula is used in another computation that does
+        // access keys.
+        blockHeight: block?.height ?? -1,
+        blockTimeUnixMs: block?.timeUnixMs ?? -1,
         output:
           typeof value !== undefined && typeof value !== null
             ? JSON.stringify(value)
@@ -75,5 +80,12 @@ export class Computation extends Model {
         updateOnDuplicate: ['output'],
       }
     )
+  }
+
+  get block(): Block {
+    return {
+      height: this.blockHeight,
+      timeUnixMs: this.blockTimeUnixMs,
+    }
   }
 }

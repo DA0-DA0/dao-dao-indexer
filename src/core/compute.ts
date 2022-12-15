@@ -2,6 +2,7 @@ import { Op } from 'sequelize'
 
 import { Contract, Event } from '../db/models'
 import {
+  Block,
   ComputationOutput,
   Env,
   Formula,
@@ -15,12 +16,11 @@ export const compute = async (
   formula: Formula,
   targetContract: Contract,
   args: Record<string, any>,
-  blockHeight?: number
+  block: Block
 ): Promise<ComputationOutput> => {
-  // Store the latest block height and time that we've seen for all keys
-  // accessed. This is the earliest this computation could have been made.
-  let latestBlockHeight: number | undefined
-  let latestBlockTimeUnixMicro: number | undefined
+  // Store the latest block that we've seen for all keys accessed. This is the
+  // earliest this computation could have been made.
+  let latestBlock: Block | undefined
 
   const updateLatestBlock = async (events: Event[]) => {
     if (events.length === 0) {
@@ -31,26 +31,22 @@ export const compute = async (
 
     // If latest is unset, or if we found a later block height, update.
     if (
-      latestBlockHeight === undefined ||
-      latestEvent.blockHeight > latestBlockHeight
+      latestBlock === undefined ||
+      latestEvent.blockHeight > latestBlock.height
     ) {
-      latestBlockHeight = latestEvent.blockHeight
-      latestBlockTimeUnixMicro = latestEvent.blockTimeUnixMicro
+      latestBlock = {
+        height: latestEvent.blockHeight,
+        timeUnixMs: latestEvent.blockTimeUnixMs,
+      }
     }
   }
 
-  const env = getEnv(
-    targetContract.address,
-    args,
-    blockHeight,
-    updateLatestBlock
-  )
+  const env = getEnv(targetContract.address, block, args, updateLatestBlock)
 
   const value = await formula(env)
 
   return {
-    blockHeight: latestBlockHeight ?? -1,
-    blockTimeUnixMicro: latestBlockTimeUnixMicro ?? -1,
+    block: latestBlock,
     value,
   }
 }
@@ -59,26 +55,25 @@ export const computeRange = async (
   formula: Formula,
   targetContract: Contract,
   args: Record<string, any>,
-  blockHeightStart: number,
-  blockHeightEnd: number
+  blockStart: Block,
+  blockEnd: Block
 ): Promise<ComputationOutput[]> => {
   const computeForBlockInRange = async (
-    blockHeight: number
+    block: Block
   ): Promise<{
-    nextPotentialBlockHeight: number | undefined
-    latestBlockHeight: number | undefined
-    latestBlockTimeUnixMicro: number | undefined
+    nextPotentialBlock: Block | undefined
+    latestBlock: Block | undefined
     value: any
   }> => {
-    // Store the next block height that has the potential to change the result.
-    // Each getter below will update this value if it finds a key change event
-    // after the current blockHeight we're computing. If it remains undefined,
-    // then we know that the result will not change because no inputs changed.
-    let nextPotentialBlockHeight: number | undefined
+    // Store the next block that has the potential to change the result. Each
+    // getter below will update this value if it finds a key change event after
+    // the current block we're computing. If it remains undefined, then we know
+    // that the result will not change because no inputs changed.
+    let nextPotentialBlock: Block | undefined
 
     // Find the next event that may change the result for the given key filter
-    // and update accordingly. Ignore any events after the end block height.
-    const updateNextChangedBlockHeight = async (
+    // and update accordingly. Ignore any events after the end block.
+    const updateNextChangedBlock = async (
       contractAddress: string,
       keyFilter: string | object
     ) => {
@@ -86,30 +81,32 @@ export const computeRange = async (
         where: {
           contractAddress,
           key: keyFilter,
-          // After the current block height and at or before the end.
+          // After the current block and at or before the end block.
           blockHeight: {
-            [Op.gt]: blockHeight,
-            [Op.lte]: blockHeightEnd,
+            [Op.gt]: block.height,
+            [Op.lte]: blockEnd.height,
           },
         },
         order: [['blockHeight', 'ASC']],
       })
 
       // If we found an event, and it's earlier than the current next potential
-      // block height (or if we haven't found one yet), update.
+      // block (or if we haven't found one yet), update.
       if (
         nextEvent &&
-        (nextPotentialBlockHeight === undefined ||
-          nextEvent.blockHeight < nextPotentialBlockHeight)
+        (nextPotentialBlock === undefined ||
+          nextEvent.blockHeight < nextPotentialBlock.height)
       ) {
-        nextPotentialBlockHeight = nextEvent.blockHeight
+        nextPotentialBlock = {
+          height: nextEvent.blockHeight,
+          timeUnixMs: nextEvent.blockTimeUnixMs,
+        }
       }
     }
 
-    // Store the latest block height and time that we've seen for all keys
-    // accessed. This is the earliest this computation could have been made.
-    let latestBlockHeight: number | undefined
-    let latestBlockTimeUnixMicro: number | undefined
+    // Store the latest block that we've seen for all keys accessed. This is the
+    // earliest this computation could have been made.
+    let latestBlock: Block | undefined
 
     const updateLatestBlock = async (events: Event[]) => {
       if (events.length === 0) {
@@ -120,13 +117,15 @@ export const computeRange = async (
         (a, b) => b.blockHeight - a.blockHeight
       )[0]
 
-      // If latest is unset, or if we found a later block height, update.
+      // If latest is unset, or if we found a later block, update.
       if (
-        latestBlockHeight === undefined ||
-        latestEvent.blockHeight > latestBlockHeight
+        latestBlock === undefined ||
+        latestEvent.blockHeight > latestBlock.height
       ) {
-        latestBlockHeight = latestEvent.blockHeight
-        latestBlockTimeUnixMicro = latestEvent.blockTimeUnixMicro
+        latestBlock = {
+          height: latestEvent.blockHeight,
+          timeUnixMs: latestEvent.blockTimeUnixMs,
+        }
       }
     }
 
@@ -134,51 +133,49 @@ export const computeRange = async (
     // changed block height.
     const env = getEnv(
       targetContract.address,
+      block,
       args,
-      blockHeight,
       async (events, keyFilter) => {
         await updateLatestBlock(events)
-        await updateNextChangedBlockHeight(targetContract.address, keyFilter)
+        await updateNextChangedBlock(targetContract.address, keyFilter)
       }
     )
 
     const value = await formula(env)
 
     return {
-      nextPotentialBlockHeight,
-      latestBlockHeight,
-      latestBlockTimeUnixMicro,
+      nextPotentialBlock,
+      latestBlock,
       value,
     }
   }
 
   const results: ComputationOutput[] = []
 
-  // Start at the beginning block height and compute the value. Each computation
-  // will return with its value and the next block height that may change the
-  // result. We can then start at that block height and compute again. We repeat
-  // this until we reach the end block height.
-  let nextPotentialBlockHeight = blockHeightStart
-  while (nextPotentialBlockHeight <= blockHeightEnd) {
-    const result = await computeForBlockInRange(nextPotentialBlockHeight)
+  // Start at the beginning block and compute the value. Each computation will
+  // return with its value and the next block that may change the result. We can
+  // then start at that block and compute again. We repeat this until we reach
+  // the end block.
+  let nextPotentialBlock = blockStart
+  while (nextPotentialBlock.height <= blockEnd.height) {
+    const result = await computeForBlockInRange(nextPotentialBlock)
 
     const previousResult = results[results.length - 1]
     // Only store result if it's the first result or different from the most
     // recently stored result.
     if (!previousResult || result.value !== previousResult.value) {
       results.push({
-        blockHeight: result.latestBlockHeight ?? -1,
-        blockTimeUnixMicro: result.latestBlockTimeUnixMicro ?? -1,
+        block: result.latestBlock,
         value: result.value,
       })
     }
 
-    // If no future block height may change the result, stop.
-    if (result.nextPotentialBlockHeight === undefined) {
+    // If no future block may change the result, stop.
+    if (result.nextPotentialBlock === undefined) {
       break
     }
 
-    nextPotentialBlockHeight = result.nextPotentialBlockHeight
+    nextPotentialBlock = result.nextPotentialBlock
   }
 
   return results
@@ -187,21 +184,19 @@ export const computeRange = async (
 // Generate environment for computation.
 const getEnv = (
   contractAddress: string,
+  block: Block,
   args: Record<string, any>,
-  blockHeight?: number,
   onFetchEvents?: (
     events: Event[],
     keyFilter: string | object
   ) => void | Promise<void>
 ): Env<{}> => {
-  // Most recent event at or below this block height.
-  const blockHeightFilter = blockHeight
-    ? {
-        blockHeight: {
-          [Op.lte]: blockHeight,
-        },
-      }
-    : {}
+  // Most recent event at or below this block.
+  const blockHeightFilter = {
+    blockHeight: {
+      [Op.lte]: block.height,
+    },
+  }
 
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
@@ -241,7 +236,6 @@ const getEnv = (
       where: {
         contractAddress,
         key: keyFilter,
-        // Most recent event at or below this block height.
         ...blockHeightFilter,
       },
       order: [['blockHeight', 'DESC']],
@@ -297,7 +291,7 @@ const getEnv = (
 
     // Convert block time to date.
     const date = new Date(0)
-    date.setUTCSeconds(Number(event.blockTimeUnixMicro) / 1e6)
+    date.setUTCSeconds(Number(event.blockTimeUnixMs) / 1e3)
     return date
   }
 
@@ -327,12 +321,13 @@ const getEnv = (
 
     // Convert block time to date.
     const date = new Date(0)
-    date.setUTCSeconds(Number(event.blockTimeUnixMicro) / 1e6)
+    date.setUTCSeconds(Number(event.blockTimeUnixMs) / 1e3)
     return date
   }
 
   return {
     contractAddress,
+    block,
     get,
     getMap,
     getDateKeyModified,

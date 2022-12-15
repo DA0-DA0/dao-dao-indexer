@@ -4,3 +4,6 @@ scripts/
 
 config.json
 *.crt
+
+# meilisearch
+data.ms

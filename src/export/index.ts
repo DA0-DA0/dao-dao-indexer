@@ -5,7 +5,7 @@ import readline from 'readline'
 import { loadConfig } from '../config'
 import { loadDb } from '../db'
 import { setupMeilisearch, updateIndexesForContracts } from '../meilisearch'
-import { dbExporter } from './dbExporter'
+import { exporter, updateState } from './db'
 import { IndexerEvent } from './types'
 import { objectMatchesStructure } from './utils'
 
@@ -30,16 +30,28 @@ const main = async () => {
 
   // Return promise that never resolves. Listen for file changes.
   return new Promise((_, reject) => {
+    let latestBlockHeight = -1
+    // Initialize state.
+    updateState().then((blockHeight) => {
+      latestBlockHeight = blockHeight
+    })
+    // Update db state every second.
+    const stateInterval = setInterval(async () => {
+      latestBlockHeight = await updateState()
+    }, 1000)
+    // Allow process to exit even though this interval is alive.
+    stateInterval.unref()
+
     // Read state.
     let reading = false
     let pendingRead = false
     let bytesRead = 0
+    let lastBlockHeightExported = 0
 
     // Pending events and statistics.
     const pendingIndexerEvents: IndexerEvent[] = []
     let processed = 0
     let exported = 0
-    let lastBlockHeightSeen = 0
 
     // Wait for responses from export promises and update/display statistics.
     const flushToDb = async () => {
@@ -62,14 +74,14 @@ const main = async () => {
       const eventsToExport = Object.values(uniqueIndexerEvents)
 
       // Export events to DB.
-      const updatedContracts = await dbExporter(eventsToExport)
+      const updatedContracts = await exporter(eventsToExport)
       // Update meilisearch indexes.
       await updateIndexesForContracts(updatedContracts)
 
       // Update statistics.
       processed += pendingIndexerEvents.length
       exported += eventsToExport.length
-      lastBlockHeightSeen =
+      lastBlockHeightExported =
         pendingIndexerEvents[pendingIndexerEvents.length - 1].blockHeight
 
       // Clear queue.
@@ -157,16 +169,16 @@ const main = async () => {
 
     // Print latest statistics every 100ms.
     let printLoaderCount = 0
-    const interval = setInterval(() => {
+    const logInterval = setInterval(() => {
       printLoaderCount = (printLoaderCount + 1) % LOADER_MAP.length
       process.stdout.write(
         `\r${
           LOADER_MAP[printLoaderCount]
-        }  ${processed.toLocaleString()} processed. ${exported.toLocaleString()} exported. Last block height seen: ${lastBlockHeightSeen.toLocaleString()}.`
+        }  ${processed.toLocaleString()} processed. ${exported.toLocaleString()} exported. Last block height with export: ${lastBlockHeightExported.toLocaleString()}. Latest block height: ${latestBlockHeight.toLocaleString()}`
       )
     }, 100)
     // Allow process to exit even though this interval is alive.
-    interval.unref()
+    logInterval.unref()
   })
 }
 

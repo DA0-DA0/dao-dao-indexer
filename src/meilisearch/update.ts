@@ -1,6 +1,6 @@
 import { loadConfig } from '../config'
 import { compute, getFormula } from '../core'
-import { Contract } from '../db'
+import { Contract, State } from '../db'
 import { loadMeilisearch } from './client'
 
 export const updateIndexesForContracts = async (contracts: Contract[]) => {
@@ -8,6 +8,16 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
   const {
     meilisearch: { indexes },
   } = await loadConfig()
+
+  // Update indexes with data from the latest block height.
+  const state = await State.findOne({
+    where: {
+      singleton: true,
+    },
+  })
+  if (!state) {
+    throw new Error('State not found while updating indexes')
+  }
 
   for (const {
     index,
@@ -44,7 +54,7 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
         matchingContracts.map(async (contract) => ({
           contractAddress: contract.address,
           codeId: contract.codeId,
-          ...(await compute(formula, contract, args)),
+          ...(await compute(formula, contract, args, state.latestBlock)),
         }))
       )
 

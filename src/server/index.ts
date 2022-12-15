@@ -3,7 +3,9 @@ import Router from '@koa/router'
 import Koa from 'koa'
 
 import { compute, computeRange, getFormula } from '../core'
-import { Computation, Contract, closeDb, loadDb } from '../db'
+import { Block } from '../core/types'
+import { Computation, Contract, State, closeDb, loadDb } from '../db'
+import { validateBlockString } from './validate'
 
 const app = new Koa()
 const router = new Router()
@@ -32,47 +34,48 @@ app.use(async (ctx, next) => {
 
 // Main formula computer.
 router.get('/:targetContractAddress/(.+)', async (ctx) => {
-  const {
-    blockHeight: _blockHeight,
-    blockHeights: _blockHeights,
-    ...args
-  } = ctx.query
+  const { block: _block, blocks: _blocks, ...args } = ctx.query
   const { targetContractAddress } = ctx.params
 
-  // If blockHeight passed, validate that it's a number.
-  let blockHeight: number | undefined
-  if (_blockHeight && typeof _blockHeight === 'string') {
-    blockHeight = parseInt(_blockHeight, 10)
-    if (isNaN(blockHeight)) {
+  // If block passed, validate.
+  let block: Block | undefined
+  if (_block && typeof _block === 'string') {
+    try {
+      block = validateBlockString(_block, 'block')
+    } catch (err) {
       ctx.status = 400
-      ctx.body = 'blockHeight must be a number'
-      return
-    }
-    if (blockHeight < 1) {
-      ctx.status = 400
-      ctx.body = 'blockHeight must be at least 1'
+      ctx.body = err instanceof Error ? err.message : err
       return
     }
   }
 
-  // If blockHeights passed, validate that it's a range of two numbers.
-  let blockHeights: [number, number] | undefined
-  if (_blockHeights && typeof _blockHeights === 'string') {
-    const [start, end] = _blockHeights.split('..').map((s) => parseInt(s, 10))
-    if (isNaN(start) || isNaN(end)) {
+  // If blocks passed, validate that it's a range of two blocks.
+  let blocks: [Block, Block] | undefined
+  if (_blocks && typeof _blocks === 'string') {
+    const [startBlock, endBlock] = _blocks.split('..')
+    if (!startBlock || !endBlock) {
       ctx.status = 400
-      ctx.body = 'blockHeights must be a range of two numbers'
+      ctx.body = 'blocks must be a range of two numbers'
       return
     }
-    blockHeights = [start, end]
-    if (blockHeights[0] >= blockHeights[1]) {
+
+    try {
+      blocks = [
+        validateBlockString(startBlock, 'the start block'),
+        validateBlockString(endBlock, 'the end block'),
+      ]
+    } catch (err) {
       ctx.status = 400
-      ctx.body = 'the start blockHeight must be less than the end'
+      ctx.body = err instanceof Error ? err.message : err
       return
     }
-    if (blockHeights[0] < 1) {
+
+    if (
+      blocks[0].height >= blocks[1].height ||
+      blocks[0].timeUnixMs >= blocks[1].timeUnixMs
+    ) {
       ctx.status = 400
-      ctx.body = 'blockHeights must be at least 1'
+      ctx.body = 'the start block must be less than the end block'
       return
     }
   }
@@ -97,13 +100,12 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
   try {
     let computation
 
-    // If blockHeights passed, compute range. A range query will probably return
-    // with an initial blockHeight below the requested start blockHeight. This
-    // is because the formula output that's valid at the provided start
-    // blockHeight depends on key events that happened in the past. Each
-    // computation in the range indicates what blockHeight/blockTimeUnixMicro it
-    // was first valid at, so the first one should too.
-    if (blockHeights) {
+    // If blocks passed, compute range. A range query will probably return with
+    // an initial block below the requested start block. This is because the
+    // formula output that's valid at the provided start block depends on key
+    // events that happened in the past. Each computation in the range indicates
+    // what block it was first valid at, so the first one should too.
+    if (blocks) {
       // Find existing start and end computations. COMMENTING OUT FOR NOW since
       // we can't yet determine if an entire range has been cached or not. This
       // code below detects if any output in the range has been cached, and then
@@ -118,7 +120,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       //     formula: formulaName,
       //     args: JSON.stringify(args),
       //     blockHeight: {
-      //       [Op.lte]: blockHeights[0],
+      //       [Op.lte]: blocks[0].height,
       //     },
       //   },
       //   order: [['blockHeight', 'DESC']],
@@ -129,8 +131,8 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       //     formula: formulaName,
       //     args: JSON.stringify(args),
       //     blockHeight: {
-      //       [Op.gt]: blockHeights[0],
-      //       [Op.lte]: blockHeights[1],
+      //       [Op.gt]: blocks[0].height,
+      //       [Op.lte]: blocks[1].height,
       //     },
       //   },
       //   order: [['blockHeight', 'DESC']],
@@ -163,10 +165,10 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       //   ]
 
       //   computation = computations.map(
-      //     ({ blockHeight, blockTimeUnixMicro, output }) => ({
+      //     ({ blockHeight, output }) => ({
       //       value: output && JSON.parse(output),
-      //       blockHeight: Number(blockHeight),
-      //       blockTimeUnixMicro: Number(blockTimeUnixMicro),
+      //       blockHeight: block.height ?? -1,
+      //       blockTimeUnixMs: block.timeUnixMs ?? -1,
       //     })
       //   )
       // } else {
@@ -175,17 +177,18 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
         formula,
         contract,
         args,
-        blockHeights[0],
-        blockHeights[1]
+        blocks[0],
+        blocks[1]
       )
 
-      computation = rangeComputations.map(
-        ({ blockHeight, blockTimeUnixMicro, ...data }) => ({
-          ...data,
-          blockHeight: Number(blockHeight),
-          blockTimeUnixMicro: Number(blockTimeUnixMicro),
-        })
-      )
+      computation = rangeComputations.map(({ block, ...data }) => ({
+        ...data,
+        // If no block, the computation must not have accessed any keys. It may
+        // be a constant formula, in which case it doesn't have any block
+        // context.
+        blockHeight: block?.height ?? -1,
+        blockTimeUnixMs: block?.timeUnixMs ?? -1,
+      }))
 
       // Cache computations for future queries.
       await Computation.createFromComputationOutputs(
@@ -197,6 +200,20 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       // }
     } else {
       // Otherwise compute for single block.
+
+      // Use latest block if not provided.
+      if (block === undefined) {
+        const state = await State.findOne({
+          where: {
+            singleton: true,
+          },
+        })
+        if (!state) {
+          throw new Error('State not found')
+        }
+
+        block = state.latestBlock
+      }
       // const existingComputation = await Computation.findOne({
       //   where: {
       //     contractAddress: contract.address,
@@ -222,12 +239,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       //     existingComputation.output && JSON.parse(existingComputation.output)
       // } else {
       // Otherwise compute.
-      const computationOutput = await compute(
-        formula,
-        contract,
-        args,
-        blockHeight
-      )
+      const computationOutput = await compute(formula, contract, args, block)
 
       computation = computationOutput.value
 

@@ -2,6 +2,7 @@ import { SequelizeOptions } from 'sequelize-typescript'
 
 export interface Config {
   indexerRoot: string
+  statusEndpoint: string
   db: { uri?: string } & Pick<
     SequelizeOptions,
     | 'dialect'

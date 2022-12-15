@@ -1,5 +1,6 @@
 {
   "indexerRoot": "/Users/user/.juno/indexer",
+  "statusEndpoint": "http://localhost:26657/status",
   "db": {
     "dialect": "postgres",
     "host": "localhost",

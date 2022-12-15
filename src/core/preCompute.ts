@@ -17,6 +17,16 @@ export const preCompute = async (
     throw new Error(`Contract not found: ${contractAddress}`)
   }
 
+  const earliestEvent = await Event.findOne({
+    where: {
+      contractAddress,
+    },
+    order: [['blockHeight', 'ASC']],
+  })
+  if (!earliestEvent) {
+    throw new Error(`No events found for ${contractAddress}}`)
+  }
+
   const latestEvent = await Event.findOne({
     where: {
       contractAddress,
@@ -39,8 +49,8 @@ export const preCompute = async (
       formula,
       contract,
       args,
-      1,
-      latestEvent.blockHeight
+      earliestEvent.block,
+      latestEvent.block
     )
 
     // Store computations in DB.
