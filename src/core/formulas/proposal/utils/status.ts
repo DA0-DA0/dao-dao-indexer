@@ -3,6 +3,7 @@ import { isExpirationExpired } from '../../utils'
 import { Proposal } from '../types'
 import { doesVoteCountFail, doesVoteCountPass, totalVotes } from './math'
 
+// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/contracts/proposal/dao-proposal-single/src/proposal.rs#L81
 export const isPassed = (proposal: Proposal, block: Block): boolean => {
   const expired = isExpirationExpired(proposal.expiration, block)
 
@@ -51,6 +52,7 @@ export const isPassed = (proposal: Proposal, block: Block): boolean => {
   return BigInt(proposal.votes.yes) >= BigInt(threshold)
 }
 
+// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/contracts/proposal/dao-proposal-single/src/proposal.rs#L127
 export const isRejected = (proposal: Proposal, block: Block): boolean => {
   const expired = isExpirationExpired(proposal.expiration, block)
 

@@ -1,10 +1,13 @@
 import { PercentageThreshold, Votes } from '../types'
 
+// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/packages/dao-voting/src/voting.rs#L216
 export const totalVotes = (votes: Votes): bigint =>
   BigInt(votes.yes) + BigInt(votes.no) + BigInt(votes.abstain)
 
+// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/packages/dao-voting/src/voting.rs#L8
 const PRECISION_FACTOR = 10n ** 9n
 
+// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/packages/dao-voting/src/voting.rs#L83
 export const compareVoteCount = (
   _votes: bigint,
   cmp: '>' | '>=',
@@ -19,6 +22,7 @@ export const compareVoteCount = (
   return cmp === '>' ? votes > threshold : votes >= threshold
 }
 
+// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/packages/dao-voting/src/voting.rs#L135
 export const doesVoteCountPass = (
   yesVotes: bigint,
   options: bigint,
@@ -36,6 +40,7 @@ export const doesVoteCountPass = (
   return compareVoteCount(yesVotes, '>=', options, percent.percent)
 }
 
+// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/packages/dao-voting/src/voting.rs#L152
 export const doesVoteCountFail = (
   noVotes: bigint,
   options: bigint,
