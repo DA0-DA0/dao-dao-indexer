@@ -2,6 +2,7 @@ import { Formula } from '../../types'
 import { info, instantiatedAt } from '../common'
 import { balance } from '../external/cw20'
 import { ContractInfo, Expiration } from '../types'
+import { isExpirationExpired } from '../utils'
 import {
   totalPower as daoVotingCw20StakedTotalPower,
   votingPower as daoVotingCw20StakedVotingPower,
@@ -30,13 +31,26 @@ interface ProposalModuleWithInfo extends ProposalModule {
   info?: ContractInfo
 }
 
+type PausedResponse =
+  | {
+      Paused: {
+        expiration: Expiration
+      }
+    }
+  | {
+      Unpaused: {}
+    }
+
 interface DumpState {
   // Same as contract query.
   admin?: string
   config?: Config
   version?: ContractInfo
-  voting_module?: string
+  pause_info?: PausedResponse
   proposal_modules?: ProposalModuleWithInfo[]
+  voting_module?: string
+  active_proposal_module_count: number
+  total_proposal_module_count: number
   // Extra.
   votingModuleInfo?: ContractInfo
   createdAt?: string
@@ -123,13 +137,18 @@ export const dumpState: Formula<DumpState | undefined> = async (env) => {
     adminResponse,
     configResponse,
     version,
-    { address: voting_module, info: votingModuleInfo },
+    pause_info,
     proposal_modules,
+    { address: voting_module, info: votingModuleInfo },
+    activeProposalModuleCount,
+    totalProposalModuleCount,
     createdAt,
   ] = await Promise.all([
     admin(env),
     config(env),
     info(env),
+    paused(env),
+    proposalModules(env),
     votingModule(env).then(async (contractAddress) => {
       const infoResponse = await info({
         ...env,
@@ -140,7 +159,16 @@ export const dumpState: Formula<DumpState | undefined> = async (env) => {
         info: infoResponse,
       }
     }),
-    proposalModules(env),
+    // V2
+    env.get<number | undefined>(
+      env.contractAddress,
+      'active_proposal_module_count'
+    ),
+    env.get<number | undefined>(
+      env.contractAddress,
+      'total_proposal_module_count'
+    ),
+    // Extra.
     instantiatedAt(env),
   ])
 
@@ -154,18 +182,34 @@ export const dumpState: Formula<DumpState | undefined> = async (env) => {
     admin: adminResponse,
     config: configResponse,
     version,
-    voting_module,
+    pause_info,
     proposal_modules,
+    voting_module,
+    // V1 doesn't have these counts; all proposal modules are active.
+    active_proposal_module_count:
+      activeProposalModuleCount ?? proposal_modules?.length ?? 0,
+    total_proposal_module_count:
+      totalProposalModuleCount ?? proposal_modules?.length ?? 0,
     // Extra.
     votingModuleInfo,
     createdAt,
   }
 }
 
-export const paused: Formula<Expiration | false> = async ({
+export const paused: Formula<PausedResponse> = async ({
   contractAddress,
+  block,
   get,
-}) => (await get<Expiration | undefined>(contractAddress, 'paused')) ?? false
+}) => {
+  const expiration = await get<Expiration | undefined>(
+    contractAddress,
+    'paused'
+  )
+
+  return !expiration || isExpirationExpired(expiration, block)
+    ? { Unpaused: {} }
+    : { Paused: { expiration } }
+}
 
 export const admin: Formula<string | undefined> = async ({
   contractAddress,
