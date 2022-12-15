@@ -13,7 +13,7 @@
     "serve": "node dist/server/index.js",
     "serve:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js\"",
     "serve:prod": "npm run build && pm2 reload ecosystem.config.js --only server",
-    "deploy:api": "./scripts/deploy_api.sh",
+    "deploy:server": "./scripts/deploy_server.sh",
     "deploy:exporter": "./scripts/deploy_exporter.sh"
   },
   "author": "Noah Saso <noah@noah.zone>",
