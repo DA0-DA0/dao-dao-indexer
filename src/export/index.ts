@@ -13,6 +13,8 @@ const BULK_INSERT_SIZE = 500
 const LOADER_MAP = ['—', '\\', '|', '/']
 
 const main = async () => {
+  console.log(`\n\n[${new Date().toISOString()}] Exporting events...`)
+
   const config = await loadConfig()
 
   const eventsFile = path.join(config.indexerRoot, '.events.txt')
@@ -25,8 +27,6 @@ const main = async () => {
   await loadDb()
   // Setup meilisearch.
   await setupMeilisearch()
-
-  console.log(`\n\n[${new Date().toISOString()}] Exporting events...`)
 
   // Return promise that never resolves. Listen for file changes.
   return new Promise((_, reject) => {
