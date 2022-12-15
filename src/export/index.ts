@@ -35,10 +35,10 @@ const main = async () => {
     updateState().then((blockHeight) => {
       latestBlockHeight = blockHeight
     })
-    // Update db state every second.
+    // Update db state every 3 seconds.
     const stateInterval = setInterval(async () => {
       latestBlockHeight = await updateState()
-    }, 1000)
+    }, 3000)
     // Allow process to exit even though this interval is alive.
     stateInterval.unref()
 
