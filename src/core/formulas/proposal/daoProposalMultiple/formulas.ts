@@ -205,7 +205,7 @@ export const proposalCreatedAt: Formula<
 
 // Helpers
 
-// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/contracts/proposal/dao-proposal-single/src/proposal.rs#L57
+// https://github.com/DA0-DA0/dao-contracts/blob/fa567797e2f42e70296a2d6f889f341ff80f0695/contracts/proposal/dao-proposal-single/src/proposal.rs#L50
 const intoResponse = async (
   env: Env,
   proposal: MultipleChoiceProposal,

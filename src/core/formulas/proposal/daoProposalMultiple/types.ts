@@ -55,3 +55,11 @@ export interface Ballot {
   vote: MultipleChoiceVote
   rationale?: string | null
 }
+
+export type VoteResult =
+  | {
+      single_winner: CheckedMultipleChoiceOption
+    }
+  | {
+      tie: {}
+    }

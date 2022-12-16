@@ -1,8 +1,4 @@
-import { PercentageThreshold, Votes } from '../types'
-
-// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/packages/dao-voting/src/voting.rs#L216
-export const totalVotes = (votes: Votes): bigint =>
-  BigInt(votes.yes) + BigInt(votes.no) + BigInt(votes.abstain)
+import { PercentageThreshold } from '../types'
 
 // https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/packages/dao-voting/src/voting.rs#L8
 const PRECISION_FACTOR = 10n ** 9n

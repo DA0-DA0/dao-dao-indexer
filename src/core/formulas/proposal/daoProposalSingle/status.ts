@@ -1,7 +1,7 @@
 import { Block } from '../../../types'
 import { isExpirationExpired } from '../../utils'
-import { doesVoteCountFail, doesVoteCountPass, totalVotes } from '../utils/math'
-import { SingleChoiceProposal } from './types'
+import { doesVoteCountFail, doesVoteCountPass } from '../utils/math'
+import { SingleChoiceProposal, Votes } from './types'
 
 // https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/contracts/proposal/dao-proposal-single/src/proposal.rs#L81
 export const isPassed = (
@@ -137,3 +137,7 @@ export const isRejected = (
     BigInt(proposal.total_power) - totalVotes(proposal.votes)
   return BigInt(proposal.votes.yes) + outstandingVotes < BigInt(threshold)
 }
+
+// https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/packages/dao-voting/src/voting.rs#L216
+const totalVotes = (votes: Votes): bigint =>
+  BigInt(votes.yes) + BigInt(votes.no) + BigInt(votes.abstain)
