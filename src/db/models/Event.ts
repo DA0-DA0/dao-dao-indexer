@@ -22,7 +22,8 @@ import { Contract } from './Contract'
       fields: ['blockHeight', 'contractAddress', 'key'],
     },
     {
-      fields: ['contractAddress', 'key'],
+      // Speeds up queries.
+      fields: ['blockHeight', 'contractAddress'],
     },
   ],
 })
