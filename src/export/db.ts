@@ -54,7 +54,10 @@ export const exporter: Exporter = async (events) => {
 // Update db state. Returns latest block height for log.
 export const updateState = async (): Promise<number> => {
   const { statusEndpoint } = await loadConfig()
-  const { data } = await axios.get(statusEndpoint)
+  const { data } = await axios.get(statusEndpoint, {
+    // https://stackoverflow.com/a/74735197
+    headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
+  })
 
   const latestBlockHeight = Number(data.result.sync_info.latest_block_height)
   const latestBlockTimeUnixMs = Date.parse(

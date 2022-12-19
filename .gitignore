@@ -3,6 +3,7 @@ dist/
 scripts/
 
 config.json
+config.*.json
 *.crt
 
 # meilisearch
