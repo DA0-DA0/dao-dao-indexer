@@ -37,12 +37,12 @@ export const price: Formula = async (env) => {
     token1: {
       denom: token1.denom,
       cw20Info: token1Cw20,
-      price: token2Amount / token1Amount,
+      price: (token2Amount / token1Amount).toString(),
     },
     token2: {
       denom: token2.denom,
       cw20Info: token2Cw20,
-      price: token1Amount / token2Amount,
+      price: (token1Amount / token2Amount).toString(),
     },
   }
 }
