@@ -43,6 +43,10 @@ export class Event extends Model {
   @Column(DataType.BIGINT)
   blockTimeUnixMs!: number
 
+  @AllowNull(false)
+  @Column(DataType.DATE)
+  blockTimestamp!: Date
+
   // Key is stored as a comma separated list of uint8 values that represents a
   // byte array. The byte array datatype doesn't allow for prefix queries, so we
   // have to manually encode binary data in a format that allows for

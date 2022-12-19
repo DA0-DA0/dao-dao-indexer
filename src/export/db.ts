@@ -27,6 +27,7 @@ export const exporter: Exporter = async (events) => {
     contractAddress: event.contractAddress,
     blockHeight: event.blockHeight,
     blockTimeUnixMs: Math.round(event.blockTimeUnixMicro / 1000),
+    blockTimestamp: new Date(event.blockTimeUnixMicro / 1000),
     // Convert base64 key to comma-separated list of bytes. See explanation in
     // `Event` model for more information.
     key: Buffer.from(event.key, 'base64').join(','),
