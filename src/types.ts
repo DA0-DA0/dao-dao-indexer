@@ -1,7 +1,8 @@
 import { SequelizeOptions } from 'sequelize-typescript'
 
 export interface Config {
-  indexerRoot: string
+  indexerRoot?: string
+  eventsFile?: string
   statusEndpoint: string
   db: { uri?: string } & Pick<
     SequelizeOptions,
@@ -19,13 +20,13 @@ export interface Config {
     | 'pool'
     | 'schema'
   >
-  preCompute: {
+  preCompute?: {
     codeIds?: number[]
     contractAddresses?: string[]
     formulaPrefixes?: string[]
     formulas?: string[]
   }[]
-  meilisearch: {
+  meilisearch?: {
     host: string
     apiKey?: string
     indexes: {

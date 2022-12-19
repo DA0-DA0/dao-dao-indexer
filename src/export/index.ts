@@ -17,9 +17,12 @@ const main = async () => {
 
   const config = await loadConfig()
 
-  const eventsFile = path.join(config.indexerRoot, '.events.txt')
+  let eventsFile = config.eventsFile || ''
+  if (!eventsFile && config.indexerRoot) {
+    eventsFile = path.join(config.indexerRoot, '.events.txt')
+  }
   // Ensure events file exists.
-  if (!fs.existsSync(eventsFile)) {
+  if (!eventsFile || !fs.existsSync(eventsFile)) {
     throw new Error(`Events file not found (${eventsFile}).`)
   }
 

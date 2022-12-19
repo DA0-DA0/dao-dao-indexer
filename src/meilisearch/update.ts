@@ -4,10 +4,14 @@ import { Contract, State } from '../db'
 import { loadMeilisearch } from './client'
 
 export const updateIndexesForContracts = async (contracts: Contract[]) => {
+  const { meilisearch } = await loadConfig()
+
+  // If no meilisearch in config, nothing to update.
+  if (!meilisearch) {
+    return
+  }
+
   const client = await loadMeilisearch()
-  const {
-    meilisearch: { indexes },
-  } = await loadConfig()
 
   // Update indexes with data from the latest block height.
   const state = await State.findOne({
@@ -25,7 +29,7 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
     args = {},
     codeIds,
     contractAddresses,
-  } of indexes) {
+  } of meilisearch.indexes) {
     const formula = getFormula(formulaName)
     if (!formula) {
       throw new Error(`Formula ${formulaName} not found`)

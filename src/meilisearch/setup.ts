@@ -2,13 +2,17 @@ import { loadConfig } from '../config'
 import { loadMeilisearch } from './client'
 
 export const setupMeilisearch = async () => {
+  const { meilisearch } = await loadConfig()
+
+  // If no meilisearch in config, nothing to setup.
+  if (!meilisearch) {
+    return
+  }
+
   const client = await loadMeilisearch()
-  const {
-    meilisearch: { indexes },
-  } = await loadConfig()
 
   // Create indexes if they don't exist.
-  for (const { index, filterableAttributes } of indexes) {
+  for (const { index, filterableAttributes } of meilisearch.indexes) {
     try {
       const clientIndex = await client.getIndex(index)
       if (clientIndex.primaryKey !== 'contractAddress') {
