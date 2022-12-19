@@ -7,7 +7,7 @@ interface Token {
   denom: Denom
 }
 
-export const price: Formula = async (env) => {
+export const summary: Formula = async (env) => {
   const { contractAddress, get } = env
 
   const token1 = await get<Token>(contractAddress, 'token1')
@@ -37,11 +37,13 @@ export const price: Formula = async (env) => {
     token1: {
       denom: token1.denom,
       cw20Info: token1Cw20,
+      reserve: token1Amount,
       price: token2Amount / token1Amount,
     },
     token2: {
       denom: token2.denom,
       cw20Info: token2Cw20,
+      reserve: token2Amount,
       price: token1Amount / token2Amount,
     },
   }
