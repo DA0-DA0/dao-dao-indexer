@@ -1,12 +1,25 @@
 import cors from '@koa/cors'
 import Router from '@koa/router'
+import { Command } from 'commander'
 import Koa from 'koa'
 
+import { loadConfig } from '../config'
 import { compute, computeRange, getFormula } from '../core'
 import { Block } from '../core/types'
 import { Computation, Contract, State, closeDb, loadDb } from '../db'
 import { validateBlockString } from './validate'
 
+// Parse arguments.
+const program = new Command()
+program.option('-p, --port <port>', 'port to listen on', '3420')
+program.option(
+  '-c, --config <path>',
+  'path to config file, falling back to config.json'
+)
+program.parse()
+const options = program.opts()
+
+// Setup app.
 const app = new Koa()
 const router = new Router()
 
@@ -272,11 +285,18 @@ app.use(router.routes()).use(router.allowedMethods())
 
 // Start.
 const main = async () => {
+  // Load config with config option.
+  await loadConfig(options.config)
+
   // Connect to DB.
   await loadDb()
 
-  app.listen(3420, () => {
-    console.log('Listening on 3420...')
+  if (!options.port || isNaN(options.port)) {
+    throw new Error('Port must be a number')
+  }
+
+  app.listen(options.port, () => {
+    console.log(`Listening on ${options.port}...`)
 
     // Tell pm2 we're ready.
     if (process.send) {

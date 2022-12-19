@@ -8,13 +8,15 @@ export const CONFIG_FILE = path.join(__dirname, '../config.json')
 
 // Config
 let config: Config
-export const loadConfig = async () => {
+export const loadConfig = async (configOverride?: string) => {
   if (!config) {
-    if (!fs.existsSync(CONFIG_FILE)) {
-      throw new Error(`Config not found (${CONFIG_FILE}).`)
+    const configPath = path.resolve(configOverride ?? CONFIG_FILE)
+
+    if (!fs.existsSync(configPath)) {
+      throw new Error(`Config not found (${configPath}).`)
     }
 
-    config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'))
+    config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
   }
 
   return config
