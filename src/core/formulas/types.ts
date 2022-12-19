@@ -13,3 +13,11 @@ export interface ContractInfo {
   contract: string
   version: string
 }
+
+export type Denom =
+  | {
+      native: string
+    }
+  | {
+      cw20: string
+    }
