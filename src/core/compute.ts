@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, Sequelize } from 'sequelize'
 
 import { Contract, Event } from '../db/models'
 import {
@@ -122,10 +122,7 @@ export const computeRange = async (
         latestBlock === undefined ||
         latestEvent.blockHeight > latestBlock.height
       ) {
-        latestBlock = {
-          height: latestEvent.blockHeight,
-          timeUnixMs: latestEvent.blockTimeUnixMs,
-        }
+        latestBlock = latestEvent.block
       }
     }
 
@@ -233,12 +230,28 @@ const getEnv = (
       [Op.like]: `${keyPrefix}%`,
     }
     const events = await Event.findAll({
+      attributes: [
+        // DISTINCT ON is not directly supported by Sequelize, so we need to
+        // cast to unknown and back to string to insert this at the beginning of
+        // the query. This ensures we use the most recent version of the key.
+        Sequelize.literal('DISTINCT ON("key") "key"') as unknown as string,
+        'key',
+        'contractAddress',
+        'blockHeight',
+        'blockTimeUnixMs',
+        'value',
+        'delete',
+      ],
       where: {
         contractAddress,
         key: keyFilter,
         ...blockHeightFilter,
       },
-      order: [['blockHeight', 'DESC']],
+      order: [
+        // Needs to be first so we can use DISTINCT ON.
+        ['key', 'ASC'],
+        ['blockHeight', 'DESC'],
+      ],
     })
 
     // Call hook.
