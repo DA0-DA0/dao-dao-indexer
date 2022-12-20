@@ -203,6 +203,44 @@ export const proposalCreatedAt: Formula<
     await getDateKeyFirstSet(contractAddress, 'proposals', Number(id))
   )?.toISOString()
 
+// Return open proposals. If an address is passed, returns only proposals with
+// no votes from the address.
+export const openProposals: Formula<
+  ProposalResponse<MultipleChoiceProposal>[],
+  { address?: string }
+> = async (env) => {
+  const openProposals = (
+    await listProposals({
+      ...env,
+      args: {},
+    })
+  ).filter(({ proposal }) => proposal.status === Status.Open)
+
+  // Get votes for the given address for each open proposal. If no address,
+  // don't filter by vote.
+  const openProposalVotes = env.args.address
+    ? await Promise.all(
+        openProposals.map(({ id }) =>
+          vote({
+            ...env,
+            args: {
+              proposalId: id.toString(),
+              voter: env.args.address!,
+            },
+          })
+        )
+      )
+    : undefined
+
+  // Filter out proposals with votes if address provided.
+  const openProposalsWithoutVotes =
+    env.args.address && openProposalVotes
+      ? openProposals.filter((_, index) => !openProposalVotes[index])
+      : openProposals
+
+  return openProposalsWithoutVotes
+}
+
 // Helpers
 
 // https://github.com/DA0-DA0/dao-contracts/blob/fa567797e2f42e70296a2d6f889f341ff80f0695/contracts/proposal/dao-proposal-single/src/proposal.rs#L50

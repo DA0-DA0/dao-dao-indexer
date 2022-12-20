@@ -1,6 +1,9 @@
 import { Formula } from '../../types'
 import { info, instantiatedAt } from '../common'
 import { balance } from '../external/cw20'
+import { openProposals as multipleChoiceOpenProposals } from '../proposal/daoProposalMultiple'
+import { openProposals as singleChoiceOpenProposals } from '../proposal/daoProposalSingle'
+import { ProposalResponse } from '../proposal/types'
 import { ContractInfo, Expiration } from '../types'
 import { isExpirationExpired } from '../utils'
 import {
@@ -64,6 +67,11 @@ interface Cw20Balance {
 interface SubDao {
   addr: string
   charter?: string | null
+}
+
+interface InboxItem {
+  address: string
+  proposals: ProposalResponse<any>[]
 }
 
 export const config: Formula<Config | undefined> = async ({
@@ -340,4 +348,59 @@ const TOTAL_POWER_MAP: Record<string, Formula<string> | undefined> = {
   'cw20-staked-balance-voting': daoVotingCw20StakedTotalPower,
   'cwd-voting-cw20-staked': daoVotingCw20StakedTotalPower,
   'dao-voting-cw20-staked': daoVotingCw20StakedTotalPower,
+}
+
+// Return open proposals without votes from the given address. If no address
+// provided, just return open proposals.
+export const openProposals: Formula<
+  InboxItem[] | undefined,
+  { address?: string }
+> = async (env) => {
+  const proposalModules = await activeProposalModules(env)
+
+  if (!proposalModules) {
+    return undefined
+  }
+
+  return (
+    await Promise.all(
+      proposalModules.map(async ({ address, info }) => {
+        if (!info) {
+          return undefined
+        }
+
+        const openProposalsFormula =
+          OPEN_PROPOSALS_MAP[info.contract.replace('crates.io:', '')]
+        const openProposals = await openProposalsFormula?.({
+          ...env,
+          contractAddress: address,
+        })
+
+        return (
+          openProposals && {
+            address,
+            proposals: openProposals,
+          }
+        )
+      })
+    )
+  ).filter(Boolean) as InboxItem[]
+}
+
+// Map contract name to open proposal formula.
+const OPEN_PROPOSALS_MAP: Record<
+  string,
+  Formula<ProposalResponse<any>[], { address?: string }> | undefined
+> = {
+  // Single choice
+  // V1
+  'cw-govmod-single': singleChoiceOpenProposals,
+  'cw-proposal-single': singleChoiceOpenProposals,
+  // V2
+  'cwd-proposal-single': singleChoiceOpenProposals,
+  'dao-proposal-single': singleChoiceOpenProposals,
+
+  // Multiple choice
+  'cwd-proposal-multiple': multipleChoiceOpenProposals,
+  'dao-proposal-multiple': multipleChoiceOpenProposals,
 }
