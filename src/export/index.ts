@@ -2,6 +2,8 @@ import * as fs from 'fs'
 import path from 'path'
 import readline from 'readline'
 
+import { Command } from 'commander'
+
 import { loadConfig } from '../config'
 import { loadDb } from '../db'
 import { setupMeilisearch, updateIndexesForContracts } from '../meilisearch'
@@ -12,10 +14,20 @@ import { objectMatchesStructure } from './utils'
 const BULK_INSERT_SIZE = 500
 const LOADER_MAP = ['—', '\\', '|', '/']
 
+// Parse arguments.
+const program = new Command()
+program.option(
+  '-c, --config <path>',
+  'path to config file, falling back to config.json'
+)
+program.parse()
+const options = program.opts()
+
 const main = async () => {
   console.log(`\n\n[${new Date().toISOString()}] Exporting events...`)
 
-  const config = await loadConfig()
+  // Load config with config option.
+  const config = await loadConfig(options.config)
 
   let eventsFile = config.eventsFile || ''
   if (!eventsFile && config.indexerRoot) {
