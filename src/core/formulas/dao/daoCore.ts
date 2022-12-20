@@ -70,7 +70,7 @@ interface SubDao {
 }
 
 interface InboxItem {
-  address: string
+  proposalModuleAddress: string
   proposals: ProposalResponse<any>[]
 }
 
@@ -364,7 +364,7 @@ export const openProposals: Formula<
 
   return (
     await Promise.all(
-      proposalModules.map(async ({ address, info }) => {
+      proposalModules.map(async ({ address: proposalModuleAddress, info }) => {
         if (!info) {
           return undefined
         }
@@ -373,12 +373,12 @@ export const openProposals: Formula<
           OPEN_PROPOSALS_MAP[info.contract.replace('crates.io:', '')]
         const openProposals = await openProposalsFormula?.({
           ...env,
-          contractAddress: address,
+          contractAddress: proposalModuleAddress,
         })
 
         return (
           openProposals && {
-            address,
+            proposalModuleAddress,
             proposals: openProposals,
           }
         )
