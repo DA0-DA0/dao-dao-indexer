@@ -402,12 +402,21 @@ const getEnv = (
       return typeof key !== 'string' && typeof key !== 'number' && key.map
     })
 
-    const keyFilter = {
-      [Op.or]: {
-        [Op.in]: nonMapKeys,
-        [Op.regexp]: `^(${mapKeyPrefixes.join('|')}).+`,
-      },
-    }
+    const nonMapKeyFilter =
+      nonMapKeys.length > 0 ? { [Op.in]: nonMapKeys } : undefined
+    const mapKeyFilter =
+      mapKeyPrefixes.length > 0
+        ? { [Op.regexp]: `^(${mapKeyPrefixes.join('|')}).+` }
+        : undefined
+    const keyFilter =
+      nonMapKeyFilter && mapKeyFilter
+        ? {
+            [Op.or]: {
+              ...nonMapKeyFilter,
+              ...mapKeyFilter,
+            },
+          }
+        : nonMapKeyFilter || mapKeyFilter || {}
 
     const events = await Event.findAll({
       attributes: [
