@@ -3,6 +3,18 @@ export type FormulaGetter = <T>(
   ...keys: (string | number)[]
 ) => Promise<T | undefined>
 
+export type FormulaPrefetch = (
+  contractAddress: string,
+  ...listOfKeys: (
+    | string
+    | number
+    | {
+        keys: (string | number)[]
+        map: boolean
+      }
+  )[]
+) => Promise<void>
+
 export type FormulaMapGetter = <
   K extends string | number = string | number,
   V = any
@@ -31,6 +43,7 @@ export type Env<Args extends Record<string, string> | undefined = undefined> = {
   getMap: FormulaMapGetter
   getDateKeyModified: FormulaDateGetter
   getDateKeyFirstSet: FormulaDateGetter
+  prefetch: FormulaPrefetch
   args: Args extends undefined ? Record<string, any> : Args
 } & (Args extends undefined ? Record<string, any> : { args: Args })
 

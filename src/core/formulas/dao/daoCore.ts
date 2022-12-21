@@ -141,6 +141,27 @@ export const activeProposalModules: Formula<
 }
 
 export const dumpState: Formula<DumpState | undefined> = async (env) => {
+  // Prefetch all data in one query.
+  await env.prefetch(
+    env.contractAddress,
+    'admin',
+    'config_v2',
+    'config',
+    'contract_info',
+    'paused',
+    'voting_module',
+    'active_proposal_module_count',
+    'total_proposal_module_count',
+    {
+      keys: ['proposal_modules_v2'],
+      map: true,
+    },
+    {
+      keys: ['proposal_modules'],
+      map: true,
+    }
+  )
+
   const [
     adminResponse,
     configResponse,
@@ -157,16 +178,15 @@ export const dumpState: Formula<DumpState | undefined> = async (env) => {
     info(env),
     paused(env),
     proposalModules(env),
-    votingModule(env).then(async (contractAddress) => {
-      const infoResponse = await info({
-        ...env,
-        contractAddress: contractAddress ?? '',
-      })
-      return {
-        address: contractAddress,
-        info: infoResponse,
-      }
-    }),
+    votingModule(env).then(async (contractAddress) => ({
+      address: contractAddress,
+      info: contractAddress
+        ? await info({
+            ...env,
+            contractAddress,
+          })
+        : undefined,
+    })),
     // V2
     env.get<number | undefined>(
       env.contractAddress,

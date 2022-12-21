@@ -9,6 +9,7 @@ import {
   FormulaDateGetter,
   FormulaGetter,
   FormulaMapGetter,
+  FormulaPrefetch,
 } from './types'
 import { dbKeyForKeys, dbKeyToNumber, dbKeyToString } from './utils'
 
@@ -34,10 +35,7 @@ export const compute = async (
       latestBlock === undefined ||
       latestEvent.blockHeight > latestBlock.height
     ) {
-      latestBlock = {
-        height: latestEvent.blockHeight,
-        timeUnixMs: latestEvent.blockTimeUnixMs,
-      }
+      latestBlock = latestEvent.block
     }
   }
 
@@ -97,10 +95,7 @@ export const computeRange = async (
         (nextPotentialBlock === undefined ||
           nextEvent.blockHeight < nextPotentialBlock.height)
       ) {
-        nextPotentialBlock = {
-          height: nextEvent.blockHeight,
-          timeUnixMs: nextEvent.blockTimeUnixMs,
-        }
+        nextPotentialBlock = nextEvent.block
       }
     }
 
@@ -195,16 +190,33 @@ const getEnv = (
     },
   }
 
+  // Cache event for key, or events for map. Null if event(s) nonexistent.
+  const cache: Record<string, Event[] | null | undefined> = {}
+
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
-    const event = await Event.findOne({
-      where: {
-        contractAddress,
-        key,
-        ...blockHeightFilter,
-      },
-      order: [['blockHeight', 'DESC']],
-    })
+    // Check cache.
+    const cacheKey = `${contractAddress}:${key}`
+    const cachedEvent = cache[cacheKey]
+
+    const event =
+      // If undefined, we haven't tried to fetch it yet. If not undefined,
+      // either it exists or it doesn't (null).
+      cachedEvent !== undefined
+        ? cachedEvent?.[0]
+        : await Event.findOne({
+            where: {
+              contractAddress,
+              key,
+              ...blockHeightFilter,
+            },
+            order: [['blockHeight', 'DESC']],
+          })
+
+    // Cache event, null if nonexistent.
+    if (cachedEvent === undefined) {
+      cache[cacheKey] = event ? [event] : null
+    }
 
     // Call hook.
     await onFetchEvents?.(event ? [event] : [], key)
@@ -214,7 +226,9 @@ const getEnv = (
       return undefined
     }
 
-    return JSON.parse(event.value ?? 'null')
+    const value = JSON.parse(event.value ?? 'null')
+
+    return value
   }
 
   const getMap: FormulaMapGetter = async (
@@ -224,40 +238,57 @@ const getEnv = (
   ) => {
     const keyPrefix =
       (Array.isArray(name)
-        ? dbKeyForKeys(...name, '')
+        ? // Add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
+          dbKeyForKeys(...name, '')
         : dbKeyForKeys(name, '')) + ','
+    // Check cache.
+    const cacheKey = `${contractAddress}:${keyPrefix}`
+    const cachedEvents = cache[cacheKey]
+
     const keyFilter = {
       [Op.like]: `${keyPrefix}%`,
     }
-    const events = await Event.findAll({
-      attributes: [
-        // DISTINCT ON is not directly supported by Sequelize, so we need to
-        // cast to unknown and back to string to insert this at the beginning of
-        // the query. This ensures we use the most recent version of the key.
-        Sequelize.literal('DISTINCT ON("key") "key"') as unknown as string,
-        'key',
-        'contractAddress',
-        'blockHeight',
-        'blockTimeUnixMs',
-        'value',
-        'delete',
-      ],
-      where: {
-        contractAddress,
-        key: keyFilter,
-        ...blockHeightFilter,
-      },
-      order: [
-        // Needs to be first so we can use DISTINCT ON.
-        ['key', 'ASC'],
-        ['blockHeight', 'DESC'],
-      ],
-    })
+    const events =
+      // If undefined, we haven't tried to fetch them yet. If not undefined,
+      // either they exist or they don't (null).
+      cachedEvents !== undefined
+        ? cachedEvents ?? []
+        : await Event.findAll({
+            attributes: [
+              // DISTINCT ON is not directly supported by Sequelize, so we need to
+              // cast to unknown and back to string to insert this at the beginning of
+              // the query. This ensures we use the most recent version of the key.
+              Sequelize.literal(
+                'DISTINCT ON("key") "key"'
+              ) as unknown as string,
+              'key',
+              'contractAddress',
+              'blockHeight',
+              'blockTimeUnixMs',
+              'value',
+              'delete',
+            ],
+            where: {
+              contractAddress,
+              key: keyFilter,
+              ...blockHeightFilter,
+            },
+            order: [
+              // Needs to be first so we can use DISTINCT ON.
+              ['key', 'ASC'],
+              ['blockHeight', 'DESC'],
+            ],
+          })
+
+    // Cache events, null if nonexistent.
+    if (cachedEvents === undefined) {
+      cache[cacheKey] = events.length ? events : null
+    }
 
     // Call hook.
     await onFetchEvents?.(events, keyFilter)
 
-    // If no events found, return empty map.
+    // If no events found, return undefined.
     if (!events.length) {
       return undefined
     }
@@ -338,6 +369,78 @@ const getEnv = (
     return date
   }
 
+  const prefetch: FormulaPrefetch = async (contractAddress, ...listOfKeys) => {
+    const keys = listOfKeys.map((key) =>
+      typeof key === 'string' || typeof key === 'number'
+        ? dbKeyForKeys(key)
+        : !key.map
+        ? dbKeyForKeys(...key.keys)
+        : // If it's a map, we need to filter by the prefix, so add an empty key at the end so append a comma. Also add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
+          dbKeyForKeys(...key.keys, '') + ','
+    )
+
+    const nonMapKeys = keys.filter((_, index) => {
+      const key = listOfKeys[index]
+      return typeof key === 'string' || typeof key === 'number' || !key.map
+    })
+    const mapKeyPrefixes = keys.filter((_, index) => {
+      const key = listOfKeys[index]
+      return typeof key !== 'string' && typeof key !== 'number' && key.map
+    })
+
+    const keyFilter = {
+      [Op.or]: {
+        [Op.in]: nonMapKeys,
+        [Op.regexp]: `^(${mapKeyPrefixes.join('|')}).+`,
+      },
+    }
+
+    const events = await Event.findAll({
+      attributes: [
+        // DISTINCT ON is not directly supported by Sequelize, so we need to
+        // cast to unknown and back to string to insert this at the beginning of
+        // the query. This ensures we use the most recent version of the key.
+        Sequelize.literal('DISTINCT ON("key") "key"') as unknown as string,
+        'key',
+        'contractAddress',
+        'blockHeight',
+        'blockTimeUnixMs',
+        'value',
+        'delete',
+      ],
+      where: {
+        contractAddress,
+        key: keyFilter,
+        ...blockHeightFilter,
+      },
+      order: [
+        // Needs to be first so we can use DISTINCT ON.
+        ['key', 'ASC'],
+        ['blockHeight', 'DESC'],
+      ],
+    })
+
+    // Call hook.
+    await onFetchEvents?.(events, keyFilter)
+
+    nonMapKeys.forEach((key) => {
+      // Find matching event for key.
+      const event = events.find((event) => event.key === key)
+      const cacheKey = `${contractAddress}:${key}`
+      // If no event found or key deleted, cache null for nonexistent.
+      cache[cacheKey] = !event || event.delete ? null : [event]
+    })
+    mapKeyPrefixes.forEach((keyPrefix) => {
+      // Find matching events for key prefix.
+      const eventsForPrefix = events.filter((event) =>
+        event.key.startsWith(keyPrefix)
+      )
+      const cacheKey = `${contractAddress}:${keyPrefix}`
+      // If no events found, cache null for nonexistent.
+      cache[cacheKey] = eventsForPrefix.length ? eventsForPrefix : null
+    })
+  }
+
   return {
     contractAddress,
     block,
@@ -345,6 +448,7 @@ const getEnv = (
     getMap,
     getDateKeyModified,
     getDateKeyFirstSet,
+    prefetch,
     args,
   }
 }
