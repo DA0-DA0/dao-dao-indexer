@@ -8,12 +8,27 @@ interface Token {
 }
 
 export const summary: Formula = async (env) => {
-  const { contractAddress, get, prefetch } = env
+  const { contractAddress, get } = env
 
-  await prefetch(contractAddress, 'token1', 'token2')
+  const [{ token1, token1Cw20 }, { token2, token2Cw20 }] = await Promise.all([
+    get<Token>(contractAddress, 'token1').then(async (token1) => ({
+      token1,
+      // Get CW20 token info if available.
+      token1Cw20:
+        token1 && 'cw20' in token1.denom
+          ? await tokenInfo({ ...env, contractAddress: token1.denom.cw20 })
+          : undefined,
+    })),
+    get<Token>(contractAddress, 'token2').then(async (token2) => ({
+      token2,
+      // Get CW20 token info if available.
+      token2Cw20:
+        token2 && 'cw20' in token2.denom
+          ? await tokenInfo({ ...env, contractAddress: token2.denom.cw20 })
+          : undefined,
+    })),
+  ])
 
-  const token1 = await get<Token>(contractAddress, 'token1')
-  const token2 = await get<Token>(contractAddress, 'token2')
   if (!token1 || !token2) {
     return undefined
   }
@@ -24,16 +39,6 @@ export const summary: Formula = async (env) => {
   if (token1Amount === 0 || token2Amount === 0) {
     return undefined
   }
-
-  // Get CW20 token info if available.
-  const token1Cw20 =
-    'cw20' in token1.denom
-      ? await tokenInfo({ ...env, contractAddress: token1.denom.cw20 })
-      : undefined
-  const token2Cw20 =
-    'cw20' in token2.denom
-      ? await tokenInfo({ ...env, contractAddress: token2.denom.cw20 })
-      : undefined
 
   return {
     token1: {
