@@ -10,7 +10,7 @@ export type FormulaPrefetch = (
     | number
     | {
         keys: (string | number)[]
-        map: boolean
+        map?: boolean
       }
   )[]
 ) => Promise<void>

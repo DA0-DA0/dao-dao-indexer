@@ -8,7 +8,9 @@ interface Token {
 }
 
 export const summary: Formula = async (env) => {
-  const { contractAddress, get } = env
+  const { contractAddress, get, prefetch } = env
+
+  await prefetch(contractAddress, 'token1', 'token2')
 
   const token1 = await get<Token>(contractAddress, 'token1')
   const token2 = await get<Token>(contractAddress, 'token2')

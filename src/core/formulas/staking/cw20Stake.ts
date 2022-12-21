@@ -27,6 +27,13 @@ export const totalStaked: Formula<string> = async ({ contractAddress, get }) =>
 export const stakedValue: Formula<string, { address: string }> = async (
   env
 ) => {
+  await env.prefetch(
+    env.contractAddress,
+    'balance',
+    { keys: ['staked_balances', env.args.address] },
+    'total_staked'
+  )
+
   const balance = Number(await totalValue(env))
   const staked = Number(await stakedBalance(env))
   const total = Number(await totalStaked(env))

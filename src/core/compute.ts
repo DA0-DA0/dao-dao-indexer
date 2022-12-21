@@ -316,15 +316,29 @@ const getEnv = (
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
+    // Check cache.
+    const cacheKey = `${contractAddress}:${key}`
+    const cachedEvent = cache[cacheKey]
+
     // Get most recent event for this key.
-    const event = await Event.findOne({
-      where: {
-        contractAddress,
-        key,
-        ...blockHeightFilter,
-      },
-      order: [['blockHeight', 'DESC']],
-    })
+    const event =
+      // If undefined, we haven't tried to fetch it yet. If not undefined,
+      // either it exists or it doesn't (null).
+      cachedEvent !== undefined
+        ? cachedEvent?.[0]
+        : await Event.findOne({
+            where: {
+              contractAddress,
+              key,
+              ...blockHeightFilter,
+            },
+            order: [['blockHeight', 'DESC']],
+          })
+
+    // Cache event, null if nonexistent.
+    if (cachedEvent === undefined) {
+      cache[cacheKey] = event ? [event] : null
+    }
 
     // Call hook.
     await onFetchEvents?.(event ? [event] : [], key)
@@ -430,6 +444,7 @@ const getEnv = (
       // If no event found or key deleted, cache null for nonexistent.
       cache[cacheKey] = !event || event.delete ? null : [event]
     })
+    // Group events by key prefix for maps, and also cache separately.
     mapKeyPrefixes.forEach((keyPrefix) => {
       // Find matching events for key prefix.
       const eventsForPrefix = events.filter((event) =>
@@ -438,6 +453,13 @@ const getEnv = (
       const cacheKey = `${contractAddress}:${keyPrefix}`
       // If no events found, cache null for nonexistent.
       cache[cacheKey] = eventsForPrefix.length ? eventsForPrefix : null
+
+      // Cache events separately.
+      eventsForPrefix.forEach((event) => {
+        const cacheKey = `${contractAddress}:${event.key}`
+        // If key deleted, cache null for nonexistent.
+        cache[cacheKey] = event.delete ? null : [event]
+      })
     })
   }
 
