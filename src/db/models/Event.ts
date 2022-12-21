@@ -22,9 +22,14 @@ import { Contract } from './Contract'
       fields: ['blockHeight', 'contractAddress', 'key'],
     },
     {
-      // Speeds up queries. Composite indexes are most efficient when equality
-      // tests are first and ranges second.
+      // Speeds up queries finding latest key for a contract. Composite indexes
+      // are most efficient when equality tests are first and ranges second.
       fields: ['contractAddress', 'blockHeight'],
+    },
+    {
+      // Speeds up queries finding first newer dependent key to validate a
+      // computation.
+      fields: ['key'],
     },
   ],
 })
