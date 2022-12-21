@@ -9,6 +9,11 @@ import { Exporter } from './types'
 export const exporter: Exporter = async (events) => {
   await loadDb()
 
+  const state = await State.getSingleton()
+  if (!state) {
+    throw new Error('State not found while exporting')
+  }
+
   const uniqueContracts = [
     ...new Set(events.map((event) => event.contractAddress)),
   ]
@@ -45,11 +50,11 @@ export const exporter: Exporter = async (events) => {
     updateOnDuplicate: ['value', 'delete'],
   })
 
-  // Remove computations that depend on changed keys.
+  // Update validity of computations that depend on changed keys.
   const eventKeys = eventRecords.map(
     (event) => `${event.contractAddress}:${event.key}`
   )
-  await Computation.destroy({
+  const invalidComputations = await Computation.findAll({
     where: {
       [Op.or]: {
         // Any dependent keys that overlap with changed keys.
@@ -80,6 +85,11 @@ export const exporter: Exporter = async (events) => {
       },
     },
   })
+  await Promise.all(
+    invalidComputations.map((computation) =>
+      computation.ensureValidityUpToBlockHeight(state.latestBlockHeight)
+    )
+  )
 
   // Return updated contracts.
   return Contract.findAll({

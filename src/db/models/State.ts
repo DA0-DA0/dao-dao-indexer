@@ -25,6 +25,14 @@ export class State extends Model {
   @Column(DataType.BIGINT)
   latestBlockTimeUnixMs!: number
 
+  static async getSingleton(): Promise<State | null> {
+    return await State.findOne({
+      where: {
+        singleton: true,
+      },
+    })
+  }
+
   get latestBlock(): Block {
     return {
       height: this.latestBlockHeight,

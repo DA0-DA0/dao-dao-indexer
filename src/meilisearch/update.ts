@@ -14,11 +14,7 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
   const client = await loadMeilisearch()
 
   // Update indexes with data from the latest block height.
-  const state = await State.findOne({
-    where: {
-      singleton: true,
-    },
-  })
+  const state = await State.getSingleton()
   if (!state) {
     throw new Error('State not found while updating indexes')
   }

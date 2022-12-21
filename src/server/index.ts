@@ -217,17 +217,14 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
 
       // Use latest block if not provided.
       if (block === undefined) {
-        const state = await State.findOne({
-          where: {
-            singleton: true,
-          },
-        })
+        const state = await State.getSingleton()
         if (!state) {
           throw new Error('State not found')
         }
 
         block = state.latestBlock
       }
+      // Get most recent computation.
       const existingComputation = await Computation.findOne({
         where: {
           contractAddress: contract.address,
@@ -240,61 +237,15 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
         order: [['blockHeight', 'DESC']],
       })
 
-      // If found existing computation, use that.
-      let usedExisting = false
-      if (existingComputation) {
-        // Check if any events exist after the existing computation up to the
-        // requested block. If so, recompute.
-        const dependentKeysByContract =
-          existingComputation.dependentKeys.reduce((acc, dependentKey) => {
-            const [contractAddress, key] = dependentKey.split(':')
-            return {
-              ...acc,
-              [contractAddress]: [...(acc[contractAddress] ?? []), key],
-            }
-          }, {} as Record<string, string[] | undefined>)
-        const newEvents = await Event.count({
-          where: {
-            blockHeight: {
-              [Op.gt]: existingComputation.blockHeight,
-            },
-            // Any key for any of the contracts.
-            [Op.or]: Object.entries(dependentKeysByContract).map(
-              ([contractAddress, keys]) => {
-                const nonMapKeys = keys!.filter(
-                  (key) => key[key.length - 1] !== ','
-                )
-                const mapPrefixes = keys!.filter(
-                  (key) => key[key.length - 1] === ','
-                )
+      // If found existing computation, check its validity.
+      const existingComputationValid =
+        existingComputation !== null &&
+        (await existingComputation.ensureValidityUpToBlockHeight(block.height))
 
-                return {
-                  contractAddress,
-                  [Op.or]: [
-                    { key: nonMapKeys },
-                    {
-                      key: {
-                        [Op.or]: mapPrefixes.map((prefix) => ({
-                          [Op.like]: `${prefix}%`,
-                        })),
-                      },
-                    },
-                  ],
-                }
-              }
-            ),
-          },
-        })
-
-        // If no new events for any of the dependent keys found, use existing.
-        if (newEvents === 0) {
-          usedExisting = true
-          computation =
-            existingComputation.output && JSON.parse(existingComputation.output)
-        }
-      }
-
-      if (!usedExisting) {
+      if (existingComputation && existingComputationValid) {
+        computation =
+          existingComputation.output && JSON.parse(existingComputation.output)
+      } else {
         // Compute if did not find or use existing.
         const computationOutput = await compute(formula, contract, args, block)
 
@@ -305,7 +256,11 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
           contract.address,
           formulaName,
           args,
-          computationOutput
+          {
+            ...computationOutput,
+            // Valid up to the current block.
+            latestBlockHeightValid: block.height,
+          }
         )
       }
     }
