@@ -10,7 +10,13 @@ let sequelize: Sequelize | undefined
 // Tell Sequelize to parse int8 as BigInt instead of string.
 require('pg').defaults.parseInt8 = true
 
-export const loadDb = async () => {
+export const loadDb = async (
+  {
+    logging,
+  }: {
+    logging: boolean | undefined
+  } = { logging: false }
+) => {
   if (sequelize) {
     return sequelize
   }
@@ -19,7 +25,7 @@ export const loadDb = async () => {
 
   const options: SequelizeOptions = {
     // Allow options to override logging, but default to false.
-    logging: false,
+    logging,
 
     // User config.
     ...db,

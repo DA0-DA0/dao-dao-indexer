@@ -1,7 +1,8 @@
 import { loadDb } from './index'
 
 export const main = async () => {
-  const sequelize = await loadDb()
+  // Log when altering.
+  const sequelize = await loadDb({ logging: true })
 
   try {
     // Alter the database to match any changes.
