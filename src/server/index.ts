@@ -2,11 +2,12 @@ import cors from '@koa/cors'
 import Router from '@koa/router'
 import { Command } from 'commander'
 import Koa from 'koa'
+import { Op } from 'sequelize'
 
 import { loadConfig } from '../config'
 import { compute, computeRange, getFormula } from '../core'
 import { Block } from '../core/types'
-import { Contract, State, closeDb, loadDb } from '../db'
+import { Computation, Contract, Event, State, closeDb, loadDb } from '../db'
 import { validateBlockString } from './validate'
 
 // Parse arguments.
@@ -227,43 +228,86 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
 
         block = state.latestBlock
       }
-      // const existingComputation = await Computation.findOne({
-      //   where: {
-      //     contractAddress: contract.address,
-      //     formula: formulaName,
-      //     args: JSON.stringify(args),
-      //     ...(blockHeight !== undefined
-      //       ? {
-      //           blockHeight: {
-      //             [Op.lte]: blockHeight,
-      //           },
-      //         }
-      //       : undefined),
-      //   },
-      //   order: [['blockHeight', 'DESC']],
-      // })
+      const existingComputation = await Computation.findOne({
+        where: {
+          contractAddress: contract.address,
+          formula: formulaName,
+          args: JSON.stringify(args),
+          blockHeight: {
+            [Op.lte]: block.height,
+          },
+        },
+        order: [['blockHeight', 'DESC']],
+      })
 
-      // COMMENTING OUT FOR NOW since we can't yet determine if the latest
-      // computation is up to date. It needs to be pre-computing on export to
-      // ensure that this value is up to date. TODO: Pre-compute on export.
-      // // If found existing computation, use that.
-      // if (existingComputation) {
-      //   computation =
-      //     existingComputation.output && JSON.parse(existingComputation.output)
-      // } else {
-      // Otherwise compute.
-      const computationOutput = await compute(formula, contract, args, block)
+      // If found existing computation, use that.
+      let usedExisting = false
+      if (existingComputation) {
+        // Check if any events exist after the existing computation up to the
+        // requested block. If so, recompute.
+        const dependentKeysByContract =
+          existingComputation.dependentKeys.reduce((acc, dependentKey) => {
+            const [contractAddress, key] = dependentKey.split(':')
+            return {
+              ...acc,
+              [contractAddress]: [...(acc[contractAddress] ?? []), key],
+            }
+          }, {} as Record<string, string[] | undefined>)
+        const newEvents = await Event.count({
+          where: {
+            blockHeight: {
+              [Op.gt]: existingComputation.blockHeight,
+            },
+            // Any key for any of the contracts.
+            [Op.or]: Object.entries(dependentKeysByContract).map(
+              ([contractAddress, keys]) => {
+                const nonMapKeys = keys!.filter(
+                  (key) => key[key.length - 1] !== ','
+                )
+                const mapPrefixes = keys!.filter(
+                  (key) => key[key.length - 1] === ','
+                )
 
-      computation = computationOutput.value
+                return {
+                  contractAddress,
+                  [Op.or]: [
+                    { key: nonMapKeys },
+                    {
+                      key: {
+                        [Op.or]: mapPrefixes.map((prefix) => ({
+                          [Op.like]: `${prefix}%`,
+                        })),
+                      },
+                    },
+                  ],
+                }
+              }
+            ),
+          },
+        })
 
-      // Cache computation for future queries.
-      // await Computation.createFromComputationOutputs(
-      //   contract.address,
-      //   formulaName,
-      //   args,
-      //   computationOutput
-      // )
-      // }
+        // If no new events for any of the dependent keys found, use existing.
+        if (newEvents === 0) {
+          usedExisting = true
+          computation =
+            existingComputation.output && JSON.parse(existingComputation.output)
+        }
+      }
+
+      if (!usedExisting) {
+        // Compute if did not find or use existing.
+        const computationOutput = await compute(formula, contract, args, block)
+
+        computation = computationOutput.value
+
+        // Cache computation for future queries.
+        await Computation.createFromComputationOutputs(
+          contract.address,
+          formulaName,
+          args,
+          computationOutput
+        )
+      }
     }
 
     // If string, encode as JSON.

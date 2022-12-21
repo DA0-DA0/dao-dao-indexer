@@ -51,6 +51,8 @@ export interface ComputationOutput {
   // Undefined if formula did not use any keys.
   block: Block | undefined
   value: any
+  // List of contractAddress:key pairs that this formula depends on.
+  dependentKeys: string[]
 }
 
 export type NestedFormulaMap = {

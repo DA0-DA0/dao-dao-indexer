@@ -20,12 +20,6 @@ export interface Config {
     | 'pool'
     | 'schema'
   >
-  preCompute?: {
-    codeIds?: number[]
-    contractAddresses?: string[]
-    formulaPrefixes?: string[]
-    formulas?: string[]
-  }[]
   meilisearch?: {
     host: string
     apiKey?: string

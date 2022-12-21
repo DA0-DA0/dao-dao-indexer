@@ -48,6 +48,13 @@ export class Computation extends Model {
   @Column(DataType.TEXT)
   args!: string
 
+  // This formula may depend on keys in other contracts, so we need to include
+  // contractAddress for each key. If the key ends with a comma, it is a map
+  // prefix. Format: "contractAddress:key"[]
+  @AllowNull(false)
+  @Column(DataType.ARRAY(DataType.TEXT))
+  dependentKeys!: string[]
+
   // JSON encoded value.
   @AllowNull
   @Column(DataType.TEXT)
@@ -60,10 +67,11 @@ export class Computation extends Model {
     ...computationOutputs: ComputationOutput[]
   ) {
     await Computation.bulkCreate(
-      computationOutputs.map(({ block, value }) => ({
+      computationOutputs.map(({ block, value, dependentKeys }) => ({
         contractAddress,
         formula,
         args: JSON.stringify(args),
+        dependentKeys,
         // If no block, the computation must not have accessed any keys. It may
         // be a constant formula, in which case it doesn't have any block
         // context and should thus use an invalid block below the first possible
@@ -77,7 +85,7 @@ export class Computation extends Model {
             : null,
       })),
       {
-        updateOnDuplicate: ['output'],
+        updateOnDuplicate: ['dependentKeys', 'output'],
       }
     )
   }

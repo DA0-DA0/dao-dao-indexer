@@ -1,8 +1,9 @@
 import axios from 'axios'
+import { Op, Sequelize } from 'sequelize'
 
 import { loadConfig } from '../config'
 import { loadDb } from '../db'
-import { Contract, Event, State } from '../db/models'
+import { Computation, Contract, Event, State } from '../db/models'
 import { Exporter } from './types'
 
 export const exporter: Exporter = async (events) => {
@@ -42,6 +43,42 @@ export const exporter: Exporter = async (events) => {
   // separately.
   await Event.bulkCreate(eventRecords, {
     updateOnDuplicate: ['value', 'delete'],
+  })
+
+  // Remove computations that depend on changed keys.
+  const eventKeys = eventRecords.map(
+    (event) => `${event.contractAddress}:${event.key}`
+  )
+  await Computation.destroy({
+    where: {
+      [Op.or]: {
+        // Any dependent keys that overlap with changed keys.
+        dependentKeys: {
+          [Op.overlap]: eventKeys,
+        },
+        // Any dependent keys that are map prefixes of changed keys. This is
+        // safe because keys are encoded as comma-separated numbers and are
+        // prefixed with an alphanumeric contract address and a colon, so
+        // they cannot contain single quotes and perform SQL injection.
+        id: {
+          [Op.in]: Sequelize.literal(`
+            (
+              SELECT
+                "Computations".id
+              FROM
+                "Computations",
+                unnest("Computations"."dependentKeys") prefixes(x)
+              INNER JOIN
+                unnest(ARRAY['${eventKeys.join("','")}']) keys(x)
+              ON
+                keys.x LIKE prefixes.x || '%'
+              WHERE
+                prefixes.x LIKE '%,'
+            )
+          `),
+        },
+      },
+    },
   })
 
   // Return updated contracts.

@@ -39,13 +39,21 @@ export const compute = async (
     }
   }
 
-  const env = getEnv(targetContract.address, block, args, updateLatestBlock)
+  const dependentKeys = new Set<string>()
+  const env = getEnv(
+    targetContract.address,
+    block,
+    args,
+    dependentKeys,
+    updateLatestBlock
+  )
 
   const value = await formula(env)
 
   return {
     block: latestBlock,
     value,
+    dependentKeys: Array.from(dependentKeys),
   }
 }
 
@@ -62,6 +70,7 @@ export const computeRange = async (
     nextPotentialBlock: Block | undefined
     latestBlock: Block | undefined
     value: any
+    dependentKeys: string[]
   }> => {
     // Store the next block that has the potential to change the result. Each
     // getter below will update this value if it finds a key change event after
@@ -123,10 +132,12 @@ export const computeRange = async (
 
     // Add hook to env so that the getters update the latest block info and next
     // changed block height.
+    const dependentKeys = new Set<string>()
     const env = getEnv(
       targetContract.address,
       block,
       args,
+      dependentKeys,
       async (events, keyFilter) => {
         await updateLatestBlock(events)
         await updateNextChangedBlock(targetContract.address, keyFilter)
@@ -139,6 +150,7 @@ export const computeRange = async (
       nextPotentialBlock,
       latestBlock,
       value,
+      dependentKeys: Array.from(dependentKeys),
     }
   }
 
@@ -159,6 +171,7 @@ export const computeRange = async (
       results.push({
         block: result.latestBlock,
         value: result.value,
+        dependentKeys: result.dependentKeys,
       })
     }
 
@@ -178,6 +191,8 @@ const getEnv = (
   contractAddress: string,
   block: Block,
   args: Record<string, any>,
+  // An array to add accessed keys to.
+  dependentKeys: Set<string>,
   onFetchEvents?: (
     events: Event[],
     keyFilter: string | object
@@ -195,10 +210,11 @@ const getEnv = (
 
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
-    // Check cache.
     const cacheKey = `${contractAddress}:${key}`
-    const cachedEvent = cache[cacheKey]
+    dependentKeys.add(cacheKey)
 
+    // Check cache.
+    const cachedEvent = cache[cacheKey]
     const event =
       // If undefined, we haven't tried to fetch it yet. If not undefined,
       // either it exists or it doesn't (null).
@@ -241,8 +257,10 @@ const getEnv = (
         ? // Add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
           dbKeyForKeys(...name, '')
         : dbKeyForKeys(name, '')) + ','
-    // Check cache.
     const cacheKey = `${contractAddress}:${keyPrefix}`
+    dependentKeys.add(cacheKey)
+
+    // Check cache.
     const cachedEvents = cache[cacheKey]
 
     const keyFilter = {
@@ -316,8 +334,10 @@ const getEnv = (
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
-    // Check cache.
     const cacheKey = `${contractAddress}:${key}`
+    dependentKeys.add(cacheKey)
+
+    // Check cache.
     const cachedEvent = cache[cacheKey]
 
     // Get most recent event for this key.
@@ -359,6 +379,11 @@ const getEnv = (
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
+    dependentKeys.add(`${contractAddress}:${key}`)
+
+    // The cache consists of the most recent events for each key, but this
+    // fetches the first event, so we can't use the cache.
+
     // Get first set event for this key.
     const event = await Event.findOne({
       where: {
@@ -392,6 +417,7 @@ const getEnv = (
         : // If it's a map, we need to filter by the prefix, so add an empty key at the end so append a comma. Also add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
           dbKeyForKeys(...key.keys, '') + ','
     )
+    keys.forEach((key) => dependentKeys.add(`${contractAddress}:${key}`))
 
     const nonMapKeys = keys.filter((_, index) => {
       const key = listOfKeys[index]
