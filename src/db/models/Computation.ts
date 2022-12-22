@@ -27,6 +27,10 @@ import { Event } from './Event'
       // tests are first and ranges second.
       fields: ['contractAddress', 'blockHeight'],
     },
+    {
+      // Speeds up export invalidation queries.
+      fields: ['dependentKeys', 'blockHeight'],
+    },
   ],
 })
 export class Computation extends Model {
