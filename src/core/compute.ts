@@ -10,8 +10,9 @@ export const compute = async (
   args: Record<string, any>,
   block: Block
 ): Promise<ComputationOutput> => {
-  // Store the latest block that we've seen for all keys accessed. This is the
-  // earliest this computation could have been made.
+  // Store the latest block that we've seen for all keys accessed. This is when
+  // this computation became valid, i.e. the earliest this computation could
+  // have been made to get this output.
   let latestBlock: Block | undefined
 
   const updateLatestBlock = async (events: Event[]) => {
@@ -55,14 +56,16 @@ export const computeRange = async (
   blockStart: Block,
   blockEnd: Block
 ): Promise<ComputationOutput[]> => {
-  // Dependent keys across all blocks.
+  // Dependent keys seen so far.
   const allDependentKeys = new Set<string>()
-  // All events for dependent keys. All events for a given key should be sorted
-  // in descending order by block height relative to each other. All events do
-  // not need to be sorted, but we pick the first event (or list of first events
-  // for a map) based on the first matched key in the list, so the first key
-  // within the block height constraints should be the correct one.
-  let allEvents: Event[] = []
+  // All events for contractAddress:key pairs. All events for a given key should
+  // be sorted in descending order. This is different from dependent keys, which
+  // may include map prefixes. We need to store all events for each key so we
+  // can find the first event for a given key based on dynamic block height
+  // constraints. Map contents may change based on many different keys, so maps
+  // need to be reconstructed by individual key comparisons, meaning we need to
+  // store keys separately here and not combined into their maps.
+  const allEventsByContractAndKey: Record<string, Event[] | undefined> = {}
 
   const computeForBlockInRange = async (
     block: Block
@@ -99,45 +102,29 @@ export const computeRange = async (
       Array.from(allDependentKeys)
     )
     for (const key of nonMapKeys) {
-      const [contractAddress, eventKey] = key.split(':')
-      // `allEvents` are sorted descending by block height with respect to any
-      // given key, so we can find the first event for a given key that is
-      // before or equal to the current block height.
-      const matchingEvent = allEvents.find(
-        (event) =>
-          event.contractAddress === contractAddress &&
-          event.key === eventKey &&
-          event.blockHeight <= block.height
+      // Sorted descending by block height, so we can find the latest event for
+      // a given key that is before or equal to the current block height by
+      // finding the first event.
+      const latestEvent = allEventsByContractAndKey[key]?.find(
+        (event) => event.blockHeight <= block.height
       )
-      initialCache[key] = matchingEvent ? [matchingEvent] : null
+      initialCache[key] = latestEvent ? [latestEvent] : null
     }
     for (const prefixKey of mapPrefixes) {
-      const [contractAddress, eventKeyPrefix] = prefixKey.split(':')
-      // Get the first matching event for each unique key in the map before or
-      // equal to the current block height.
-      const matchingEvents = allEvents.reduce((acc, event) => {
-        // If event is after the current block, or if we've already found an
-        // event for this key, skip.
-        if (
-          event.blockHeight > block.height ||
-          event.key in acc ||
-          event.contractAddress !== contractAddress ||
-          !event.key.startsWith(eventKeyPrefix)
-        ) {
-          return acc
-        }
+      // Sorted descending by block height, so we can find the latest event for
+      // for each unique key in the map before or equal to the current block
+      // height by finding the first event for each.
+      const latestEvents = Object.entries(allEventsByContractAndKey)
+        .filter(([key]) => key.startsWith(prefixKey))
+        .map(([, events]) =>
+          events?.find((event) => event.blockHeight <= block.height)
+        )
+        .filter((event): event is Event => event !== undefined)
 
-        return {
-          ...acc,
-          [event.key]: event,
-        }
-      }, {} as Record<string, Event>)
-
-      initialCache[prefixKey] = Object.values(matchingEvents)
+      initialCache[prefixKey] = latestEvents
     }
 
-    // Add hook to env so that the getters update the latest block info and next
-    // changed block height.
+    // Add hook to env so that the getters update the latest block info.
     const dependentKeys = new Set<string>()
     const env = getEnv(
       targetContract.address,
@@ -159,10 +146,6 @@ export const computeRange = async (
 
   const results: ComputationOutput[] = []
 
-  // Start at the beginning block and compute the value. Each computation will
-  // return with its value and the next block that may change the result. We can
-  // then start at that block and compute again. We repeat this until we reach
-  // the end block.
   let nextPotentialBlock: Block | undefined = blockStart
   while (nextPotentialBlock && nextPotentialBlock.height <= blockEnd.height) {
     const currentBlock: Block = nextPotentialBlock
@@ -195,8 +178,16 @@ export const computeRange = async (
         },
         order: [['blockHeight', 'DESC']],
       })
+
       // Save for future computations.
-      allEvents = allEvents.concat(futureEvents)
+      futureEvents.forEach((event) => {
+        const key = `${event.contractAddress}:${event.key}`
+        if (key in allEventsByContractAndKey) {
+          allEventsByContractAndKey[key]!.push(event)
+        } else {
+          allEventsByContractAndKey[key] = [event]
+        }
+      })
       newDependentKeys.forEach((key) => allDependentKeys.add(key))
     }
 
@@ -208,18 +199,15 @@ export const computeRange = async (
     const { nonMapKeys: nextNonMapKeys, mapPrefixes: nextMapPrefixes } =
       Event.splitDependentKeys(Array.from(result.dependentKeys))
     for (const key of nextNonMapKeys) {
-      const [contractAddress, eventKey] = key.split(':')
-      // `allEvents` are sorted descending by block height with respect to any
-      // given key, so we can find the next event for a given key that is after
-      // the current block height by selecting the last one found.
-      const matchingEvent = allEvents
-        .filter(
-          (event) =>
-            event.contractAddress === contractAddress &&
-            event.key === eventKey &&
-            event.blockHeight > currentBlock.height
-        )
-        .slice(-1)[0]
+      // Sorted descending by block height, so we can find the next event for a
+      // given key that is after the current block height by selecting the last
+      // one.
+      const matchingEvent = allEventsByContractAndKey[key]
+        ? findLast(
+            allEventsByContractAndKey[key]!,
+            (event) => event.blockHeight > currentBlock.height
+          )
+        : undefined
 
       if (
         matchingEvent &&
@@ -230,25 +218,23 @@ export const computeRange = async (
       }
     }
     for (const prefixKey of nextMapPrefixes) {
-      const [contractAddress, eventKeyPrefix] = prefixKey.split(':')
-      // Get the last matching event for each unique key in the map after the
-      // current block height.
-      const matchingEvents = allEvents.reduce(
-        (acc, event) =>
-          event.contractAddress === contractAddress &&
-          event.key.startsWith(eventKeyPrefix) &&
-          event.blockHeight > currentBlock.height
-            ? {
-                ...acc,
-                [event.key]: event,
-              }
-            : acc,
-        {} as Record<string, Event>
-      )
+      // Sorted descending by block height, so we can find the next event for
+      // for each unique key in the map after the current block height by
+      // finding the last event for each.
+      const matchingEvents = Object.entries(allEventsByContractAndKey)
+        .filter(([key]) => key.startsWith(prefixKey))
+        .map(([, events]) =>
+          events
+            ? findLast(
+                events,
+                (event) => event.blockHeight > currentBlock.height
+              )
+            : undefined
+        )
+        .filter((event): event is Event => event !== undefined)
+        .sort((a, b) => b.blockHeight - a.blockHeight)
 
-      const nextEvent = Object.values(matchingEvents).sort(
-        (a, b) => a.blockHeight - b.blockHeight
-      )[0]
+      const nextEvent = matchingEvents[0]
       if (
         nextEvent &&
         (nextPotentialBlock === undefined ||
@@ -260,4 +246,16 @@ export const computeRange = async (
   }
 
   return results
+}
+
+const findLast = <T>(
+  arr: T[],
+  predicate: (item: T) => boolean
+): T | undefined => {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (predicate(arr[i])) {
+      return arr[i]
+    }
+  }
+  return undefined
 }

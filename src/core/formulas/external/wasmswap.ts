@@ -55,3 +55,28 @@ export const summary: Formula = async (env) => {
     },
   }
 }
+
+export const price: Formula = async (env) => {
+  const { contractAddress, get } = env
+
+  const [token1, token2] = await Promise.all([
+    get<Token>(contractAddress, 'token1'),
+    get<Token>(contractAddress, 'token2'),
+  ])
+
+  if (!token1 || !token2) {
+    return undefined
+  }
+
+  const token1Amount = parseFloat(token1.reserve)
+  const token2Amount = parseFloat(token2.reserve)
+
+  if (token1Amount === 0 || token2Amount === 0) {
+    return undefined
+  }
+
+  return {
+    token1: token2Amount / token1Amount,
+    token2: token1Amount / token2Amount,
+  }
+}
