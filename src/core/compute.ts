@@ -15,7 +15,7 @@ export const compute = async (
   // have been made to get this output.
   let latestBlock: Block | undefined
 
-  const updateLatestBlock = async (events: Event[]) => {
+  const onFetchEvents = async (events: Event[]) => {
     if (events.length === 0) {
       return
     }
@@ -37,7 +37,7 @@ export const compute = async (
     block,
     args,
     dependentKeys,
-    updateLatestBlock
+    onFetchEvents
   )
 
   const value = await formula(env)
@@ -73,15 +73,21 @@ export const computeRange = async (
     latestBlock: Block | undefined
     value: any
     dependentKeys: string[]
+    eventsUsed: Event[]
   }> => {
     // Store the latest block that we've seen for all keys accessed. This is the
     // earliest this computation could have been made.
     let latestBlock: Block | undefined
 
-    const updateLatestBlock = async (events: Event[]) => {
+    // Store the events used for this computation.
+    let eventsUsed: Event[] = []
+
+    const onFetchEvents = async (events: Event[]) => {
       if (events.length === 0) {
         return
       }
+
+      eventsUsed = [...eventsUsed, ...events]
 
       const latestEvent = events.sort(
         (a, b) => b.blockHeight - a.blockHeight
@@ -103,24 +109,37 @@ export const computeRange = async (
     )
     for (const key of nonMapKeys) {
       const allEvents = allEventsByContractAndKey[key]
+      // No events found for this key, cache null to indicate it doesn't exist
+      // and prevent querying for it.
+      if (!allEvents) {
+        initialCache[key] = null
+        continue
+      }
 
       // Sorted ascending by block height, so we can find the latest event for a
       // given key that is before or at the current block height by finding the
       // index of the first event that is after the current block height and
       // subtracting 1.
-      const nextEventIndex = allEvents?.findIndex(
+      const nextEventIndex = allEvents.findIndex(
         (event) => event.blockHeight > block.height
       )
 
-      if (
-        allEvents &&
-        nextEventIndex !== undefined &&
-        // Ensure there is at least one event before the next event.
-        nextEventIndex > 1
-      ) {
-        // Subtract 1 to get the index of the event we want.
-        const currentEventIndex = nextEventIndex - 1
+      const currentEventIndex =
+        // If the next event index is undefined or is the first event, there is
+        // no current event.
+        nextEventIndex === undefined || nextEventIndex === 0
+          ? undefined
+          : // If the next event index is greater than 0, the current event is the
+          // most recent event before this one, so subtract one.
+          nextEventIndex > 0
+          ? nextEventIndex - 1
+          : // If the next event index is -1, meaning no events matched the predicate, and events exist, the current event is the last event.
+          allEvents.length > 0
+          ? allEvents.length - 1
+          : // Otherwise there are no events before the current block height.
+            undefined
 
+      if (currentEventIndex !== undefined) {
         initialCache[key] = [allEvents[currentEventIndex]]
 
         // Remove all events that are before the current event we found, since
@@ -140,17 +159,34 @@ export const computeRange = async (
       // each unique key in the map before or at the current block height by
       // finding the index of the first event for each that is after the current
       // block height and subtracting 1.
-      const nextEventIndexes = contractKeyEventEntries.map(([, events]) =>
-        events?.findIndex((event) => event.blockHeight > block.height)
-      )
+      const currentEventIndexes = contractKeyEventEntries.map(([, events]) => {
+        if (!events) {
+          return undefined
+        }
 
-      initialCache[prefixKey] = nextEventIndexes
-        .map((nextEventIndex, entryIndex) =>
-          nextEventIndex !== undefined &&
-          // Ensure there is at least one event before the next event.
-          nextEventIndex > 1
-            ? // Subtract 1 to get the index of the event we want.
-              contractKeyEventEntries[entryIndex][1]![nextEventIndex - 1]
+        const nextEventIndex = events.findIndex(
+          (event) => event.blockHeight > block.height
+        )
+
+        // If the next event index is undefined or is the first event, there is
+        // no current event.
+        return nextEventIndex === undefined || nextEventIndex === 0
+          ? undefined
+          : // If the next event index is greater than 0, the current event is the
+          // most recent event before this one, so subtract one.
+          nextEventIndex > 0
+          ? nextEventIndex - 1
+          : // If the next event index is -1, meaning no events matched the predicate, and there is only one event, the current event is the only event.
+          events.length === 1
+          ? 0
+          : // Otherwise there are no events before the current block height.
+            undefined
+      })
+
+      initialCache[prefixKey] = currentEventIndexes
+        .map((currentEventIndex, entryIndex) =>
+          currentEventIndex !== undefined
+            ? contractKeyEventEntries[entryIndex][1]![currentEventIndex]
             : null
         )
         .filter((event): event is Event => event !== null)
@@ -158,16 +194,12 @@ export const computeRange = async (
       // Remove all events that are before the current event we found for each
       // key, since future computations will only go up. Keep the one we found
       // in case it's used in the future.
-      nextEventIndexes.forEach((nextEventIndex, entryIndex) => {
-        if (
-          nextEventIndex !== undefined &&
-          // Ensure there is at least one event before the next event.
-          nextEventIndex > 1
-        ) {
+      currentEventIndexes.forEach((currentEventIndex, entryIndex) => {
+        if (currentEventIndex !== undefined) {
           allEventsByContractAndKey[contractKeyEventEntries[entryIndex][0]] =
-            allEventsByContractAndKey[contractKeyEventEntries[entryIndex][0]]
-              // Subtract 1 to get the index of the event we want.
-              ?.slice(nextEventIndex - 1)
+            allEventsByContractAndKey[
+              contractKeyEventEntries[entryIndex][0]
+            ]?.slice(currentEventIndex)
         }
       })
     }
@@ -179,7 +211,7 @@ export const computeRange = async (
       block,
       args,
       dependentKeys,
-      updateLatestBlock,
+      onFetchEvents,
       initialCache
     )
 
@@ -189,6 +221,7 @@ export const computeRange = async (
       latestBlock,
       value,
       dependentKeys: Array.from(dependentKeys),
+      eventsUsed,
     }
   }
 
@@ -233,7 +266,20 @@ export const computeRange = async (
         if (key in allEventsByContractAndKey) {
           allEventsByContractAndKey[key]!.push(event)
         } else {
-          allEventsByContractAndKey[key] = [event]
+          // If making new events array, insert events used in the formula
+          // first. This way we cache the most recent events before the current
+          // block that were used since they weren't fetched above when getting
+          // all future events.
+          allEventsByContractAndKey[key] = [
+            ...result.eventsUsed.filter(
+              (usedEvent) =>
+                usedEvent.contractAddress === event.contractAddress &&
+                usedEvent.key === event.key
+            ),
+            event,
+          ]
+            // Sort ascending.
+            .sort((a, b) => a.blockHeight - b.blockHeight)
         }
       })
       newDependentKeys.forEach((key) => allDependentKeys.add(key))
@@ -247,11 +293,10 @@ export const computeRange = async (
     const { nonMapKeys: nextNonMapKeys, mapPrefixes: nextMapPrefixes } =
       Event.splitDependentKeys(Array.from(result.dependentKeys))
     for (const key of nextNonMapKeys) {
-      const allEvents = allEventsByContractAndKey[key]
       // Sorted ascending by block height, so we can find the next event for a
       // given key that is after the current block height by selecting the first
       // one.
-      const matchingEvent = allEvents?.find(
+      const matchingEvent = allEventsByContractAndKey[key]?.find(
         (event) => event.blockHeight > currentBlock.height
       )
 
