@@ -94,9 +94,9 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       return
     }
 
-    if (blocks[1].height - blocks[0].height > 100800) {
+    if (blocks[1].height - blocks[0].height > 446400) {
       ctx.status = 400
-      ctx.body = 'the range cannot be larger than 100800 blocks'
+      ctx.body = 'the range cannot be larger than 446400 blocks'
       return
     }
   }
