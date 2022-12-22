@@ -8,6 +8,7 @@
     "build:watch": "tsc --watch",
     "db:setup": "node dist/db/setup.js",
     "db:alter": "node dist/db/alter.js",
+    "clear-cache": "node dist/db/clearCache.js",
     "export": "node dist/export/index.js",
     "export:prod": "npm run build && pm2 reload ecosystem.config.js --only exporter",
     "serve": "node dist/server/index.js",
