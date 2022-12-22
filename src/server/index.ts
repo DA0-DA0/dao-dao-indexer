@@ -251,8 +251,9 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
           // context.
           blockHeight: block?.height ?? -1,
           blockTimeUnixMs: block?.timeUnixMs ?? -1,
-          // Remove dependent keys from output.
+          // Remove dependent keys and latest block height valid from output.
           dependentKeys: undefined,
+          latestBlockHeightValid: undefined,
         }))
 
         // Cache computations for future queries.
