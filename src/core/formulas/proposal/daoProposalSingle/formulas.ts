@@ -1,3 +1,5 @@
+import { Op } from 'sequelize'
+
 import { Env, Formula } from '../../../types'
 import { isExpirationExpired } from '../../utils'
 import { ProposalResponse, Status, VoteInfo } from '../types'
@@ -314,7 +316,9 @@ const intoResponse = async (
         env.contractAddress,
         [v2 ? 'proposals_v2' : 'proposals', id],
         {
-          status: ['executed', 'execution_failed'],
+          status: {
+            [Op.in]: ['executed', 'execution_failed'],
+          },
         }
       )
     )?.toISOString()
@@ -344,7 +348,9 @@ const intoResponse = async (
           env.contractAddress,
           [v2 ? 'proposals_v2' : 'proposals', id],
           {
-            status: ['passed', 'rejected'],
+            status: {
+              [Op.in]: ['passed', 'rejected'],
+            },
           }
         )
       )?.toISOString()
