@@ -232,7 +232,7 @@ export const computeRange = async (
             : undefined
         )
         .filter((event): event is Event => event !== undefined)
-        .sort((a, b) => b.blockHeight - a.blockHeight)
+        .sort((a, b) => a.blockHeight - b.blockHeight)
 
       const nextEvent = matchingEvents[0]
       if (
