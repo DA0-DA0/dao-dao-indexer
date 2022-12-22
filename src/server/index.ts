@@ -3,11 +3,12 @@ import Router from '@koa/router'
 import { Command } from 'commander'
 import Koa from 'koa'
 import { Op } from 'sequelize'
+import { v4 as uuidv4 } from 'uuid'
 
 import { loadConfig } from '../config'
 import { compute, computeRange, getFormula } from '../core'
 import { Block } from '../core/types'
-import { Computation, Contract, Event, State, closeDb, loadDb } from '../db'
+import { Computation, Contract, State, closeDb, loadDb } from '../db'
 import { validateBlockString } from './validate'
 
 // Parse arguments.
@@ -29,13 +30,13 @@ app.use(cors())
 
 // Logger.
 app.use(async (ctx, next) => {
+  const id = uuidv4()
+  console.log(`[${id}] ${ctx.method} ${ctx.url} @ ${new Date().toISOString()}`)
+
   await next()
+
   const rt = ctx.response.get('X-Response-Time')
-  console.log(
-    `[${new Date().toISOString()}] ${ctx.method} ${ctx.url} - ${
-      ctx.status
-    } - ${rt}`
-  )
+  console.log(`[${id}] ${ctx.method} ${ctx.url} - ${ctx.status} - ${rt}`)
 })
 
 // Add X-Response-Time header.
