@@ -75,11 +75,9 @@ export class Computation extends Model {
     contractAddress: string,
     formula: string,
     args: Record<string, any>,
-    ...computationOutputs: (ComputationOutput & {
-      latestBlockHeightValid?: number
-    })[]
-  ) {
-    await Computation.bulkCreate(
+    ...computationOutputs: ComputationOutput[]
+  ): Promise<Computation[]> {
+    return await Computation.bulkCreate(
       computationOutputs.map(
         ({ block, value, dependentKeys, latestBlockHeightValid }) => ({
           contractAddress,

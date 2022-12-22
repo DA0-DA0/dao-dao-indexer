@@ -53,6 +53,8 @@ export interface ComputationOutput {
   value: any
   // List of contractAddress:key pairs that this formula depends on.
   dependentKeys: string[]
+  // Used when computing ranges.
+  latestBlockHeightValid?: number
 }
 
 export type NestedFormulaMap = {

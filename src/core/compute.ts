@@ -236,10 +236,19 @@ export const computeRange = async (
     // Only store result if it's the first result or different from the most
     // recently stored result.
     if (!previousResult || result.value !== previousResult.value) {
+      // If there is a previous result, update its latest valid block height to
+      // just before this one, since there's now a new value.
+      if (previousResult && result.latestBlock) {
+        previousResult.latestBlockHeightValid = result.latestBlock.height - 1
+      }
+
       results.push({
         block: result.latestBlock,
         value: result.value,
         dependentKeys: result.dependentKeys,
+        // At least valid until the requested block, which may be equal to or
+        // after the latestBlock returned in the result.
+        latestBlockHeightValid: currentBlock.height,
       })
     }
 
