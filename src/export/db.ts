@@ -124,10 +124,11 @@ export const exporter: Exporter = async (events) => {
     )
   await Promise.all([
     ...safeToUpdateComputations,
-    // Destroy computations that have been determined to be valid after any
-    // potentially relevant events were exported, because these events may
-    // affect the validity of computations that have already been deemed valid,
-    // and thus they'll need to be recomputed.
+    // Destroy computations that have been previously determined to be valid at
+    // blocks above any potentially relevant events that were just exported,
+    // because these events may affect the validity of those (in case they
+    // access past key-first-set timestamps, for example), and thus they'll need
+    // to be recomputed.
     safeToUpdateComputations.length < invalidComputations.length
       ? Computation.destroy({
           where: {
