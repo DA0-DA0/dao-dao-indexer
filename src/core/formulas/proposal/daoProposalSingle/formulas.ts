@@ -22,12 +22,24 @@ export const proposal: Formula<
   } = env
 
   const idNum = Number(id)
-  const _proposal =
-    (await get<SingleChoiceProposal>(contractAddress, 'proposals_v2', idNum)) ??
-    (await get<SingleChoiceProposal>(contractAddress, 'proposals', idNum)) ??
-    undefined
 
-  return _proposal && intoResponse(env, _proposal, idNum)
+  const proposalV1 = await get<SingleChoiceProposal>(
+    contractAddress,
+    'proposals',
+    idNum
+  )
+  const proposalV2 = await get<SingleChoiceProposal>(
+    contractAddress,
+    'proposals_v2',
+    idNum
+  )
+
+  const proposal = proposalV1 ?? proposalV2
+
+  return (
+    proposal &&
+    intoResponse(env, proposal, idNum, { v2: proposal === proposalV2 })
+  )
 }
 
 export const creationPolicy: Formula = async ({ contractAddress, get }) =>
@@ -49,18 +61,21 @@ export const listProposals: Formula<
   const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
   const startAfterNum = startAfter ? Math.max(0, Number(startAfter)) : -Infinity
 
-  const proposals =
-    (await getMap<number, SingleChoiceProposal>(
-      contractAddress,
-      'proposals_v2',
-      {
-        numericKeys: true,
-      }
-    )) ??
-    (await getMap<number, SingleChoiceProposal>(contractAddress, 'proposals', {
+  const proposalsV1 = await getMap<number, SingleChoiceProposal>(
+    contractAddress,
+    'proposals',
+    {
       numericKeys: true,
-    })) ??
-    {}
+    }
+  )
+  const proposalsV2 = await getMap<number, SingleChoiceProposal>(
+    contractAddress,
+    'proposals_v2',
+    {
+      numericKeys: true,
+    }
+  )
+  const proposals = proposalsV1 ?? proposalsV2 ?? {}
 
   const proposalIds = Object.keys(proposals)
     .map(Number)
@@ -70,7 +85,9 @@ export const listProposals: Formula<
     .slice(0, limitNum)
 
   const proposalResponses = await Promise.all(
-    proposalIds.map((id) => intoResponse(env, proposals[id], id))
+    proposalIds.map((id) =>
+      intoResponse(env, proposals[id], id, { v2: proposals === proposalsV2 })
+    )
   )
 
   return proposalResponses
@@ -94,18 +111,21 @@ export const reverseProposals: Formula<
     ? Math.max(0, Number(startBefore))
     : Infinity
 
-  const proposals =
-    (await getMap<number, SingleChoiceProposal>(
-      contractAddress,
-      'proposals_v2',
-      {
-        numericKeys: true,
-      }
-    )) ??
-    (await getMap<number, SingleChoiceProposal>(contractAddress, 'proposals', {
+  const proposalsV1 = await getMap<number, SingleChoiceProposal>(
+    contractAddress,
+    'proposals',
+    {
       numericKeys: true,
-    })) ??
-    {}
+    }
+  )
+  const proposalsV2 = await getMap<number, SingleChoiceProposal>(
+    contractAddress,
+    'proposals_v2',
+    {
+      numericKeys: true,
+    }
+  )
+  const proposals = proposalsV1 ?? proposalsV2 ?? {}
 
   const proposalIds = Object.keys(proposals)
     .map(Number)
@@ -115,7 +135,11 @@ export const reverseProposals: Formula<
     .slice(0, limitNum)
 
   const proposalResponses = await Promise.all(
-    proposalIds.map((id) => intoResponse(env, proposals[id], id))
+    proposalIds.map((id) =>
+      intoResponse(env, proposals[id], id, {
+        v2: proposals === proposalsV2,
+      })
+    )
   )
 
   return proposalResponses
@@ -258,7 +282,8 @@ export const openProposals: Formula<
 const intoResponse = async (
   env: Env,
   proposal: SingleChoiceProposal,
-  id: number
+  id: number,
+  { v2 }: { v2: boolean }
 ): Promise<ProposalResponse<SingleChoiceProposal>> => {
   // Update status.
   if (proposal.status === Status.Open) {
@@ -279,9 +304,53 @@ const intoResponse = async (
     },
   })
 
+  let executedAt: string | undefined
+  if (
+    proposal.status === Status.Executed ||
+    proposal.status === Status.ExecutionFailed
+  ) {
+    executedAt = (
+      await env.getDateKeyFirstSetContainingData(
+        env.contractAddress,
+        [v2 ? 'proposals_v2' : 'proposals', id],
+        ['"status":"executed"', '"status":"execution_failed"']
+      )
+    )?.toISOString()
+  }
+
+  let closedAt: string | undefined
+  if (proposal.status === Status.Closed) {
+    closedAt = (
+      await env.getDateKeyFirstSetContainingData(
+        env.contractAddress,
+        [v2 ? 'proposals_v2' : 'proposals', id],
+        ['"status":"closed"']
+      )
+    )?.toISOString()
+  }
+
+  let completedAt: string | undefined
+  if (proposal.status !== Status.Open) {
+    completedAt =
+      executedAt ||
+      closedAt ||
+      // If not yet executed nor closed, completed when it was passed/rejected.
+      (
+        await env.getDateKeyFirstSetContainingData(
+          env.contractAddress,
+          [v2 ? 'proposals_v2' : 'proposals', id],
+          ['"status":"passed"', '"status":"rejected"']
+        )
+      )?.toISOString()
+  }
+
   return {
     id,
     proposal,
+    // Extra.
     createdAt,
+    completedAt,
+    executedAt,
+    closedAt,
   }
 }

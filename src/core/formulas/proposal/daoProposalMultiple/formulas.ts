@@ -268,9 +268,53 @@ const intoResponse = async (
     },
   })
 
+  let executedAt: string | undefined
+  if (
+    proposal.status === Status.Executed ||
+    proposal.status === Status.ExecutionFailed
+  ) {
+    executedAt = (
+      await env.getDateKeyFirstSetContainingData(
+        env.contractAddress,
+        ['proposals', id],
+        ['"status":"executed"', '"status":"execution_failed"']
+      )
+    )?.toISOString()
+  }
+
+  let closedAt: string | undefined
+  if (proposal.status === Status.Closed) {
+    closedAt = (
+      await env.getDateKeyFirstSetContainingData(
+        env.contractAddress,
+        ['proposals', id],
+        ['"status":"closed"']
+      )
+    )?.toISOString()
+  }
+
+  let completedAt: string | undefined
+  if (proposal.status !== Status.Open) {
+    completedAt =
+      executedAt ||
+      closedAt ||
+      // If not yet executed nor closed, completed when it was passed/rejected.
+      (
+        await env.getDateKeyFirstSetContainingData(
+          env.contractAddress,
+          ['proposals', id],
+          ['"status":"passed"', '"status":"rejected"']
+        )
+      )?.toISOString()
+  }
+
   return {
     id,
     proposal,
+    // Extra.
     createdAt,
+    completedAt,
+    executedAt,
+    closedAt,
   }
 }

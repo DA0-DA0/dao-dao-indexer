@@ -4,6 +4,7 @@ import { Event } from '../db/models'
 import {
   Block,
   Env,
+  FormulaDateContainingDataGetter,
   FormulaDateGetter,
   FormulaGetter,
   FormulaMapGetter,
@@ -205,7 +206,6 @@ export const getEnv = (
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
-    dependentKeys.add(`${contractAddress}:${key}`)
 
     // The cache consists of the most recent events for each key, but this
     // fetches the first event, so we can't use the cache.
@@ -225,6 +225,12 @@ export const getEnv = (
     await onFetchEvents?.(event ? [event] : [], key)
 
     if (!event) {
+      // This formula only depends on this key in the future if it is not
+      // currently set. In other words, this formula should recompute if this
+      // key becomes set when it was previously unset, since we care about the
+      // first instance of it being set.
+      dependentKeys.add(`${contractAddress}:${key}`)
+
       return undefined
     }
 
@@ -233,6 +239,52 @@ export const getEnv = (
     date.setUTCSeconds(Number(event.blockTimeUnixMs) / 1e3)
     return date
   }
+
+  // Gets the date of the first set event for the given key containing the data.
+  const getDateKeyFirstSetContainingData: FormulaDateContainingDataGetter =
+    async (contractAddress, keys, data) => {
+      const key = dbKeyForKeys(...keys)
+
+      // The cache consists of the most recent events for each key, but this
+      // fetches the first event, so we can't use the cache.
+
+      // Get first set event for this key.
+      const event = await Event.findOne({
+        where: {
+          contractAddress,
+          key,
+          delete: false,
+          value: Array.isArray(data)
+            ? {
+                [Op.or]: data.map((d) => ({
+                  [Op.like]: `%${d}%`,
+                })),
+              }
+            : {
+                [Op.like]: `%${data}%`,
+              },
+          ...blockHeightFilter,
+        },
+        order: [['blockHeight', 'ASC']],
+      })
+
+      // Call hook.
+      await onFetchEvents?.(event ? [event] : [], key)
+
+      if (!event) {
+        // This formula only depends on this key in the future if it is not
+        // currently set. In other words, this formula should recompute if this
+        // key becomes set when it was previously unset, since we care about the
+        // first instance of it being set.
+        dependentKeys.add(`${contractAddress}:${key}`)
+        return undefined
+      }
+
+      // Convert block time to date.
+      const date = new Date(0)
+      date.setUTCSeconds(Number(event.blockTimeUnixMs) / 1e3)
+      return date
+    }
 
   const prefetch: FormulaPrefetch = async (contractAddress, ...listOfKeys) => {
     const keys = listOfKeys.map((key) =>
@@ -331,6 +383,7 @@ export const getEnv = (
     getMap,
     getDateKeyModified,
     getDateKeyFirstSet,
+    getDateKeyFirstSetContainingData,
     prefetch,
     args,
   }

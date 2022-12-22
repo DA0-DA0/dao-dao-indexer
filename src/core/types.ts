@@ -30,6 +30,13 @@ export type FormulaDateGetter = (
   ...parameters: Parameters<FormulaGetter>
 ) => Promise<Date | undefined>
 
+export type FormulaDateContainingDataGetter = (
+  contractAddress: string,
+  keys: (string | number)[],
+  // If array, will return the first date where any of the data is present.
+  data: string | string[]
+) => Promise<Date | undefined>
+
 // Formulas compute a value for the state at one block height.
 export type Formula<
   R = any,
@@ -43,6 +50,7 @@ export type Env<Args extends Record<string, string> | undefined = undefined> = {
   getMap: FormulaMapGetter
   getDateKeyModified: FormulaDateGetter
   getDateKeyFirstSet: FormulaDateGetter
+  getDateKeyFirstSetContainingData: FormulaDateContainingDataGetter
   prefetch: FormulaPrefetch
   args: Args extends undefined ? Record<string, any> : Args
 } & (Args extends undefined ? Record<string, any> : { args: Args })

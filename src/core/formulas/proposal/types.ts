@@ -18,7 +18,11 @@ export enum Status {
 export interface ProposalResponse<Proposal> {
   id: number
   proposal: Proposal
+  // Extra.
   createdAt?: string
+  completedAt?: string
+  executedAt?: string
+  closedAt?: string
 }
 
 export type VoteInfo<Ballot> = Ballot & {
