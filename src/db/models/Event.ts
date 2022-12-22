@@ -69,6 +69,10 @@ export class Event extends Model {
   @Column(DataType.TEXT)
   value!: string | null
 
+  @AllowNull
+  @Column(DataType.JSONB)
+  valueJson!: object | null
+
   @AllowNull(false)
   @Column
   delete!: boolean

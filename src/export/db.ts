@@ -29,25 +29,40 @@ export const exporter: Exporter = async (events) => {
     }
   )
 
-  const eventRecords = events.map((event) => ({
-    contractAddress: event.contractAddress,
-    blockHeight: event.blockHeight,
-    blockTimeUnixMs: Math.round(event.blockTimeUnixMicro / 1000),
-    blockTimestamp: new Date(event.blockTimeUnixMicro / 1000),
-    // Convert base64 key to comma-separated list of bytes. See explanation in
-    // `Event` model for more information.
-    key: Buffer.from(event.key, 'base64').join(','),
+  const eventRecords = events.map((event) => {
     // Convert base64 value to utf-8 string, if present.
-    value: event.value && Buffer.from(event.value, 'base64').toString('utf-8'),
-    delete: event.delete,
-  }))
+    const value =
+      event.value && Buffer.from(event.value, 'base64').toString('utf-8')
+
+    let valueJson = null
+    if (!event.delete && value) {
+      try {
+        valueJson = JSON.parse(value ?? 'null')
+      } catch {
+        // Ignore parsing errors.
+      }
+    }
+
+    return {
+      contractAddress: event.contractAddress,
+      blockHeight: event.blockHeight,
+      blockTimeUnixMs: Math.round(event.blockTimeUnixMicro / 1000),
+      blockTimestamp: new Date(event.blockTimeUnixMicro / 1000),
+      // Convert base64 key to comma-separated list of bytes. See explanation in
+      // `Event` model for more information.
+      key: Buffer.from(event.key, 'base64').join(','),
+      value,
+      valueJson,
+      delete: event.delete,
+    }
+  })
 
   // Unique index on [blockHeight, contractAddress, key] ensures that we don't
-  // insert duplicate events. If we encounter a duplicate, we update the `value`
-  // and `delete` field in case event processing for a block was batched
-  // separately.
+  // insert duplicate events. If we encounter a duplicate, we update the
+  // `value`, `valueJson`, and `delete` fields in case event processing for a
+  // block was batched separately.
   await Event.bulkCreate(eventRecords, {
-    updateOnDuplicate: ['value', 'delete'],
+    updateOnDuplicate: ['value', 'valueJson', 'delete'],
   })
 
   // Update validity of computations that depend on changed keys.

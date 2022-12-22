@@ -310,10 +310,12 @@ const intoResponse = async (
     proposal.status === Status.ExecutionFailed
   ) {
     executedAt = (
-      await env.getDateKeyFirstSetContainingData(
+      await env.getDateKeyFirstSetWithValueMatch(
         env.contractAddress,
         [v2 ? 'proposals_v2' : 'proposals', id],
-        ['"status":"executed"', '"status":"execution_failed"']
+        {
+          status: ['executed', 'execution_failed'],
+        }
       )
     )?.toISOString()
   }
@@ -321,10 +323,12 @@ const intoResponse = async (
   let closedAt: string | undefined
   if (proposal.status === Status.Closed) {
     closedAt = (
-      await env.getDateKeyFirstSetContainingData(
+      await env.getDateKeyFirstSetWithValueMatch(
         env.contractAddress,
         [v2 ? 'proposals_v2' : 'proposals', id],
-        ['"status":"closed"']
+        {
+          status: 'closed',
+        }
       )
     )?.toISOString()
   }
@@ -336,10 +340,12 @@ const intoResponse = async (
       closedAt ||
       // If not yet executed nor closed, completed when it was passed/rejected.
       (
-        await env.getDateKeyFirstSetContainingData(
+        await env.getDateKeyFirstSetWithValueMatch(
           env.contractAddress,
           [v2 ? 'proposals_v2' : 'proposals', id],
-          ['"status":"passed"', '"status":"rejected"']
+          {
+            status: ['passed', 'rejected'],
+          }
         )
       )?.toISOString()
   }

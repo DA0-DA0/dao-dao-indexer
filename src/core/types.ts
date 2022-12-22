@@ -1,3 +1,5 @@
+import { WhereOptions } from 'sequelize'
+
 export type FormulaGetter = <T>(
   contractAddress: string,
   ...keys: (string | number)[]
@@ -30,11 +32,10 @@ export type FormulaDateGetter = (
   ...parameters: Parameters<FormulaGetter>
 ) => Promise<Date | undefined>
 
-export type FormulaDateContainingDataGetter = (
+export type FormulaDateWithValueMatchGetter = (
   contractAddress: string,
   keys: (string | number)[],
-  // If array, will return the first date where any of the data is present.
-  data: string | string[]
+  whereClause: WhereOptions
 ) => Promise<Date | undefined>
 
 // Formulas compute a value for the state at one block height.
@@ -50,7 +51,7 @@ export type Env<Args extends Record<string, string> | undefined = undefined> = {
   getMap: FormulaMapGetter
   getDateKeyModified: FormulaDateGetter
   getDateKeyFirstSet: FormulaDateGetter
-  getDateKeyFirstSetContainingData: FormulaDateContainingDataGetter
+  getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter
   prefetch: FormulaPrefetch
   args: Args extends undefined ? Record<string, any> : Args
 } & (Args extends undefined ? Record<string, any> : { args: Args })

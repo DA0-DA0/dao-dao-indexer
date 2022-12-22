@@ -4,8 +4,8 @@ import { Event } from '../db/models'
 import {
   Block,
   Env,
-  FormulaDateContainingDataGetter,
   FormulaDateGetter,
+  FormulaDateWithValueMatchGetter,
   FormulaGetter,
   FormulaMapGetter,
   FormulaPrefetch,
@@ -241,8 +241,8 @@ export const getEnv = (
   }
 
   // Gets the date of the first set event for the given key containing the data.
-  const getDateKeyFirstSetContainingData: FormulaDateContainingDataGetter =
-    async (contractAddress, keys, data) => {
+  const getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter =
+    async (contractAddress, keys, where) => {
       const key = dbKeyForKeys(...keys)
 
       // The cache consists of the most recent events for each key, but this
@@ -254,15 +254,7 @@ export const getEnv = (
           contractAddress,
           key,
           delete: false,
-          value: Array.isArray(data)
-            ? {
-                [Op.or]: data.map((d) => ({
-                  [Op.like]: `%${d}%`,
-                })),
-              }
-            : {
-                [Op.like]: `%${data}%`,
-              },
+          valueJson: where,
           ...blockHeightFilter,
         },
         order: [['blockHeight', 'ASC']],
@@ -383,7 +375,7 @@ export const getEnv = (
     getMap,
     getDateKeyModified,
     getDateKeyFirstSet,
-    getDateKeyFirstSetContainingData,
+    getDateKeyFirstSetWithValueMatch,
     prefetch,
     args,
   }
