@@ -21,7 +21,8 @@ export const getEnv = (
   onFetchEvents?: (
     events: Event[],
     keyFilter: string | object
-  ) => void | Promise<void>
+  ) => void | Promise<void>,
+  initialCache: Record<string, Event[] | null | undefined> = {}
 ): Env<{}> => {
   // Most recent event at or below this block.
   const blockHeightFilter = {
@@ -31,7 +32,7 @@ export const getEnv = (
   }
 
   // Cache event for key, or events for map. Null if event(s) nonexistent.
-  const cache: Record<string, Event[] | null | undefined> = {}
+  const cache: Record<string, Event[] | null | undefined> = initialCache
 
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)

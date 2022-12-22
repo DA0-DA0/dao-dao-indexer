@@ -130,18 +130,6 @@ export class Computation extends Model {
     // We need to check if it's valid at the requested block. If any events
     // exist after the computation's latest valid block, up to the requested
     // block, the computation is no longer valid.
-
-    const dependentKeysByContract = this.dependentKeys.reduce(
-      (acc, dependentKey) => {
-        const [contractAddress, key] = dependentKey.split(':')
-        return {
-          ...acc,
-          [contractAddress]: [...(acc[contractAddress] ?? []), key],
-        }
-      },
-      {} as Record<string, string[] | undefined>
-    )
-
     const firstNewerEvent = await Event.findOne({
       where: {
         // After the latest valid block up to the requested block.
@@ -150,30 +138,7 @@ export class Computation extends Model {
           [Op.lte]: blockHeight,
         },
         // Any key for any of the contracts.
-        [Op.or]: Object.entries(dependentKeysByContract).map(
-          ([contractAddress, keys]) => {
-            const nonMapKeys = keys!.filter(
-              (key) => key[key.length - 1] !== ','
-            )
-            const mapPrefixes = keys!.filter(
-              (key) => key[key.length - 1] === ','
-            )
-
-            return {
-              contractAddress,
-              [Op.or]: [
-                { key: nonMapKeys },
-                {
-                  key: {
-                    [Op.or]: mapPrefixes.map((prefix) => ({
-                      [Op.like]: `${prefix}%`,
-                    })),
-                  },
-                },
-              ],
-            }
-          }
-        ),
+        ...Event.getWhereClauseForDependentKeys(this.dependentKeys),
       },
       order: [['blockHeight', 'ASC']],
     })

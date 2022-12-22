@@ -1,3 +1,4 @@
+import { Op, WhereOptions } from 'sequelize'
 import {
   AllowNull,
   BelongsTo,
@@ -71,6 +72,59 @@ export class Event extends Model {
   @AllowNull(false)
   @Column
   delete!: boolean
+
+  // Split dependent keys into two groups: non map keys and map prefixes. Map
+  // prefixes end with a comma because they are missing the final key segment,
+  // which is the key of each map entry.
+  static splitDependentKeys(dependentKeys: string[]): {
+    nonMapKeys: string[]
+    mapPrefixes: string[]
+  } {
+    return {
+      nonMapKeys: dependentKeys.filter((key) => key[key.length - 1] !== ','),
+      mapPrefixes: dependentKeys.filter((key) => key[key.length - 1] === ','),
+    }
+  }
+
+  // Returns a where clause that will match all events that are described by the
+  // dependent keys, which contain various contract addresses, non map keys, and
+  // map prefix keys.
+  static getWhereClauseForDependentKeys(dependentKeys: string[]): WhereOptions {
+    const dependentKeysByContract = dependentKeys.reduce(
+      (acc, dependentKey) => {
+        const [contractAddress, key] = dependentKey.split(':')
+        return {
+          ...acc,
+          [contractAddress]: [...(acc[contractAddress] ?? []), key],
+        }
+      },
+      {} as Record<string, string[] | undefined>
+    )
+
+    return {
+      [Op.or]: Object.entries(dependentKeysByContract).map(
+        ([contractAddress, keys]) => {
+          const { nonMapKeys, mapPrefixes } = Event.splitDependentKeys(keys!)
+
+          return {
+            contractAddress,
+            [Op.or]: [
+              // Where key is one of the non map keys.
+              { key: nonMapKeys },
+              // Or where key is prefixed by one of the map prefixes.
+              {
+                key: {
+                  [Op.or]: mapPrefixes.map((prefix) => ({
+                    [Op.like]: `${prefix}%`,
+                  })),
+                },
+              },
+            ],
+          }
+        }
+      ),
+    }
+  }
 
   get block(): Block {
     return {

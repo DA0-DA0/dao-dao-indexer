@@ -202,6 +202,8 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
         // context.
         blockHeight: block?.height ?? -1,
         blockTimeUnixMs: block?.timeUnixMs ?? -1,
+        // Remove dependent keys from output.
+        dependentKeys: undefined,
       }))
 
       // Cache computations for future queries.
@@ -274,6 +276,8 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
 
     ctx.set('Content-Type', 'application/json')
   } catch (err) {
+    console.error(err)
+
     ctx.status = 500
     ctx.body = err instanceof Error ? err.message : `${err}`
   }
