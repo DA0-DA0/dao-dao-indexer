@@ -101,10 +101,11 @@ export const exporter: Exporter = async (events) => {
     },
   })
 
-  // Ensure validity of computations that depend on changed keys if the created
-  // events are newer. If the computations start in the future, destroy them,
-  // because formulas can depend on the first event where a key is set (usually
-  // to get dates for events), which is in the past.
+  // Update validity of computations that depend on changed keys if the created
+  // events are newer than the computations latest valid block. If the
+  // computations are valid for a future block (after these event blocks),
+  // destroy them, because formulas can depend on the first event where a key is
+  // set (usually to get dates for events), which is in the past.
   const earliestBlockHeight = Math.min(
     ...eventRecords.map((event) => event.blockHeight)
   )
