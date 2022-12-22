@@ -67,6 +67,8 @@ const main = async () => {
     const pendingIndexerEvents: IndexerEvent[] = []
     let processed = 0
     let exported = 0
+    let computationsUpdated = 0
+    let computationsDestroyed = 0
 
     // Wait for responses from export promises and update/display statistics.
     const flushToDb = async () => {
@@ -89,7 +91,11 @@ const main = async () => {
       const eventsToExport = Object.values(uniqueIndexerEvents)
 
       // Export events to DB.
-      const updatedContracts = await exporter(eventsToExport)
+      const {
+        contracts: updatedContracts,
+        computationsUpdated: _computationsUpdated,
+        computationsDestroyed: _computationsDestroyed,
+      } = await exporter(eventsToExport)
       // Update meilisearch indexes.
       await updateIndexesForContracts(updatedContracts)
 
@@ -98,6 +104,8 @@ const main = async () => {
       exported += eventsToExport.length
       lastBlockHeightExported =
         pendingIndexerEvents[pendingIndexerEvents.length - 1].blockHeight
+      computationsUpdated += _computationsUpdated
+      computationsDestroyed += _computationsDestroyed
 
       // Clear queue.
       pendingIndexerEvents.length = 0
@@ -189,7 +197,7 @@ const main = async () => {
       process.stdout.write(
         `\r${
           LOADER_MAP[printLoaderCount]
-        }  ${processed.toLocaleString()} processed. ${exported.toLocaleString()} exported. Last block height with export: ${lastBlockHeightExported.toLocaleString()}. Latest block height: ${latestBlockHeight.toLocaleString()}.`
+        }  Processed: ${processed.toLocaleString()}. Exported: ${exported.toLocaleString()}. Latest block with export: ${lastBlockHeightExported.toLocaleString()}. Latest block: ${latestBlockHeight.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
       )
     }, 100)
     // Allow process to exit even though this interval is alive.

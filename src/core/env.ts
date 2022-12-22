@@ -100,9 +100,10 @@ export const getEnv = (
         ? cachedEvents ?? []
         : await Event.findAll({
             attributes: [
-              // DISTINCT ON is not directly supported by Sequelize, so we need to
-              // cast to unknown and back to string to insert this at the beginning of
-              // the query. This ensures we use the most recent version of the key.
+              // DISTINCT ON is not directly supported by Sequelize, so we need
+              // to cast to unknown and back to string to insert this at the
+              // beginning of the query. This ensures we use the most recent
+              // version of the key.
               Sequelize.literal(
                 'DISTINCT ON("key") "key"'
               ) as unknown as string,

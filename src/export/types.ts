@@ -10,4 +10,8 @@ export interface IndexerEvent {
   delete: boolean
 }
 
-export type Exporter = (events: IndexerEvent[]) => Promise<Contract[]>
+export type Exporter = (events: IndexerEvent[]) => Promise<{
+  contracts: Contract[]
+  computationsUpdated: number
+  computationsDestroyed: number
+}>

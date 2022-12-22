@@ -189,7 +189,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
           isRangeCoveredBeforeEnd &&
           (await existingComputations[
             existingComputations.length - 1
-          ].ensureValidityUpToBlockHeight(blocks[1].height))
+          ].updateValidityUpToBlockHeight(blocks[1].height))
 
         // If range is covered until the end, we are dealing with an incomplete
         // but continuous range. Load just the rest.
@@ -228,7 +228,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
 
           entireRangeValid = await existingComputations[
             existingComputations.length - 1
-          ].ensureValidityUpToBlockHeight(blocks[1].height)
+          ].updateValidityUpToBlockHeight(blocks[1].height)
         }
 
         if (entireRangeValid) {
@@ -292,7 +292,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
       // If found existing computation, check its validity.
       const existingComputationValid =
         existingComputation !== null &&
-        (await existingComputation.ensureValidityUpToBlockHeight(block.height))
+        (await existingComputation.updateValidityUpToBlockHeight(block.height))
 
       if (existingComputation && existingComputationValid) {
         computation =

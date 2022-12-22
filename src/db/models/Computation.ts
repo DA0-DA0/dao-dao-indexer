@@ -112,28 +112,45 @@ export class Computation extends Model {
   }
 
   // Returns whether or not the computation is valid at the requested block.
-  async ensureValidityUpToBlockHeight(blockHeight: number): Promise<boolean> {
-    // If the requested block is before the computation's block, it's not valid.
-    if (blockHeight < this.blockHeight) {
+  async updateValidityUpToBlockHeight(
+    upToBlockHeight: number,
+    // If undefined, default to starting after its saved latest valid block.
+    startFromBlockHeight?: number
+  ): Promise<boolean> {
+    // If the requested block is before the computation's first valid block,
+    // it's not valid for the requested block.
+    if (upToBlockHeight < this.blockHeight) {
       return false
     }
 
-    // If the computation is valid at or after the requested block, it's valid.
-    if (this.latestBlockHeightValid >= blockHeight) {
+    // If the computation is valid at or after the requested block, and we're
+    // not starting from an earlier block, it's valid.
+    if (
+      startFromBlockHeight === undefined &&
+      this.latestBlockHeightValid >= upToBlockHeight
+    ) {
       return true
     }
 
-    // this.blockHeight <= this.latestBlockHeightValid < blockHeight
-
     // We need to check if it's valid at the requested block. If any events
-    // exist after the computation's latest valid block, up to the requested
-    // block, the computation is no longer valid.
+    // exist after the computation's latest valid block (or earlier if passed
+    // `startFromBlockHeight`), up to the requested block, the computation is no
+    // longer valid.
     const firstNewerEvent = await Event.findOne({
       where: {
-        // After the latest valid block up to the requested block.
         blockHeight: {
-          [Op.gt]: this.latestBlockHeightValid,
-          [Op.lte]: blockHeight,
+          [Op.gte]:
+            // If passed a block height to start from, start there as long as
+            // it's after the computation's start block and before the latest
+            // valid block.
+            Math.max(
+              this.blockHeight + 1,
+              Math.min(
+                startFromBlockHeight ?? Infinity,
+                this.latestBlockHeightValid + 1
+              )
+            ),
+          [Op.lte]: upToBlockHeight,
         },
         // Any key for any of the contracts.
         ...Event.getWhereClauseForDependentKeys(this.dependentKeys),
@@ -145,17 +162,21 @@ export class Computation extends Model {
     // valid, so update validity.
     if (!firstNewerEvent) {
       await this.update({
-        latestBlockHeightValid: blockHeight,
+        latestBlockHeightValid: upToBlockHeight,
       })
       return true
     }
+
     // If new event found, computation is not valid at the requested block.
-    // Update latest valid block to just before the event.
-    else {
-      await this.update({
-        latestBlockHeightValid: firstNewerEvent.blockHeight - 1,
-      })
-      return false
-    }
+    // Update latest valid block to just before the new event found. If
+    // `startFromBlockHeight` was passed, it's possible to set the latest valid
+    // block height earlier than previously set. This should only happen when a
+    // computation already exists and has been deemed valid at a block for which
+    // an event gets exported afterwards. This may happen if a query caches a
+    // computation for a block before the exporter has caught up to that block.
+    await this.update({
+      latestBlockHeightValid: firstNewerEvent.blockHeight - 1,
+    })
+    return false
   }
 }

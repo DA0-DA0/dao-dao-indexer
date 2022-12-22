@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Op, Sequelize } from 'sequelize'
+import { Op, Sequelize, WhereOptions } from 'sequelize'
 
 import { loadConfig } from '../config'
 import { loadDb } from '../db'
@@ -65,91 +65,110 @@ export const exporter: Exporter = async (events) => {
     updateOnDuplicate: ['value', 'valueJson', 'delete'],
   })
 
-  // Update validity of computations that depend on changed keys.
+  // Update validity of computations that depend on changed keys in two cases:
+  //
+  //    1. the computation starts being valid at a block after the earliest
+  //       event block
+  //    2. the computation starts being valid before the earliest event block
+  //       and has been determined to be valid after the earliest event block
+  //
+  // In the first case, we need to destroy the computation because formulas can
+  // depend on the first event where a key is set (usually to get dates for
+  // events). We cannot verify the validity of the computation so it must be
+  // recomputed later (next time it is requested).
+  //
+  // In the second case, we need to update the computation's validity because it
+  // spans a range that includes an event that may have changed the computation.
+  // This can happen if a computation is requested at a block that the exporter
+  // has not yet reached and thus the block's events have not yet been exported.
+  // We can update the computation's validity by checking the range from the
+  // earliest event block to the computation's potentially incorrect value for
+  // `latestBlockHeightValid`. This is safe because the computation is still
+  // valid at its initial block—just its end block validity may need changing.
+
   const eventKeys = eventRecords.map(
     (event) => `${event.contractAddress}:${event.key}`
   )
-  const invalidComputations = await Computation.findAll({
+  const affectedComputationsWhereClause: WhereOptions = {
+    [Op.or]: {
+      // Any dependent keys that overlap with changed keys.
+      dependentKeys: {
+        [Op.overlap]: eventKeys,
+      },
+      // Any dependent keys that are map prefixes of changed keys. This is
+      // safe because keys are encoded as comma-separated numbers and are
+      // prefixed with an alphanumeric contract address and a colon, so
+      // they cannot contain single quotes and perform SQL injection.
+      id: {
+        [Op.in]: Sequelize.literal(`
+          (
+            SELECT
+              "Computations".id
+            FROM
+              "Computations",
+              unnest("Computations"."dependentKeys") prefixes(x)
+            INNER JOIN
+              unnest(ARRAY['${eventKeys.join("','")}']) keys(x)
+            ON
+              keys.x LIKE prefixes.x || '%'
+            WHERE
+              prefixes.x LIKE '%,'
+          )
+        `),
+      },
+    },
+  }
+
+  const earliestEventBlockHeight = Math.min(
+    ...eventRecords.map((event) => event.blockHeight)
+  )
+
+  // 1. Destroy those starting after the earliest event block.
+  const computationsDestroyed = await Computation.destroy({
     where: {
-      [Op.or]: {
-        // Any dependent keys that overlap with changed keys.
-        dependentKeys: {
-          [Op.overlap]: eventKeys,
-        },
-        // Any dependent keys that are map prefixes of changed keys. This is
-        // safe because keys are encoded as comma-separated numbers and are
-        // prefixed with an alphanumeric contract address and a colon, so
-        // they cannot contain single quotes and perform SQL injection.
-        id: {
-          [Op.in]: Sequelize.literal(`
-            (
-              SELECT
-                "Computations".id
-              FROM
-                "Computations",
-                unnest("Computations"."dependentKeys") prefixes(x)
-              INNER JOIN
-                unnest(ARRAY['${eventKeys.join("','")}']) keys(x)
-              ON
-                keys.x LIKE prefixes.x || '%'
-              WHERE
-                prefixes.x LIKE '%,'
-            )
-          `),
-        },
+      ...affectedComputationsWhereClause,
+      blockHeight: {
+        [Op.gte]: earliestEventBlockHeight,
       },
     },
   })
 
-  // Update validity of computations that depend on changed keys if the created
-  // events are newer than the computations latest valid block. If the
-  // computations are valid for a future block (after these event blocks),
-  // destroy them, because formulas can depend on the first event where a key is
-  // set (usually to get dates for events), which is in the past.
-  const earliestBlockHeight = Math.min(
-    ...eventRecords.map((event) => event.blockHeight)
-  )
-  const latestBlockHeight = Math.max(
-    ...eventRecords.map((event) => event.blockHeight)
+  // 2. Update those starting before the earliest event block and deemed valid
+  //    after the earliest event block.
+  const safeToUpdateComputations = await Computation.findAll({
+    where: {
+      ...affectedComputationsWhereClause,
+      blockHeight: {
+        [Op.lt]: earliestEventBlockHeight,
+      },
+      latestBlockHeightValid: {
+        [Op.gte]: earliestEventBlockHeight,
+      },
+    },
+  })
+  await Promise.all(
+    safeToUpdateComputations.map((computation) =>
+      computation.updateValidityUpToBlockHeight(
+        computation.latestBlockHeightValid,
+        // Restart validity check at the earliest event block instead of the
+        // default behavior of using the `latestBlockHeightValid` value.
+        earliestEventBlockHeight
+      )
+    )
   )
 
-  // If the computation is valid up to a block height that is before the
-  // earliest block height of the events, then it's safe to update it since its
-  // validity based on all previous events remains the same.
-  const safeToUpdateComputations = invalidComputations
-    .filter(
-      (computation) => computation.latestBlockHeightValid < earliestBlockHeight
-    )
-    .map((computation) =>
-      computation.ensureValidityUpToBlockHeight(latestBlockHeight)
-    )
-  await Promise.all([
-    ...safeToUpdateComputations,
-    // Destroy computations that have been previously determined to be valid at
-    // blocks above any potentially relevant events that were just exported,
-    // because these events may affect the validity of those (in case they
-    // access past key-first-set timestamps, for example), and thus they'll need
-    // to be recomputed.
-    safeToUpdateComputations.length < invalidComputations.length
-      ? Computation.destroy({
-          where: {
-            id: invalidComputations
-              .filter(
-                (computation) =>
-                  computation.latestBlockHeightValid >= earliestBlockHeight
-              )
-              .map((computation) => computation.id),
-          },
-        })
-      : Promise.resolve(),
-  ])
-
-  // Return updated contracts.
-  return Contract.findAll({
+  // Get updated contracts.
+  const contracts = await Contract.findAll({
     where: {
       address: uniqueContracts,
     },
   })
+
+  return {
+    contracts,
+    computationsUpdated: safeToUpdateComputations.length,
+    computationsDestroyed,
+  }
 }
 
 // Update db state. Returns latest block height for log.
