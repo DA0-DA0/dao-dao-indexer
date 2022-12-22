@@ -25,7 +25,7 @@ export const loadDb = async (
 
   const options: SequelizeOptions = {
     // Allow options to override logging, but default to false.
-    logging,
+    logging: logging ? console.log : false,
 
     // User config.
     ...db,
