@@ -206,6 +206,7 @@ export const getEnv = (
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
+    dependentKeys.add(`${contractAddress}:${key}`)
 
     // The cache consists of the most recent events for each key, but this
     // fetches the first event, so we can't use the cache.
@@ -225,12 +226,6 @@ export const getEnv = (
     await onFetchEvents?.(event ? [event] : [], key)
 
     if (!event) {
-      // This formula only depends on this key in the future if it is not
-      // currently set. In other words, this formula should recompute if this
-      // key becomes set when it was previously unset, since we care about the
-      // first instance of it being set.
-      dependentKeys.add(`${contractAddress}:${key}`)
-
       return undefined
     }
 
@@ -244,6 +239,7 @@ export const getEnv = (
   const getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter =
     async (contractAddress, keys, where) => {
       const key = dbKeyForKeys(...keys)
+      dependentKeys.add(`${contractAddress}:${key}`)
 
       // The cache consists of the most recent events for each key, but this
       // fetches the first event, so we can't use the cache.
@@ -264,11 +260,6 @@ export const getEnv = (
       await onFetchEvents?.(event ? [event] : [], key)
 
       if (!event) {
-        // This formula only depends on this key in the future if it is not
-        // currently set. In other words, this formula should recompute if this
-        // key becomes set when it was previously unset, since we care about the
-        // first instance of it being set.
-        dependentKeys.add(`${contractAddress}:${key}`)
         return undefined
       }
 
