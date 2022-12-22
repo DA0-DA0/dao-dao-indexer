@@ -100,11 +100,47 @@ export const exporter: Exporter = async (events) => {
       },
     },
   })
-  await Promise.all(
-    invalidComputations.map((computation) =>
-      computation.ensureValidityUpToBlockHeight(state.latestBlockHeight)
-    )
+
+  // Ensure validity of computations that depend on changed keys if the created
+  // events are newer. If the computations start in the future, destroy them,
+  // because formulas can depend on the first event where a key is set (usually
+  // to get dates for events), which is in the past.
+  const earliestBlockHeight = Math.min(
+    ...eventRecords.map((event) => event.blockHeight)
   )
+  const latestBlockHeight = Math.max(
+    ...eventRecords.map((event) => event.blockHeight)
+  )
+
+  // If the computation is valid up to a block height that is before the
+  // earliest block height of the events, then it's safe to update it since its
+  // validity based on all previous events remains the same.
+  const safeToUpdateComputations = invalidComputations
+    .filter(
+      (computation) => computation.latestBlockHeightValid < earliestBlockHeight
+    )
+    .map((computation) =>
+      computation.ensureValidityUpToBlockHeight(latestBlockHeight)
+    )
+  await Promise.all([
+    ...safeToUpdateComputations,
+    // Destroy computations that have been determined to be valid after any
+    // potentially relevant events were exported, because these events may
+    // affect the validity of computations that have already been deemed valid,
+    // and thus they'll need to be recomputed.
+    safeToUpdateComputations.length < invalidComputations.length
+      ? Computation.destroy({
+          where: {
+            id: invalidComputations
+              .filter(
+                (computation) =>
+                  computation.latestBlockHeightValid >= earliestBlockHeight
+              )
+              .map((computation) => computation.id),
+          },
+        })
+      : Promise.resolve(),
+  ])
 
   // Return updated contracts.
   return Contract.findAll({
