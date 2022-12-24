@@ -51,11 +51,21 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
 
     try {
       const documents = await Promise.all(
-        matchingContracts.map(async (contract) => ({
-          contractAddress: contract.address,
-          codeId: contract.codeId,
-          ...(await compute(formula, contract, args, state.latestBlock)),
-        }))
+        matchingContracts.map(async (contract) => {
+          const { block, value } = await compute(
+            formula,
+            contract,
+            args,
+            state.latestBlock
+          )
+
+          return {
+            contractAddress: contract.address,
+            codeId: contract.codeId,
+            block,
+            value,
+          }
+        })
       )
 
       await clientIndex.addDocuments(documents)
