@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 
 import { loadConfig } from '../config'
+import { loadDb } from '../db'
 import { setupMeilisearch } from './setup'
 import { updateIndexesForContracts } from './update'
 
@@ -17,13 +18,22 @@ const main = async () => {
   // Load config with config option.
   await loadConfig(options.config)
 
-  // Setup meilisearch.
-  await setupMeilisearch()
+  // Connect to db.
+  const sequelize = await loadDb()
 
-  // Update.
-  const updated = await updateIndexesForContracts()
+  try {
+    // Setup meilisearch.
+    await setupMeilisearch()
 
-  console.log(`Updated ${updated} documents.`)
+    // Update.
+    const updated = await updateIndexesForContracts()
+
+    console.log(`Updated ${updated} documents.`)
+  } catch (err) {
+    throw err
+  } finally {
+    await sequelize.close()
+  }
 }
 
 main()
