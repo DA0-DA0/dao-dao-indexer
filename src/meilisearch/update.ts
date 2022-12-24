@@ -1,14 +1,18 @@
+import { Op } from 'sequelize'
+
 import { loadConfig } from '../config'
 import { compute, getFormula } from '../core'
 import { Contract, State } from '../db'
 import { loadMeilisearch } from './client'
 
-export const updateIndexesForContracts = async (contracts: Contract[]) => {
+export const updateIndexesForContracts = async (
+  contracts?: Contract[]
+): Promise<number> => {
   const { meilisearch } = await loadConfig()
 
   // If no meilisearch in config, nothing to update.
   if (!meilisearch) {
-    return
+    return 0
   }
 
   const client = await loadMeilisearch()
@@ -18,6 +22,8 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
   if (!state) {
     throw new Error('State not found while updating indexes')
   }
+
+  let exported = 0
 
   for (const {
     index,
@@ -39,11 +45,30 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
 
     const clientIndex = client.index(index)
 
-    const matchingContracts = contracts.filter(
-      (contract) =>
-        codeIds?.includes(contract.codeId) ||
-        contractAddresses?.includes(contract.address)
-    )
+    const matchingContracts =
+      contracts?.filter(
+        (contract) =>
+          codeIds?.includes(contract.codeId) ||
+          contractAddresses?.includes(contract.address)
+      ) ??
+      // If no contracts provided, query for all matching contracts.
+      (await Contract.findAll({
+        where:
+          codeIds && contractAddresses
+            ? {
+                [Op.or]: {
+                  codeId: codeIds,
+                  address: contractAddresses,
+                },
+              }
+            : codeIds
+            ? {
+                codeId: codeIds,
+              }
+            : {
+                address: contractAddresses,
+              },
+      }))
 
     if (!matchingContracts.length) {
       continue
@@ -69,6 +94,8 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
       )
 
       await clientIndex.addDocuments(documents)
+
+      exported += documents.length
     } catch (err) {
       console.error(
         `Error computing formula ${formulaName} for contracts ${matchingContracts.map(
@@ -78,4 +105,6 @@ export const updateIndexesForContracts = async (contracts: Contract[]) => {
       )
     }
   }
+
+  return exported
 }

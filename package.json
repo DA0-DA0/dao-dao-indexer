@@ -15,7 +15,8 @@
     "serve:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js\"",
     "serve:prod": "npm run build && pm2 reload ecosystem.config.js --only server_testnet,server_mainnet",
     "deploy:server": "./scripts/deploy_server.sh",
-    "deploy:exporter": "./scripts/deploy_exporter.sh"
+    "deploy:exporter": "./scripts/deploy_exporter.sh",
+    "search:update": "node dist/meilisearch/runUpdate.js"
   },
   "author": "Noah Saso <noah@noah.zone>",
   "devDependencies": {
