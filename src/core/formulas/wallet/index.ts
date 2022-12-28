@@ -1,1 +1,1 @@
-export * as proposal from './proposal'
+export * as proposals from './proposals'
