@@ -400,6 +400,8 @@ export const getContractEnv = (
             ],
             where: {
               key: keyFilter,
+              // TODO: Figure out how to ignore if deleted but still match with
+              // where clause on valueJson.
               ...(where && {
                 valueJson: where,
               }),
@@ -428,12 +430,11 @@ export const getContractEnv = (
       return undefined
     }
 
-    // Add individual events to cache and dependent keys.
+    // Add individual events to cache.
     events.forEach((event) => {
       const cacheKey = `${event.contractAddress}:${event.key}`
       // If key deleted, cache null for nonexistent.
       cache[cacheKey] = event.delete ? null : [event]
-      dependentKeys.add(cacheKey)
     })
 
     // Remove delete events.
