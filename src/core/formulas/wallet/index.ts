@@ -1,1 +1,1 @@
-export * from './votes'
+export * as proposal from './proposal'

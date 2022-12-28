@@ -58,7 +58,7 @@ export const main = async () => {
           where: {
             ...(options.addresses
               ? {
-                  contractAddress: options.addresses.split(','),
+                  walletAddress: options.addresses.split(','),
                 }
               : {}),
             ...(options.formulas
