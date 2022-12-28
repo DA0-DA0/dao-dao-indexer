@@ -1,16 +1,19 @@
-import * as formulas from './formulas'
-import { Formula, NestedFormulaMap } from './types'
+import { contractFormulas, walletFormulas } from './formulas'
+import { ContractFormula, NestedFormulaMap, WalletFormula } from './types'
 
-export const getFormula = (
+export const getContractFormula = (
   formulaName: string
-): Formula<any, any> | undefined => {
+): ContractFormula<any, any> | undefined => {
   const formulaPath = formulaName.split('/')
   const formulaBase = formulaPath
     .slice(0, -1)
     .reduce(
       (acc, key) =>
         typeof acc === 'object' && acc[key] ? acc[key] : undefined,
-      formulas as NestedFormulaMap | Formula<any, any> | undefined
+      contractFormulas as
+        | NestedFormulaMap<ContractFormula<any, any>>
+        | ContractFormula<any, any>
+        | undefined
     )
 
   const formula =
@@ -20,22 +23,26 @@ export const getFormula = (
   return typeof formula === 'function' ? formula : undefined
 }
 
-export const getAllFormulaNames = (
-  formulaMap: NestedFormulaMap = formulas
-): string[] => {
-  const formulaNames = []
-  for (const [key, value] of Object.entries(formulaMap)) {
-    if (!value) {
-      continue
-    } else if (typeof value === 'function') {
-      formulaNames.push(key)
-    } else {
-      formulaNames.push(
-        ...getAllFormulaNames(value).map((name) => `${key}/${name}`)
-      )
-    }
-  }
-  return formulaNames
+export const getWalletFormula = (
+  formulaName: string
+): WalletFormula<any, any> | undefined => {
+  const formulaPath = formulaName.split('/')
+  const formulaBase = formulaPath
+    .slice(0, -1)
+    .reduce(
+      (acc, key) =>
+        typeof acc === 'object' && acc[key] ? acc[key] : undefined,
+      walletFormulas as
+        | NestedFormulaMap<WalletFormula<any, any>>
+        | WalletFormula<any, any>
+        | undefined
+    )
+
+  const formula =
+    typeof formulaBase === 'object'
+      ? formulaBase[formulaPath[formulaPath.length - 1]]
+      : undefined
+  return typeof formula === 'function' ? formula : undefined
 }
 
 // https://github.com/CosmWasm/cw-storage-plus/blob/179bcd0dc2b769c787f411a7cf9a614a80e4dee0/src/helpers.rs#L57

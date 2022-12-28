@@ -19,6 +19,7 @@ export interface Config {
     | 'protocol'
     | 'pool'
     | 'schema'
+    | 'logging'
   >
   meilisearch?: {
     host: string

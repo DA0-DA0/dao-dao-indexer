@@ -6,7 +6,13 @@ import { Op } from 'sequelize'
 import { v4 as uuidv4 } from 'uuid'
 
 import { loadConfig } from '../config'
-import { compute, computeRange, getFormula } from '../core'
+import {
+  computeContract,
+  computeContractRange,
+  computeWallet,
+  getContractFormula,
+  getWalletFormula,
+} from '../core'
 import { Block } from '../core/types'
 import { Computation, Contract, State, closeDb, loadDb } from '../db'
 import { validateBlockString } from './validate'
@@ -47,10 +53,10 @@ app.use(async (ctx, next) => {
   ctx.set('X-Response-Time', `${ms}ms`)
 })
 
-// Main formula computer.
-router.get('/:targetContractAddress/(.+)', async (ctx) => {
+// Contract formula computer.
+router.get('/contract/:address/(.+)', async (ctx) => {
   const { block: _block, blocks: _blocks, ...args } = ctx.query
-  const { targetContractAddress } = ctx.params
+  const { address } = ctx.params
 
   // If block passed, validate.
   let block: Block | undefined
@@ -102,8 +108,8 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
   }
 
   // Validate that formula exists.
-  const formulaName = ctx.path.split('/').slice(2).join('/')
-  const formula = getFormula(formulaName)
+  const formulaName = ctx.path.split('/').slice(3).join('/')
+  const formula = getContractFormula(formulaName)
   if (!formula) {
     ctx.status = 404
     ctx.body = 'formula not found'
@@ -111,7 +117,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
   }
 
   // Validate that contract exists.
-  const contract = await Contract.findByPk(targetContractAddress)
+  const contract = await Contract.findByPk(address)
   if (!contract) {
     ctx.status = 404
     ctx.body = 'contract not found'
@@ -194,7 +200,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
         // If range is covered until the end, we are dealing with an incomplete
         // but continuous range. Load just the rest.
         if (isRangeCoveredBeforeEnd && !entireRangeValid) {
-          const missingComputations = await computeRange(
+          const missingComputations = await computeContractRange(
             formula,
             contract,
             args,
@@ -243,7 +249,7 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
 
       // If could not find existing range, compute.
       if (!existingUsed) {
-        const rangeComputations = await computeRange(
+        const rangeComputations = await computeContractRange(
           formula,
           contract,
           args,
@@ -299,7 +305,12 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
           existingComputation.output && JSON.parse(existingComputation.output)
       } else {
         // Compute if did not find or use existing.
-        const computationOutput = await compute(formula, contract, args, block)
+        const computationOutput = await computeContract(
+          formula,
+          contract,
+          args,
+          block
+        )
 
         computation = computationOutput.value
 
@@ -316,6 +327,62 @@ router.get('/:targetContractAddress/(.+)', async (ctx) => {
         )
       }
     }
+
+    // If string, encode as JSON.
+    if (typeof computation === 'string') {
+      ctx.body = JSON.stringify(computation)
+    } else {
+      ctx.body = computation
+    }
+
+    ctx.set('Content-Type', 'application/json')
+  } catch (err) {
+    console.error(err)
+
+    ctx.status = 500
+    ctx.body = err instanceof Error ? err.message : `${err}`
+  }
+})
+
+// Wallet formula computer.
+router.get('/wallet/:address/(.+)', async (ctx) => {
+  const { block: _block, ...args } = ctx.query
+  const { address } = ctx.params
+
+  // If block passed, validate.
+  let block: Block | undefined
+  if (_block && typeof _block === 'string') {
+    try {
+      block = validateBlockString(_block, 'block')
+    } catch (err) {
+      ctx.status = 400
+      ctx.body = err instanceof Error ? err.message : err
+      return
+    }
+  }
+
+  // Validate that formula exists.
+  const formulaName = ctx.path.split('/').slice(3).join('/')
+  const formula = getWalletFormula(formulaName)
+  if (!formula) {
+    ctx.status = 404
+    ctx.body = 'formula not found'
+    return
+  }
+
+  try {
+    const state = await State.getSingleton()
+    if (!state) {
+      throw new Error('State not found')
+    }
+
+    // Use latest block if not provided.
+    if (block === undefined) {
+      block = state.latestBlock
+    }
+
+    const computation = (await computeWallet(formula, address, args, block))
+      .value
 
     // If string, encode as JSON.
     if (typeof computation === 'string') {

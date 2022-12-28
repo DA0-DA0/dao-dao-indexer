@@ -1,11 +1,16 @@
 import { Op } from 'sequelize'
 
 import { Contract, Event } from '../db/models'
-import { getEnv } from './env'
-import { Block, ComputationOutput, Formula } from './types'
+import { getContractEnv, getWalletEnv } from './env'
+import {
+  Block,
+  ComputationOutput,
+  ContractFormula,
+  WalletFormula,
+} from './types'
 
-export const compute = async (
-  formula: Formula,
+export const computeContract = async (
+  formula: ContractFormula,
   targetContract: Contract,
   args: Record<string, any>,
   block: Block
@@ -32,7 +37,7 @@ export const compute = async (
   }
 
   const dependentKeys = new Set<string>()
-  const env = getEnv(
+  const env = getContractEnv(
     targetContract.address,
     block,
     args,
@@ -49,8 +54,8 @@ export const compute = async (
   }
 }
 
-export const computeRange = async (
-  formula: Formula,
+export const computeContractRange = async (
+  formula: ContractFormula,
   targetContract: Contract,
   args: Record<string, any>,
   blockStart: Block,
@@ -206,7 +211,7 @@ export const computeRange = async (
 
     // Add hook to env so that the getters update the latest block info.
     const dependentKeys = new Set<string>()
-    const env = getEnv(
+    const env = getContractEnv(
       targetContract.address,
       block,
       args,
@@ -342,4 +347,49 @@ export const computeRange = async (
   }
 
   return results
+}
+
+export const computeWallet = async (
+  formula: WalletFormula,
+  walletAddress: string,
+  args: Record<string, any>,
+  block: Block
+): Promise<ComputationOutput> => {
+  // Store the latest block that we've seen for all keys accessed. This is when
+  // this computation became valid, i.e. the earliest this computation could
+  // have been made to get this output.
+  let latestBlock: Block | undefined
+
+  const onFetchEvents = async (events: Event[]) => {
+    if (events.length === 0) {
+      return
+    }
+
+    const latestEvent = events.sort((a, b) => b.blockHeight - a.blockHeight)[0]
+
+    // If latest is unset, or if we found a later block height, update.
+    if (
+      latestBlock === undefined ||
+      latestEvent.blockHeight > latestBlock.height
+    ) {
+      latestBlock = latestEvent.block
+    }
+  }
+
+  const dependentKeys = new Set<string>()
+  const env = getWalletEnv(
+    walletAddress,
+    block,
+    args,
+    dependentKeys,
+    onFetchEvents
+  )
+
+  const value = await formula(env)
+
+  return {
+    block: latestBlock,
+    value,
+    dependentKeys: Array.from(dependentKeys),
+  }
 }

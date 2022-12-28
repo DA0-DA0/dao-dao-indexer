@@ -24,11 +24,11 @@ export const loadDb = async (
   const { db } = await loadConfig()
 
   const options: SequelizeOptions = {
-    // Allow options to override logging, but default to false.
-    logging: logging ? console.log : false,
-
     // User config.
     ...db,
+
+    // Allow options to override logging, but default to false.
+    logging: db.logging ?? logging ? console.log : false,
 
     // Tell Sequelize what models we have.
     models: [Computation, Contract, Event, State],

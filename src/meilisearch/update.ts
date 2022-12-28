@@ -1,7 +1,7 @@
 import { Op } from 'sequelize'
 
 import { loadConfig } from '../config'
-import { compute, getFormula } from '../core'
+import { computeContract, getContractFormula } from '../core'
 import { Contract, State } from '../db'
 import { loadMeilisearch } from './client'
 
@@ -32,7 +32,7 @@ export const updateIndexesForContracts = async (
     codeIds,
     contractAddresses,
   } of meilisearch.indexes) {
-    const formula = getFormula(formulaName)
+    const formula = getContractFormula(formulaName)
     if (!formula) {
       throw new Error(`Formula ${formulaName} not found`)
     }
@@ -77,7 +77,7 @@ export const updateIndexesForContracts = async (
     try {
       const documents = await Promise.all(
         matchingContracts.map(async (contract) => {
-          const { block, value } = await compute(
+          const { block, value } = await computeContract(
             formula,
             contract,
             args,

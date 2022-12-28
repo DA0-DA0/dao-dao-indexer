@@ -3,17 +3,19 @@ import { Op, Sequelize } from 'sequelize'
 import { Event } from '../db/models'
 import {
   Block,
-  Env,
+  ContractEnv,
   FormulaDateGetter,
   FormulaDateWithValueMatchGetter,
   FormulaGetter,
   FormulaMapGetter,
   FormulaPrefetch,
+  FormulaValueMatchGetter,
+  WalletEnv,
 } from './types'
 import { dbKeyForKeys, dbKeyToNumber, dbKeyToString } from './utils'
 
 // Generate environment for computation.
-export const getEnv = (
+export const getContractEnv = (
   contractAddress: string,
   block: Block,
   args: Record<string, any>,
@@ -23,17 +25,15 @@ export const getEnv = (
     events: Event[],
     keyFilter: string | object
   ) => void | Promise<void>,
-  initialCache: Record<string, Event[] | null | undefined> = {}
-): Env<{}> => {
+  // Cache event for key, or events for map. Null if event(s) nonexistent.
+  cache: Record<string, Event[] | null | undefined> = {}
+): ContractEnv<{}> => {
   // Most recent event at or below this block.
   const blockHeightFilter = {
     blockHeight: {
       [Op.lte]: block.height,
     },
   }
-
-  // Cache event for key, or events for map. Null if event(s) nonexistent.
-  const cache: Record<string, Event[] | null | undefined> = initialCache
 
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
@@ -370,5 +370,137 @@ export const getEnv = (
     getDateKeyFirstSetWithValueMatch,
     prefetch,
     args,
+  }
+}
+
+// Generate environment for computation.
+export const getWalletEnv = (
+  walletAddress: string,
+  block: Block,
+  args: Record<string, any>,
+  // An array to add accessed keys to.
+  dependentKeys: Set<string>,
+  onFetchEvents?: (
+    events: Event[],
+    keyFilter: string | object
+  ) => void | Promise<void>,
+  // Cache event for key, or events for map. Null if event(s) nonexistent.
+  cache: Record<string, Event[] | null | undefined> = {}
+): WalletEnv<{}> => {
+  // Get functions for operating on contracts.
+  const contractEnv: Omit<ContractEnv<{}>, 'contractAddress'> & {
+    contractAddress?: string
+  } = getContractEnv(
+    '',
+    block,
+    {},
+    dependentKeys,
+    onFetchEvents,
+    // Share cache.
+    cache
+  )
+  // Remove contractAddress from contractEnv, since we don't use it for the
+  // wallet env.
+  delete contractEnv.contractAddress
+
+  // Most recent event at or below this block.
+  const blockHeightFilter = {
+    blockHeight: {
+      [Op.lte]: block.height,
+    },
+  }
+
+  const getWhereValueMatches: FormulaValueMatchGetter = async (keys, where) => {
+    const dbKey = keys
+      .map((key, index) =>
+        typeof key === 'object' && 'wildcard' in key && key.wildcard
+          ? '%'
+          : index === keys.length - 1
+          ? dbKeyForKeys(key as string | number)
+          : dbKeyForKeys(key as string | number, '')
+      )
+      .join(',')
+    dependentKeys.add(dbKey)
+
+    // Check cache.
+    const cachedEvents = cache[dbKey]
+    const keyFilter = {
+      [Op.like]: dbKey,
+    }
+    const events =
+      // If undefined, we haven't tried to fetch them yet. If not undefined,
+      // either they exist or they don't (null).
+      cachedEvents !== undefined
+        ? cachedEvents ?? []
+        : await Event.findAll({
+            attributes: [
+              // DISTINCT ON is not directly supported by Sequelize, so we need
+              // to cast to unknown and back to string to insert this at the
+              // beginning of the query. This ensures we use the most recent
+              // version of the key for each contract.
+              Sequelize.literal(
+                'DISTINCT ON("contractAddress", "key") "key"'
+              ) as unknown as string,
+              'key',
+              'contractAddress',
+              'blockHeight',
+              'blockTimeUnixMs',
+              'value',
+              'delete',
+            ],
+            where: {
+              key: keyFilter,
+              ...(where && {
+                valueJson: where,
+              }),
+              ...blockHeightFilter,
+            },
+            order: [
+              // Needs to be first so we can use DISTINCT ON.
+              ['contractAddress', 'ASC'],
+              ['key', 'ASC'],
+              // Descending block height ensures we get the most recent event
+              // for the (contractAddress,key) pair.
+              ['blockHeight', 'DESC'],
+            ],
+          })
+
+    // Cache events, null if nonexistent.
+    if (cachedEvents === undefined) {
+      cache[dbKey] = events.length ? events : null
+    }
+
+    // Call hook.
+    await onFetchEvents?.(events, keyFilter)
+
+    // If no events found, return undefined.
+    if (!events.length) {
+      return undefined
+    }
+
+    // Add individual events to cache and dependent keys.
+    events.forEach((event) => {
+      const cacheKey = `${event.contractAddress}:${event.key}`
+      // If key deleted, cache null for nonexistent.
+      cache[cacheKey] = event.delete ? null : [event]
+      dependentKeys.add(cacheKey)
+    })
+
+    // Remove delete events.
+    const undeletedEvents = events.filter((event) => !event.delete)
+
+    const values: any[] = undeletedEvents.map((event) => ({
+      contractAddress: event.contractAddress,
+      block: event.block,
+      value: JSON.parse(event.value ?? 'null'),
+    }))
+
+    return values
+  }
+
+  return {
+    walletAddress,
+    ...contractEnv,
+    getWhereValueMatches,
   }
 }

@@ -38,13 +38,20 @@ export type FormulaDateWithValueMatchGetter = (
   whereClause: WhereOptions
 ) => Promise<Date | undefined>
 
+export type FormulaValueMatchGetter = <T>(
+  keys: (string | number | { wildcard: true })[],
+  whereClause?: WhereOptions
+) => Promise<{ contractAddress: string; block: Block; value: T }[] | undefined>
+
 // Formulas compute a value for the state at one block height.
-export type Formula<
+export type ContractFormula<
   R = any,
   Args extends Record<string, string> | undefined = undefined
-> = (env: Env<Args>) => Promise<R>
+> = (env: ContractEnv<Args>) => Promise<R>
 
-export type Env<Args extends Record<string, string> | undefined = undefined> = {
+export type ContractEnv<
+  Args extends Record<string, string> | undefined = undefined
+> = {
   contractAddress: string
   block: Block
   get: FormulaGetter
@@ -52,6 +59,26 @@ export type Env<Args extends Record<string, string> | undefined = undefined> = {
   getDateKeyModified: FormulaDateGetter
   getDateKeyFirstSet: FormulaDateGetter
   getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter
+  prefetch: FormulaPrefetch
+  args: Args extends undefined ? Record<string, any> : Args
+} & (Args extends undefined ? Record<string, any> : { args: Args })
+
+export type WalletFormula<
+  R = any,
+  Args extends Record<string, string> | undefined = undefined
+> = (env: WalletEnv<Args>) => Promise<R>
+
+export type WalletEnv<
+  Args extends Record<string, string> | undefined = undefined
+> = {
+  walletAddress: string
+  block: Block
+  get: FormulaGetter
+  getMap: FormulaMapGetter
+  getDateKeyModified: FormulaDateGetter
+  getDateKeyFirstSet: FormulaDateGetter
+  getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter
+  getWhereValueMatches: FormulaValueMatchGetter
   prefetch: FormulaPrefetch
   args: Args extends undefined ? Record<string, any> : Args
 } & (Args extends undefined ? Record<string, any> : { args: Args })
@@ -66,8 +93,8 @@ export interface ComputationOutput {
   latestBlockHeightValid?: number
 }
 
-export type NestedFormulaMap = {
-  [key: string]: Formula<any, any> | NestedFormulaMap | undefined
+export type NestedFormulaMap<F> = {
+  [key: string]: F | NestedFormulaMap<F> | undefined
 }
 
 export type Block = {
