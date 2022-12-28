@@ -45,35 +45,8 @@ export type FormulaValueMatchGetter = <T>(
   { contractAddress: string; block: Block; key: string; value: T }[] | undefined
 >
 
-// Formulas compute a value for the state at one block height.
-export type ContractFormula<
-  R = any,
-  Args extends Record<string, string> | undefined = undefined
-> = (env: ContractEnv<Args>) => Promise<R>
-
-export type ContractEnv<
-  Args extends Record<string, string> | undefined = undefined
-> = {
+export type ContractEnv<Args extends Record<string, string> = {}> = {
   contractAddress: string
-  block: Block
-  get: FormulaGetter
-  getMap: FormulaMapGetter
-  getDateKeyModified: FormulaDateGetter
-  getDateKeyFirstSet: FormulaDateGetter
-  getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter
-  prefetch: FormulaPrefetch
-  args: Args extends undefined ? Record<string, any> : Args
-} & (Args extends undefined ? Record<string, any> : { args: Args })
-
-export type WalletFormula<
-  R = any,
-  Args extends Record<string, string> | undefined = undefined
-> = (env: WalletEnv<Args>) => Promise<R>
-
-export type WalletEnv<
-  Args extends Record<string, string> | undefined = undefined
-> = {
-  walletAddress: string
   block: Block
   get: FormulaGetter
   getMap: FormulaMapGetter
@@ -82,8 +55,25 @@ export type WalletEnv<
   getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter
   getWhereValueMatches: FormulaValueMatchGetter
   prefetch: FormulaPrefetch
-  args: Args extends undefined ? Record<string, any> : Args
-} & (Args extends undefined ? Record<string, any> : { args: Args })
+  args: Args
+}
+
+export type WalletEnv<Args extends Record<string, string> = {}> = Omit<
+  ContractEnv<Args>,
+  'contractAddress'
+> & {
+  walletAddress: string
+}
+
+// Formulas compute a value for the state at one block height.
+export type ContractFormula<
+  R = any,
+  Args extends Record<string, string> = {}
+> = (env: ContractEnv<Args>) => Promise<R>
+
+export type WalletFormula<R = any, Args extends Record<string, string> = {}> = (
+  env: WalletEnv<Args>
+) => Promise<R>
 
 export interface ComputationOutput {
   // Undefined if formula did not use any keys.

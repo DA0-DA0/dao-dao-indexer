@@ -20,6 +20,10 @@ program.option(
   '-c, --config <path>',
   'path to config file, falling back to config.json'
 )
+program.option(
+  '-b, --block <height>',
+  'block height to start exporting from, falling back to the beginning of the events file'
+)
 program.parse()
 const options = program.opts()
 
@@ -43,13 +47,12 @@ const main = async () => {
   // Setup meilisearch.
   await setupMeilisearch()
 
+  // Initialize state.
+  const initialBlockHeight = await updateState()
+
   // Return promise that never resolves. Listen for file changes.
   return new Promise((_, reject) => {
-    let latestBlockHeight = -1
-    // Initialize state.
-    updateState().then((blockHeight) => {
-      latestBlockHeight = blockHeight
-    })
+    let latestBlockHeight = initialBlockHeight
     // Update db state every 3 seconds.
     const stateInterval = setInterval(async () => {
       latestBlockHeight = await updateState()
@@ -143,6 +146,12 @@ const main = async () => {
               delete: {},
             })
           ) {
+            continue
+          }
+
+          // If event is from a block before the start block, skip.
+          if (options.block && event.blockHeight < Number(options.block)) {
+            lastBlockHeightExported = event.blockHeight
             continue
           }
 

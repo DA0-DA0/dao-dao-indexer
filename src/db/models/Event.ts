@@ -91,12 +91,16 @@ export class Event extends Model {
   }
 
   // Returns a where clause that will match all events that are described by the
-  // dependent keys, which contain various contract addresses, non map keys, and
-  // map prefix keys.
+  // dependent keys, which contain various contract addresses, non map keys
+  // (potentially containing wildcards), and map prefix keys.
   static getWhereClauseForDependentKeys(dependentKeys: string[]): WhereOptions {
+    // Some keys (most likely those with wildcards) may not have a contract
+    // address. It is fine to group these together.
     const dependentKeysByContract = dependentKeys.reduce(
       (acc, dependentKey) => {
-        const [contractAddress, key] = dependentKey.split(':')
+        const [contractAddress, key] = dependentKey.includes(':')
+          ? dependentKey.split(':')
+          : ['', dependentKey]
         return {
           ...acc,
           [contractAddress]: [...(acc[contractAddress] ?? []), key],
@@ -111,19 +115,29 @@ export class Event extends Model {
           const { nonMapKeys, mapPrefixes } = Event.splitDependentKeys(keys!)
 
           return {
-            contractAddress,
-            [Op.or]: [
-              // Where key is one of the non map keys.
-              { key: nonMapKeys },
-              // Or where key is prefixed by one of the map prefixes.
-              {
-                key: {
-                  [Op.or]: mapPrefixes.map((prefix) => ({
-                    [Op.like]: `${prefix}%`,
-                  })),
-                },
-              },
-            ],
+            // Only include if contract address is defined.
+            ...(contractAddress && { contractAddress }),
+            // Same logic as in `makeAffectedComputationsWhereClause` in
+            // `src/export/db.ts`.
+            key: {
+              [Op.or]: [
+                // Where key is one of the non map keys.
+                ...nonMapKeys.map((key) =>
+                  // If key contains wildcard, use LIKE.
+                  key.includes('%')
+                    ? {
+                        [Op.like]: key,
+                      }
+                    : {
+                        [Op.eq]: key,
+                      }
+                ),
+                // Or where key is prefixed by one of the map prefixes.
+                ...mapPrefixes.map((prefix) => ({
+                  [Op.like]: `${prefix}%`,
+                })),
+              ],
+            },
           }
         }
       ),

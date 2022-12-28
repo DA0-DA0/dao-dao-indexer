@@ -3,7 +3,13 @@ import { Op, Sequelize, WhereOptions } from 'sequelize'
 
 import { loadConfig } from '../config'
 import { loadDb } from '../db'
-import { Computation, Contract, Event, State } from '../db/models'
+import {
+  Contract,
+  ContractComputation,
+  Event,
+  State,
+  WalletComputation,
+} from '../db/models'
 import { Exporter } from './types'
 
 export const exporter: Exporter = async (events) => {
@@ -86,66 +92,66 @@ export const exporter: Exporter = async (events) => {
   // `latestBlockHeightValid`. This is safe because the computation is still
   // valid at its initial block—just its end block validity may need changing.
 
-  const eventKeys = eventRecords.map(
-    (event) => `${event.contractAddress}:${event.key}`
+  const eventKeys = Array.from(
+    new Set(
+      eventRecords.map((event) => `${event.contractAddress}:${event.key}`)
+    )
   )
-  const affectedComputationsWhereClause: WhereOptions = {
-    [Op.or]: {
-      // Any dependent keys that overlap with changed keys.
-      dependentKeys: {
-        [Op.overlap]: eventKeys,
-      },
-      // Any dependent keys that are map prefixes of changed keys. This is
-      // safe because keys are encoded as comma-separated numbers and are
-      // prefixed with an alphanumeric contract address and a colon, so
-      // they cannot contain single quotes and perform SQL injection.
-      id: {
-        [Op.in]: Sequelize.literal(`
-          (
-            SELECT
-              "Computations".id
-            FROM
-              "Computations",
-              unnest("Computations"."dependentKeys") prefixes(x)
-            INNER JOIN
-              unnest(ARRAY['${eventKeys.join("','")}']) keys(x)
-            ON
-              keys.x LIKE prefixes.x || '%'
-            WHERE
-              prefixes.x LIKE '%,'
-          )
-        `),
-      },
-    },
-  }
+  const contractAffectedComputationsWhereClause =
+    makeAffectedComputationsWhereClause('ContractComputations', eventKeys)
+  const walletAffectedComputationsWhereClause =
+    makeAffectedComputationsWhereClause('WalletComputations', eventKeys)
 
   const earliestEventBlockHeight = Math.min(
     ...eventRecords.map((event) => event.blockHeight)
   )
 
   // 1. Destroy those starting after the earliest event block.
-  const computationsDestroyed = await Computation.destroy({
-    where: {
-      ...affectedComputationsWhereClause,
-      blockHeight: {
-        [Op.gte]: earliestEventBlockHeight,
+  const computationsDestroyed =
+    (await ContractComputation.destroy({
+      where: {
+        ...contractAffectedComputationsWhereClause,
+        blockHeight: {
+          [Op.gte]: earliestEventBlockHeight,
+        },
       },
-    },
-  })
+    })) +
+    (await WalletComputation.destroy({
+      where: {
+        ...walletAffectedComputationsWhereClause,
+        blockHeight: {
+          [Op.gte]: earliestEventBlockHeight,
+        },
+      },
+    }))
 
   // 2. Update those starting before the earliest event block and deemed valid
   //    after the earliest event block.
-  const safeToUpdateComputations = await Computation.findAll({
-    where: {
-      ...affectedComputationsWhereClause,
-      blockHeight: {
-        [Op.lt]: earliestEventBlockHeight,
-      },
-      latestBlockHeightValid: {
-        [Op.gte]: earliestEventBlockHeight,
-      },
-    },
-  })
+  const safeToUpdateComputations: (ContractComputation | WalletComputation)[] =
+    [
+      ...(await ContractComputation.findAll({
+        where: {
+          ...contractAffectedComputationsWhereClause,
+          blockHeight: {
+            [Op.lt]: earliestEventBlockHeight,
+          },
+          latestBlockHeightValid: {
+            [Op.gte]: earliestEventBlockHeight,
+          },
+        },
+      })),
+      ...(await WalletComputation.findAll({
+        where: {
+          ...walletAffectedComputationsWhereClause,
+          blockHeight: {
+            [Op.lt]: earliestEventBlockHeight,
+          },
+          latestBlockHeightValid: {
+            [Op.gte]: earliestEventBlockHeight,
+          },
+        },
+      })),
+    ]
   await Promise.all(
     safeToUpdateComputations.map((computation) =>
       computation.updateValidityUpToBlockHeight(
@@ -193,3 +199,72 @@ export const updateState = async (): Promise<number> => {
 
   return latestBlockHeight
 }
+
+// Same logic as in `getWhereClauseForDependentKeys` in
+// `src/db/models/Event.ts`.
+const makeAffectedComputationsWhereClause = (
+  tableName: string,
+  eventKeys: string[]
+): WhereOptions => ({
+  [Op.or]: {
+    // Any dependent keys that overlap with changed keys.
+    dependentKeys: {
+      [Op.overlap]: eventKeys,
+    },
+    // Any dependent keys that contain a wildcard match or are map prefixes of
+    // changed keys. If dependent keys do not start with a contract address,
+    // match any contract address. This query is safe from SQL injection because
+    // keys are encoded as comma-separated numbers and are prefixed with an
+    // alphanumeric contract address and a colon, so they cannot contain single
+    // quotes and perform SQL injection.
+    id: {
+      [Op.in]: Sequelize.literal(`
+        (
+          SELECT
+            "${tableName}".id
+          FROM
+            "${tableName}",
+            unnest("${tableName}"."dependentKeys") keys(x)
+          INNER JOIN
+            unnest(ARRAY['${eventKeys.join("','")}']) event_keys(x)
+          ON
+            (
+              keys.x LIKE '%\\%%'
+              AND
+              (
+                (
+                  keys.x LIKE '%:%'
+                  AND
+                  event_keys.x LIKE keys.x
+                )
+                OR
+                (
+                  keys.x NOT LIKE '%:%'
+                  AND
+                  event_keys.x LIKE '%:' || keys.x
+                )
+              )
+            )
+            OR
+            (
+              keys.x LIKE '%,'
+              AND
+              (
+                (
+                  keys.x LIKE '%:%'
+                  AND
+                  event_keys.x LIKE keys.x || '%'
+                )
+                OR
+                (
+                  keys.x NOT LIKE '%:%'
+                  AND
+                  event_keys.x LIKE '%:' || keys.x || '%'
+                )
+              )
+            )
+        )
+      `),
+    },
+  },
+})

@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 
 import { loadConfig } from '../config'
-import { Computation, loadDb } from './index'
+import { ContractComputation, WalletComputation, loadDb } from './index'
 
 // Parse arguments.
 const program = new Command()
@@ -11,7 +11,7 @@ program.option(
 )
 program.option(
   '-a, --addresses <addresses>',
-  'comma separated list of contract addresses to reset the cache for'
+  'comma separated list of wallet/contract addresses to reset the cache for'
 )
 program.option(
   '-f, --formulas <formulas>',
@@ -31,26 +31,43 @@ export const main = async () => {
   try {
     let count = 0
 
-    // If no filters, drop the table and recreate it to quickly delete all.
+    // If no filters, drop the tables and recreate them to quickly delete all.
     if (!options.addresses && !options.formulas) {
-      count = await Computation.count()
-      await Computation.sync({ force: true })
+      count =
+        (await ContractComputation.count()) + (await WalletComputation.count())
+      await ContractComputation.sync({ force: true })
+      await WalletComputation.sync({ force: true })
     } else {
       // Otherwise just delete the rows that match the filters.
-      count = await Computation.destroy({
-        where: {
-          ...(options.addresses
-            ? {
-                contractAddress: options.addresses.split(','),
-              }
-            : {}),
-          ...(options.formulas
-            ? {
-                formula: options.formulas.split(','),
-              }
-            : {}),
-        },
-      })
+      count =
+        (await ContractComputation.destroy({
+          where: {
+            ...(options.addresses
+              ? {
+                  contractAddress: options.addresses.split(','),
+                }
+              : {}),
+            ...(options.formulas
+              ? {
+                  formula: options.formulas.split(','),
+                }
+              : {}),
+          },
+        })) +
+        (await WalletComputation.destroy({
+          where: {
+            ...(options.addresses
+              ? {
+                  contractAddress: options.addresses.split(','),
+                }
+              : {}),
+            ...(options.formulas
+              ? {
+                  formula: options.formulas.split(','),
+                }
+              : {}),
+          },
+        }))
     }
 
     console.log(
@@ -60,7 +77,7 @@ export const main = async () => {
         options.addresses || options.formulas
           ? ` matching filters:\n${[
               options.addresses
-                ? `contract addresses: ${options.addresses}`
+                ? `wallet/contract addresses: ${options.addresses}`
                 : '',
               options.formulas ? `formulas: ${options.formulas}` : '',
             ]

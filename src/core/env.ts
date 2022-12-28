@@ -14,7 +14,7 @@ import {
 } from './types'
 import { dbKeyForKeys, dbKeyToNumber, dbKeyToString } from './utils'
 
-// Generate environment for computation.
+// Generate environment for contract computation.
 export const getContractEnv = (
   contractAddress: string,
   block: Block,
@@ -360,56 +360,6 @@ export const getContractEnv = (
     })
   }
 
-  return {
-    contractAddress,
-    block,
-    get,
-    getMap,
-    getDateKeyModified,
-    getDateKeyFirstSet,
-    getDateKeyFirstSetWithValueMatch,
-    prefetch,
-    args,
-  }
-}
-
-// Generate environment for computation.
-export const getWalletEnv = (
-  walletAddress: string,
-  block: Block,
-  args: Record<string, any>,
-  // An array to add accessed keys to.
-  dependentKeys: Set<string>,
-  onFetchEvents?: (
-    events: Event[],
-    keyFilter: string | object
-  ) => void | Promise<void>,
-  // Cache event for key, or events for map. Null if event(s) nonexistent.
-  cache: Record<string, Event[] | null | undefined> = {}
-): WalletEnv<{}> => {
-  // Get functions for operating on contracts.
-  const contractEnv: Omit<ContractEnv<{}>, 'contractAddress'> & {
-    contractAddress?: string
-  } = getContractEnv(
-    '',
-    block,
-    {},
-    dependentKeys,
-    onFetchEvents,
-    // Share cache.
-    cache
-  )
-  // Remove contractAddress from contractEnv, since we don't use it for the
-  // wallet env.
-  delete contractEnv.contractAddress
-
-  // Most recent event at or below this block.
-  const blockHeightFilter = {
-    blockHeight: {
-      [Op.lte]: block.height,
-    },
-  }
-
   const getWhereValueMatches: FormulaValueMatchGetter = async (keys, where) => {
     const dbKey = keys
       .map((key, index) =>
@@ -500,8 +450,51 @@ export const getWalletEnv = (
   }
 
   return {
+    contractAddress,
+    block,
+    get,
+    getMap,
+    getDateKeyModified,
+    getDateKeyFirstSet,
+    getDateKeyFirstSetWithValueMatch,
+    getWhereValueMatches,
+    prefetch,
+    args,
+  }
+}
+
+// Generate environment for wallet computation.
+export const getWalletEnv = (
+  walletAddress: string,
+  block: Block,
+  args: Record<string, any>,
+  // An array to add accessed keys to.
+  dependentKeys: Set<string>,
+  onFetchEvents?: (
+    events: Event[],
+    keyFilter: string | object
+  ) => void | Promise<void>,
+  // Cache event for key, or events for map. Null if event(s) nonexistent.
+  cache: Record<string, Event[] | null | undefined> = {}
+): WalletEnv<{}> => {
+  // Get functions for operating on contracts.
+  const contractEnv: Omit<ContractEnv<{}>, 'contractAddress'> & {
+    contractAddress?: string
+  } = getContractEnv(
+    '',
+    block,
+    args,
+    dependentKeys,
+    onFetchEvents,
+    // Share cache.
+    cache
+  )
+  // Remove contractAddress from contractEnv, since we don't use it for the
+  // wallet env.
+  delete contractEnv.contractAddress
+
+  return {
     walletAddress,
     ...contractEnv,
-    getWhereValueMatches,
   }
 }

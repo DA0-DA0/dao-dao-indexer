@@ -33,7 +33,7 @@ import { Event } from './Event'
     },
   ],
 })
-export class Computation extends Model {
+export class ContractComputation extends Model {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
@@ -80,19 +80,19 @@ export class Computation extends Model {
     formula: string,
     args: Record<string, any>,
     ...computationOutputs: ComputationOutput[]
-  ): Promise<Computation[]> {
-    return await Computation.bulkCreate(
+  ): Promise<ContractComputation[]> {
+    return await ContractComputation.bulkCreate(
       computationOutputs.map(
         ({ block, value, dependentKeys, latestBlockHeightValid }) => ({
           contractAddress,
           formula,
           args: JSON.stringify(args),
           dependentKeys,
-          // If no block, the computation must not have accessed any keys. It may
-          // be a constant formula, in which case it doesn't have any block
-          // context and should thus use an invalid block below the first possible
-          // block in case the formula is used in another computation that does
-          // access keys.
+          // If no block, the computation must not have accessed any keys. It
+          // may be a constant formula, in which case it doesn't have any block
+          // context and should thus use an invalid block below the first
+          // possible block in case the formula is used in another computation
+          // that does access keys.
           blockHeight: block?.height ?? -1,
           blockTimeUnixMs: block?.timeUnixMs ?? -1,
           latestBlockHeightValid: latestBlockHeightValid ?? block?.height ?? -1,

@@ -1,4 +1,5 @@
-export * from './Computation'
 export * from './Contract'
+export * from './ContractComputation'
 export * from './Event'
 export * from './State'
+export * from './WalletComputation'

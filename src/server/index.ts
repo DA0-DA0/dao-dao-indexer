@@ -14,7 +14,14 @@ import {
   getWalletFormula,
 } from '../core'
 import { Block } from '../core/types'
-import { Computation, Contract, State, closeDb, loadDb } from '../db'
+import {
+  Contract,
+  ContractComputation,
+  State,
+  WalletComputation,
+  closeDb,
+  loadDb,
+} from '../db'
 import { validateBlockString } from './validate'
 
 // Parse arguments.
@@ -153,7 +160,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
       // between. If not, compute range.
       let existingUsed = false
 
-      const existingStartComputation = await Computation.findOne({
+      const existingStartComputation = await ContractComputation.findOne({
         where: {
           ...computationWhere,
           blockHeight: {
@@ -164,7 +171,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
       })
       // If start computation exists, check the rest.
       if (existingStartComputation) {
-        const existingRestComputations = await Computation.findAll({
+        const existingRestComputations = await ContractComputation.findAll({
           where: {
             ...computationWhere,
             blockHeight: {
@@ -217,7 +224,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
 
           // Cache computations for future queries.
           const createdMissingComputations =
-            await Computation.createFromComputationOutputs(
+            await ContractComputation.createFromComputationOutputs(
               contract.address,
               formulaName,
               args,
@@ -270,7 +277,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
         }))
 
         // Cache computations for future queries.
-        await Computation.createFromComputationOutputs(
+        await ContractComputation.createFromComputationOutputs(
           contract.address,
           formulaName,
           args,
@@ -285,7 +292,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
         block = state.latestBlock
       }
       // Get most recent computation.
-      const existingComputation = await Computation.findOne({
+      const existingComputation = await ContractComputation.findOne({
         where: {
           ...computationWhere,
           blockHeight: {
@@ -315,7 +322,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
         computation = computationOutput.value
 
         // Cache computation for future queries.
-        await Computation.createFromComputationOutputs(
+        await ContractComputation.createFromComputationOutputs(
           contract.address,
           formulaName,
           args,
@@ -370,6 +377,13 @@ router.get('/wallet/:address/(.+)', async (ctx) => {
     return
   }
 
+  // Validate that address exists.
+  if (!address?.trim()) {
+    ctx.status = 400
+    ctx.body = 'missing address'
+    return
+  }
+
   try {
     const state = await State.getSingleton()
     if (!state) {
@@ -381,8 +395,56 @@ router.get('/wallet/:address/(.+)', async (ctx) => {
       block = state.latestBlock
     }
 
-    const computation = (await computeWallet(formula, address, args, block))
-      .value
+    let computation
+
+    const computationWhere = {
+      walletAddress: address,
+      formula: formulaName,
+      args: JSON.stringify(args),
+    }
+
+    // Get most recent computation.
+    const existingComputation = await WalletComputation.findOne({
+      where: {
+        ...computationWhere,
+        blockHeight: {
+          [Op.lte]: block.height,
+        },
+      },
+      order: [['blockHeight', 'DESC']],
+    })
+
+    // If found existing computation, check its validity.
+    const existingComputationValid =
+      existingComputation !== null &&
+      (await existingComputation.updateValidityUpToBlockHeight(block.height))
+
+    if (existingComputation && existingComputationValid) {
+      computation =
+        existingComputation.output && JSON.parse(existingComputation.output)
+    } else {
+      // Compute if did not find or use existing.
+      const computationOutput = await computeWallet(
+        formula,
+        address,
+        args,
+        block
+      )
+
+      computation = computationOutput.value
+
+      // Cache computation for future queries.
+      await WalletComputation.createFromComputationOutputs(
+        address,
+        formulaName,
+        args,
+        {
+          ...computationOutput,
+          // Valid up to the current block.
+          latestBlockHeightValid: block.height,
+        }
+      )
+    }
 
     // If string, encode as JSON.
     if (typeof computation === 'string') {
