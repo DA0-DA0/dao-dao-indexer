@@ -41,7 +41,9 @@ export type FormulaDateWithValueMatchGetter = (
 export type FormulaValueMatchGetter = <T>(
   keys: (string | number | { wildcard: true })[],
   whereClause?: WhereOptions
-) => Promise<{ contractAddress: string; block: Block; value: T }[] | undefined>
+) => Promise<
+  { contractAddress: string; block: Block; key: string; value: T }[] | undefined
+>
 
 // Formulas compute a value for the state at one block height.
 export type ContractFormula<

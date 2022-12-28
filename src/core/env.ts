@@ -487,13 +487,14 @@ export const getWalletEnv = (
     })
 
     // Remove delete events.
-    const undeletedEvents = events.filter((event) => !event.delete)
-
-    const values: any[] = undeletedEvents.map((event) => ({
-      contractAddress: event.contractAddress,
-      block: event.block,
-      value: JSON.parse(event.value ?? 'null'),
-    }))
+    const values = events
+      .filter((event) => !event.delete)
+      .map(({ contractAddress, block, key, value }) => ({
+        contractAddress,
+        block,
+        key,
+        value: JSON.parse(value ?? 'null'),
+      }))
 
     return values
   }
