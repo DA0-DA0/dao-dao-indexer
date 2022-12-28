@@ -389,7 +389,7 @@ export const getContractEnv = (
               // beginning of the query. This ensures we use the most recent
               // version of the key for each contract.
               Sequelize.literal(
-                'DISTINCT ON("contractAddress", "key") "key"'
+                'DISTINCT ON("key", "contractAddress") "key"'
               ) as unknown as string,
               'key',
               'contractAddress',
@@ -409,8 +409,8 @@ export const getContractEnv = (
             },
             order: [
               // Needs to be first so we can use DISTINCT ON.
-              ['contractAddress', 'ASC'],
               ['key', 'ASC'],
+              ['contractAddress', 'ASC'],
               // Descending block height ensures we get the most recent event
               // for the (contractAddress,key) pair.
               ['blockHeight', 'DESC'],
