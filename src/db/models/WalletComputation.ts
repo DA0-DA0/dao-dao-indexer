@@ -91,7 +91,11 @@ export class WalletComputation extends Model {
         })
       ),
       {
-        updateOnDuplicate: ['dependentKeys', 'output'],
+        updateOnDuplicate: [
+          'dependentKeys',
+          'output',
+          'latestBlockHeightValid',
+        ],
       }
     )
   }

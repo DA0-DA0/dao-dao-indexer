@@ -103,7 +103,11 @@ export class ContractComputation extends Model {
         })
       ),
       {
-        updateOnDuplicate: ['dependentKeys', 'output'],
+        updateOnDuplicate: [
+          'dependentKeys',
+          'output',
+          'latestBlockHeightValid',
+        ],
       }
     )
   }
