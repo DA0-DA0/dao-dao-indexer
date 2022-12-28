@@ -73,7 +73,14 @@ export const votesCast: WalletFormula<
 export const stats: WalletFormula<{
   created: number
   votesCast: number
-}> = async (env) => ({
-  created: (await created(env)).length ?? 0,
-  votesCast: (await votesCast(env))?.length ?? 0,
-})
+}> = async (env) => {
+  const [createdResponse, votesCastResponse] = await Promise.all([
+    created(env),
+    votesCast(env),
+  ])
+
+  return {
+    created: createdResponse.length ?? 0,
+    votesCast: votesCastResponse?.length ?? 0,
+  }
+}
