@@ -200,6 +200,9 @@ export const exporter: Exporter = async (events) => {
     )
   )
 
+  // TODO: Maybe update validity of most recent computations even if validity
+  // ended before this block?
+
   // Get updated contracts.
   const contracts = await Contract.findAll({
     where: {
