@@ -7,8 +7,6 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { Event } from './Event'
-
 @Table({
   timestamps: true,
 })

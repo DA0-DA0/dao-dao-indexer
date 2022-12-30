@@ -3,6 +3,7 @@ import { AllowNull, Column, DataType, Model, Table } from 'sequelize-typescript'
 
 import { Block, ComputationOutput } from '../../core/types'
 import { Event } from './Event'
+import { Transformation } from './Transformation'
 
 @Table({
   timestamps: true,
@@ -142,50 +143,77 @@ export class Computation extends Model {
       return true
     }
 
-    // We need to check if it's valid at the requested block. If any events
-    // exist after the computation's latest valid block (or earlier if passed
-    // `startFromBlockHeight`), up to the requested block, the computation is no
-    // longer valid.
-    const firstNewerEvent = await Event.findOne({
-      where: {
-        blockHeight: {
-          [Op.gte]:
-            // If passed a block height to start from, start there as long as
-            // it's after the computation's start block and before the latest
-            // valid block.
-            Math.max(
-              this.blockHeight + 1,
-              Math.min(
-                startFromBlockHeight ?? Infinity,
-                this.latestBlockHeightValid + 1
-              )
-            ),
-          [Op.lte]: upToBlockHeight,
-        },
-        // Any key for any of the contracts.
-        ...Event.getWhereClauseForDependentKeys(this.dependentEvents),
-      },
-      order: [['blockHeight', 'ASC']],
-    })
+    // We need to check if it's valid at the requested block. If any events or
+    // transformations exist after the computation's latest valid block (or
+    // earlier if passed `startFromBlockHeight`), up to the requested block, the
+    // computation is no longer valid.
 
-    // If no new events for any of the dependent keys found, this is still
-    // valid, so update validity.
-    if (!firstNewerEvent) {
+    // If passed a block height to start from, start there as long as it's after
+    // the computation's start block and before the latest valid block.
+    const minBlockHeight = Math.max(
+      this.blockHeight + 1,
+      Math.min(
+        startFromBlockHeight ?? Infinity,
+        this.latestBlockHeightValid + 1
+      )
+    )
+
+    const firstNewerEvent =
+      this.dependentEvents.length === 0
+        ? null
+        : await Event.findOne({
+            where: {
+              blockHeight: {
+                [Op.gte]: minBlockHeight,
+                [Op.lte]: upToBlockHeight,
+              },
+              ...Event.getWhereClauseForDependentKeys(this.dependentEvents),
+            },
+            order: [['blockHeight', 'ASC']],
+          })
+
+    const firstNewerTransformation =
+      this.dependentTransformations.length === 0
+        ? null
+        : await Transformation.findOne({
+            where: {
+              blockHeight: {
+                [Op.gte]: minBlockHeight,
+                [Op.lte]: upToBlockHeight,
+              },
+              ...Transformation.getWhereClauseForDependentKeys(
+                this.dependentTransformations
+              ),
+            },
+            order: [['blockHeight', 'ASC']],
+          })
+
+    const firstNewerItem =
+      firstNewerEvent && firstNewerTransformation
+        ? firstNewerEvent.blockHeight < firstNewerTransformation.blockHeight
+          ? firstNewerEvent
+          : firstNewerTransformation
+        : firstNewerEvent || firstNewerTransformation
+
+    // If no new events or transformations for any of the dependent keys found,
+    // this computation is still valid, so update validity.
+    if (!firstNewerItem) {
       await this.update({
         latestBlockHeightValid: upToBlockHeight,
       })
       return true
     }
 
-    // If new event found, computation is not valid at the requested block.
-    // Update latest valid block to just before the new event found. If
-    // `startFromBlockHeight` was passed, it's possible to set the latest valid
-    // block height earlier than previously set. This should only happen when a
-    // computation already exists and has been deemed valid at a block for which
-    // an event gets exported afterwards. This may happen if a query caches a
-    // computation for a block before the exporter has caught up to that block.
+    // If new event or transformation found, computation is not valid at the
+    // requested block. Update latest valid block to just before the new item
+    // found. If `startFromBlockHeight` was passed, it's possible to set the
+    // latest valid block height earlier than previously set. This should only
+    // happen when a computation already exists and has been deemed valid at a
+    // block for which an event gets exported or a transformation gets created
+    // afterwards. This may happen if a query caches a computation for a block
+    // before the exporter has caught up to that block.
     await this.update({
-      latestBlockHeightValid: firstNewerEvent.blockHeight - 1,
+      latestBlockHeightValid: firstNewerItem.blockHeight - 1,
     })
     return false
   }

@@ -123,8 +123,8 @@ export class Event extends Model {
           return {
             // Only include if contract address is defined.
             ...(contractAddress && { contractAddress }),
-            // Same logic as in `makeAffectedComputationsWhereClause` in
-            // `src/export/db.ts`.
+            // Same logic as in `updateComputationValidityDependentOnChanges` in
+            // `src/db/utils.ts`.
             key: {
               [Op.or]: [
                 // Where key is one of the non map keys.

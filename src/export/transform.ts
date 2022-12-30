@@ -3,7 +3,13 @@ import { Op } from 'sequelize'
 
 import { loadConfig } from '../core/config'
 import { ParsedEvent } from '../core/types'
-import { Contract, Event, Transformation, loadDb } from '../db'
+import {
+  Contract,
+  Event,
+  Transformation,
+  loadDb,
+  updateComputationValidityDependentOnChanges,
+} from '../db'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 
@@ -23,13 +29,10 @@ program.option(
   '-b, --batch <path>',
   'batch size',
   (value) => parseInt(value, 10),
-  1000
+  50000
 )
 program.parse()
 const options = program.opts()
-
-// TODO: Update validity of computations after transforming events, like the
-// exporter.
 
 const main = async () => {
   console.log(`\n[${new Date().toISOString()}] Transforming existing events...`)
@@ -38,9 +41,11 @@ const main = async () => {
   loadConfig(options.config)
 
   // Load DB on start.
-  await loadDb()
+  const sequelize = await loadDb()
 
   let processed = 0
+  let computationsUpdated = 0
+  let computationsDestroyed = 0
   let transformations = 0
 
   let latestBlockHeight = options.initial
@@ -59,7 +64,7 @@ const main = async () => {
     process.stdout.write(
       `\r${
         LOADER_MAP[printLoaderCount]
-      }  Transformed: ${transformations.toLocaleString()}. Event processed/total: ${processed.toLocaleString()}/${total.toLocaleString()}.`
+      }  Transformed: ${transformations.toLocaleString()}. Event processed/total: ${processed.toLocaleString()}/${total.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
     )
   }, 100)
   // Allow process to exit even though this interval is alive.
@@ -126,13 +131,22 @@ const main = async () => {
       })
     )
 
-    transformations += (await Transformation.transformEvents(parsedEvents))
-      .length
+    const _transformations = await Transformation.transformEvents(parsedEvents)
+
+    transformations += _transformations.length
+
+    const { updated, destroyed } =
+      await updateComputationValidityDependentOnChanges([], _transformations)
+
+    computationsUpdated += updated
+    computationsDestroyed += destroyed
   }
 
   clearInterval(logInterval)
 
   console.log(`\n[${new Date().toISOString()}] Transforming complete.`)
+
+  await sequelize.close()
 }
 
 main()

@@ -110,8 +110,8 @@ export class Transformation extends Model {
           return {
             // Only include if contract address is defined.
             ...(contractAddress && { contractAddress }),
-            // Same logic as in `makeAffectedComputationsWhereClause` in
-            // `src/export/db.ts`.
+            // Same logic as in `updateComputationValidityDependentOnChanges` in
+            // `src/db/utils.ts`.
             name: {
               [Op.or]: [
                 ...(exactNames.length > 0 ? [{ [Op.in]: exactNames }] : []),
@@ -160,7 +160,10 @@ export class Transformation extends Model {
           contractAddress: event.contractAddress,
           blockHeight: event.blockHeight,
           blockTimeUnixMs: event.blockTimeUnixMs,
-          name: transformer.getName(event),
+          name:
+            typeof transformer.name === 'string'
+              ? transformer.name
+              : transformer.name(event),
           value: undefined,
         },
       }))

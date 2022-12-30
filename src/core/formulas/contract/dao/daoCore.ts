@@ -76,10 +76,8 @@ interface InboxItem {
 
 export const config: ContractFormula<Config | undefined> = async ({
   contractAddress,
-  get,
-}) =>
-  (await get(contractAddress, 'config_v2')) ??
-  (await get(contractAddress, 'config'))
+  getTransformationMatch,
+}) => (await getTransformationMatch<Config>(contractAddress, 'config'))?.value
 
 export const proposalModules: ContractFormula<
   ProposalModuleWithInfo[] | undefined

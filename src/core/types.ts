@@ -78,13 +78,19 @@ export type FormulaDateWithValueMatchGetter = (
   whereClause: WhereOptions
 ) => Promise<Date | undefined>
 
-export type FormulaTransformMatchesGetter = <T>(
+export type FormulaTransformationMatchesGetter = <T>(
   contractAddress: string | undefined,
   nameLike: string,
   whereClause?: WhereOptions
 ) => Promise<
   | { contractAddress: string; block: Block; name: string; value: T }[]
   | undefined
+>
+
+export type FormulaTransformationMatchGetter = <T>(
+  ...args: Parameters<FormulaTransformationMatchesGetter>
+) => Promise<
+  { contractAddress: string; block: Block; name: string; value: T } | undefined
 >
 
 export type Env<Args extends Record<string, string> = {}> = {
@@ -94,7 +100,8 @@ export type Env<Args extends Record<string, string> = {}> = {
   getDateKeyModified: FormulaDateGetter
   getDateKeyFirstSet: FormulaDateGetter
   getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter
-  getTransformMatches: FormulaTransformMatchesGetter
+  getTransformationMatch: FormulaTransformationMatchGetter
+  getTransformationMatches: FormulaTransformationMatchesGetter
   prefetch: FormulaPrefetch
   args: Args
 }
@@ -207,7 +214,7 @@ export type ParsedEvent = {
 export type Transformer = {
   codeIdsKeys: string[]
   matches: (event: ParsedEvent) => boolean
-  getName: (event: ParsedEvent) => string
+  name: string | ((event: ParsedEvent) => string)
   getValue: (
     event: ParsedEvent,
     getLastValue: () => Promise<any | null>

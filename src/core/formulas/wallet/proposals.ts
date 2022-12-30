@@ -6,9 +6,9 @@ export const created: WalletFormula<
       proposalId: number
     }[]
   | undefined
-> = async ({ walletAddress, getTransformMatches }) => {
+> = async ({ walletAddress, getTransformationMatches }) => {
   // Proposals for v1/v2 dao-proposal-single and v2 dao-proposal-multiple.
-  const proposedTransformations = await getTransformMatches<{
+  const proposedTransformations = await getTransformationMatches<{
     proposalId: number
   }>(undefined, `proposed:${walletAddress}:%`)
 
@@ -28,9 +28,9 @@ export const votesCast: WalletFormula<
       votedAt: string
     }[]
   | undefined
-> = async ({ walletAddress, getTransformMatches }) => {
+> = async ({ walletAddress, getTransformationMatches }) => {
   // Votes for dao-proposal-single and dao-proposal-multiple.
-  const voteCastTransformations = await getTransformMatches<{
+  const voteCastTransformations = await getTransformationMatches<{
     proposalId: number
     vote: any
     votedAt: string
