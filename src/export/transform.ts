@@ -107,7 +107,7 @@ const main = async () => {
     }
 
     processed += events.length
-    latestBlockHeight = events[events.length - 1].blockHeight
+    latestBlockHeight = newLatestBlockHeight
 
     const parsedEvents = events.map(
       (event): ParsedEvent => ({
