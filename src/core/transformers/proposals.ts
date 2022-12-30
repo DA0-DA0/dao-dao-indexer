@@ -5,7 +5,8 @@ export const proposed: Transformer = {
   codeIdsKeys: ['dao-proposal-single'],
   matches: (event) =>
     // Starts with proposals or proposals_v2.
-    event.key.startsWith(dbKeyForKeys('proposals', '')) &&
+    (event.key.startsWith(dbKeyForKeys('proposals', '')) ||
+      event.key.startsWith(dbKeyForKeys('proposals_v2', ''))) &&
     !!event.valueJson.proposer,
   getName: (event) => {
     // "proposals"|"proposals_v2", proposalId
