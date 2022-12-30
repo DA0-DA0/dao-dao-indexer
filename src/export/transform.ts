@@ -41,10 +41,7 @@ const main = async () => {
     ? (
         await Event.findOne({
           offset: options.offset - 1,
-          order: [
-            ['blockHeight', 'ASC'],
-            ['id', 'ASC'],
-          ],
+          order: [['blockHeight', 'ASC']],
         })
       )?.id ?? 0
     : 0
@@ -78,10 +75,7 @@ const main = async () => {
       },
       include: Contract,
       limit: options.batch,
-      order: [
-        ['blockHeight', 'ASC'],
-        ['id', 'ASC'],
-      ],
+      order: [['blockHeight', 'ASC']],
     })
 
     processed += events.length
