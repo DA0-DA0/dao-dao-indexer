@@ -28,6 +28,9 @@ program.option(
 program.parse()
 const options = program.opts()
 
+// TODO: Update validity of computations after transforming events, like the
+// exporter.
+
 const main = async () => {
   console.log(`\n[${new Date().toISOString()}] Transforming existing events...`)
 
