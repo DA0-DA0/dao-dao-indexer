@@ -98,3 +98,40 @@ export const dbKeyToNumber = (key: string): number =>
     Buffer.from(key.split(',').map((c) => parseInt(c, 10))).toString('hex'),
     16
   )
+
+// Convert comma-separated list of uint8 values in big endian format to an array
+// of strings and numbers. `withNumericKeys` must be an array of booleans
+// indicating whether the corresponding key should be converted to a number. If
+// false, that key is a string. `withNumericKeys` must be the same length as the
+// number of keys encoded in `key`.
+export const dbKeyToKeys = (
+  key: string,
+  withNumericKeys: boolean[]
+): (string | number)[] => {
+  const buffer = Buffer.from(key.split(',').map((c) => parseInt(c, 10)))
+  const keys: (string | number)[] = []
+  const addKey = (buffer: Buffer, numeric: boolean) =>
+    keys.push(
+      numeric ? parseInt(buffer.toString('hex'), 16) : buffer.toString('utf-8')
+    )
+
+  const namespaces = withNumericKeys.slice(0, -1)
+
+  let offset = 0
+  for (const isNumeric of namespaces) {
+    const namespaceLength = buffer.readUInt16BE(offset)
+    offset += 2
+    const namespace = buffer.subarray(offset, offset + namespaceLength)
+    offset += namespaceLength
+    addKey(namespace, isNumeric)
+  }
+  // Add final key.
+  addKey(buffer.subarray(offset), withNumericKeys[withNumericKeys.length - 1])
+
+  return keys
+}
+
+export const getDependentKey = (
+  contractAddress: string | undefined,
+  keyOrName: string
+) => `${contractAddress || '%'}:${keyOrName}`

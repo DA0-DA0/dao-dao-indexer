@@ -1,14 +1,14 @@
 import * as fs from 'fs'
-import path from 'path'
 import readline from 'readline'
 
+import axios from 'axios'
 import { Command } from 'commander'
 
-import { loadConfig } from '../config'
-import { loadDb } from '../db'
+import { loadConfig } from '../core/config'
+import { IndexerEvent } from '../core/types'
+import { State, loadDb } from '../db'
 import { setupMeilisearch, updateIndexesForContracts } from '../meilisearch'
-import { exporter, updateState } from './db'
-import { IndexerEvent } from './types'
+import { exporter } from './exporter'
 import { objectMatchesStructure } from './utils'
 
 const BULK_INSERT_SIZE = 500
@@ -27,16 +27,36 @@ program.option(
 program.parse()
 const options = program.opts()
 
+// Update db state. Returns latest block height for log.
+export const updateState = async (): Promise<number> => {
+  const { statusEndpoint } = loadConfig()
+  const { data } = await axios.get(statusEndpoint, {
+    // https://stackoverflow.com/a/74735197
+    headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
+  })
+
+  const latestBlockHeight = Number(data.result.sync_info.latest_block_height)
+  const latestBlockTimeUnixMs = Date.parse(
+    data.result.sync_info.latest_block_time
+  )
+
+  // Update state singleton with latest information.
+  await State.upsert({
+    singleton: true,
+    latestBlockHeight,
+    latestBlockTimeUnixMs,
+  })
+
+  return latestBlockHeight
+}
+
 const main = async () => {
   console.log(`\n\n[${new Date().toISOString()}] Exporting events...`)
 
   // Load config with config option.
-  const config = await loadConfig(options.config)
+  const config = loadConfig(options.config)
 
-  let eventsFile = config.eventsFile || ''
-  if (!eventsFile && config.indexerRoot) {
-    eventsFile = path.join(config.indexerRoot, '.events.txt')
-  }
+  const eventsFile = config.eventsFile || ''
   // Ensure events file exists.
   if (!eventsFile || !fs.existsSync(eventsFile)) {
     throw new Error(`Events file not found (${eventsFile}).`)
@@ -72,6 +92,7 @@ const main = async () => {
     let exported = 0
     let computationsUpdated = 0
     let computationsDestroyed = 0
+    let transformations = 0
 
     // Wait for responses from export promises and update/display statistics.
     const flushToDb = async () => {
@@ -93,22 +114,54 @@ const main = async () => {
       }, {} as Record<string, IndexerEvent>)
       const eventsToExport = Object.values(uniqueIndexerEvents)
 
-      // Export events to DB.
+      const parsedEvents = eventsToExport.map((event) => {
+        // Convert base64 value to utf-8 string, if present.
+        const value =
+          event.value && Buffer.from(event.value, 'base64').toString('utf-8')
+
+        let valueJson = null
+        if (!event.delete && value) {
+          try {
+            valueJson = JSON.parse(value ?? 'null')
+          } catch {
+            // Ignore parsing errors.
+          }
+        }
+
+        return {
+          codeId: event.codeId,
+          contractAddress: event.contractAddress,
+          blockHeight: event.blockHeight,
+          blockTimeUnixMs: Math.round(event.blockTimeUnixMicro / 1000),
+          blockTimestamp: new Date(event.blockTimeUnixMicro / 1000),
+          // Convert base64 key to comma-separated list of bytes. See
+          // explanation in `Event` model for more information.
+          key: Buffer.from(event.key, 'base64').join(','),
+          value,
+          valueJson,
+          delete: event.delete,
+        }
+      })
+
+      // Export events.
       const {
         contracts: updatedContracts,
         computationsUpdated: _computationsUpdated,
         computationsDestroyed: _computationsDestroyed,
-      } = await exporter(eventsToExport)
+        transformations: _transformations,
+      } = await exporter(parsedEvents)
+
       // Update meilisearch indexes.
       await updateIndexesForContracts(updatedContracts)
 
       // Update statistics.
       processed += pendingIndexerEvents.length
-      exported += eventsToExport.length
+      exported += parsedEvents.length
       lastBlockHeightExported =
         pendingIndexerEvents[pendingIndexerEvents.length - 1].blockHeight
       computationsUpdated += _computationsUpdated
       computationsDestroyed += _computationsDestroyed
+      transformations += _transformations
 
       // Clear queue.
       pendingIndexerEvents.length = 0
@@ -206,7 +259,7 @@ const main = async () => {
       process.stdout.write(
         `\r${
           LOADER_MAP[printLoaderCount]
-        }  Processed: ${processed.toLocaleString()}. Exported: ${exported.toLocaleString()}. Latest block with export: ${lastBlockHeightExported.toLocaleString()}. Latest block: ${latestBlockHeight.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
+        }  Processed/exported: ${processed.toLocaleString()}/${exported.toLocaleString()}. Latest block exported: ${lastBlockHeightExported.toLocaleString()}. Latest block: ${latestBlockHeight.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Transformed: ${transformations.toLocaleString()}.`
       )
     }, 100)
     // Allow process to exit even though this interval is alive.

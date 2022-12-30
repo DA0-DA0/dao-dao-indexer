@@ -1,5 +1,5 @@
 {
-  "indexerRoot": "/Users/user/.juno/indexer",
+  "eventsFile": "/Users/user/.juno/indexer/.events.txt",
   "statusEndpoint": "http://localhost:26657/status",
   "db": {
     "dialect": "postgres",
@@ -16,5 +16,12 @@
       "formula": "daoCore/config",
       "codeIds": [1]
     }]
+  },
+  "codeIds": {
+    "dao-proposal-single": [
+      13, 164, 225, 257, 694, 696, 844, 879, 918, 1968, 2106, 2591, 2642, 2644,
+      2646, 2726, 2739, 2752, 2754, 2758, 2759, 2762, 2769, 2862, 2934, 3014,
+      3015, 3018, 3020
+    ]
   }
 }

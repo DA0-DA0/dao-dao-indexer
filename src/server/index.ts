@@ -5,23 +5,15 @@ import Koa from 'koa'
 import { Op } from 'sequelize'
 import { v4 as uuidv4 } from 'uuid'
 
-import { loadConfig } from '../config'
 import {
-  computeContract,
-  computeContractRange,
-  computeWallet,
+  compute,
+  computeRange,
   getContractFormula,
   getWalletFormula,
 } from '../core'
+import { loadConfig } from '../core/config'
 import { Block } from '../core/types'
-import {
-  Contract,
-  ContractComputation,
-  State,
-  WalletComputation,
-  closeDb,
-  loadDb,
-} from '../db'
+import { Computation, Contract, State, closeDb, loadDb } from '../db'
 import { validateBlockString } from './validate'
 
 // Parse arguments.
@@ -60,10 +52,17 @@ app.use(async (ctx, next) => {
   ctx.set('X-Response-Time', `${ms}ms`)
 })
 
-// Contract formula computer.
-router.get('/contract/:address/(.+)', async (ctx) => {
+// Formula computer.
+router.get('/:type/:address/(.+)', async (ctx) => {
   const { block: _block, blocks: _blocks, ...args } = ctx.query
-  const { address } = ctx.params
+  const { type, address } = ctx.params
+
+  // Validate type.
+  if (type !== 'contract' && type !== 'wallet') {
+    ctx.status = 400
+    ctx.body = 'type must be contract or wallet'
+    return
+  }
 
   // If block passed, validate.
   let block: Block | undefined
@@ -116,16 +115,24 @@ router.get('/contract/:address/(.+)', async (ctx) => {
 
   // Validate that formula exists.
   const formulaName = ctx.path.split('/').slice(3).join('/')
-  const formula = getContractFormula(formulaName)
-  if (!formula) {
+  const typeAndFormula =
+    type === 'contract'
+      ? ({
+          type,
+          formula: getContractFormula(formulaName)!,
+        } as const)
+      : ({
+          type,
+          formula: getWalletFormula(formulaName)!,
+        } as const)
+  if (!typeAndFormula.formula) {
     ctx.status = 404
     ctx.body = 'formula not found'
     return
   }
 
-  // Validate that contract exists.
-  const contract = await Contract.findByPk(address)
-  if (!contract) {
+  // If type is "contract", validate that contract exists.
+  if (type === 'contract' && !(await Contract.findByPk(address))) {
     ctx.status = 404
     ctx.body = 'contract not found'
     return
@@ -140,7 +147,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
     let computation
 
     const computationWhere = {
-      contractAddress: contract.address,
+      targetAddress: address,
       formula: formulaName,
       args: JSON.stringify(args),
     }
@@ -160,7 +167,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
       // between. If not, compute range.
       let existingUsed = false
 
-      const existingStartComputation = await ContractComputation.findOne({
+      const existingStartComputation = await Computation.findOne({
         where: {
           ...computationWhere,
           blockHeight: {
@@ -171,7 +178,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
       })
       // If start computation exists, check the rest.
       if (existingStartComputation) {
-        const existingRestComputations = await ContractComputation.findAll({
+        const existingRestComputations = await Computation.findAll({
           where: {
             ...computationWhere,
             blockHeight: {
@@ -207,16 +214,17 @@ router.get('/contract/:address/(.+)', async (ctx) => {
         // If range is covered until the end, we are dealing with an incomplete
         // but continuous range. Load just the rest.
         if (isRangeCoveredBeforeEnd && !entireRangeValid) {
-          const missingComputations = await computeContractRange(
-            formula,
-            contract,
+          const missingComputations = await computeRange({
+            ...typeAndFormula,
+            targetAddress: address,
             args,
             // Start at the block of the last existing computation, since we
             // need the block time to perform computations but cannot retrieve
             // that information with just `latestBlockHeightValid`.
-            existingComputations[existingComputations.length - 1].block,
-            blocks[1]
-          )
+            blockStart:
+              existingComputations[existingComputations.length - 1].block,
+            blockEnd: blocks[1],
+          })
 
           // Ignore first computation since it's equivalent to the last existing
           // computation.
@@ -224,8 +232,8 @@ router.get('/contract/:address/(.+)', async (ctx) => {
 
           // Cache computations for future queries.
           const createdMissingComputations =
-            await ContractComputation.createFromComputationOutputs(
-              contract.address,
+            await Computation.createFromComputationOutputs(
+              address,
               formulaName,
               args,
               ...missingComputations
@@ -256,13 +264,13 @@ router.get('/contract/:address/(.+)', async (ctx) => {
 
       // If could not find existing range, compute.
       if (!existingUsed) {
-        const rangeComputations = await computeContractRange(
-          formula,
-          contract,
+        const rangeComputations = await computeRange({
+          ...typeAndFormula,
+          targetAddress: address,
           args,
-          blocks[0],
-          blocks[1]
-        )
+          blockStart: blocks[0],
+          blockEnd: blocks[1],
+        })
 
         computation = rangeComputations.map(({ block, ...data }) => ({
           ...data,
@@ -271,14 +279,14 @@ router.get('/contract/:address/(.+)', async (ctx) => {
           // context.
           blockHeight: block?.height ?? -1,
           blockTimeUnixMs: block?.timeUnixMs ?? -1,
-          // Remove dependent keys and latest block height valid from output.
-          dependentKeys: undefined,
+          // Remove dependencies and latest block height valid from output.
+          dependencies: undefined,
           latestBlockHeightValid: undefined,
         }))
 
         // Cache computations for future queries.
-        await ContractComputation.createFromComputationOutputs(
-          contract.address,
+        await Computation.createFromComputationOutputs(
+          address,
           formulaName,
           args,
           ...rangeComputations
@@ -292,7 +300,7 @@ router.get('/contract/:address/(.+)', async (ctx) => {
         block = state.latestBlock
       }
       // Get most recent computation.
-      const existingComputation = await ContractComputation.findOne({
+      const existingComputation = await Computation.findOne({
         where: {
           ...computationWhere,
           blockHeight: {
@@ -312,18 +320,18 @@ router.get('/contract/:address/(.+)', async (ctx) => {
           existingComputation.output && JSON.parse(existingComputation.output)
       } else {
         // Compute if did not find or use existing.
-        const computationOutput = await computeContract(
-          formula,
-          contract,
+        const computationOutput = await compute({
+          ...typeAndFormula,
+          targetAddress: address,
           args,
-          block
-        )
+          block,
+        })
 
         computation = computationOutput.value
 
         // Cache computation for future queries.
-        await ContractComputation.createFromComputationOutputs(
-          contract.address,
+        await Computation.createFromComputationOutputs(
+          address,
           formulaName,
           args,
           {
@@ -351,124 +359,13 @@ router.get('/contract/:address/(.+)', async (ctx) => {
   }
 })
 
-// Wallet formula computer.
-router.get('/wallet/:address/(.+)', async (ctx) => {
-  const { block: _block, ...args } = ctx.query
-  const { address } = ctx.params
-
-  // If block passed, validate.
-  let block: Block | undefined
-  if (_block && typeof _block === 'string') {
-    try {
-      block = validateBlockString(_block, 'block')
-    } catch (err) {
-      ctx.status = 400
-      ctx.body = err instanceof Error ? err.message : err
-      return
-    }
-  }
-
-  // Validate that formula exists.
-  const formulaName = ctx.path.split('/').slice(3).join('/')
-  const formula = getWalletFormula(formulaName)
-  if (!formula) {
-    ctx.status = 404
-    ctx.body = 'formula not found'
-    return
-  }
-
-  // Validate that address exists.
-  if (!address?.trim()) {
-    ctx.status = 400
-    ctx.body = 'missing address'
-    return
-  }
-
-  try {
-    const state = await State.getSingleton()
-    if (!state) {
-      throw new Error('State not found')
-    }
-
-    // Use latest block if not provided.
-    if (block === undefined) {
-      block = state.latestBlock
-    }
-
-    let computation
-
-    const computationWhere = {
-      walletAddress: address,
-      formula: formulaName,
-      args: JSON.stringify(args),
-    }
-
-    // Get most recent computation.
-    const existingComputation = await WalletComputation.findOne({
-      where: {
-        ...computationWhere,
-        blockHeight: {
-          [Op.lte]: block.height,
-        },
-      },
-      order: [['blockHeight', 'DESC']],
-    })
-
-    // If found existing computation, check its validity.
-    const existingComputationValid =
-      existingComputation !== null &&
-      (await existingComputation.updateValidityUpToBlockHeight(block.height))
-
-    if (existingComputation && existingComputationValid) {
-      computation =
-        existingComputation.output && JSON.parse(existingComputation.output)
-    } else {
-      // Compute if did not find or use existing.
-      const computationOutput = await computeWallet(
-        formula,
-        address,
-        args,
-        block
-      )
-
-      computation = computationOutput.value
-
-      // Cache computation for future queries.
-      await WalletComputation.createFromComputationOutputs(
-        address,
-        formulaName,
-        args,
-        {
-          ...computationOutput,
-          // Valid up to the current block.
-          latestBlockHeightValid: block.height,
-        }
-      )
-    }
-
-    // If string, encode as JSON.
-    if (typeof computation === 'string') {
-      ctx.body = JSON.stringify(computation)
-    } else {
-      ctx.body = computation
-    }
-
-    ctx.set('Content-Type', 'application/json')
-  } catch (err) {
-    console.error(err)
-
-    ctx.status = 500
-    ctx.body = err instanceof Error ? err.message : `${err}`
-  }
-})
-
 // Enable router.
 app.use(router.routes()).use(router.allowedMethods())
 
 // Start.
 const main = async () => {
   // Load config with config option.
-  await loadConfig(options.config)
+  loadConfig(options.config)
 
   // Connect to DB.
   await loadDb()

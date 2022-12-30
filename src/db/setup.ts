@@ -2,7 +2,7 @@ import * as readline from 'readline'
 
 import { Command } from 'commander'
 
-import { loadConfig } from '../config'
+import { loadConfig } from '../core/config'
 import { loadDb } from './index'
 
 // Parse arguments.
@@ -16,7 +16,7 @@ const options = program.opts()
 
 export const main = async () => {
   // Load config with config option.
-  await loadConfig(options.config)
+  loadConfig(options.config)
 
   const sequelize = await loadDb()
 
@@ -30,6 +30,10 @@ export const main = async () => {
     async (answer) => {
       if (answer === 'y') {
         try {
+          // Add trigram index extension.
+          await sequelize.query('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
+          await sequelize.query('CREATE EXTENSION IF NOT EXISTS btree_gin;')
+
           // Drop all tables and recreate them.
           await sequelize.sync({ force: true })
 

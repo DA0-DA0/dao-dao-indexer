@@ -1,14 +1,14 @@
 import { Op } from 'sequelize'
 
-import { loadConfig } from '../config'
-import { computeContract, getContractFormula } from '../core'
+import { compute, getContractFormula } from '../core'
+import { loadConfig } from '../core/config'
 import { Contract, State } from '../db'
 import { loadMeilisearch } from './client'
 
 export const updateIndexesForContracts = async (
   contracts?: Contract[]
 ): Promise<number> => {
-  const { meilisearch } = await loadConfig()
+  const { meilisearch } = loadConfig()
 
   // If no meilisearch in config, nothing to update.
   if (!meilisearch) {
@@ -77,12 +77,13 @@ export const updateIndexesForContracts = async (
     try {
       const documents = await Promise.all(
         matchingContracts.map(async (contract) => {
-          const { block, value } = await computeContract(
+          const { block, value } = await compute({
+            type: 'contract',
+            targetAddress: contract.address,
             formula,
-            contract,
             args,
-            state.latestBlock
-          )
+            block: state.latestBlock,
+          })
 
           return {
             contractAddress: contract.address,

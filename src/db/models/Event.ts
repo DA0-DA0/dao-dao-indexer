@@ -9,6 +9,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { getDependentKey } from '../../core'
 import { Block } from '../../core/types'
 import { Contract } from './Contract'
 
@@ -64,10 +65,10 @@ export class Event extends Model {
   @Column(DataType.TEXT)
   key!: string
 
-  // JSON encoded value.
-  @AllowNull
+  // JSON encoded value. Empty string if `delete` is true.
+  @AllowNull(false)
   @Column(DataType.TEXT)
-  value!: string | null
+  value!: string
 
   @AllowNull
   @Column(DataType.JSONB)
@@ -98,9 +99,10 @@ export class Event extends Model {
     // address. It is fine to group these together.
     const dependentKeysByContract = dependentKeys.reduce(
       (acc, dependentKey) => {
-        const [contractAddress, key] = dependentKey.includes(':')
-          ? dependentKey.split(':')
-          : ['', dependentKey]
+        // Dependent keys for any contract start with "%:".
+        const [contractAddress, key] = dependentKey.startsWith('%:')
+          ? ['', dependentKey]
+          : dependentKey.split(':')
         return {
           ...acc,
           [contractAddress]: [...(acc[contractAddress] ?? []), key],
@@ -149,5 +151,9 @@ export class Event extends Model {
       height: this.blockHeight,
       timeUnixMs: this.blockTimeUnixMs,
     }
+  }
+
+  get dependentKey(): string {
+    return getDependentKey(this.contractAddress, this.key)
   }
 }

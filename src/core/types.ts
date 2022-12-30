@@ -1,4 +1,44 @@
 import { WhereOptions } from 'sequelize'
+import { SequelizeOptions } from 'sequelize-typescript'
+
+import { Event, Transformation } from '../db'
+
+export interface Config {
+  eventsFile?: string
+  statusEndpoint: string
+  db: { uri?: string } & Pick<
+    SequelizeOptions,
+    | 'dialect'
+    | 'dialectModulePath'
+    | 'dialectOptions'
+    | 'storage'
+    | 'database'
+    | 'username'
+    | 'password'
+    | 'host'
+    | 'port'
+    | 'ssl'
+    | 'protocol'
+    | 'pool'
+    | 'schema'
+    | 'logging'
+  >
+  meilisearch?: {
+    host: string
+    apiKey?: string
+    indexes: {
+      index: string
+      filterableAttributes?: string[]
+      formula: string
+      args?: Record<string, any>
+      // One of `codeIds` or `contractAddresses` these must be present.
+      codeIds?: number[]
+      contractAddresses?: string[]
+    }[]
+  }
+  // Map some arbitary string to a list of code IDs.
+  codeIds: Record<string, number[] | undefined>
+}
 
 export type FormulaGetter = <T>(
   contractAddress: string,
@@ -38,30 +78,33 @@ export type FormulaDateWithValueMatchGetter = (
   whereClause: WhereOptions
 ) => Promise<Date | undefined>
 
-export type FormulaValueMatchGetter = <T>(
-  keys: (string | number | { wildcard: true })[],
+export type FormulaTransformMatchesGetter = <T>(
+  contractAddress: string | undefined,
+  nameLike: string,
   whereClause?: WhereOptions
 ) => Promise<
-  { contractAddress: string; block: Block; key: string; value: T }[] | undefined
+  | { contractAddress: string; block: Block; name: string; value: T }[]
+  | undefined
 >
 
-export type ContractEnv<Args extends Record<string, string> = {}> = {
-  contractAddress: string
+export type Env<Args extends Record<string, string> = {}> = {
   block: Block
   get: FormulaGetter
   getMap: FormulaMapGetter
   getDateKeyModified: FormulaDateGetter
   getDateKeyFirstSet: FormulaDateGetter
   getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter
-  getWhereValueMatches: FormulaValueMatchGetter
+  getTransformMatches: FormulaTransformMatchesGetter
   prefetch: FormulaPrefetch
   args: Args
 }
 
-export type WalletEnv<Args extends Record<string, string> = {}> = Omit<
-  ContractEnv<Args>,
-  'contractAddress'
-> & {
+export type ContractEnv<Args extends Record<string, string> = {}> =
+  Env<Args> & {
+    contractAddress: string
+  }
+
+export type WalletEnv<Args extends Record<string, string> = {}> = Env<Args> & {
   walletAddress: string
 }
 
@@ -75,14 +118,59 @@ export type WalletFormula<R = any, Args extends Record<string, string> = {}> = (
   env: WalletEnv<Args>
 ) => Promise<R>
 
+export type ComputeOptions = {
+  targetAddress: string
+  args: Record<string, any>
+  block: Block
+} & (
+  | {
+      type: 'contract'
+      formula: ContractFormula
+    }
+  | {
+      type: 'wallet'
+      formula: WalletFormula
+    }
+)
+
+export type ComputeRangeOptions = {
+  targetAddress: string
+  args: Record<string, any>
+  blockStart: Block
+  blockEnd: Block
+} & (
+  | {
+      type: 'contract'
+      formula: ContractFormula
+    }
+  | {
+      type: 'wallet'
+      formula: WalletFormula
+    }
+)
+
 export interface ComputationOutput {
   // Undefined if formula did not use any keys.
   block: Block | undefined
   value: any
-  // List of contractAddress:key pairs that this formula depends on.
-  dependentKeys: string[]
+  dependencies: Dependencies
   // Used when computing ranges.
   latestBlockHeightValid?: number
+}
+
+export interface Dependencies {
+  events: string[]
+  transformations: string[]
+}
+
+export interface SetDependencies {
+  events: Set<string>
+  transformations: Set<string>
+}
+
+export interface Cache {
+  events: Record<string, Event[] | null | undefined>
+  transformations: Record<string, Transformation[] | null | undefined>
 }
 
 export type NestedFormulaMap<F> = {
@@ -92,4 +180,40 @@ export type NestedFormulaMap<F> = {
 export type Block = {
   height: number
   timeUnixMs: number
+}
+
+export type IndexerEvent = {
+  blockHeight: number
+  blockTimeUnixMicro: number
+  contractAddress: string
+  codeId: number
+  key: string
+  value: string
+  delete: boolean
+}
+
+export type ParsedEvent = {
+  codeId: number
+  contractAddress: string
+  blockHeight: number
+  blockTimeUnixMs: number
+  blockTimestamp: Date
+  key: string
+  value: string
+  valueJson: any
+  delete: boolean
+}
+
+export type Transformer = {
+  codeIdsKeys: string[]
+  matches: (event: ParsedEvent) => boolean
+  getName: (event: ParsedEvent) => string
+  getValue: (
+    event: ParsedEvent,
+    getLastValue: () => Promise<any | null>
+  ) => any | Promise<any>
+}
+
+export type TransformerMap = {
+  [key: string]: Transformer
 }

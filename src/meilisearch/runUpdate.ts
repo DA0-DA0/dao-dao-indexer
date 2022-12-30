@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '../config'
+import { loadConfig } from '../core/config'
 import { loadDb } from '../db'
 import { setupMeilisearch } from './setup'
 import { updateIndexesForContracts } from './update'
@@ -16,7 +16,7 @@ const options = program.opts()
 
 const main = async () => {
   // Load config with config option.
-  await loadConfig(options.config)
+  loadConfig(options.config)
 
   // Connect to db.
   const sequelize = await loadDb()

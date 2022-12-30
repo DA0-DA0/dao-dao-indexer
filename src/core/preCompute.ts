@@ -1,5 +1,5 @@
-import { Contract, ContractComputation, Event, loadDb } from '../db'
-import { computeContractRange } from './compute'
+import { Computation, Contract, Event, loadDb } from '../db'
+import { computeRange } from './compute'
 import { getContractFormula } from './utils'
 
 export const preCompute = async (
@@ -45,17 +45,18 @@ export const preCompute = async (
 
     const args = formulaNameArgsMap?.[formulaName] ?? {}
 
-    const outputs = await computeContractRange(
+    const outputs = await computeRange({
+      type: 'contract',
+      targetAddress: contractAddress,
       formula,
-      contract,
       args,
-      earliestEvent.block,
-      latestEvent.block
-    )
+      blockStart: earliestEvent.block,
+      blockEnd: latestEvent.block,
+    })
 
     // Store computations in DB.
     if (outputs.length > 0) {
-      await ContractComputation.createFromComputationOutputs(
+      await Computation.createFromComputationOutputs(
         contractAddress,
         formulaName,
         args,

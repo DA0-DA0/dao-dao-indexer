@@ -1,8 +1,8 @@
-import { loadConfig } from '../config'
+import { loadConfig } from '../core/config'
 import { loadMeilisearch } from './client'
 
 export const setupMeilisearch = async () => {
-  const { meilisearch } = await loadConfig()
+  const { meilisearch } = loadConfig()
 
   // If no meilisearch in config, nothing to setup.
   if (!meilisearch) {

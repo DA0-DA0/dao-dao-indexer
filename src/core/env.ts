@@ -1,33 +1,39 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { Event } from '../db/models'
+import { Event, Transformation } from '../db/models'
 import {
   Block,
-  ContractEnv,
+  Cache,
+  Env,
   FormulaDateGetter,
   FormulaDateWithValueMatchGetter,
   FormulaGetter,
   FormulaMapGetter,
   FormulaPrefetch,
-  FormulaValueMatchGetter,
-  WalletEnv,
+  FormulaTransformMatchesGetter,
+  SetDependencies,
 } from './types'
-import { dbKeyForKeys, dbKeyToNumber, dbKeyToString } from './utils'
+import {
+  dbKeyForKeys,
+  dbKeyToNumber,
+  dbKeyToString,
+  getDependentKey,
+} from './utils'
 
-// Generate environment for contract computation.
-export const getContractEnv = (
-  contractAddress: string,
+// Generate environment for computation.
+export const getEnv = (
   block: Block,
   args: Record<string, any>,
-  // An array to add accessed keys to.
-  dependentKeys: Set<string>,
-  onFetchEvents?: (
+  dependencies: SetDependencies,
+  onFetch?: (
     events: Event[],
-    keyFilter: string | object
+    transformations: Transformation[]
   ) => void | Promise<void>,
-  // Cache event for key, or events for map. Null if event(s) nonexistent.
-  cache: Record<string, Event[] | null | undefined> = {}
-): ContractEnv<{}> => {
+  cache: Cache = {
+    events: {},
+    transformations: {},
+  }
+): Env<{}> => {
   // Most recent event at or below this block.
   const blockHeightFilter = {
     blockHeight: {
@@ -37,11 +43,11 @@ export const getContractEnv = (
 
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
-    const cacheKey = `${contractAddress}:${key}`
-    dependentKeys.add(cacheKey)
+    const dependentKey = getDependentKey(contractAddress, key)
+    dependencies.events.add(dependentKey)
 
     // Check cache.
-    const cachedEvent = cache[cacheKey]
+    const cachedEvent = cache.events[dependentKey]
     const event =
       // If undefined, we haven't tried to fetch it yet. If not undefined,
       // either it exists or it doesn't (null).
@@ -58,16 +64,16 @@ export const getContractEnv = (
 
     // Cache event, null if nonexistent.
     if (cachedEvent === undefined) {
-      cache[cacheKey] = event ? [event] : null
+      cache.events[dependentKey] = event ? [event] : null
     }
-
-    // Call hook.
-    await onFetchEvents?.(event ? [event] : [], key)
 
     // If no event found or key was deleted, return undefined.
     if (!event || event.delete) {
       return undefined
     }
+
+    // Call hook.
+    await onFetch?.(event ? [event] : [], [])
 
     const value = JSON.parse(event.value ?? 'null')
 
@@ -84,15 +90,12 @@ export const getContractEnv = (
         ? // Add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
           dbKeyForKeys(...name, '')
         : dbKeyForKeys(name, '')) + ','
-    const cacheKey = `${contractAddress}:${keyPrefix}`
-    dependentKeys.add(cacheKey)
+    const dependentKey = getDependentKey(contractAddress, keyPrefix)
+    dependencies.events.add(dependentKey)
 
     // Check cache.
-    const cachedEvents = cache[cacheKey]
+    const cachedEvents = cache.events[dependentKey]
 
-    const keyFilter = {
-      [Op.like]: `${keyPrefix}%`,
-    }
     const events =
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
@@ -116,7 +119,9 @@ export const getContractEnv = (
             ],
             where: {
               contractAddress,
-              key: keyFilter,
+              key: {
+                [Op.like]: `${keyPrefix}%`,
+              },
               ...blockHeightFilter,
             },
             order: [
@@ -128,16 +133,16 @@ export const getContractEnv = (
 
     // Cache events, null if nonexistent.
     if (cachedEvents === undefined) {
-      cache[cacheKey] = events.length ? events : null
+      cache.events[dependentKey] = events.length ? events : null
     }
-
-    // Call hook.
-    await onFetchEvents?.(events, keyFilter)
 
     // If no events found, return undefined.
     if (!events.length) {
       return undefined
     }
+
+    // Call hook.
+    await onFetch?.(events, [])
 
     // Remove delete events.
     const undeletedEvents = events.filter((event) => !event.delete)
@@ -162,11 +167,11 @@ export const getContractEnv = (
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
-    const cacheKey = `${contractAddress}:${key}`
-    dependentKeys.add(cacheKey)
+    const dependentKey = getDependentKey(contractAddress, key)
+    dependencies.events.add(dependentKey)
 
     // Check cache.
-    const cachedEvent = cache[cacheKey]
+    const cachedEvent = cache.events[dependentKey]
 
     // Get most recent event for this key.
     const event =
@@ -185,15 +190,15 @@ export const getContractEnv = (
 
     // Cache event, null if nonexistent.
     if (cachedEvent === undefined) {
-      cache[cacheKey] = event ? [event] : null
+      cache.events[dependentKey] = event ? [event] : null
     }
-
-    // Call hook.
-    await onFetchEvents?.(event ? [event] : [], key)
 
     if (!event) {
       return undefined
     }
+
+    // Call hook.
+    await onFetch?.(event ? [event] : [], [])
 
     // Convert block time to date.
     const date = new Date(0)
@@ -207,7 +212,7 @@ export const getContractEnv = (
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
-    dependentKeys.add(`${contractAddress}:${key}`)
+    dependencies.events.add(getDependentKey(contractAddress, key))
 
     // The cache consists of the most recent events for each key, but this
     // fetches the first event, so we can't use the cache.
@@ -223,12 +228,12 @@ export const getContractEnv = (
       order: [['blockHeight', 'ASC']],
     })
 
-    // Call hook.
-    await onFetchEvents?.(event ? [event] : [], key)
-
     if (!event) {
       return undefined
     }
+
+    // Call hook.
+    await onFetch?.(event ? [event] : [], [])
 
     // Convert block time to date.
     const date = new Date(0)
@@ -240,7 +245,7 @@ export const getContractEnv = (
   const getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter =
     async (contractAddress, keys, where) => {
       const key = dbKeyForKeys(...keys)
-      dependentKeys.add(`${contractAddress}:${key}`)
+      dependencies.events.add(getDependentKey(contractAddress, key))
 
       // The cache consists of the most recent events for each key, but this
       // fetches the first event, so we can't use the cache.
@@ -257,12 +262,12 @@ export const getContractEnv = (
         order: [['blockHeight', 'ASC']],
       })
 
-      // Call hook.
-      await onFetchEvents?.(event ? [event] : [], key)
-
       if (!event) {
         return undefined
       }
+
+      // Call hook.
+      await onFetch?.(event ? [event] : [], [])
 
       // Convert block time to date.
       const date = new Date(0)
@@ -279,7 +284,9 @@ export const getContractEnv = (
         : // If it's a map, we need to filter by the prefix, so add an empty key at the end so append a comma. Also add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
           dbKeyForKeys(...key.keys, '') + ','
     )
-    keys.forEach((key) => dependentKeys.add(`${contractAddress}:${key}`))
+    keys.forEach((key) =>
+      dependencies.events.add(getDependentKey(contractAddress, key))
+    )
 
     const nonMapKeys = keys.filter((_, index) => {
       const key = listOfKeys[index]
@@ -332,14 +339,14 @@ export const getContractEnv = (
     })
 
     // Call hook.
-    await onFetchEvents?.(events, keyFilter)
+    await onFetch?.(events, [])
 
     nonMapKeys.forEach((key) => {
       // Find matching event for key.
       const event = events.find((event) => event.key === key)
-      const cacheKey = `${contractAddress}:${key}`
+      const dependentKey = getDependentKey(contractAddress, key)
       // If no event found or key deleted, cache null for nonexistent.
-      cache[cacheKey] = !event || event.delete ? null : [event]
+      cache.events[dependentKey] = !event || event.delete ? null : [event]
     })
     // Group events by key prefix for maps, and also cache separately.
     mapKeyPrefixes.forEach((keyPrefix) => {
@@ -347,61 +354,58 @@ export const getContractEnv = (
       const eventsForPrefix = events.filter((event) =>
         event.key.startsWith(keyPrefix)
       )
-      const cacheKey = `${contractAddress}:${keyPrefix}`
+      const dependentKey = getDependentKey(contractAddress, keyPrefix)
       // If no events found, cache null for nonexistent.
-      cache[cacheKey] = eventsForPrefix.length ? eventsForPrefix : null
+      cache.events[dependentKey] = eventsForPrefix.length
+        ? eventsForPrefix
+        : null
 
       // Cache events separately.
       eventsForPrefix.forEach((event) => {
-        const cacheKey = `${contractAddress}:${event.key}`
+        const dependentKey = getDependentKey(contractAddress, event.key)
         // If key deleted, cache null for nonexistent.
-        cache[cacheKey] = event.delete ? null : [event]
+        cache.events[dependentKey] = event.delete ? null : [event]
       })
     })
   }
 
-  const getWhereValueMatches: FormulaValueMatchGetter = async (keys, where) => {
-    const dbKey = keys
-      .map((key, index) =>
-        typeof key === 'object' && 'wildcard' in key && key.wildcard
-          ? '%'
-          : index === keys.length - 1
-          ? dbKeyForKeys(key as string | number)
-          : dbKeyForKeys(key as string | number, '')
-      )
-      .join(',')
-    dependentKeys.add(dbKey)
+  const getTransformMatches: FormulaTransformMatchesGetter = async (
+    contractAddress,
+    nameLike,
+    where
+  ) => {
+    const dependentKey = getDependentKey(contractAddress, nameLike)
+    dependencies.transformations.add(dependentKey)
 
     // Check cache.
-    const cachedEvents = cache[dbKey]
-    const keyFilter = {
-      [Op.like]: dbKey,
-    }
-    const events =
+    const cachedTransformations = cache.transformations[dependentKey]
+    const transformations =
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
-      cachedEvents !== undefined
-        ? cachedEvents ?? []
-        : await Event.findAll({
+      cachedTransformations !== undefined
+        ? cachedTransformations ?? []
+        : await Transformation.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
               // beginning of the query. This ensures we use the most recent
               // version of the key for each contract.
               Sequelize.literal(
-                'DISTINCT ON("key", "contractAddress") "key"'
+                'DISTINCT ON("name", "contractAddress") "name"'
               ) as unknown as string,
-              'key',
+              'name',
               'contractAddress',
               'blockHeight',
               'blockTimeUnixMs',
               'value',
-              'delete',
             ],
             where: {
-              key: keyFilter,
-              // TODO: Figure out how to ignore if deleted but still match with
-              // where clause on valueJson.
+              name: {
+                [Op.like]: nameLike,
+              },
+              ...(contractAddress && {
+                contractAddress,
+              }),
               ...(where && {
                 valueJson: where,
               }),
@@ -409,93 +413,46 @@ export const getContractEnv = (
             },
             order: [
               // Needs to be first so we can use DISTINCT ON.
-              ['key', 'ASC'],
+              ['name', 'ASC'],
               ['contractAddress', 'ASC'],
               // Descending block height ensures we get the most recent event
-              // for the (contractAddress,key) pair.
+              // for the (contractAddress,name) pair.
               ['blockHeight', 'DESC'],
             ],
           })
 
-    // Cache events, null if nonexistent.
-    if (cachedEvents === undefined) {
-      cache[dbKey] = events.length ? events : null
+    // Cache transformations, null if nonexistent.
+    if (cachedTransformations === undefined) {
+      cache.transformations[dependentKey] = transformations.length
+        ? transformations
+        : null
     }
 
-    // Call hook.
-    await onFetchEvents?.(events, keyFilter)
-
-    // If no events found, return undefined.
-    if (!events.length) {
+    // If no transformations found, return undefined.
+    if (!transformations.length) {
       return undefined
     }
 
-    // Add individual events to cache.
-    events.forEach((event) => {
-      const cacheKey = `${event.contractAddress}:${event.key}`
-      // If key deleted, cache null for nonexistent.
-      cache[cacheKey] = event.delete ? null : [event]
-    })
+    // Call hook.
+    await onFetch?.([], transformations)
 
-    // Remove delete events.
-    const values = events
-      .filter((event) => !event.delete)
-      .map(({ contractAddress, block, key, value }) => ({
-        contractAddress,
-        block,
-        key,
-        value: JSON.parse(value ?? 'null'),
-      }))
-
-    return values
+    return transformations.map((transformation) => ({
+      contractAddress: transformation.contractAddress,
+      block: transformation.block,
+      name: transformation.name,
+      value: transformation.value as any,
+    }))
   }
 
   return {
-    contractAddress,
     block,
     get,
     getMap,
     getDateKeyModified,
     getDateKeyFirstSet,
     getDateKeyFirstSetWithValueMatch,
-    getWhereValueMatches,
+    getTransformMatches,
     prefetch,
     args,
-  }
-}
-
-// Generate environment for wallet computation.
-export const getWalletEnv = (
-  walletAddress: string,
-  block: Block,
-  args: Record<string, any>,
-  // An array to add accessed keys to.
-  dependentKeys: Set<string>,
-  onFetchEvents?: (
-    events: Event[],
-    keyFilter: string | object
-  ) => void | Promise<void>,
-  // Cache event for key, or events for map. Null if event(s) nonexistent.
-  cache: Record<string, Event[] | null | undefined> = {}
-): WalletEnv<{}> => {
-  // Get functions for operating on contracts.
-  const contractEnv: Omit<ContractEnv<{}>, 'contractAddress'> & {
-    contractAddress?: string
-  } = getContractEnv(
-    '',
-    block,
-    args,
-    dependentKeys,
-    onFetchEvents,
-    // Share cache.
-    cache
-  )
-  // Remove contractAddress from contractEnv, since we don't use it for the
-  // wallet env.
-  delete contractEnv.contractAddress
-
-  return {
-    walletAddress,
-    ...contractEnv,
   }
 }

@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '../config'
+import { loadConfig } from '../core/config'
 import { loadDb } from './index'
 
 // Parse arguments.
@@ -14,7 +14,7 @@ const options = program.opts()
 
 export const main = async () => {
   // Load config with config option.
-  await loadConfig(options.config)
+  loadConfig(options.config)
 
   // Log when altering.
   const sequelize = await loadDb({ logging: true })

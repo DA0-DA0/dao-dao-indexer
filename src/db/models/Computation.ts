@@ -1,46 +1,38 @@
 import { Op } from 'sequelize'
-import {
-  AllowNull,
-  BelongsTo,
-  Column,
-  DataType,
-  ForeignKey,
-  Model,
-  Table,
-} from 'sequelize-typescript'
+import { AllowNull, Column, DataType, Model, Table } from 'sequelize-typescript'
 
 import { Block, ComputationOutput } from '../../core/types'
-import { Contract } from './Contract'
 import { Event } from './Event'
 
 @Table({
   timestamps: true,
   indexes: [
     // Formulas are deterministic, so only one output can exist for a formula
-    // with args on a contract at a given block height.
+    // with args for a target address at a given block height.
     {
       unique: true,
-      fields: ['blockHeight', 'contractAddress', 'formula', 'args'],
+      fields: ['blockHeight', 'targetAddress', 'formula', 'args'],
     },
     {
       // Speeds up queries. Composite indexes are most efficient when equality
       // tests are first and ranges second.
-      fields: ['contractAddress', 'blockHeight'],
+      fields: ['targetAddress', 'blockHeight'],
+    },
+    // TODO: Combine the below indexes? Or separate into 3 single indexes?
+    {
+      // Speeds up export invalidation queries.
+      fields: ['dependentEvents', 'blockHeight'],
     },
     {
       // Speeds up export invalidation queries.
-      fields: ['dependentKeys', 'blockHeight'],
+      fields: ['dependentTransformations', 'blockHeight'],
     },
   ],
 })
-export class ContractComputation extends Model {
+export class Computation extends Model {
   @AllowNull(false)
-  @ForeignKey(() => Contract)
   @Column
-  contractAddress!: string
-
-  @BelongsTo(() => Contract)
-  contract!: Contract
+  targetAddress!: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
@@ -63,12 +55,20 @@ export class ContractComputation extends Model {
   @Column(DataType.TEXT)
   args!: string
 
-  // This formula may depend on keys in other contracts, so we need to include
-  // contractAddress for each key. If the key ends with a comma, it is a map
-  // prefix. Format: "contractAddress:key"[]
+  // If the key ends with a comma, it is a map prefix. Non-map-prefix keys may
+  // contain a wildcard in the form of a '%'. Keys may or may not contain a
+  // contract address. No contract address means it depends on all.
+  // Format: ("key" | "contractAddress:key")[]
   @AllowNull(false)
   @Column(DataType.ARRAY(DataType.TEXT))
-  dependentKeys!: string[]
+  dependentEvents!: string[]
+
+  // Name may contain a wildcard in the form of a '%', and may or may not
+  // contain a contract address. No contract address means it depends on all.
+  // Format: ("name" | "contractAddress:name")[]
+  @AllowNull(false)
+  @Column(DataType.ARRAY(DataType.TEXT))
+  dependentTransformations!: string[]
 
   // JSON encoded value.
   @AllowNull
@@ -76,18 +76,19 @@ export class ContractComputation extends Model {
   output!: string | null
 
   static async createFromComputationOutputs(
-    contractAddress: string,
+    targetAddress: string,
     formula: string,
     args: Record<string, any>,
     ...computationOutputs: ComputationOutput[]
-  ): Promise<ContractComputation[]> {
-    return await ContractComputation.bulkCreate(
+  ): Promise<Computation[]> {
+    return await Computation.bulkCreate(
       computationOutputs.map(
-        ({ block, value, dependentKeys, latestBlockHeightValid }) => ({
-          contractAddress,
+        ({ block, value, dependencies, latestBlockHeightValid }) => ({
+          targetAddress,
           formula,
           args: JSON.stringify(args),
-          dependentKeys,
+          dependentEvents: dependencies.events,
+          dependentTransformations: dependencies.transformations,
           // If no block, the computation must not have accessed any keys. It
           // may be a constant formula, in which case it doesn't have any block
           // context and should thus use an invalid block below the first
@@ -104,7 +105,8 @@ export class ContractComputation extends Model {
       ),
       {
         updateOnDuplicate: [
-          'dependentKeys',
+          'dependentEvents',
+          'dependentTransformations',
           'output',
           'latestBlockHeightValid',
         ],
@@ -161,7 +163,7 @@ export class ContractComputation extends Model {
           [Op.lte]: upToBlockHeight,
         },
         // Any key for any of the contracts.
-        ...Event.getWhereClauseForDependentKeys(this.dependentKeys),
+        ...Event.getWhereClauseForDependentKeys(this.dependentEvents),
       },
       order: [['blockHeight', 'ASC']],
     })

@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "lint": "eslint .",
+    "format": "eslint . --fix",
     "prebuild": "rm -rf dist",
     "build": "tsc",
     "build:watch": "tsc --watch",
@@ -11,6 +13,7 @@
     "clear-cache": "node dist/db/clearCache.js",
     "export": "node dist/export/index.js",
     "export:prod": "npm run build && pm2 reload ecosystem.config.js --only exporter",
+    "transform": "node dist/export/transform.js",
     "serve": "node dist/server/index.js",
     "serve:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js\"",
     "serve:dev:testnet": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js -c config.testnet.json\"",

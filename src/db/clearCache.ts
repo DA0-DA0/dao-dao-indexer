@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '../config'
-import { ContractComputation, WalletComputation, loadDb } from './index'
+import { loadConfig } from '../core/config'
+import { Computation, loadDb } from './index'
 
 // Parse arguments.
 const program = new Command()
@@ -23,7 +23,7 @@ const options = program.opts()
 // Deletes computations.
 export const main = async () => {
   // Load config with config option.
-  await loadConfig(options.config)
+  loadConfig(options.config)
 
   // Log when altering.
   const sequelize = await loadDb({ logging: true })
@@ -33,41 +33,24 @@ export const main = async () => {
 
     // If no filters, drop the tables and recreate them to quickly delete all.
     if (!options.addresses && !options.formulas) {
-      count =
-        (await ContractComputation.count()) + (await WalletComputation.count())
-      await ContractComputation.sync({ force: true })
-      await WalletComputation.sync({ force: true })
+      count = await Computation.count()
+      await Computation.sync({ force: true })
     } else {
       // Otherwise just delete the rows that match the filters.
-      count =
-        (await ContractComputation.destroy({
-          where: {
-            ...(options.addresses
-              ? {
-                  contractAddress: options.addresses.split(','),
-                }
-              : {}),
-            ...(options.formulas
-              ? {
-                  formula: options.formulas.split(','),
-                }
-              : {}),
-          },
-        })) +
-        (await WalletComputation.destroy({
-          where: {
-            ...(options.addresses
-              ? {
-                  walletAddress: options.addresses.split(','),
-                }
-              : {}),
-            ...(options.formulas
-              ? {
-                  formula: options.formulas.split(','),
-                }
-              : {}),
-          },
-        }))
+      count = await Computation.destroy({
+        where: {
+          ...(options.addresses
+            ? {
+                targetAddress: options.addresses.split(','),
+              }
+            : {}),
+          ...(options.formulas
+            ? {
+                formula: options.formulas.split(','),
+              }
+            : {}),
+        },
+      })
     }
 
     console.log(
