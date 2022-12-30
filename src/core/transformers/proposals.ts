@@ -14,13 +14,13 @@ export const proposed: Transformer = {
     !!event.valueJson.proposer,
   name: (event) => {
     // "proposals"|"proposals_v2", proposalId
-    const keys = dbKeyToKeys(event.key, [false, true])
-    return `proposed:${event.valueJson.proposer}:${keys[1]}`
+    const [, proposalId] = dbKeyToKeys(event.key, [false, true])
+    return `proposed:${event.valueJson.proposer}:${proposalId}`
   },
   getValue: (event) => {
     // "proposals"|"proposals_v2", proposalId
-    const keys = dbKeyToKeys(event.key, [false, true])
-    return { proposalId: keys[1] }
+    const [, proposalId] = dbKeyToKeys(event.key, [false, true])
+    return { proposalId }
   },
 }
 
@@ -29,15 +29,15 @@ export const voteCast: Transformer = {
   matches: (event) => event.key.startsWith(KEY_PREFIX_BALLOTS),
   name: (event) => {
     // "ballots", proposalId, address
-    const keys = dbKeyToKeys(event.key, [false, true, false])
-    return `voteCast:${keys[2]}:${keys[1]}`
+    const [, proposalId, address] = dbKeyToKeys(event.key, [false, true, false])
+    return `voteCast:${address}:${proposalId}`
   },
   getValue: (event) => {
     // "ballots", proposalId, address
-    const keys = dbKeyToKeys(event.key, [false, true, false])
+    const [, proposalId] = dbKeyToKeys(event.key, [false, true, false])
 
     return {
-      proposalId: keys[1],
+      proposalId,
       vote: event.valueJson,
       votedAt: event.blockTimestamp.toISOString(),
     }

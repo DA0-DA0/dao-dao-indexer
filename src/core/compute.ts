@@ -5,11 +5,13 @@ import { getEnv } from './env'
 import {
   Block,
   Cache,
+  CacheMap,
   ComputationOutput,
   ComputeOptions,
   ComputeRangeOptions,
   Dependencies,
   SetDependencies,
+  SplitDependentKeys,
 } from './types'
 
 export const compute = async ({
@@ -141,149 +143,22 @@ export const computeRange = async ({
     }
 
     if (allDependencies.events.size > 0) {
-      const { nonMapKeys, mapPrefixes } = Event.splitDependentKeys(
-        Array.from(allDependencies.events)
+      addToCache(
+        Event.splitDependentKeys(Array.from(allDependencies.events)),
+        allEvents,
+        initialCache.events,
+        block
       )
-      for (const key of nonMapKeys) {
-        const allEventsForThisKey = allEvents[key]
-        // No events found for this key, cache null to indicate it doesn't exist
-        // and prevent querying for it.
-        if (!allEventsForThisKey) {
-          initialCache.events[key] = null
-          continue
-        }
-
-        // Sorted ascending by block height, so we can find the latest event for
-        // a given key that is before or at the current block height by finding
-        // the index of the first event that is after the current block height
-        // and subtracting 1.
-        const nextIndex = allEventsForThisKey.findIndex(
-          (event) => event.blockHeight > block.height
-        )
-
-        const currentIndex =
-          // If the next event index is undefined or is the first event, there
-          // is no current event.
-          nextIndex === undefined || nextIndex === 0
-            ? undefined
-            : // If the next event index is greater than 0, the current event is the
-            // most recent event before this one, so subtract one.
-            nextIndex > 0
-            ? nextIndex - 1
-            : // If the next event index is -1, meaning no events matched the predicate, and events exist, the current event is the last event.
-            allEventsForThisKey.length > 0
-            ? allEventsForThisKey.length - 1
-            : // Otherwise there are no events before the current block height.
-              undefined
-
-        if (currentIndex !== undefined) {
-          initialCache.events[key] = [allEventsForThisKey[currentIndex]]
-
-          // Remove all events that are before the current event we found, since
-          // future computations will only go up. Keep the one we found in case
-          // it's used in the future.
-          allEvents[key] = allEventsForThisKey.slice(currentIndex)
-        } else {
-          initialCache.events[key] = null
-        }
-      }
-      for (const prefixKey of mapPrefixes) {
-        const contractKeyEventEntries = Object.entries(allEvents).filter(
-          ([key]) => key.startsWith(prefixKey)
-        )
-
-        // Sorted ascending by block height, so we can find the latest event for
-        // each unique key in the map before or at the current block height by
-        // finding the index of the first event for each that is after the
-        // current block height and subtracting 1.
-        const currentIndexes = contractKeyEventEntries.map(([, events]) => {
-          if (!events) {
-            return undefined
-          }
-
-          const nextIndex = events.findIndex(
-            (event) => event.blockHeight > block.height
-          )
-
-          // If the next event index is undefined or is the first event, there
-          // is no current event.
-          return nextIndex === undefined || nextIndex === 0
-            ? undefined
-            : // If the next event index is greater than 0, the current event is the most recent event before this one, so subtract one.
-            nextIndex > 0
-            ? nextIndex - 1
-            : // If the next event index is -1, meaning no events matched the predicate, and there is only one event, the current event is the only event.
-            events.length === 1
-            ? 0
-            : // Otherwise there are no events before the current block height.
-              undefined
-        })
-
-        initialCache.events[prefixKey] = currentIndexes
-          .map((currentEventIndex, entryIndex) =>
-            currentEventIndex !== undefined
-              ? contractKeyEventEntries[entryIndex][1]![currentEventIndex]
-              : null
-          )
-          .filter((event): event is Event => event !== null)
-
-        // Remove all events that are before the current event we found for each
-        // key, since future computations will only go up. Keep the one we found
-        // in case it's used in the future.
-        currentIndexes.forEach((currentEventIndex, entryIndex) => {
-          if (currentEventIndex !== undefined) {
-            allEvents[contractKeyEventEntries[entryIndex][0]] =
-              allEvents[contractKeyEventEntries[entryIndex][0]]?.slice(
-                currentEventIndex
-              )
-          }
-        })
-      }
     }
-    for (const key of allDependencies.transformations) {
-      const allTransformationsForThisKey = allTransformations[key]
-      // No transformations found for this key, cache null to indicate it
-      // doesn't exist and prevent querying for it.
-      if (!allTransformationsForThisKey) {
-        initialCache.transformations[key] = null
-        continue
-      }
-
-      // Sorted ascending by block height, so we can find the latest
-      // transformation for a given key that is before or at the current block
-      // height by finding the index of the first transformation that is after
-      // the current block height and subtracting 1.
-      const nextIndex = allTransformationsForThisKey.findIndex(
-        (transformation) => transformation.blockHeight > block.height
+    if (allDependencies.transformations.size > 0) {
+      addToCache(
+        Transformation.splitDependentKeys(
+          Array.from(allDependencies.transformations)
+        ),
+        allTransformations,
+        initialCache.transformations,
+        block
       )
-
-      const currentIndex =
-        // If the next index is undefined or is the first one, there is no
-        // current transformation.
-        nextIndex === undefined || nextIndex === 0
-          ? undefined
-          : // If the next index is greater than 0, the current transformation is the most recent before this one, so subtract one.
-          nextIndex > 0
-          ? nextIndex - 1
-          : // If the next index is -1, meaning no transformations matched the predicate, and transformations exist, the current transformation is the last one.
-          allTransformationsForThisKey.length > 0
-          ? allTransformationsForThisKey.length - 1
-          : // Otherwise there are no transformations before the current block height.
-            undefined
-
-      if (currentIndex !== undefined) {
-        initialCache.transformations[key] = [
-          allTransformationsForThisKey[currentIndex],
-        ]
-
-        // Remove all transformations that are before the current one we found,
-        // since future computations will only go up. Keep the one we found in
-        // case it's used in the future.
-        allTransformations[key] =
-          allTransformationsForThisKey.slice(currentIndex)
-      } else {
-        initialCache.transformations[key] = null
-      }
     }
 
     // Add hook to env so that the getters update the latest block info.
@@ -431,68 +306,193 @@ export const computeRange = async ({
     // Find the next event or transformation that has the potential to change
     // the result for the given dependencies. If it remains undefined, then we
     // know that the result will not change because no inputs changed.
-    nextPotentialBlock = undefined
+    nextPotentialBlock = undefined as Block | undefined
 
     if (result.dependencies.events.length > 0) {
-      const { nonMapKeys: nextNonMapKeys, mapPrefixes: nextMapPrefixes } =
-        Event.splitDependentKeys(result.dependencies.events)
-      for (const key of nextNonMapKeys) {
-        // Sorted ascending by block height, so we can find the next event for a
-        // given key that is after the current block height by selecting the first
-        // one.
-        const matchingEvent = allEvents[key]?.find(
-          (event) => event.blockHeight > currentBlock.height
-        )
-
-        if (
-          matchingEvent &&
-          (nextPotentialBlock === undefined ||
-            matchingEvent.blockHeight < nextPotentialBlock.height)
-        ) {
-          nextPotentialBlock = matchingEvent.block
-        }
-      }
-      for (const prefixKey of nextMapPrefixes) {
-        // Sorted ascending by block height, so we can find the next event for
-        // for each unique key in the map after the current block height by
-        // finding the first one.
-        const matchingEvents = Object.entries(allEvents)
-          .filter(([key]) => key.startsWith(prefixKey))
-          .map(([, events]) =>
-            events?.find((event) => event.blockHeight > currentBlock.height)
-          )
-          .filter((event): event is Event => event !== undefined)
-
-        const nextEvent = matchingEvents.sort(
-          (a, b) => a.blockHeight - b.blockHeight
-        )[0]
-        if (
-          nextEvent &&
-          (nextPotentialBlock === undefined ||
-            nextEvent.blockHeight < nextPotentialBlock.height)
-        ) {
-          nextPotentialBlock = nextEvent.block
-        }
-      }
-    }
-
-    for (const key of result.dependencies.transformations) {
-      // Sorted ascending by block height, so we can find the next
-      // transformation for a given key that is after the current block height
-      // by selecting the first one.
-      const matchingTransformation = allTransformations[key]?.find(
-        (transformation) => transformation.blockHeight > currentBlock.height
+      const eventNextPotentialBlock = getNextPotentialBlock(
+        Event.splitDependentKeys(result.dependencies.events),
+        allEvents,
+        currentBlock
       )
 
       if (
-        matchingTransformation &&
+        eventNextPotentialBlock &&
         (nextPotentialBlock === undefined ||
-          matchingTransformation.blockHeight < nextPotentialBlock.height)
+          eventNextPotentialBlock.height < nextPotentialBlock.height)
       ) {
-        nextPotentialBlock = matchingTransformation.block
+        nextPotentialBlock = eventNextPotentialBlock
+      }
+    }
+    if (result.dependencies.transformations.length > 0) {
+      const transformationNextPotentialBlock = getNextPotentialBlock(
+        Transformation.splitDependentKeys(result.dependencies.transformations),
+        allTransformations,
+        currentBlock
+      )
+
+      if (
+        transformationNextPotentialBlock &&
+        (nextPotentialBlock === undefined ||
+          transformationNextPotentialBlock.height < nextPotentialBlock.height)
+      ) {
+        nextPotentialBlock = transformationNextPotentialBlock
       }
     }
   }
 
   return results
+}
+
+const addToCache = <T extends Event | Transformation>(
+  { nonMapKeys, mapPrefixes }: SplitDependentKeys,
+  allItems: Record<string, T[] | undefined>,
+  initialCacheMap: CacheMap<T>,
+  block: Block
+) => {
+  for (const key of nonMapKeys) {
+    const allItemsForThisKey = allItems[key]
+    // No items found for this key, cache null to indicate it doesn't exist and
+    // pritem querying for it.
+    if (!allItemsForThisKey) {
+      initialCacheMap[key] = null
+      continue
+    }
+
+    // Sorted ascending by block height, so we can find the latest item for a
+    // given key that is before or at the current block height by finding the
+    // index of the first item that is after the current block height and
+    // subtracting 1.
+    const nextIndex = allItemsForThisKey.findIndex(
+      (item) => item.blockHeight > block.height
+    )
+
+    const currentIndex =
+      // If the next item index is undefined or is the first item, there is no
+      // current item.
+      nextIndex === undefined || nextIndex === 0
+        ? undefined
+        : // If the next item index is greater than 0, the current item is the
+        // most recent item before this one, so subtract one.
+        nextIndex > 0
+        ? nextIndex - 1
+        : // If the next item index is -1, meaning no items matched the predicate, and items exist, the current item is the last item.
+        allItemsForThisKey.length > 0
+        ? allItemsForThisKey.length - 1
+        : // Otherwise there are no items before the current block height.
+          undefined
+
+    if (currentIndex !== undefined) {
+      initialCacheMap[key] = [allItemsForThisKey[currentIndex]]
+
+      // Remove all items that are before the current item we found, since
+      // future computations will only go up. Keep the one we found in case it's
+      // used in the future.
+      allItems[key] = allItemsForThisKey.slice(currentIndex)
+    } else {
+      initialCacheMap[key] = null
+    }
+  }
+  for (const prefixKey of mapPrefixes) {
+    const contractKeyItemEntries = Object.entries(allItems).filter(([key]) =>
+      key.startsWith(prefixKey)
+    )
+
+    // Sorted ascending by block height, so we can find the latest item for each
+    // unique key in the map before or at the current block height by finding
+    // the index of the first item for each that is after the current block
+    // height and subtracting 1.
+    const currentIndexes = contractKeyItemEntries.map(([, items]) => {
+      if (!items) {
+        return undefined
+      }
+
+      const nextIndex = items.findIndex(
+        (item) => item.blockHeight > block.height
+      )
+
+      // If the next item index is undefined or is the first item, there is no
+      // current item.
+      return nextIndex === undefined || nextIndex === 0
+        ? undefined
+        : // If the next item index is greater than 0, the current item is the most recent item before this one, so subtract one.
+        nextIndex > 0
+        ? nextIndex - 1
+        : // If the next item index is -1, meaning no items matched the predicate, and there is only one item, the current item is the only item.
+        items.length === 1
+        ? 0
+        : // Otherwise there are no items before the current block height.
+          undefined
+    })
+
+    initialCacheMap[prefixKey] = currentIndexes
+      .map((currentItemIndex, entryIndex) =>
+        currentItemIndex !== undefined
+          ? contractKeyItemEntries[entryIndex][1]![currentItemIndex]
+          : null
+      )
+      .filter((item): item is T => item !== null)
+
+    // Remove all items that are before the current item we found for each key,
+    // since future computations will only go up. Keep the one we found in case
+    // it's used in the future.
+    currentIndexes.forEach((currentItemIndex, index) => {
+      if (currentItemIndex !== undefined) {
+        allItems[contractKeyItemEntries[index][0]] =
+          allItems[contractKeyItemEntries[index][0]]?.slice(currentItemIndex)
+      }
+    })
+  }
+}
+
+// Find the next item that has the potential to change the result for the given
+// keys. If it remains undefined, then we know that the result will not change
+// because no inputs changed.
+export const getNextPotentialBlock = <T extends Event | Transformation>(
+  { nonMapKeys, mapPrefixes }: SplitDependentKeys,
+  allItems: Record<string, T[] | undefined>,
+  currentBlock: Block
+): Block | undefined => {
+  let nextPotentialBlock: Block | undefined
+
+  for (const key of nonMapKeys) {
+    // Sorted ascending by block height, so we can find the next item for a
+    // given key that is after the current block height by selecting the first
+    // one.
+    const matchingItem = allItems[key]?.find(
+      (item) => item.blockHeight > currentBlock.height
+    )
+
+    if (
+      matchingItem &&
+      (nextPotentialBlock === undefined ||
+        matchingItem.blockHeight < nextPotentialBlock.height)
+    ) {
+      nextPotentialBlock = matchingItem.block
+    }
+  }
+
+  for (const prefixKey of mapPrefixes) {
+    // Sorted ascending by block height, so we can find the next item for for
+    // each unique key in the map after the current block height by finding the
+    // first one.
+    const matchingItems = Object.entries(allItems)
+      .filter(([key]) => key.startsWith(prefixKey))
+      .map(([, items]) =>
+        items?.find((item) => item.blockHeight > currentBlock.height)
+      )
+      .filter((item): item is T => item !== undefined)
+
+    const nextItem = matchingItems.sort(
+      (a, b) => a.blockHeight - b.blockHeight
+    )[0]
+    if (
+      nextItem &&
+      (nextPotentialBlock === undefined ||
+        nextItem.blockHeight < nextPotentialBlock.height)
+    ) {
+      nextPotentialBlock = nextItem.block
+    }
+  }
+
+  return nextPotentialBlock
 }

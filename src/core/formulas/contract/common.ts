@@ -3,11 +3,11 @@ import { ContractInfo } from '../types'
 
 export const info: ContractFormula<ContractInfo | undefined> = async ({
   contractAddress,
-  get,
-}) => await get(contractAddress, 'contract_info')
+  getTransformationMatch,
+}) =>
+  (await getTransformationMatch<ContractInfo>(contractAddress, 'info'))?.value
 
 export const instantiatedAt: ContractFormula<string | undefined> = async ({
   contractAddress,
-  getDateKeyFirstSet,
-}) =>
-  (await getDateKeyFirstSet(contractAddress, 'contract_info'))?.toISOString()
+  getDateFirstTransformed,
+}) => (await getDateFirstTransformed(contractAddress, 'info'))?.toISOString()

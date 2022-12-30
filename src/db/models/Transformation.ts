@@ -15,6 +15,7 @@ import * as transformerMap from '../../core/transformers'
 import {
   Block,
   ParsedEvent,
+  SplitDependentKeys,
   Transformer,
   TransformerMap,
 } from '../../core/types'
@@ -81,6 +82,16 @@ export class Transformation extends Model {
     return getDependentKey(this.contractAddress, this.name)
   }
 
+  // Split dependent keys into two groups: non map keys and map prefixes. Map
+  // prefixes end with a colon because they are missing the final key segment,
+  // which is the key of each map entry.
+  static splitDependentKeys(dependentKeys: string[]): SplitDependentKeys {
+    return {
+      nonMapKeys: dependentKeys.filter((key) => key[key.length - 1] !== ':'),
+      mapPrefixes: dependentKeys.filter((key) => key[key.length - 1] === ':'),
+    }
+  }
+
   // Returns a where clause that will match all transformations that are
   // described by the dependent keys, which contain various contract addresses
   // and names.
@@ -103,9 +114,13 @@ export class Transformation extends Model {
 
     return {
       [Op.or]: Object.entries(dependentNamesByContract).map(
-        ([contractAddress, names]) => {
-          const exactNames = names!.filter((name) => !name.includes('%'))
-          const wildcardNames = names!.filter((name) => name.includes('%'))
+        ([contractAddress, dependentKeys]) => {
+          const { nonMapKeys, mapPrefixes } = Transformation.splitDependentKeys(
+            dependentKeys!
+          )
+
+          const exactNames = nonMapKeys.filter((name) => !name.includes('%'))
+          const wildcardNames = nonMapKeys.filter((name) => name.includes('%'))
 
           return {
             // Only include if contract address is defined.
@@ -114,9 +129,14 @@ export class Transformation extends Model {
             // `src/db/utils.ts`.
             name: {
               [Op.or]: [
+                // Where name is one of the non-map names.
                 ...(exactNames.length > 0 ? [{ [Op.in]: exactNames }] : []),
                 ...wildcardNames.map((name) => ({
                   [Op.like]: name,
+                })),
+                // Or where key is prefixed by one of the map prefixes.
+                ...mapPrefixes.map((prefix) => ({
+                  [Op.like]: prefix + '%',
                 })),
               ],
             },
@@ -135,7 +155,10 @@ export class Transformation extends Model {
     // Collect each transformer's total set of code IDs to use for filtering by
     // matching keys with the config.
     const transformerCodeIds = transformers.map(({ codeIdsKeys }) =>
-      codeIdsKeys.flatMap((key) => codeIds?.[key] ?? [])
+      codeIdsKeys.length
+        ? codeIdsKeys.flatMap((key) => codeIds?.[key] ?? [])
+        : // Those with no code IDs are always included.
+          null
     )
 
     // Collect all pending transformations before evaluating them. This is
@@ -149,7 +172,9 @@ export class Transformation extends Model {
     }[] = events.flatMap((event) => {
       const transformersForEvent = transformers.filter(
         (transformer, index) =>
-          transformerCodeIds[index].includes(event.codeId) &&
+          // Those with no code IDs are always included.
+          (transformerCodeIds[index] === null ||
+            transformerCodeIds[index]!.includes(event.codeId)) &&
           transformer.matches(event)
       )
 

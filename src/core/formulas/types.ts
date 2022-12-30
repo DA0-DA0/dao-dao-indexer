@@ -21,3 +21,9 @@ export type Denom =
   | {
       cw20: string
     }
+
+export interface ProposalModule {
+  address: string
+  prefix: string
+  status: 'Enabled' | 'Disabled'
+}

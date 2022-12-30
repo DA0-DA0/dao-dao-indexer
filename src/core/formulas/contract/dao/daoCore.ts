@@ -1,5 +1,5 @@
 import { ContractFormula } from '../../../types'
-import { ContractInfo, Expiration } from '../../types'
+import { ContractInfo, Expiration, ProposalModule } from '../../types'
 import { isExpirationExpired } from '../../utils'
 import { info, instantiatedAt } from '../common'
 import { balance } from '../external/cw20'
@@ -22,12 +22,6 @@ interface Config {
   description: string
   image_url?: string | null
   name: string
-}
-
-interface ProposalModule {
-  address: string
-  prefix: string
-  status: 'Enabled' | 'Disabled'
 }
 
 interface ProposalModuleWithInfo extends ProposalModule {
@@ -82,34 +76,14 @@ export const config: ContractFormula<Config | undefined> = async ({
 export const proposalModules: ContractFormula<
   ProposalModuleWithInfo[] | undefined
 > = async (env) => {
-  const { contractAddress, getMap } = env
+  const { contractAddress, getTransformationMap } = env
 
-  const proposalModules: ProposalModule[] = []
-
-  // V2.
-  const proposalModuleMap = await getMap<string, ProposalModule>(
-    contractAddress,
-    'proposal_modules_v2'
+  const proposalModules = Object.values(
+    (await getTransformationMap<string, ProposalModule>(
+      contractAddress,
+      'proposalModules'
+    )) ?? {}
   )
-
-  if (proposalModuleMap) {
-    proposalModules.push(...Object.values(proposalModuleMap))
-  }
-  // V1.
-  else {
-    const proposalModuleAddresses = Object.keys(
-      (await getMap<string, string>(contractAddress, 'proposal_modules')) ?? {}
-    )
-    proposalModules.push(
-      ...proposalModuleAddresses.map((address) => ({
-        address,
-        // V1 modules don't have a prefix.
-        prefix: '',
-        // V1 modules are always enabled.
-        status: 'Enabled' as const,
-      }))
-    )
-  }
 
   // If no proposal modules, this must not be a DAO core contract.
   if (!proposalModules.length) {
@@ -141,26 +115,20 @@ export const activeProposalModules: ContractFormula<
 export const dumpState: ContractFormula<DumpState | undefined> = async (
   env
 ) => {
-  // Prefetch all data in one query.
-  await env.prefetch(
-    env.contractAddress,
+  // Prefetch all data.
+  await env.prefetchTransformations(env.contractAddress, [
     'admin',
-    'config_v2',
     'config',
-    'contract_info',
+    'info',
     'paused',
-    'voting_module',
-    'active_proposal_module_count',
-    'total_proposal_module_count',
     {
-      keys: ['proposal_modules_v2'],
+      name: 'proposalModules',
       map: true,
     },
-    {
-      keys: ['proposal_modules'],
-      map: true,
-    }
-  )
+    'votingModule',
+    'activeProposalModuleCount',
+    'totalProposalModuleCount',
+  ])
 
   const [
     adminResponse,
@@ -188,13 +156,13 @@ export const dumpState: ContractFormula<DumpState | undefined> = async (
         : undefined,
     })),
     // V2
-    env.get<number | undefined>(
+    env.getTransformationMatch<number | undefined>(
       env.contractAddress,
-      'active_proposal_module_count'
+      'activeProposalModuleCount'
     ),
-    env.get<number | undefined>(
+    env.getTransformationMatch<number | undefined>(
       env.contractAddress,
-      'total_proposal_module_count'
+      'totalProposalModuleCount'
     ),
     // Extra.
     instantiatedAt(env),
@@ -215,9 +183,9 @@ export const dumpState: ContractFormula<DumpState | undefined> = async (
     voting_module,
     // V1 doesn't have these counts; all proposal modules are active.
     active_proposal_module_count:
-      activeProposalModuleCount ?? proposal_modules?.length ?? 0,
+      activeProposalModuleCount?.value ?? proposal_modules?.length ?? 0,
     total_proposal_module_count:
-      totalProposalModuleCount ?? proposal_modules?.length ?? 0,
+      totalProposalModuleCount?.value ?? proposal_modules?.length ?? 0,
     // Extra.
     votingModuleInfo,
     createdAt,
@@ -227,12 +195,11 @@ export const dumpState: ContractFormula<DumpState | undefined> = async (
 export const paused: ContractFormula<PausedResponse> = async ({
   contractAddress,
   block,
-  get,
+  getTransformationMatch,
 }) => {
-  const expiration = await get<Expiration | undefined>(
-    contractAddress,
-    'paused'
-  )
+  const expiration = (
+    await getTransformationMatch<Expiration>(contractAddress, 'paused')
+  )?.value
 
   return !expiration || isExpirationExpired(expiration, block)
     ? { Unpaused: {} }
@@ -241,18 +208,21 @@ export const paused: ContractFormula<PausedResponse> = async ({
 
 export const admin: ContractFormula<string | undefined> = async ({
   contractAddress,
-  get,
-}) => await get<string>(contractAddress, 'admin')
+  getTransformationMatch,
+}) => (await getTransformationMatch<string>(contractAddress, 'admin'))?.value
 
 export const adminNomination: ContractFormula<string | undefined> = async ({
   contractAddress,
-  get,
-}) => await get<string>(contractAddress, 'nominated_admin')
+  getTransformationMatch,
+}) =>
+  (await getTransformationMatch<string>(contractAddress, 'nominatedAdmin'))
+    ?.value
 
 export const votingModule: ContractFormula<string | undefined> = async ({
   contractAddress,
-  get,
-}) => await get<string>(contractAddress, 'voting_module')
+  getTransformationMatch,
+}) =>
+  (await getTransformationMatch<string>(contractAddress, 'votingModule'))?.value
 
 export const item: ContractFormula<
   string | undefined,

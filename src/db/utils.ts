@@ -115,7 +115,7 @@ export const updateComputationValidityDependentOnChanges = async (
               },
             },
             {
-              // Transformation wildcards.
+              // Transformation wildcards and map prefixes.
               id: {
                 [Op.in]: Sequelize.literal(`
                     (
@@ -133,6 +133,12 @@ export const updateComputationValidityDependentOnChanges = async (
                           keys.x LIKE '%\\%%'
                           AND
                           transformation_keys.x LIKE keys.x
+                        )
+                        OR
+                        (
+                          keys.x LIKE '%:'
+                          AND
+                          transformation_keys.x LIKE keys.x || '%'
                         )
                     )
                   `),

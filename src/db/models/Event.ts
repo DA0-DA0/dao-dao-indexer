@@ -10,7 +10,7 @@ import {
 } from 'sequelize-typescript'
 
 import { getDependentKey } from '../../core'
-import { Block } from '../../core/types'
+import { Block, SplitDependentKeys } from '../../core/types'
 import { Contract } from './Contract'
 
 @Table({
@@ -85,10 +85,7 @@ export class Event extends Model {
   // Split dependent keys into two groups: non map keys and map prefixes. Map
   // prefixes end with a comma because they are missing the final key segment,
   // which is the key of each map entry.
-  static splitDependentKeys(dependentKeys: string[]): {
-    nonMapKeys: string[]
-    mapPrefixes: string[]
-  } {
+  static splitDependentKeys(dependentKeys: string[]): SplitDependentKeys {
     return {
       nonMapKeys: dependentKeys.filter((key) => key[key.length - 1] !== ','),
       mapPrefixes: dependentKeys.filter((key) => key[key.length - 1] === ','),
@@ -120,6 +117,9 @@ export class Event extends Model {
         ([contractAddress, keys]) => {
           const { nonMapKeys, mapPrefixes } = Event.splitDependentKeys(keys!)
 
+          const exactKeys = nonMapKeys.filter((key) => !key.includes('%'))
+          const wildcardKeys = nonMapKeys.filter((key) => key.includes('%'))
+
           return {
             // Only include if contract address is defined.
             ...(contractAddress && { contractAddress }),
@@ -128,19 +128,13 @@ export class Event extends Model {
             key: {
               [Op.or]: [
                 // Where key is one of the non map keys.
-                ...nonMapKeys.map((key) =>
-                  // If key contains wildcard, use LIKE.
-                  key.includes('%')
-                    ? {
-                        [Op.like]: key,
-                      }
-                    : {
-                        [Op.eq]: key,
-                      }
-                ),
+                ...(exactKeys.length > 0 ? [{ [Op.in]: exactKeys }] : []),
+                ...wildcardKeys.map((key) => ({
+                  [Op.like]: key,
+                })),
                 // Or where key is prefixed by one of the map prefixes.
                 ...mapPrefixes.map((prefix) => ({
-                  [Op.like]: `${prefix}%`,
+                  [Op.like]: prefix + '%',
                 })),
               ],
             },

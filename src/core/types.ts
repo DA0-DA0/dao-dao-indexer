@@ -82,16 +82,35 @@ export type FormulaTransformationMatchesGetter = <T>(
   contractAddress: string | undefined,
   nameLike: string,
   whereClause?: WhereOptions
-) => Promise<
-  | { contractAddress: string; block: Block; name: string; value: T }[]
-  | undefined
->
+) => Promise<{ contractAddress: string; name: string; value: T }[] | undefined>
 
 export type FormulaTransformationMatchGetter = <T>(
   ...args: Parameters<FormulaTransformationMatchesGetter>
-) => Promise<
-  { contractAddress: string; block: Block; name: string; value: T } | undefined
->
+) => Promise<{ contractAddress: string; name: string; value: T } | undefined>
+
+export type FormulaTransformationDateGetter = (
+  ...parameters: Parameters<FormulaTransformationMatchGetter>
+) => Promise<Date | undefined>
+
+export type FormulaTransformationMapGetter = <
+  K extends string | number = string | number,
+  V = any
+>(
+  contractAddress: string,
+  namePrefix: string
+) => Promise<Record<K, V> | undefined>
+
+export type FormulaPrefetchTransformations = (
+  contractAddress: string,
+  // Names must not contain wildcards.
+  listOfNames: (
+    | string
+    | {
+        name: string
+        map: true
+      }
+  )[]
+) => Promise<void>
 
 export type Env<Args extends Record<string, string> = {}> = {
   block: Block
@@ -102,7 +121,10 @@ export type Env<Args extends Record<string, string> = {}> = {
   getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter
   getTransformationMatch: FormulaTransformationMatchGetter
   getTransformationMatches: FormulaTransformationMatchesGetter
+  getTransformationMap: FormulaTransformationMapGetter
+  getDateFirstTransformed: FormulaTransformationDateGetter
   prefetch: FormulaPrefetch
+  prefetchTransformations: FormulaPrefetchTransformations
   args: Args
 }
 
@@ -175,9 +197,16 @@ export interface SetDependencies {
   transformations: Set<string>
 }
 
+export type CacheMap<T> = Record<string, T[] | null | undefined>
+
 export interface Cache {
-  events: Record<string, Event[] | null | undefined>
-  transformations: Record<string, Transformation[] | null | undefined>
+  events: CacheMap<Event>
+  transformations: CacheMap<Transformation>
+}
+
+export interface SplitDependentKeys {
+  nonMapKeys: string[]
+  mapPrefixes: string[]
 }
 
 export type NestedFormulaMap<F> = {
@@ -211,14 +240,14 @@ export type ParsedEvent = {
   delete: boolean
 }
 
-export type Transformer = {
+export type Transformer<V = any> = {
   codeIdsKeys: string[]
   matches: (event: ParsedEvent) => boolean
   name: string | ((event: ParsedEvent) => string)
   getValue: (
     event: ParsedEvent,
-    getLastValue: () => Promise<any | null>
-  ) => any | Promise<any>
+    getLastValue: () => Promise<V | null>
+  ) => V | null | Promise<V | null>
 }
 
 export type TransformerMap = {
