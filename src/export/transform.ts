@@ -13,8 +13,11 @@ program.option(
   '-c, --config <path>',
   'path to config file, falling back to config.json'
 )
-program.option('-o, --offset <number>', 'initial offset', (value) =>
-  parseInt(value, 10)
+program.option(
+  '-i, --initial <block height>',
+  'initial block height',
+  (value) => parseInt(value, 10),
+  0
 )
 program.option(
   '-b, --batch <path>',
@@ -37,18 +40,11 @@ const main = async () => {
   let processed = 0
   let transformations = 0
 
-  let lastId = options.offset
-    ? (
-        await Event.findOne({
-          offset: options.offset - 1,
-          order: [['blockHeight', 'ASC']],
-        })
-      )?.id ?? 0
-    : 0
+  let latestBlockHeight = options.initial
   const total = await Event.count({
     where: {
-      id: {
-        [Op.gt]: lastId,
+      blockHeight: {
+        [Op.gte]: latestBlockHeight,
       },
     },
   })
@@ -66,20 +62,52 @@ const main = async () => {
   // Allow process to exit even though this interval is alive.
   logInterval.unref()
 
+  let latestBlockEventIdsSeen: number[] = []
   while (processed < total) {
     const events = await Event.findAll({
       where: {
-        id: {
-          [Op.gt]: lastId,
+        // Since there can be multiple events per block, the fixed batch size
+        // will likely end up leaving some events in the latest block out of
+        // this batch. To fix this, repeat the latest block again (>=) excluding
+        // the events we've already seen.
+        blockHeight: {
+          [Op.gte]: latestBlockHeight,
         },
+        ...(latestBlockEventIdsSeen.length > 0 && {
+          id: {
+            [Op.notIn]: latestBlockEventIdsSeen,
+          },
+        }),
       },
       include: Contract,
       limit: options.batch,
       order: [['blockHeight', 'ASC']],
     })
 
+    // If there are no more events, we're done.
+    if (events.length === 0) {
+      break
+    }
+
+    const newLatestBlockHeight = events[events.length - 1].blockHeight
+
+    // If the latest block height is the same as the previous latest block
+    // height, we are still in the same block and should append the event IDs to
+    // the list instead of replacing it. This will only happen if the batch size
+    // is smaller than the maximum number of events in any one block. Otherwise,
+    // we're in a new block and should reset the list.
+    if (newLatestBlockHeight === latestBlockHeight) {
+      latestBlockEventIdsSeen = latestBlockEventIdsSeen.concat(
+        events.map((event) => event.id)
+      )
+    } else {
+      latestBlockEventIdsSeen = events
+        .filter((event) => event.blockHeight === newLatestBlockHeight)
+        .map((event) => event.id)
+    }
+
     processed += events.length
-    lastId = events[events.length - 1].id
+    latestBlockHeight = events[events.length - 1].blockHeight
 
     const parsedEvents = events.map(
       (event): ParsedEvent => ({
