@@ -146,6 +146,8 @@ const main = async () => {
   console.log(`\n[${new Date().toISOString()}] Transforming complete.`)
 
   await sequelize.close()
+
+  process.exit(0)
 }
 
 main()

@@ -1,6 +1,9 @@
 // https://github.com/CosmWasm/cw-storage-plus/blob/179bcd0dc2b769c787f411a7cf9a614a80e4dee0/src/helpers.rs#L57
 // Recreate cw-storage-plus key nesting format. Output is a comma-separated list
 // of uint8 values that represents a byte array. See `Event` model for more
+
+import { Block } from './types'
+
 // information.
 export const dbKeyForKeys = (...keys: (string | number)[]): string => {
   const bufferKeys = keys.map(keyToBuffer)
@@ -88,3 +91,27 @@ export const getDependentKey = (
   contractAddress: string | undefined,
   keyOrName: string
 ) => `${contractAddress || '%'}:${keyOrName}`
+
+export const validateBlockString = (block: string, subject: string): Block => {
+  const parsedBlock = block.split(':').map((s) => parseInt(s, 10))
+
+  if (parsedBlock.length !== 2) {
+    throw new Error(`${subject} must be a height:timeUnixMs pair`)
+  }
+
+  const [blockHeight, blockTimeUnixMs] = parsedBlock
+  if (isNaN(blockHeight) || isNaN(blockTimeUnixMs)) {
+    throw new Error(`${subject}'s values must be integers`)
+  }
+
+  if (blockHeight < 1 || blockTimeUnixMs < 0) {
+    throw new Error(
+      `${subject}'s height must be at least 1 and ${subject}'s timeUnixMs must be at least 0`
+    )
+  }
+
+  return {
+    height: blockHeight,
+    timeUnixMs: blockTimeUnixMs,
+  }
+}

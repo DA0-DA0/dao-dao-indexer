@@ -6,7 +6,7 @@ import { Op } from 'sequelize'
 import { v4 as uuidv4 } from 'uuid'
 
 import { Block, compute, computeRange, loadConfig } from '@/core'
-import { getContractFormula, getWalletFormula } from '@/data'
+import { getTypedFormula } from '@/data'
 import { Computation, Contract, State, closeDb, loadDb } from '@/db'
 
 import { validateBlockString } from './validate'
@@ -110,17 +110,10 @@ router.get('/:type/:address/(.+)', async (ctx) => {
 
   // Validate that formula exists.
   const formulaName = ctx.path.split('/').slice(3).join('/')
-  const typeAndFormula =
-    type === 'contract'
-      ? ({
-          type,
-          formula: getContractFormula(formulaName)!,
-        } as const)
-      : ({
-          type,
-          formula: getWalletFormula(formulaName)!,
-        } as const)
-  if (!typeAndFormula.formula) {
+  let typedFormula
+  try {
+    typedFormula = getTypedFormula(type, formulaName)
+  } catch {
     ctx.status = 404
     ctx.body = 'formula not found'
     return
@@ -210,7 +203,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
         // but continuous range. Load just the rest.
         if (isRangeCoveredBeforeEnd && !entireRangeValid) {
           const missingComputations = await computeRange({
-            ...typeAndFormula,
+            ...typedFormula,
             targetAddress: address,
             args,
             // Start at the block of the last existing computation, since we
@@ -260,7 +253,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
       // If could not find existing range, compute.
       if (!existingUsed) {
         const rangeComputations = await computeRange({
-          ...typeAndFormula,
+          ...typedFormula,
           targetAddress: address,
           args,
           blockStart: blocks[0],
@@ -316,7 +309,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
       } else {
         // Compute if did not find or use existing.
         const computationOutput = await compute({
-          ...typeAndFormula,
+          ...typedFormula,
           targetAddress: address,
           args,
           block,

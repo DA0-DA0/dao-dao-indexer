@@ -45,3 +45,35 @@ export const getWalletFormula = (
       : undefined
   return typeof formula === 'function' ? formula : undefined
 }
+
+type TypedFormula =
+  | {
+      type: 'contract'
+      formula: ContractFormula<any, any>
+    }
+  | {
+      type: 'wallet'
+      formula: WalletFormula<any, any>
+    }
+
+export const getTypedFormula = (
+  type: 'contract' | 'wallet',
+  formulaName: string
+): TypedFormula => {
+  const typeAndFormula =
+    type === 'contract'
+      ? {
+          type,
+          formula: getContractFormula(formulaName),
+        }
+      : {
+          type,
+          formula: getWalletFormula(formulaName),
+        }
+
+  if (!typeAndFormula.formula) {
+    throw new Error(`Formula not found: ${formulaName}`)
+  }
+
+  return typeAndFormula as TypedFormula
+}
