@@ -101,11 +101,11 @@ router.get('/:type/:address/(.+)', async (ctx) => {
       return
     }
 
-    if (blocks[1].height - blocks[0].height > 446400) {
-      ctx.status = 400
-      ctx.body = 'the range cannot be larger than 446400 blocks'
-      return
-    }
+    // if (blocks[1].height - blocks[0].height > 446400) {
+    //   ctx.status = 400
+    //   ctx.body = 'the range cannot be larger than 446400 blocks'
+    //   return
+    // }
   }
 
   // Validate that formula exists.
