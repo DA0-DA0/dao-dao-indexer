@@ -8,11 +8,16 @@ export const main = async () => {
   // Parse arguments.
   const program = new Command()
   program.requiredOption('-f, --formula <formula>', 'formula name to compute')
-  program.requiredOption('-t, --target <address>', 'target contract address')
   program.option('-a, --args <args>', 'JSON args to pass to formula', '{}')
   program.option(
-    '-c, --config <path>',
-    'path to config file, falling back to config.json'
+    '-t, --targets <addresses>',
+    'comma-separated list of target contract addresses',
+    (value) => value.split(',')
+  )
+  program.option(
+    '-i, --ids <code IDs>',
+    'comma-separated list of code IDs',
+    (value) => value.split(',').map((id) => parseInt(id, 10))
   )
   program.option(
     '-s, --start <block height>',
@@ -23,6 +28,10 @@ export const main = async () => {
     '-e, --end <block height>',
     'block height to end computing at (defaults to latest block)',
     (value) => parseInt(value, 10)
+  )
+  program.option(
+    '-c, --config <path>',
+    'path to config file, falling back to config.json'
   )
   program.parse()
   const options = program.opts()
@@ -46,11 +55,34 @@ export const main = async () => {
     }
   }
 
-  // Log.
-  await loadDb({ logging: true })
+  const sequelize = await loadDb()
 
-  if (!(await Contract.findByPk(options.target))) {
-    throw new Error(`Contract not found: ${options.target}`)
+  let contractAddresses: string[]
+
+  if (options.targets) {
+    contractAddresses = (
+      await Contract.findAll({
+        where: {
+          address: options.targets,
+        },
+      })
+    ).map((contract) => contract.address)
+  } else if (options.ids?.length) {
+    contractAddresses = (
+      await Contract.findAll({
+        where: {
+          codeId: options.ids,
+        },
+      })
+    ).map((contract) => contract.address)
+  } else {
+    throw new Error(
+      'Must specify either target contract addresses or code IDs.'
+    )
+  }
+
+  if (contractAddresses.length === 0) {
+    throw new Error('No contracts found.')
   }
 
   const blockStart: Block | undefined = options.start
@@ -58,7 +90,7 @@ export const main = async () => {
     : (
         await Event.findOne({
           where: {
-            contractAddress: options.target,
+            contractAddress: contractAddresses,
           },
           order: [['blockHeight', 'ASC']],
         })
@@ -80,42 +112,62 @@ export const main = async () => {
 
   const typedFormula = getTypedFormula('contract', options.formula)
 
-  const start = new Date()
+  const initialStart = new Date()
   console.log(
-    `[${new Date().toISOString()}] Precomputing ${
+    `[${initialStart.toLocaleString()}] Computing ${
       options.formula
-    } (with args ${JSON.stringify(args)}) for ${options.target} from ${
-      blockStart.height
-    } to ${blockEnd.height}...`
+    } (with args ${JSON.stringify(
+      args
+    )}) for ${contractAddresses.length.toLocaleString()} contract${
+      contractAddresses.length === 1 ? '' : 's'
+    } from ${blockStart.height} to ${blockEnd.height}:`
   )
+  contractAddresses.forEach((address) => console.log(`  - ${address}`))
+  console.log()
 
-  const outputs = await computeRange({
-    ...typedFormula,
-    targetAddress: options.target,
-    args,
-    blockStart,
-    blockEnd,
-  })
+  let computations = 0
+  for (const targetAddress of contractAddresses) {
+    const start = new Date()
+    console.log(`[${start.toLocaleString()}] Computing ${targetAddress}...`)
 
-  // Store computations in DB.
-  if (outputs.length > 0) {
-    await Computation.createFromComputationOutputs(
-      options.target,
-      options.formula,
+    const outputs = await computeRange({
+      ...typedFormula,
+      targetAddress,
       args,
-      ...outputs
+      blockStart,
+      blockEnd,
+    })
+    computations += outputs.length
+
+    // Store computations in DB.
+    if (outputs.length > 0) {
+      await Computation.createFromComputationOutputs(
+        targetAddress,
+        options.formula,
+        args,
+        ...outputs
+      )
+    }
+
+    const end = new Date()
+    console.log(
+      `Generated ${outputs.length.toLocaleString()} computations in ${(
+        (end.getTime() - start.getTime()) /
+        1000
+      ).toLocaleString()}s.`
     )
+    console.log()
   }
 
   const end = new Date()
-
   console.log(
-    `[${new Date().toISOString()}] Precomputed ${outputs.length.toLocaleString()} computations in ${(
-      (end.getTime() - start.getTime()) /
+    `[${end.toLocaleString()}] Generated ${computations.toLocaleString()} computations in ${(
+      (end.getTime() - initialStart.getTime()) /
       1000
     ).toLocaleString()}s.`
   )
 
+  await sequelize.close()
   process.exit(0)
 }
 
