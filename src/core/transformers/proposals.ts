@@ -1,12 +1,14 @@
 import { Transformer } from '../types'
 import { dbKeyForKeys, dbKeyToKeys } from '../utils'
 
+const CODE_IDS_KEYS = ['dao-proposal-single']
+
 const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
 const KEY_PREFIX_PROPOSALS_V2 = dbKeyForKeys('proposals_v2', '')
 const KEY_PREFIX_BALLOTS = dbKeyForKeys('ballots', '')
 
 export const proposed: Transformer = {
-  codeIdsKeys: ['dao-proposal-single'],
+  codeIdsKeys: CODE_IDS_KEYS,
   matches: (event) =>
     // Starts with proposals or proposals_v2.
     (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
@@ -25,7 +27,7 @@ export const proposed: Transformer = {
 }
 
 export const voteCast: Transformer = {
-  codeIdsKeys: ['dao-proposal-single'],
+  codeIdsKeys: CODE_IDS_KEYS,
   matches: (event) => event.key.startsWith(KEY_PREFIX_BALLOTS),
   name: (event) => {
     // "ballots", proposalId, address

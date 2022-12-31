@@ -43,12 +43,14 @@ export const balance: ContractFormula<string, { address: string }> = async ({
 
 export const tokenInfo: ContractFormula<TokenInfo | undefined> = async ({
   contractAddress,
-  get,
+  getTransformationMatch,
 }) => {
-  const tokenInfoResponse = await get<TokenInfoResponse>(
-    contractAddress,
-    'token_info'
-  )
+  const tokenInfoResponse = (
+    await getTransformationMatch<TokenInfoResponse>(
+      contractAddress,
+      'tokenInfo'
+    )
+  )?.value
 
   return (
     tokenInfoResponse && {
