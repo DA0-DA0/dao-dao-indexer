@@ -13,7 +13,7 @@ import {
   loadDb,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-import { setupMeilisearch, updateIndexesForContracts } from '@/meilisearch'
+import { setupMeilisearch, updateIndexesForContracts } from '@/ms'
 
 import { objectMatchesStructure } from './utils'
 
