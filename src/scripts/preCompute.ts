@@ -46,7 +46,8 @@ export const main = async () => {
     }
   }
 
-  await loadDb()
+  // Log.
+  await loadDb({ logging: true })
 
   if (!(await Contract.findByPk(options.target))) {
     throw new Error(`Contract not found: ${options.target}`)
