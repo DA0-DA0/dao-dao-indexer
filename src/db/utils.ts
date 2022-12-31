@@ -3,6 +3,8 @@ import { Op, Sequelize } from 'sequelize'
 import { loadDb } from './connection'
 import { Computation, Event, Transformation } from './models'
 
+// TODO: Compute computation if the latest computation is no longer valid?
+
 // Update validity of computations dependent on changed keys in three ways:
 //
 //    1. the computation starts being valid after the earliest block
