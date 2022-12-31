@@ -28,7 +28,14 @@
             "alphabetize": {
               "order": "asc",
               "caseInsensitive": true
-            }
+            },
+            "pathGroups": [
+              {
+                "pattern": "@/**",
+                "group": "internal",
+                "position": "after"
+              }
+            ]
           }
         ],
         "import/no-duplicates": "error",

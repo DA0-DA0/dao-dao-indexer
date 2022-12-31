@@ -9,8 +9,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { getDependentKey } from '../../core'
-import { Block, SplitDependentKeys } from '../../core/types'
+import { Block, SplitDependentKeys, getDependentKey } from '@/core'
+
 import { Contract } from './Contract'
 
 @Table({

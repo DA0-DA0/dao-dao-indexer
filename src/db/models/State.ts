@@ -1,6 +1,6 @@
 import { AllowNull, Column, DataType, Model, Table } from 'sequelize-typescript'
 
-import { Block } from '../../core/types'
+import { Block } from '@/core'
 
 @Table({
   timestamps: true,

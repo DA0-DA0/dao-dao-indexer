@@ -1,20 +1,21 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '../core/config'
-import { loadDb } from '../db'
+import { loadConfig } from '@/core'
+import { loadDb } from '@/db'
+
 import { setupMeilisearch } from './setup'
 import { updateIndexesForContracts } from './update'
 
-// Parse arguments.
-const program = new Command()
-program.option(
-  '-c, --config <path>',
-  'path to config file, falling back to config.json'
-)
-program.parse()
-const options = program.opts()
-
 const main = async () => {
+  // Parse arguments.
+  const program = new Command()
+  program.option(
+    '-c, --config <path>',
+    'path to config file, falling back to config.json'
+  )
+  program.parse()
+  const options = program.opts()
+
   // Load config with config option.
   loadConfig(options.config)
 

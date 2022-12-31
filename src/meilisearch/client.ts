@@ -1,6 +1,6 @@
 import MeiliSearch from 'meilisearch'
 
-import { loadConfig } from '../core/config'
+import { loadConfig } from '@/core'
 
 let msClient: MeiliSearch | undefined
 

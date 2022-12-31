@@ -1,4 +1,4 @@
-import { Block } from '../core/types'
+import { Block } from '@/core'
 
 export const validateBlockString = (block: string, subject: string): Block => {
   const parsedBlock = block.split(':').map((s) => parseInt(s, 10))

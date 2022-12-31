@@ -1,4 +1,5 @@
-import { loadConfig } from '../core/config'
+import { loadConfig } from '@/core'
+
 import { loadMeilisearch } from './client'
 
 export const setupMeilisearch = async () => {

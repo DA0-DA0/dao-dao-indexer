@@ -1,7 +1,8 @@
 import { Op } from 'sequelize'
 import { AllowNull, Column, DataType, Model, Table } from 'sequelize-typescript'
 
-import { Block, ComputationOutput } from '../../core/types'
+import { Block, ComputationOutput } from '@/core'
+
 import { Event } from './Event'
 import { Transformation } from './Transformation'
 

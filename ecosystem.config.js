@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'exporter',
-      script: 'dist/export/index.js',
+      script: 'dist/scripts/export.js',
     },
     {
       name: 'server_testnet',

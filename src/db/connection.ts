@@ -1,6 +1,7 @@
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
-import { loadConfig } from '../core/config'
+import { loadConfig } from '@/core'
+
 import { Computation, Contract, Event, State, Transformation } from './models'
 
 let sequelize: Sequelize | undefined

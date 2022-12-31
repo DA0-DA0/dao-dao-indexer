@@ -1,6 +1,7 @@
 import { Op } from 'sequelize'
 
-import { Event, Transformation } from '../db/models'
+import { Event, Transformation } from '@/db'
+
 import { getEnv } from './env'
 import {
   Block,

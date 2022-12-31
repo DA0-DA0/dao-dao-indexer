@@ -9,16 +9,17 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { getDependentKey } from '../../core'
-import { loadConfig } from '../../core/config'
-import * as transformerMap from '../../core/transformers'
 import {
   Block,
   ParsedEvent,
   SplitDependentKeys,
   Transformer,
   TransformerMap,
-} from '../../core/types'
+  getDependentKey,
+  loadConfig,
+} from '@/core'
+import * as transformerMap from '@/data/transformers'
+
 import { Contract } from './Contract'
 
 @Table({

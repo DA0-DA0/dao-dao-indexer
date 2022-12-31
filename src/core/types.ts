@@ -1,7 +1,7 @@
 import { WhereOptions } from 'sequelize'
 import { SequelizeOptions } from 'sequelize-typescript'
 
-import { Event, Transformation } from '../db'
+import { Event, Transformation } from '@/db'
 
 export interface Config {
   eventsFile?: string

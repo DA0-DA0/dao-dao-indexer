@@ -5,15 +5,10 @@ import Koa from 'koa'
 import { Op } from 'sequelize'
 import { v4 as uuidv4 } from 'uuid'
 
-import {
-  compute,
-  computeRange,
-  getContractFormula,
-  getWalletFormula,
-} from '../core'
-import { loadConfig } from '../core/config'
-import { Block } from '../core/types'
-import { Computation, Contract, State, closeDb, loadDb } from '../db'
+import { Block, compute, computeRange, loadConfig } from '@/core'
+import { getContractFormula, getWalletFormula } from '@/data'
+import { Computation, Contract, State, closeDb, loadDb } from '@/db'
+
 import { validateBlockString } from './validate'
 
 // Parse arguments.

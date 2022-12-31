@@ -10,7 +10,14 @@
     "outDir": "dist",
     "rootDir": "src",
     "target": "es2020",
-    "strict": true
+    "strict": true,
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"],
+      // Override since we have a folder at `src/meilisearch` which takes
+      // precedence over the library.
+      "meilisearch": ["../node_modules/meilisearch"]
+    }
   },
   "include": ["src/**/*"]
 }

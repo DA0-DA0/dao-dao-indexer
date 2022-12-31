@@ -1,6 +1,7 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { Event, Transformation } from '../db/models'
+import { Event, Transformation } from '@/db'
+
 import {
   Block,
   Cache,

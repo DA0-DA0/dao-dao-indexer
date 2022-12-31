@@ -1,8 +1,9 @@
 import { Op } from 'sequelize'
 
-import { compute, getContractFormula } from '../core'
-import { loadConfig } from '../core/config'
-import { Contract, State } from '../db'
+import { compute, loadConfig } from '@/core'
+import { getContractFormula } from '@/data'
+import { Contract, State } from '@/db'
+
 import { loadMeilisearch } from './client'
 
 export const updateIndexesForContracts = async (
