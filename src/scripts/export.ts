@@ -5,14 +5,7 @@ import axios from 'axios'
 import { Command } from 'commander'
 
 import { IndexerEvent, ParsedEvent, loadConfig } from '@/core'
-import {
-  Contract,
-  Event,
-  State,
-  Transformation,
-  loadDb,
-  updateComputationValidityDependentOnChanges,
-} from '@/db'
+import { Contract, Event, State, Transformation, loadDb } from '@/db'
 import { setupMeilisearch, updateIndexesForContracts } from '@/ms'
 
 import { objectMatchesStructure } from './utils'
@@ -306,18 +299,19 @@ const exporter = async (
   // insert duplicate events. If we encounter a duplicate, we update the
   // `value`, `valueJson`, and `delete` fields in case event processing for a
   // block was batched separately.
-  const exportedEvents = await Event.bulkCreate(parsedEvents, {
+  await Event.bulkCreate(parsedEvents, {
     updateOnDuplicate: ['value', 'valueJson', 'delete'],
   })
 
   // Transform events as needed.
   const transformations = await Transformation.transformEvents(parsedEvents)
 
-  const { updated, destroyed } =
-    await updateComputationValidityDependentOnChanges(
-      exportedEvents,
-      transformations
-    )
+  // Don't update computation validity for now.
+  // const { updated, destroyed } =
+  //   await updateComputationValidityDependentOnChanges(
+  //     exportedEvents,
+  //     transformations
+  //   )
 
   // Get updated contracts.
   const contracts = await Contract.findAll({
@@ -328,8 +322,8 @@ const exporter = async (
 
   return {
     contracts,
-    computationsUpdated: updated,
-    computationsDestroyed: destroyed,
+    computationsUpdated: 0, // updated,
+    computationsDestroyed: 0, // destroyed,
     transformations: transformations.length,
   }
 }
