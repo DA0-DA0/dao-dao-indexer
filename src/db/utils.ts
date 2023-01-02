@@ -3,7 +3,7 @@ import { Op, Sequelize } from 'sequelize'
 import { loadDb } from './connection'
 import { Computation, Event, Transformation } from './models'
 
-// TODO: Compute computation if the latest computation is no longer valid?
+// TODO: Compute computation if the latest computation is no longer valid? Maybe we should have a separate task that constantly checks the validity of computations and updates them as needed?
 
 // Update validity of computations dependent on changed keys in three ways:
 //
@@ -164,6 +164,8 @@ export const updateComputationValidityDependentOnChanges = async (
     { earliestBlockHeight: Infinity, latestBlockHeight: -Infinity }
   )
 
+  console.log('\ndestroying')
+  console.time('destroying')
   // 1. Destroy those starting after the earliest block.
   const destroyed = await Computation.destroy({
     where: {
@@ -173,7 +175,11 @@ export const updateComputationValidityDependentOnChanges = async (
       },
     },
   })
+  console.log()
+  console.timeEnd('destroying')
 
+  console.log('\nfetching')
+  console.time('fetching')
   // 2. Update those starting before the earliest block and deemed valid after
   //    the earliest block.
   const toUpdateInRange = await Computation.findAll({
@@ -187,7 +193,11 @@ export const updateComputationValidityDependentOnChanges = async (
       },
     },
   })
+  console.log()
+  console.timeEnd('fetching')
 
+  console.log('\nupdating')
+  console.time('updating')
   await Promise.all(
     toUpdateInRange.map((computation) =>
       computation.updateValidityUpToBlockHeight(
@@ -200,58 +210,65 @@ export const updateComputationValidityDependentOnChanges = async (
       )
     )
   )
+  console.log()
+  console.timeEnd('updating')
 
-  // Commenting out for now because this is really slow. Maybe we should have a
-  // separate task that constantly checks the validity of computations and
-  // updates them as needed?
-  // // 3. Update those most recent which start before the earliest block and have
-  // //    been deemed valid before the earliest block.
-  // const toUpdateExtendingRange = await Computation.findAll({
-  //   attributes: [
-  //     // DISTINCT ON is not directly supported by Sequelize, so we need to cast
-  //     // to unknown and back to string to insert this at the beginning of the
-  //     // query. This ensures we use the most recent computation for the formula.
-  //     Sequelize.literal(
-  //       'DISTINCT ON("formula", "args", "targetAddress") \'\''
-  //     ) as unknown as string,
-  //     'id',
-  //     'targetAddress',
-  //     'blockHeight',
-  //     'blockTimeUnixMs',
-  //     'latestBlockHeightValid',
-  //     'formula',
-  //     'args',
-  //     'dependentEvents',
-  //     'dependentTransformations',
-  //     'output',
-  //   ],
-  //   where: {
-  //     ...whereComputationsAffected,
-  //     blockHeight: {
-  //       [Op.lt]: earliestBlockHeight,
-  //     },
-  //     latestBlockHeightValid: {
-  //       [Op.lt]: earliestBlockHeight,
-  //     },
-  //   },
-  //   order: [
-  //     // Need to be first so we can use DISTINCT ON.
-  //     ['formula', 'ASC'],
-  //     ['args', 'ASC'],
-  //     ['targetAddress', 'ASC'],
+  console.log('\nextending')
+  console.time('extending')
+  // 3. Update those most recent which start before the earliest block and have
+  //    been deemed valid before the earliest block.
+  const toUpdateExtendingRange = await Computation.findAll({
+    attributes: [
+      // DISTINCT ON is not directly supported by Sequelize, so we need to cast
+      // to unknown and back to string to insert this at the beginning of the
+      // query. This ensures we use the most recent computation for the formula.
+      Sequelize.literal(
+        'DISTINCT ON("formula", "args", "targetAddress") \'\''
+      ) as unknown as string,
+      'id',
+      'targetAddress',
+      'blockHeight',
+      'blockTimeUnixMs',
+      'latestBlockHeightValid',
+      'formula',
+      'args',
+      'dependentEvents',
+      'dependentTransformations',
+      'output',
+    ],
+    where: {
+      ...whereComputationsAffected,
+      blockHeight: {
+        [Op.lt]: earliestBlockHeight,
+      },
+      latestBlockHeightValid: {
+        [Op.lt]: earliestBlockHeight,
+      },
+    },
+    order: [
+      // Need to be first so we can use DISTINCT ON.
+      ['formula', 'ASC'],
+      ['args', 'ASC'],
+      ['targetAddress', 'ASC'],
 
-  //     ['blockHeight', 'DESC'],
-  //   ],
-  // })
+      ['blockHeight', 'DESC'],
+    ],
+  })
+  console.log()
+  console.timeEnd('extending')
 
-  // await Promise.all(
-  //   toUpdateExtendingRange.map((computation) =>
-  //     computation.updateValidityUpToBlockHeight(latestBlockHeight)
-  //   )
-  // )
+  console.log('\nupdating')
+  console.time('updating')
+  await Promise.all(
+    toUpdateExtendingRange.map((computation) =>
+      computation.updateValidityUpToBlockHeight(latestBlockHeight)
+    )
+  )
+  console.log()
+  console.timeEnd('updating')
 
   return {
-    updated: toUpdateInRange.length, // + toUpdateExtendingRange.length,
+    updated: toUpdateInRange.length + toUpdateExtendingRange.length,
     destroyed,
   }
 }
