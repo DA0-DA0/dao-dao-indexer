@@ -75,20 +75,21 @@ export const updateComputationValidityDependentOnChanges = async (
     { earliestBlockHeight: Infinity, latestBlockHeight: -Infinity }
   )
 
-  // 1. Destroy those starting after the earliest block.
-  const destroyed = await Computation.destroy({
-    where: {
-      ...makeWhereComputationsAffected(
-        escape,
-        dependentEvents,
-        dependentTransformations,
-        `"blockHeight" >= ${earliestBlockHeight}`
-      ),
-      blockHeight: {
-        [Op.gte]: earliestBlockHeight,
-      },
-    },
-  })
+  // // 1. Destroy those starting after the earliest block.
+  // const destroyed = await Computation.destroy({
+  //   where: {
+  //     ...makeWhereComputationsAffected(
+  //       escape,
+  //       dependentEvents,
+  //       dependentTransformations,
+  //       `"blockHeight" >= ${earliestBlockHeight}`
+  //     ),
+  //     blockHeight: {
+  //       [Op.gte]: earliestBlockHeight,
+  //     },
+  //   },
+  // })
+  const destroyed = 0
 
   // 2. Update those starting before the earliest block and deemed valid after
   //    the earliest block.
