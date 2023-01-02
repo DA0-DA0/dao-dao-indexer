@@ -61,95 +61,6 @@ export const updateComputationValidityDependentOnChanges = async (
       transformations.map((transformation) => transformation.dependentKey)
     )
   )
-  // Same logic as in `getWhereClauseForDependentKeys` in
-  // `src/db/models/Event.ts` and `src/db/models/Transformation.ts`.
-  const whereComputationsAffected = {
-    [Op.or]: [
-      // Any dependent events that overlap with event keys.
-      ...(dependentEvents.length > 0
-        ? [
-            {
-              dependentEvents: {
-                [Op.overlap]: dependentEvents,
-              },
-            },
-            {
-              id: {
-                // Event wildcards and map prefixes. Any dependent keys that
-                // contain a wildcard match or are map prefixes of changed keys.
-                // If dependent keys do not start with a contract address, match
-                // any contract address.
-                [Op.in]: Sequelize.literal(`
-                    (
-                      SELECT
-                        "Computations".id
-                      FROM
-                        "Computations",
-                        unnest("Computations"."dependentEvents") keys(x)
-                      INNER JOIN
-                        unnest(ARRAY[${dependentEvents
-                          .map((key) => escape(key))
-                          .join(',')}]) event_keys(x)
-                      ON
-                        (
-                          keys.x LIKE '%\\%%'
-                          AND
-                          event_keys.x LIKE keys.x
-                        )
-                        OR
-                        (
-                          keys.x LIKE '%,'
-                          AND
-                          event_keys.x LIKE keys.x || '%'
-                        )
-                    )
-                  `),
-              },
-            },
-          ]
-        : []),
-      // Any dependent transformations that overlap with transformation keys.
-      ...(dependentTransformations.length > 0
-        ? [
-            {
-              dependentTransformations: {
-                [Op.overlap]: dependentTransformations,
-              },
-            },
-            {
-              // Transformation wildcards and map prefixes.
-              id: {
-                [Op.in]: Sequelize.literal(`
-                    (
-                      SELECT
-                        "Computations".id
-                      FROM
-                        "Computations",
-                        unnest("Computations"."dependentTransformations") keys(x)
-                      INNER JOIN
-                        unnest(ARRAY[${dependentTransformations
-                          .map((key) => escape(key))
-                          .join(',')}]) transformation_keys(x)
-                      ON
-                        (
-                          keys.x LIKE '%\\%%'
-                          AND
-                          transformation_keys.x LIKE keys.x
-                        )
-                        OR
-                        (
-                          keys.x LIKE '%:'
-                          AND
-                          transformation_keys.x LIKE keys.x || '%'
-                        )
-                    )
-                  `),
-              },
-            },
-          ]
-        : []),
-    ],
-  }
 
   // Events and transformations may be very long, so we don't want to spread
   // them into a call to `Math.min` and potentially cause a stack overflow.
@@ -164,27 +75,31 @@ export const updateComputationValidityDependentOnChanges = async (
     { earliestBlockHeight: Infinity, latestBlockHeight: -Infinity }
   )
 
-  console.log('\ndestroying')
-  console.time('destroying')
   // 1. Destroy those starting after the earliest block.
   const destroyed = await Computation.destroy({
     where: {
-      ...whereComputationsAffected,
+      ...makeWhereComputationsAffected(
+        escape,
+        dependentEvents,
+        dependentTransformations,
+        `"blockHeight" >= ${earliestBlockHeight}`
+      ),
       blockHeight: {
         [Op.gte]: earliestBlockHeight,
       },
     },
   })
-  console.log()
-  console.timeEnd('destroying')
 
-  console.log('\nfetching')
-  console.time('fetching')
   // 2. Update those starting before the earliest block and deemed valid after
   //    the earliest block.
   const toUpdateInRange = await Computation.findAll({
     where: {
-      ...whereComputationsAffected,
+      ...makeWhereComputationsAffected(
+        escape,
+        dependentEvents,
+        dependentTransformations,
+        `"blockHeight" < ${earliestBlockHeight} AND "latestBlockHeightValid" >= ${earliestBlockHeight}`
+      ),
       blockHeight: {
         [Op.lt]: earliestBlockHeight,
       },
@@ -193,11 +108,7 @@ export const updateComputationValidityDependentOnChanges = async (
       },
     },
   })
-  console.log()
-  console.timeEnd('fetching')
 
-  console.log('\nupdating')
-  console.time('updating')
   await Promise.all(
     toUpdateInRange.map((computation) =>
       computation.updateValidityUpToBlockHeight(
@@ -210,11 +121,7 @@ export const updateComputationValidityDependentOnChanges = async (
       )
     )
   )
-  console.log()
-  console.timeEnd('updating')
 
-  console.log('\nextending')
-  console.time('extending')
   // 3. Update those most recent which start before the earliest block and have
   //    been deemed valid before the earliest block.
   const toUpdateExtendingRange = await Computation.findAll({
@@ -237,7 +144,12 @@ export const updateComputationValidityDependentOnChanges = async (
       'output',
     ],
     where: {
-      ...whereComputationsAffected,
+      ...makeWhereComputationsAffected(
+        escape,
+        dependentEvents,
+        dependentTransformations,
+        `"blockHeight" < ${earliestBlockHeight} AND "latestBlockHeightValid" < ${earliestBlockHeight}`
+      ),
       blockHeight: {
         [Op.lt]: earliestBlockHeight,
       },
@@ -254,21 +166,114 @@ export const updateComputationValidityDependentOnChanges = async (
       ['blockHeight', 'DESC'],
     ],
   })
-  console.log()
-  console.timeEnd('extending')
 
-  console.log('\nupdating')
-  console.time('updating')
   await Promise.all(
     toUpdateExtendingRange.map((computation) =>
       computation.updateValidityUpToBlockHeight(latestBlockHeight)
     )
   )
-  console.log()
-  console.timeEnd('updating')
 
   return {
     updated: toUpdateInRange.length + toUpdateExtendingRange.length,
     destroyed,
   }
 }
+
+// Same logic as in `getWhereClauseForDependentKeys` in `src/db/models/Event.ts`
+// and `src/db/models/Transformation.ts`.
+const makeWhereComputationsAffected = (
+  escape: (str: string) => string,
+  dependentEvents: string[],
+  dependentTransformations: string[],
+  whereClause: string
+) => ({
+  [Op.or]: [
+    // Any dependent events that overlap with event keys.
+    ...(dependentEvents.length > 0
+      ? [
+          {
+            dependentEvents: {
+              [Op.overlap]: dependentEvents,
+            },
+          },
+          {
+            id: {
+              // Event wildcards and map prefixes. Any dependent keys that
+              // contain a wildcard match or are map prefixes of changed keys.
+              // If dependent keys do not start with a contract address, match
+              // any contract address.
+              [Op.in]: Sequelize.literal(`
+                    (
+                      SELECT
+                        "Computations".id
+                      FROM
+                        "Computations",
+                        unnest("Computations"."dependentEvents") keys(x)
+                      INNER JOIN
+                        unnest(ARRAY[${dependentEvents
+                          .map((key) => escape(key))
+                          .join(',')}]) event_keys(x)
+                      ON
+                        (
+                          keys.x LIKE '%\\%%'
+                          AND
+                          event_keys.x LIKE keys.x
+                        )
+                        OR
+                        (
+                          keys.x LIKE '%,'
+                          AND
+                          event_keys.x LIKE keys.x || '%'
+                        )
+                      WHERE
+                        ${whereClause}
+                    )
+                  `),
+            },
+          },
+        ]
+      : []),
+    // Any dependent transformations that overlap with transformation keys.
+    ...(dependentTransformations.length > 0
+      ? [
+          {
+            dependentTransformations: {
+              [Op.overlap]: dependentTransformations,
+            },
+          },
+          {
+            // Transformation wildcards and map prefixes.
+            id: {
+              [Op.in]: Sequelize.literal(`
+                    (
+                      SELECT
+                        "Computations".id
+                      FROM
+                        "Computations",
+                        unnest("Computations"."dependentTransformations") keys(x)
+                      INNER JOIN
+                        unnest(ARRAY[${dependentTransformations
+                          .map((key) => escape(key))
+                          .join(',')}]) transformation_keys(x)
+                      ON
+                        (
+                          keys.x LIKE '%\\%%'
+                          AND
+                          transformation_keys.x LIKE keys.x
+                        )
+                        OR
+                        (
+                          keys.x LIKE '%:'
+                          AND
+                          transformation_keys.x LIKE keys.x || '%'
+                        )
+                      WHERE
+                        ${whereClause}
+                    )
+                  `),
+            },
+          },
+        ]
+      : []),
+  ],
+})
