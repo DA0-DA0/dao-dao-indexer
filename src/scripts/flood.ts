@@ -32,7 +32,7 @@ const main = async () => {
   program.option(
     '-d, --delay <seconds>',
     'delay between loop iterations in seconds',
-    (value) => parseInt(value, 10),
+    (value) => parseFloat(value),
     1
   )
   program.parse()
@@ -112,7 +112,9 @@ const main = async () => {
 
     // Delay.
     if (forever || (loop > 2 && i < loop)) {
-      await new Promise((resolve) => setTimeout(resolve, delay * 1000))
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.round(delay * 1000))
+      )
     }
   }
 }
