@@ -49,7 +49,7 @@ const main = async () => {
     delete: false,
   }
 
-  let latestBlockHeight: number | undefined
+  let latestBlockHeight = -1
   const total = await Event.count({
     where: eventFilter,
   })
