@@ -26,7 +26,25 @@ const app = new Koa()
 const router = new Router()
 
 // CORS.
-app.use(cors())
+const allowedOrigins = [
+  // daodao.zone
+  /^https:\/\/(www\.)?daodao\.zone$/,
+  // testnet.daodao.zone
+  /^https:\/\/testnet\.daodao\.zone$/,
+  // Vercel preview URLs.
+  /^https:\/\/dao-dao-[^\.]+-da0da0.vercel.app$/,
+]
+app.use(
+  cors({
+    origin: (ctx) => {
+      const origin = ctx.headers.origin
+      if (origin && allowedOrigins.some((allowed) => allowed.test(origin))) {
+        return origin
+      }
+      return 'https://daodao.zone'
+    },
+  })
+)
 
 // Logger.
 app.use(async (ctx, next) => {
