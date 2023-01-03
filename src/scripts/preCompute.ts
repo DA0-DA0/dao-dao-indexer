@@ -1,4 +1,5 @@
 import { Command } from 'commander'
+import { Op } from 'sequelize'
 
 import { Block, computeRange, loadConfig, validateBlockString } from '@/core'
 import { getTypedFormula } from '@/data'
@@ -20,14 +21,18 @@ export const main = async () => {
     (value) => value.split(',').map((id) => parseInt(id, 10))
   )
   program.option(
-    '-s, --start <block height>',
-    'block height to start computing from (defaults to earliest event for the target contract)',
-    (value) => parseInt(value, 10)
+    '-s, --start <blockHeight:timeUnixMs>',
+    'block to start computing from (defaults to earliest event for the target contract)'
   )
   program.option(
-    '-e, --end <block height>',
-    'block height to end computing at (defaults to latest block)',
-    (value) => parseInt(value, 10)
+    '-e, --end <blockHeight:timeUnixMs>',
+    'block to end computing at (defaults to latest block)'
+  )
+  program.option(
+    '-b, --batch <size>',
+    'batch size for computing (defaults to 100,000)',
+    (value) => parseInt(value, 10),
+    500000
   )
   program.option(
     '-c, --config <path>',
@@ -130,28 +135,66 @@ export const main = async () => {
     const start = new Date()
     console.log(`[${start.toLocaleString()}] Computing ${targetAddress}...`)
 
-    const outputs = await computeRange({
-      ...typedFormula,
-      targetAddress,
-      args,
-      blockStart,
-      blockEnd,
-    })
-    computations += outputs.length
-
-    // Store computations in DB.
-    if (outputs.length > 0) {
-      await Computation.createFromComputationOutputs(
-        targetAddress,
-        options.formula,
-        args,
-        outputs
+    // Loop in batches.
+    let count = 0
+    let block = blockStart
+    let i = 1
+    while (block.height <= blockEnd.height) {
+      const endBlockHeight = Math.min(
+        block.height + options.batch,
+        blockEnd.height + 1
       )
+      const endBlockEvent = await Event.findOne({
+        where: {
+          contractAddress: targetAddress,
+          blockHeight: {
+            // Make sure we don't infinite loop on one block.
+            [Op.gt]: block.height,
+            [Op.lte]: endBlockHeight,
+          },
+        },
+        order: [['blockHeight', 'DESC']],
+      })
+
+      // If no event before end block, we're done.
+      if (!endBlockEvent) {
+        break
+      }
+
+      const outputs = await computeRange({
+        ...typedFormula,
+        targetAddress,
+        args,
+        blockStart: block,
+        blockEnd: endBlockEvent.block,
+      })
+      count += outputs.length
+
+      // Store computations in DB.
+      if (outputs.length > 0) {
+        await Computation.createFromComputationOutputs(
+          targetAddress,
+          options.formula,
+          args,
+          outputs
+        )
+      }
+
+      console.log(
+        `  - Batch ${i} (${block.height}-${
+          endBlockEvent.blockHeight
+        }): ${outputs.length.toLocaleString()}`
+      )
+
+      block = endBlockEvent.block
+      i++
     }
+
+    computations += count
 
     const end = new Date()
     console.log(
-      `Generated ${outputs.length.toLocaleString()} computations in ${(
+      `Generated ${count.toLocaleString()} computations in ${(
         (end.getTime() - start.getTime()) /
         1000
       ).toLocaleString()}s.`
