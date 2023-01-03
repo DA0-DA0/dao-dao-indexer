@@ -223,11 +223,14 @@ const main = async () => {
           reading = false
 
           // If we get to the end and there's no pending read, we're caught up.
-          // Clear all cached computations and start updating computation
-          // validity for future reads/exports.
-          computationsDestroyed += await Computation.destroy({ where: {} })
-          catchingUp = false
-          console.log()
+          // If this is the first time we've caught up, clear all cached
+          // computations and start updating computation validity for future
+          // reads/exports.
+          if (catchingUp) {
+            computationsDestroyed += await Computation.destroy({ where: {} })
+            catchingUp = false
+            console.log()
+          }
         }
       } catch (err) {
         reject(err)
