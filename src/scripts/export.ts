@@ -5,7 +5,15 @@ import axios from 'axios'
 import { Command } from 'commander'
 
 import { IndexerEvent, ParsedEvent, loadConfig } from '@/core'
-import { Contract, Event, State, Transformation, loadDb } from '@/db'
+import {
+  Computation,
+  Contract,
+  Event,
+  State,
+  Transformation,
+  loadDb,
+  updateComputationValidityDependentOnChanges,
+} from '@/db'
 import { setupMeilisearch, updateIndexesForContracts } from '@/ms'
 
 import { objectMatchesStructure } from './utils'
@@ -70,6 +78,15 @@ const main = async () => {
     let computationsDestroyed = 0
     let transformations = 0
 
+    // It takes much longer to validate cached formula computations when
+    // exporting events that are not close to the latest block, since we need to
+    // scan all future computations to see if any depend on previous events.
+    // Since exporting sometimes has to be restarted from the beginning, just
+    // skip updating computation validity until we've caught up to close to the
+    // end of the file, clear all cached computations, and then start updating
+    // computation validity again.
+    let catchingUp = true
+
     // Wait for responses from export promises and update/display statistics.
     const flushToDb = async () => {
       if (pendingIndexerEvents.length === 0) {
@@ -125,7 +142,7 @@ const main = async () => {
         computationsUpdated: _computationsUpdated,
         computationsDestroyed: _computationsDestroyed,
         transformations: _transformations,
-      } = await exporter(parsedEvents)
+      } = await exporter(parsedEvents, !catchingUp)
 
       // Update meilisearch indexes.
       await updateIndexesForContracts(updatedContracts)
@@ -204,6 +221,13 @@ const main = async () => {
           read()
         } else {
           reading = false
+
+          // If we get to the end and there's no pending read, we're caught up.
+          // Clear all cached computations and start updating computation
+          // validity for future reads/exports.
+          computationsDestroyed += await Computation.destroy({ where: {} })
+          catchingUp = false
+          console.log()
         }
       } catch (err) {
         reject(err)
@@ -235,7 +259,9 @@ const main = async () => {
       process.stdout.write(
         `\r${
           LOADER_MAP[printLoaderCount]
-        }  Processed/exported: ${processed.toLocaleString()}/${exported.toLocaleString()}. Latest block exported: ${lastBlockHeightExported.toLocaleString()}. Latest block: ${latestBlockHeight.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Transformed: ${transformations.toLocaleString()}.`
+        }  Processed/exported: ${processed.toLocaleString()}/${exported.toLocaleString()}. Latest block exported: ${lastBlockHeightExported.toLocaleString()}. Latest block: ${latestBlockHeight.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. ${
+          catchingUp ? 'Catching up...' : 'Caught up.'
+        }`
       )
     }, 100)
     // Allow process to exit even though this interval is alive.
@@ -267,7 +293,8 @@ const updateState = async (): Promise<number> => {
 }
 
 const exporter = async (
-  parsedEvents: ParsedEvent[]
+  parsedEvents: ParsedEvent[],
+  updateComputations: boolean
 ): Promise<{
   contracts: Contract[]
   computationsUpdated: number
@@ -299,19 +326,24 @@ const exporter = async (
   // insert duplicate events. If we encounter a duplicate, we update the
   // `value`, `valueJson`, and `delete` fields in case event processing for a
   // block was batched separately.
-  await Event.bulkCreate(parsedEvents, {
+  const exportedEvents = await Event.bulkCreate(parsedEvents, {
     updateOnDuplicate: ['value', 'valueJson', 'delete'],
   })
 
   // Transform events as needed.
   const transformations = await Transformation.transformEvents(parsedEvents)
 
-  // Don't update computation validity for now.
-  // const { updated, destroyed } =
-  //   await updateComputationValidityDependentOnChanges(
-  //     exportedEvents,
-  //     transformations
-  //   )
+  let updated = 0
+  let destroyed = 0
+  if (updateComputations) {
+    const computationUpdates =
+      await updateComputationValidityDependentOnChanges(
+        exportedEvents,
+        transformations
+      )
+    updated = computationUpdates.updated
+    destroyed = computationUpdates.destroyed
+  }
 
   // Get updated contracts.
   const contracts = await Contract.findAll({
@@ -322,8 +354,8 @@ const exporter = async (
 
   return {
     contracts,
-    computationsUpdated: 0, // updated,
-    computationsDestroyed: 0, // destroyed,
+    computationsUpdated: updated,
+    computationsDestroyed: destroyed,
     transformations: transformations.length,
   }
 }

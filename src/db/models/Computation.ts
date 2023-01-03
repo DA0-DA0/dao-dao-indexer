@@ -144,13 +144,11 @@ export class Computation extends Model {
       return true
     }
 
-    // We need to check if it's valid at the requested block. If any events or
-    // transformations exist after the computation's latest valid block (or
-    // earlier if passed `startFromBlockHeight`), up to the requested block, the
-    // computation is no longer valid.
-
     // If passed a block height to start from, start there as long as it's after
-    // the computation's start block and before the latest valid block.
+    // the computation's start block and before the latest valid block. We start
+    // after the computation's start block because we know there is an event or
+    // transformation at that block. We want to find the _next_ dependency
+    // starting at least after the first block.
     const minBlockHeight = Math.max(
       this.blockHeight + 1,
       Math.min(
