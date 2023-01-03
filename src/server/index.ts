@@ -27,6 +27,8 @@ const router = new Router()
 
 // CORS.
 const allowedOrigins = [
+  // localhost
+  /^https?:\/\/localhost(:\d+)?$/,
   // daodao.zone
   /^https:\/\/(www\.)?daodao\.zone$/,
   // testnet.daodao.zone
