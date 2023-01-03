@@ -26,7 +26,7 @@ const main = async () => {
     50000
   )
   program.parse()
-  const { config, initial, batch } = program.opts()
+  const { config, batch } = program.opts()
 
   console.log(`\n[${new Date().toISOString()}] JSONifying existing events...`)
 
@@ -49,14 +49,9 @@ const main = async () => {
     delete: false,
   }
 
-  let latestBlockHeight = initial
+  let latestBlockHeight: number | undefined
   const total = await Event.count({
-    where: {
-      ...eventFilter,
-      blockHeight: {
-        [Op.gte]: latestBlockHeight,
-      },
-    },
+    where: eventFilter,
   })
 
   // Print latest statistics every 100ms.
@@ -66,7 +61,7 @@ const main = async () => {
     process.stdout.write(
       `\r${
         LOADER_MAP[printLoaderCount]
-      }  Event processed/total: ${processed.toLocaleString()}/${total.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Latest block height: ${latestBlockHeight.toLocaleString()}`
+      }  Event processed/total: ${processed.toLocaleString()}/${total.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Latest block height: ${latestBlockHeight?.toLocaleString()}`
     )
   }, 100)
   // Allow process to exit even though this interval is alive.
