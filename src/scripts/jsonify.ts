@@ -43,7 +43,12 @@ const main = async () => {
 
   const eventFilter = {
     value: {
-      [Op.ne]: '',
+      [Op.and]: [
+        {
+          [Op.ne]: null,
+          [Op.ne]: '',
+        },
+      ],
     },
     valueJson: null,
     delete: false,
