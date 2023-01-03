@@ -47,6 +47,7 @@ const main = async () => {
         {
           [Op.ne]: null,
           [Op.ne]: '',
+          [Op.ne]: 'null',
         },
       ],
     },
