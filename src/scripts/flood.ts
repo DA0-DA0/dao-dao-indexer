@@ -23,8 +23,20 @@ const main = async () => {
     'the source file to read requests from',
     'requests.json'
   )
+  program.option(
+    '-l, --loop <times>',
+    'run the script in a loop this many times (pass -1 to run forever)',
+    (value) => parseInt(value, 10),
+    1
+  )
+  program.option(
+    '-d, --delay <seconds>',
+    'delay between loop iterations in seconds',
+    (value) => parseInt(value, 10),
+    1
+  )
   program.parse()
-  const { host, requests: numRequests, source } = program.opts()
+  const { host, requests: numRequests, source, loop, delay } = program.opts()
 
   // Read requests.
   const requestsFile = path.resolve(source)
@@ -42,57 +54,67 @@ const main = async () => {
     (_, index) => _requests[index % _requests.length]
   )
 
-  console.log(`Sending ${requests.length} requests to ${host}...`)
+  const forever = loop === -1
+  for (let i = 1; forever || i <= loop; i++) {
+    console.log(
+      `--- [${i}] Sending ${requests.length} requests to ${host}... ---`
+    )
 
-  let statuses: Record<number | string, number> = {}
-  const durations: number[] = []
+    let statuses: Record<number | string, number> = {}
+    const durations: number[] = []
 
-  const start = new Date()
-  await Promise.all(
-    requests.map(async (request) => {
-      try {
-        const requestStart = new Date()
+    const start = new Date()
+    await Promise.all(
+      requests.map(async (request) => {
+        try {
+          const requestStart = new Date()
 
-        const response = await axios.get(host + request, {
-          headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
-        })
-        statuses[response.status] = (statuses[response.status] || 0) + 1
-        statuses['success'] = (statuses['success'] || 0) + 1
+          const response = await axios.get(host + request, {
+            headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
+          })
+          statuses[response.status] = (statuses[response.status] || 0) + 1
+          statuses['success'] = (statuses['success'] || 0) + 1
 
-        const requestEnd = new Date()
-        const requestDuration =
-          (requestEnd.getTime() - requestStart.getTime()) / 1000
-        durations.push(requestDuration)
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          if (err.response) {
-            statuses[err.response.status] =
-              (statuses[err.response.status] || 0) + 1
-            statuses['error'] = (statuses['error'] || 0) + 1
+          const requestEnd = new Date()
+          const requestDuration =
+            (requestEnd.getTime() - requestStart.getTime()) / 1000
+          durations.push(requestDuration)
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            if (err.response) {
+              statuses[err.response.status] =
+                (statuses[err.response.status] || 0) + 1
+              statuses['error'] = (statuses['error'] || 0) + 1
+            }
+
+            return
           }
 
-          return
+          throw err
         }
+      })
+    )
+    const end = new Date()
 
-        throw err
-      }
-    })
-  )
-  const end = new Date()
+    // Print results.
+    const durationSeconds = (end.getTime() - start.getTime()) / 1000
+    const requestsPerSecond = Math.round(requests.length / durationSeconds)
+    console.log(`Duration: ${durationSeconds}s`)
+    console.log(`Requests per second: ${requestsPerSecond.toLocaleString()}`)
+    console.log(
+      `Average request duration: ${(
+        durations.reduce((a, b) => a + b, 0) / durations.length
+      ).toLocaleString(undefined, {
+        maximumFractionDigits: 3,
+      })}s`
+    )
+    console.log(`Statuses: ${JSON.stringify(statuses, null, 2)}\n`)
 
-  // Print results.
-  const durationSeconds = (end.getTime() - start.getTime()) / 1000
-  const requestsPerSecond = Math.round(requests.length / durationSeconds)
-  console.log(`Duration: ${durationSeconds}s`)
-  console.log(`Requests per second: ${requestsPerSecond.toLocaleString()}`)
-  console.log(
-    `Average request duration: ${(
-      durations.reduce((a, b) => a + b, 0) / durations.length
-    ).toLocaleString(undefined, {
-      maximumFractionDigits: 3,
-    })}s`
-  )
-  console.log(`Statuses: ${JSON.stringify(statuses, null, 2)}`)
+    // Delay.
+    if (forever || (loop > 2 && i < loop)) {
+      await new Promise((resolve) => setTimeout(resolve, delay * 1000))
+    }
+  }
 }
 
 main()
