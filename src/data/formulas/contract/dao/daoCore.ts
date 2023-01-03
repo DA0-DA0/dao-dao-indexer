@@ -228,8 +228,13 @@ export const votingModule: ContractFormula<string | undefined> = async ({
 export const item: ContractFormula<
   string | undefined,
   { key: string }
-> = async ({ contractAddress, get, args: { key } }) =>
-  await get<string | undefined>(contractAddress, 'items', key)
+> = async ({ contractAddress, get, args: { key } }) => {
+  if (!key) {
+    throw new Error('missing `key`')
+  }
+
+  return await get<string | undefined>(contractAddress, 'items', key)
+}
 
 export const listItems: ContractFormula<string[]> = async ({
   contractAddress,

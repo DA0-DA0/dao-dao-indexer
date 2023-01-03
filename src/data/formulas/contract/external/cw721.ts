@@ -36,6 +36,10 @@ export const nftInfo: ContractFormula<
   NftInfo | undefined,
   { tokenId: string }
 > = async ({ contractAddress, get, args: { tokenId } }) => {
+  if (!tokenId) {
+    throw new Error('missing `tokenId`')
+  }
+
   const info = await get<TokenInfo>(contractAddress, 'tokens', tokenId)
 
   return (
@@ -50,6 +54,10 @@ export const ownerOf: ContractFormula<
   OwnerOfInfo | undefined,
   { tokenId: string }
 > = async ({ contractAddress, get, args: { tokenId } }) => {
+  if (!tokenId) {
+    throw new Error('missing `tokenId`')
+  }
+
   const info = await get<TokenInfo>(contractAddress, 'tokens', tokenId)
 
   return (
@@ -80,6 +88,10 @@ export const allOperators: ContractFormula<
   Approval[],
   { owner: string; limit?: string; startAfter?: string }
 > = async ({ contractAddress, getMap, args: { owner, limit, startAfter } }) => {
+  if (!owner) {
+    throw new Error('missing `owner`')
+  }
+
   const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const operatorsMap =
@@ -106,6 +118,10 @@ export const tokens: ContractFormula<
   string[],
   { owner: string; limit?: string; startAfter?: string }
 > = async ({ contractAddress, getMap, args: { owner, limit, startAfter } }) => {
+  if (!owner) {
+    throw new Error('missing `owner`')
+  }
+
   const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const tokensMap =
@@ -139,9 +155,16 @@ export const approvalsForSpender: ContractFormula<
   Approval[] | undefined,
   { tokenId: string; spender: string }
 > = async ({ contractAddress, get, args: { tokenId, spender } }) => {
+  if (!tokenId) {
+    throw new Error('missing `tokenId`')
+  }
+  if (!spender) {
+    throw new Error('missing `spender`')
+  }
+
   const info = await get<TokenInfo>(contractAddress, 'tokens', tokenId)
   if (!info) {
-    return undefined
+    return
   }
 
   if (info.owner === spender) {
@@ -163,5 +186,10 @@ export const approvalsForSpender: ContractFormula<
 export const approvals: ContractFormula<
   Approval[] | undefined,
   { tokenId: string }
-> = async ({ contractAddress, get, args: { tokenId } }) =>
-  (await get<TokenInfo>(contractAddress, 'tokens', tokenId))?.approvals
+> = async ({ contractAddress, get, args: { tokenId } }) => {
+  if (!tokenId) {
+    throw new Error('missing `tokenId`')
+  }
+
+  return (await get<TokenInfo>(contractAddress, 'tokens', tokenId))?.approvals
+}

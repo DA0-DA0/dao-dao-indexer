@@ -19,6 +19,10 @@ export const depositInfo: ContractFormula<
   any | undefined,
   { proposalId: string }
 > = async ({ contractAddress, get, args: { proposalId } }) => {
+  if (!proposalId) {
+    throw new Error('missing `proposalId`')
+  }
+
   const data = await get<[any, string]>(
     contractAddress,
     'deposits',

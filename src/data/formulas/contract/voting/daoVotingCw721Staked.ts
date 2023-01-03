@@ -12,13 +12,24 @@ export const nftClaims: ContractFormula<any[], { address: string }> = async ({
   contractAddress,
   get,
   args: { address },
-}) => (await get(contractAddress, 'nft_claims', address)) ?? []
+}) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
+  return (await get(contractAddress, 'nft_claims', address)) ?? []
+}
 
 export const votingPower: ContractFormula<
   string,
   { address: string }
-> = async ({ contractAddress, get, args: { address } }) =>
-  (await get<string>(contractAddress, 'nb', address)) || '0'
+> = async ({ contractAddress, get, args: { address } }) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
+  return (await get<string>(contractAddress, 'nb', address)) || '0'
+}
 
 export const totalPower: ContractFormula<string> = async ({
   contractAddress,
@@ -37,6 +48,10 @@ export const stakedNfts: ContractFormula<
   getMap,
   args: { address, limit, startAfter },
 }) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
   const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const stakedNfts =

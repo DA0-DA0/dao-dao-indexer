@@ -9,7 +9,13 @@ export const member: ContractFormula<number, { address: string }> = async ({
   contractAddress,
   get,
   args: { address },
-}) => (await get<number>(contractAddress, 'members', address)) ?? 0
+}) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
+  return (await get<number>(contractAddress, 'members', address)) ?? 0
+}
 
 export const listMembers: ContractFormula<
   Member[],

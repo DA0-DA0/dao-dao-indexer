@@ -38,9 +38,14 @@ export const balance: ContractFormula<string, { address: string }> = async ({
   contractAddress,
   get,
   args: { address },
-}) =>
+}) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
   // If no balance is found, return 0.
-  (await get<string>(contractAddress, 'balance', address)) ?? '0'
+  return (await get<string>(contractAddress, 'balance', address)) ?? '0'
+}
 
 export const tokenInfo: ContractFormula<TokenInfo | undefined> = async ({
   contractAddress,
@@ -66,18 +71,28 @@ export const minter: ContractFormula = async ({ contractAddress, get }) =>
   (await get<TokenInfoResponse>(contractAddress, 'token_info'))?.mint
 
 export const allowance: ContractFormula<
-  AllowanceResponse | undefined,
+  AllowanceResponse,
   { owner: string; spender: string }
-> = async ({ contractAddress, get, args: { owner, spender } }) =>
-  (await get<AllowanceResponse>(
-    contractAddress,
-    'allowance',
-    owner,
-    spender
-  )) ?? {
-    allowance: '0',
-    expires: { never: {} },
+> = async ({ contractAddress, get, args: { owner, spender } }) => {
+  if (!owner) {
+    throw new Error('missing `owner`')
   }
+  if (!spender) {
+    throw new Error('missing `spender`')
+  }
+
+  return (
+    (await get<AllowanceResponse>(
+      contractAddress,
+      'allowance',
+      owner,
+      spender
+    )) ?? {
+      allowance: '0',
+      expires: { never: {} },
+    }
+  )
+}
 
 export const ownerAllowances: ContractFormula<
   OwnerAllowanceInfo[],
@@ -87,6 +102,10 @@ export const ownerAllowances: ContractFormula<
     startAfter?: string
   }
 > = async ({ contractAddress, getMap, args: { owner, limit, startAfter } }) => {
+  if (!owner) {
+    throw new Error('missing `owner`')
+  }
+
   const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const allowancesMap =
@@ -118,6 +137,10 @@ export const spenderAllowances: ContractFormula<
   getMap,
   args: { spender, limit, startAfter },
 }) => {
+  if (!spender) {
+    throw new Error('missing `spender`')
+  }
+
   const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
   const allowancesMap =

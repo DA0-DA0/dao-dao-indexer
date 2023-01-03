@@ -13,12 +13,19 @@ export const config: ContractFormula<any | undefined> = async ({
 export const stakedBalance: ContractFormula<
   string,
   { address: string }
-> = async ({ contractAddress, get, args: { address } }) =>
-  (await get<string | undefined>(
-    contractAddress,
-    'staked_balances',
-    address
-  )) || '0'
+> = async ({ contractAddress, get, args: { address } }) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
+  return (
+    (await get<string | undefined>(
+      contractAddress,
+      'staked_balances',
+      address
+    )) ?? '0'
+  )
+}
 
 export const totalStaked: ContractFormula<string> = async ({
   contractAddress,
@@ -28,6 +35,10 @@ export const totalStaked: ContractFormula<string> = async ({
 export const stakedValue: ContractFormula<string, { address: string }> = async (
   env
 ) => {
+  if (!env.args.address) {
+    throw new Error('missing `address`')
+  }
+
   await env.prefetch(
     env.contractAddress,
     'balance',
@@ -54,8 +65,13 @@ export const totalValue: ContractFormula<string> = async ({
 export const claims: ContractFormula<
   any[] | undefined,
   { address: string }
-> = async ({ contractAddress, get, args: { address } }) =>
-  await get<any[]>(contractAddress, 'claims', address)
+> = async ({ contractAddress, get, args: { address } }) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
+  return await get<any[]>(contractAddress, 'claims', address)
+}
 
 export const listStakers: ContractFormula<
   StakerBalance[],

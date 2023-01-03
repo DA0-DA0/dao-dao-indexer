@@ -10,8 +10,13 @@ export const approver: ContractFormula<string | undefined> = async ({
 export const pendingProposal: ContractFormula<
   any | undefined,
   { id: string }
-> = async ({ contractAddress, get, args: { id } }) =>
-  await get(contractAddress, 'pending_proposals', id)
+> = async ({ contractAddress, get, args: { id } }) => {
+  if (!id) {
+    throw new Error('missing `id`')
+  }
+
+  return await get(contractAddress, 'pending_proposals', id)
+}
 
 export const pendingProposals: ContractFormula<any[] | undefined> = async ({
   contractAddress,

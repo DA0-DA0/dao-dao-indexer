@@ -8,8 +8,13 @@ interface StakerBalance {
 export const votingPower: ContractFormula<
   string,
   { address: string }
-> = async ({ contractAddress, get, args: { address } }) =>
-  (await get<string>(contractAddress, 'staked_balances', address)) || '0'
+> = async ({ contractAddress, get, args: { address } }) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
+  return (await get<string>(contractAddress, 'staked_balances', address)) || '0'
+}
 
 export const totalPower: ContractFormula<string> = async ({
   contractAddress,
@@ -24,8 +29,13 @@ export const dao: ContractFormula<string | undefined> = async ({
 export const claims: ContractFormula<
   any[] | undefined,
   { address: string }
-> = async ({ contractAddress, get, args: { address } }) =>
-  await get<any[]>(contractAddress, 'claims', address)
+> = async ({ contractAddress, get, args: { address } }) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
+  return await get<any[]>(contractAddress, 'claims', address)
+}
 
 export const config: ContractFormula = async ({ contractAddress, get }) =>
   await get(contractAddress, 'config')

@@ -169,6 +169,13 @@ export const vote: ContractFormula<
   getDateKeyModified,
   args: { proposalId, voter },
 }) => {
+  if (!proposalId) {
+    throw new Error('missing `proposalId`')
+  }
+  if (!voter) {
+    throw new Error('missing `voter`')
+  }
+
   const ballot = await get<Ballot>(
     contractAddress,
     'ballots',
@@ -176,7 +183,7 @@ export const vote: ContractFormula<
     voter
   )
   if (!ballot) {
-    return undefined
+    return
   }
 
   const votedAt = (

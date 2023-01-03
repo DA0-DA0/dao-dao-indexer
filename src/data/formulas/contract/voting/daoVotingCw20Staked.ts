@@ -15,6 +15,10 @@ export const stakingContract: ContractFormula<string | undefined> = async ({
 export const votingPower: ContractFormula<string, { address: string }> = async (
   env
 ) => {
+  if (!env.args.address) {
+    throw new Error('missing `address`')
+  }
+
   const stakingContractAddress = (await stakingContract(env)) ?? ''
   const power = await stakedBalance({
     ...env,

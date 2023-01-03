@@ -125,7 +125,8 @@ export type Env<Args extends Record<string, string> = {}> = {
   getDateFirstTransformed: FormulaTransformationDateGetter
   prefetch: FormulaPrefetch
   prefetchTransformations: FormulaPrefetchTransformations
-  args: Args
+  // Arguments may or may not be present, so force formula to handle undefined.
+  args: Partial<Args>
 }
 
 export type ContractEnv<Args extends Record<string, string> = {}> =

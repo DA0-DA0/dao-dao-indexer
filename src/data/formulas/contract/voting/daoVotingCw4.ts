@@ -4,6 +4,10 @@ export const votingPower: ContractFormula<
   string,
   { address: string }
 > = async ({ contractAddress, get, args: { address } }) => {
+  if (!address) {
+    throw new Error('missing `address`')
+  }
+
   const weight = await get<string | undefined>(
     contractAddress,
     'user_weights',
