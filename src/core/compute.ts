@@ -162,7 +162,6 @@ export const computeRange = async ({
       )
     }
 
-    // Add hook to env so that the getters update the latest block info.
     const dependencies: SetDependencies = {
       events: new Set<string>(),
       transformations: new Set<string>(),

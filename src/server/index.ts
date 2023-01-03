@@ -67,7 +67,7 @@ app.use(async (ctx, next) => {
 
 // Formula computer.
 router.get('/:type/:address/(.+)', async (ctx) => {
-  const { block: _block, blocks: _blocks, ...args } = ctx.query
+  const { block: _block, blocks: _blocks, step: _step, ...args } = ctx.query
   const { type, address } = ctx.params
 
   // Validate type.
@@ -91,6 +91,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
 
   // If blocks passed, validate that it's a range of two blocks.
   let blocks: [Block, Block] | undefined
+  let step = 1
   if (_blocks && typeof _blocks === 'string') {
     const [startBlock, endBlock] = _blocks.split('..')
     if (!startBlock || !endBlock) {
@@ -117,6 +118,17 @@ router.get('/:type/:address/(.+)', async (ctx) => {
       ctx.status = 400
       ctx.body = 'the start block must be less than the end block'
       return
+    }
+
+    // If step passed, validate.
+    if (_step && typeof _step === 'string') {
+      const parsedStep = parseInt(_step, 10)
+      if (isNaN(parsedStep) || parsedStep < 1) {
+        ctx.status = 400
+        ctx.body = 'step must be a positive integer'
+        return
+      }
+      step = parsedStep
     }
 
     // if (blocks[1].height - blocks[0].height > 446400) {
@@ -164,6 +176,12 @@ router.get('/:type/:address/(.+)', async (ctx) => {
     // events that happened in the past. Each computation in the range indicates
     // what block it was first valid at, so the first one should too.
     if (blocks) {
+      let outputs: {
+        value: any
+        blockHeight: number
+        blockTimeUnixMs: number
+      }[] = []
+
       // Cap end block at latest block.
       if (blocks[1].height > state.latestBlockHeight) {
         blocks[1] = state.latestBlock
@@ -259,7 +277,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
         }
 
         if (entireRangeValid) {
-          computation = existingComputations.map(({ block, output }) => ({
+          outputs = existingComputations.map(({ block, output }) => ({
             value: output && JSON.parse(output),
             blockHeight: block.height ?? -1,
             blockTimeUnixMs: block.timeUnixMs ?? -1,
@@ -278,7 +296,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
           blockEnd: blocks[1],
         })
 
-        computation = rangeComputations.map(({ block, ...data }) => ({
+        outputs = rangeComputations.map(({ block, ...data }) => ({
           ...data,
           // If no block, the computation must not have accessed any keys. It
           // may be a constant formula, in which case it doesn't have any block
@@ -297,6 +315,32 @@ router.get('/:type/:address/(.+)', async (ctx) => {
           args,
           rangeComputations
         )
+      }
+
+      // Skip to match block step.
+      if (step === 1) {
+        computation = outputs
+      } else {
+        computation = []
+        for (
+          let blockHeight = blocks[0].height;
+          blockHeight <= blocks[1].height;
+          blockHeight += step
+        ) {
+          // Sorted ascending by block height, so find first computation with
+          // block height greater than desired block height and use the
+          // previous to get the latest value at the target block height.
+          const index = outputs.findIndex((c) => c.blockHeight > blockHeight)
+          if (index > 0) {
+            computation.push({
+              at: blockHeight,
+              ...outputs[index - 1],
+            })
+            // Remove all computations before the one we just added, keeping the
+            // current one in case nothing has changed in the next step.
+            outputs.splice(0, index - 1)
+          }
+        }
       }
     } else {
       // Otherwise compute for single block.
