@@ -67,8 +67,16 @@ export const tokenInfo: ContractFormula<TokenInfo | undefined> = async ({
   )
 }
 
-export const minter: ContractFormula = async ({ contractAddress, get }) =>
-  (await get<TokenInfoResponse>(contractAddress, 'token_info'))?.mint
+export const minter: ContractFormula = async ({
+  contractAddress,
+  getTransformationMatch,
+}) =>
+  (
+    await getTransformationMatch<TokenInfoResponse>(
+      contractAddress,
+      'tokenInfo'
+    )
+  )?.value.mint
 
 export const allowance: ContractFormula<
   AllowanceResponse,
