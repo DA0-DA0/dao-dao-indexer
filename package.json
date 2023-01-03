@@ -15,6 +15,7 @@
     "export:prod": "npm run build && pm2 reload ecosystem.config.js --only exporter",
     "transform": "node dist/scripts/transform.js",
     "pre-compute": "node dist/scripts/preCompute.js",
+    "flood": "node dist/scripts/flood.js",
     "serve": "node dist/server/index.js",
     "serve:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js\"",
     "serve:dev:testnet": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js -c config.testnet.json\"",

@@ -5,6 +5,7 @@ dist/
 config.json
 config.*.json
 *.crt
+requests.json
 
 # meilisearch
 data.ms

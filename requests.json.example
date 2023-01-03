@@ -1,0 +1,11 @@
+{
+  "requests": [
+    "/contract/juno1gpwekludv6vu8pkpnp2hwwf7f84a7mcvgm9t2cvp92hvpxk07kdq8z4xj2/info",
+    "/contract/juno1hna436c6rptglejpu45su9eqna38v8hpm59u6q7cjpvw0w57t0hqpw8j4s/info",
+    "/contract/juno15p8mfce2yg6pd0z8ey7sse7v4rm095k6r2eywqsqv3uwyc7qurhqrtmjln/info",
+    "/contract/juno1ex95hug49k3pp6fq2gugn4zqkdslkla25kxl9j74avsmjw0a338qh4scfk/info",
+    "/contract/juno10h0hc64jv006rr8qy0zhlu4jsxct8qwa0vtaleayh0ujz0zynf2s2r7v8q/info",
+    "/contract/juno130z8079e3dvalal8lw7yu37l99umm0ytzehes00830xl546uu7aqz5akcp/info",
+    "/contract/juno1hmkvjxael9fkskw66wg0wu3a0naysdlw008rh47z22442ptgjaxs45vedy/info"
+  ]
+}
