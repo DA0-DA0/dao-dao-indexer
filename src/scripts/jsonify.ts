@@ -111,8 +111,8 @@ const main = async () => {
     }
 
     // JSONify.
-    await Promise.all(
-      events.map(async (event) => {
+    const updates = events
+      .map((event) => {
         let valueJson = null
         try {
           valueJson = JSON.parse(event.value ?? 'null')
@@ -120,11 +120,17 @@ const main = async () => {
           // Ignore parsing errors.
         }
         if (valueJson !== null) {
-          await event.update({ valueJson })
           event.valueJson = valueJson
+          return {
+            ...event.dataValues,
+            valueJson,
+          }
         }
       })
-    )
+      .filter(Boolean)
+    await Event.bulkCreate(updates, {
+      updateOnDuplicate: ['valueJson'],
+    })
 
     processed += events.length
     latestBlockHeight = newLatestBlockHeight
