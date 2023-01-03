@@ -31,13 +31,18 @@ const main = async () => {
     (value) => parseInt(value, 10),
     50000
   )
+  program.option(
+    '-a, --addresses <addresses>',
+    'comma separated list of contract addresses to transform',
+    (value) => value.split(',')
+  )
   program.parse()
-  const options = program.opts()
+  const { config, initial, batch, addresses } = program.opts()
 
   console.log(`\n[${new Date().toISOString()}] Transforming existing events...`)
 
   // Load config with config option.
-  loadConfig(options.config)
+  loadConfig(config)
 
   // Load DB on start.
   const sequelize = await loadDb()
@@ -47,9 +52,16 @@ const main = async () => {
   let computationsDestroyed = 0
   let transformations = 0
 
-  let latestBlockHeight = options.initial
+  const addressFilter = addresses?.length
+    ? {
+        contractAddress: addresses,
+      }
+    : {}
+
+  let latestBlockHeight = initial
   const total = await Event.count({
     where: {
+      ...addressFilter,
       blockHeight: {
         [Op.gte]: latestBlockHeight,
       },
@@ -73,6 +85,7 @@ const main = async () => {
   while (processed < total) {
     const events = await Event.findAll({
       where: {
+        ...addressFilter,
         // Since there can be multiple events per block, the fixed batch size
         // will likely end up leaving some events in the latest block out of
         // this batch. To fix this, repeat the latest block again (>=) excluding
@@ -87,7 +100,7 @@ const main = async () => {
         }),
       },
       include: Contract,
-      limit: options.batch,
+      limit: batch,
       order: [['blockHeight', 'ASC']],
     })
 

@@ -76,7 +76,7 @@ export const minter: ContractFormula = async ({
       contractAddress,
       'tokenInfo'
     )
-  )?.value.mint
+  )?.value?.mint
 
 export const allowance: ContractFormula<
   AllowanceResponse,
