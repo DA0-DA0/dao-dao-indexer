@@ -2,13 +2,7 @@ import { Command } from 'commander'
 import { Op } from 'sequelize'
 
 import { ParsedEvent, loadConfig } from '@/core'
-import {
-  Contract,
-  Event,
-  Transformation,
-  loadDb,
-  updateComputationValidityDependentOnChanges,
-} from '@/db'
+import { Contract, Event, Transformation, loadDb } from '@/db'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 
@@ -37,8 +31,6 @@ const main = async () => {
   const sequelize = await loadDb()
 
   let processed = 0
-  let computationsUpdated = 0
-  let computationsDestroyed = 0
   let transformations = 0
 
   const eventFilter = {
@@ -67,7 +59,7 @@ const main = async () => {
     process.stdout.write(
       `\r${
         LOADER_MAP[printLoaderCount]
-      }  Event processed/total: ${processed.toLocaleString()}/${total.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Latest block height: ${latestBlockHeight?.toLocaleString()}`
+      }  Event processed/total: ${processed.toLocaleString()}/${total.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. Latest block height: ${latestBlockHeight?.toLocaleString()}`
     )
   }, 100)
   // Allow process to exit even though this interval is alive.
@@ -154,12 +146,6 @@ const main = async () => {
     const _transformations = await Transformation.transformEvents(parsedEvents)
 
     transformations += _transformations.length
-
-    const { updated, destroyed } =
-      await updateComputationValidityDependentOnChanges([], _transformations)
-
-    computationsUpdated += updated
-    computationsDestroyed += destroyed
   }
 
   clearInterval(logInterval)
