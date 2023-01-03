@@ -85,7 +85,6 @@ const main = async () => {
   const requestsPerSecond = Math.round(requests.length / durationSeconds)
   console.log(`Duration: ${durationSeconds}s`)
   console.log(`Requests per second: ${requestsPerSecond.toLocaleString()}`)
-  console.log(`Statuses: ${JSON.stringify(statuses, null, 2)}`)
   console.log(
     `Average request duration: ${(
       durations.reduce((a, b) => a + b, 0) / durations.length
@@ -93,6 +92,7 @@ const main = async () => {
       maximumFractionDigits: 3,
     })}s`
   )
+  console.log(`Statuses: ${JSON.stringify(statuses, null, 2)}`)
 }
 
 main()
