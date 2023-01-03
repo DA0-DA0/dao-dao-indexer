@@ -145,7 +145,7 @@ export const main = async () => {
         targetAddress,
         options.formula,
         args,
-        ...outputs
+        outputs
       )
     }
 

@@ -81,7 +81,7 @@ export class Computation extends Model {
     targetAddress: string,
     formula: string,
     args: Record<string, any>,
-    ...computationOutputs: ComputationOutput[]
+    computationOutputs: ComputationOutput[]
   ): Promise<Computation[]> {
     return await Computation.bulkCreate(
       computationOutputs.map(

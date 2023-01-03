@@ -242,7 +242,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
               address,
               formulaName,
               args,
-              ...missingComputations
+              missingComputations
             )
 
           // Avoid using push(...items) since there is a limit to the number of
@@ -295,7 +295,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
           address,
           formulaName,
           args,
-          ...rangeComputations
+          rangeComputations
         )
       }
     } else {
@@ -340,11 +340,13 @@ router.get('/:type/:address/(.+)', async (ctx) => {
           address,
           formulaName,
           args,
-          {
-            ...computationOutput,
-            // Valid up to the current block.
-            latestBlockHeightValid: block.height,
-          }
+          [
+            {
+              ...computationOutput,
+              // Valid up to the current block.
+              latestBlockHeightValid: block.height,
+            },
+          ]
         )
       }
     }
