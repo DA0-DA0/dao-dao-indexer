@@ -45,16 +45,24 @@ const main = async () => {
   console.log(`Sending ${requests.length} requests to ${host}...`)
 
   let statuses: Record<number | string, number> = {}
+  const durations: number[] = []
 
   const start = new Date()
   await Promise.all(
     requests.map(async (request) => {
       try {
+        const requestStart = new Date()
+
         const response = await axios.get(host + request, {
           headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
         })
         statuses[response.status] = (statuses[response.status] || 0) + 1
         statuses['success'] = (statuses['success'] || 0) + 1
+
+        const requestEnd = new Date()
+        const requestDuration =
+          (requestEnd.getTime() - requestStart.getTime()) / 1000
+        durations.push(requestDuration)
       } catch (err) {
         if (err instanceof AxiosError) {
           if (err.response) {
@@ -78,6 +86,13 @@ const main = async () => {
   console.log(`Duration: ${durationSeconds}s`)
   console.log(`Requests per second: ${requestsPerSecond.toLocaleString()}`)
   console.log(`Statuses: ${JSON.stringify(statuses, null, 2)}`)
+  console.log(
+    `Average request duration: ${(
+      durations.reduce((a, b) => a + b, 0) / durations.length
+    ).toLocaleString(undefined, {
+      maximumFractionDigits: 3,
+    })}s`
+  )
 }
 
 main()
