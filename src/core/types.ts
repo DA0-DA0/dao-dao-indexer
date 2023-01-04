@@ -256,9 +256,20 @@ export type TransformerMap = {
   [key: string]: Transformer
 }
 
+type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
+  {
+    [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>
+  }[Keys]
+
 export type Webhook<V = any> = {
-  codeIdsKeys: string[]
-  matches: (event: Event) => boolean
+  filter: RequireAtLeastOne<{
+    codeIdsKeys: string[]
+    contractAddresses: string[]
+    matches: (event: Event) => boolean
+  }>
   endpoint: {
     url: string
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
@@ -269,6 +280,10 @@ export type Webhook<V = any> = {
     event: Event,
     getLastEvent: () => Promise<Event | null>
   ) => V | undefined | Promise<V | undefined>
+}
+
+export type ProcessedWebhook<V = any> = Omit<Webhook<V>, 'filter'> & {
+  filter: (event: Event) => boolean
 }
 
 export type PendingWebhook = {

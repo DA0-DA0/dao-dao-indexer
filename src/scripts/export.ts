@@ -409,7 +409,7 @@ const exporter = async (
   const exportedEvents = await Event.bulkCreate(parsedEvents, {
     updateOnDuplicate: ['value', 'valueJson', 'delete'],
   })
-  // Add contracts to events.
+  // Add contracts to events since webhooks need to access contract code IDs.
   exportedEvents.forEach((event) => {
     event.contract = contracts.find(
       (contract) => contract.address === event.contractAddress

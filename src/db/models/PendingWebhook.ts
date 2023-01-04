@@ -13,7 +13,7 @@ import {
 } from 'sequelize-typescript'
 
 import { Webhook, loadConfig } from '@/core'
-import { webhooks } from '@/data/webhooks'
+import { getProcessedWebhooks } from '@/data/webhooks'
 
 import { Event } from './Event'
 
@@ -43,30 +43,16 @@ export class PendingWebhook extends Model {
 
   // Events must be loaded with `Contract` included.
   static async queueWebhooks(events: Event[]): Promise<number> {
-    const { codeIds } = loadConfig()
-
+    const webhooks = getProcessedWebhooks(loadConfig())
     if (webhooks.length === 0) {
       return 0
     }
 
-    // Collect each webooks's total set of code IDs to use for filtering by
-    // matching keys with the config.
-    const webhookCodeIds = webhooks.map(({ codeIdsKeys }) =>
-      codeIdsKeys.length
-        ? codeIdsKeys.flatMap((key) => codeIds?.[key] ?? [])
-        : // Those with no code IDs are always included.
-          null
-    )
-
     const pendingWebhooksToCreate = (
       await Promise.all(
         events.flatMap((event) => {
-          const webhooksForEvent = webhooks.filter(
-            (webhook, index) =>
-              // Those with no code IDs are always included.
-              (webhookCodeIds[index] === null ||
-                webhookCodeIds[index]!.includes(event.contract.codeId)) &&
-              webhook.matches(event)
+          const webhooksForEvent = webhooks.filter((webhook) =>
+            webhook.filter(event)
           )
 
           return webhooksForEvent.map(async (webhook) => {
