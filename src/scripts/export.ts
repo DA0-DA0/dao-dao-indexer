@@ -1,14 +1,16 @@
 import * as fs from 'fs'
 import readline from 'readline'
+import { Worker } from 'worker_threads'
 
 import axios from 'axios'
 import { Command } from 'commander'
+import { Sequelize } from 'sequelize'
 
 import { IndexerEvent, ParsedEvent, loadConfig } from '@/core'
 import {
-  Computation,
   Contract,
   Event,
+  PendingWebhook,
   State,
   Transformation,
   loadDb,
@@ -21,29 +23,49 @@ import { objectMatchesStructure } from './utils'
 const BULK_INSERT_SIZE = 500
 const LOADER_MAP = ['—', '\\', '|', '/']
 
-const main = async () => {
-  // Parse arguments.
-  const program = new Command()
-  program.option(
-    '-c, --config <path>',
-    'path to config file, falling back to config.json'
-  )
-  program.option(
-    '-b, --block <height>',
-    'block height to start exporting from, falling back to the beginning of the events file'
-  )
-  program.parse()
-  const options = program.opts()
+// Parse arguments.
+const program = new Command()
+program.option(
+  '-c, --config <path>',
+  'path to config file, falling back to config.json'
+)
+program.option(
+  '-b, --block <height>',
+  'block height to start exporting from, falling back to after the last exported block',
+  (value) => parseInt(value, 10)
+)
+program.option(
+  // Adds inverted `update` to the options object.
+  '-n, --no-update',
+  "don't update computation validity based on new events or transformations"
+)
+program.parse()
+const options = program.opts()
 
+// Load config with config option.
+const config = loadConfig(options.config)
+
+// Read state.
+let reading = false
+let printLoaderCount = 0
+// When true, shut down ASAP.
+let shuttingDown = false
+
+let latestBlockHeightExported = 0
+const exit = () => {
+  console.log(
+    `\n[${new Date().toISOString()}] Latest exported block with event: ${latestBlockHeightExported.toLocaleString()}. Exiting...`
+  )
+
+  process.exit(0)
+}
+
+const main = async () => {
   console.log(`\n\n[${new Date().toISOString()}] Exporting events...`)
 
-  // Load config with config option.
-  const config = loadConfig(options.config)
-
-  const eventsFile = config.eventsFile || ''
   // Ensure events file exists.
-  if (!eventsFile || !fs.existsSync(eventsFile)) {
-    throw new Error(`Events file not found (${eventsFile}).`)
+  if (!config.eventsFile || !fs.existsSync(config.eventsFile)) {
+    throw new Error(`Events file not found (${config.eventsFile}).`)
   }
 
   // Load DB on start.
@@ -52,23 +74,35 @@ const main = async () => {
   await setupMeilisearch()
 
   // Initialize state.
-  const initialBlockHeight = await updateState()
+  if (!(await State.findOne({ where: { singleton: true } }))) {
+    await State.create({
+      singleton: true,
+      latestBlockHeight: 0,
+      latestBlockTimeUnixMs: 0,
+      lastBlockHeightExported: 0,
+    })
+  }
+  const initialState = await updateState()
+
+  const initialBlock =
+    (options.block as number | undefined) ??
+    // Start at the next block after the last exported block if no command line
+    // argument passed for `block`.
+    (initialState.lastBlockHeightExported ?? 0) + 1
 
   // Return promise that never resolves. Listen for file changes.
   return new Promise((_, reject) => {
-    let latestBlockHeight = initialBlockHeight
+    let latestBlockHeight = initialState.latestBlockHeight
     // Update db state every 3 seconds.
     const stateInterval = setInterval(async () => {
-      latestBlockHeight = await updateState()
+      latestBlockHeight = (await updateState()).latestBlockHeight
     }, 3000)
     // Allow process to exit even though this interval is alive.
     stateInterval.unref()
 
     // Read state.
-    let reading = false
     let pendingRead = false
     let bytesRead = 0
-    let lastBlockHeightExported = 0
 
     // Pending events and statistics.
     const pendingIndexerEvents: IndexerEvent[] = []
@@ -77,18 +111,34 @@ const main = async () => {
     let computationsUpdated = 0
     let computationsDestroyed = 0
     let transformations = 0
-
-    // It takes much longer to validate cached formula computations when
-    // exporting events that are not close to the latest block, since we need to
-    // scan all future computations to see if any depend on previous events.
-    // Since exporting sometimes has to be restarted from the beginning, just
-    // skip updating computation validity until we've caught up to close to the
-    // end of the file, clear all cached computations, and then start updating
-    // computation validity again.
+    let webhooksQueued = 0
     let catchingUp = true
+    let linesRead = 0
+
+    const printStatistics = () => {
+      printLoaderCount = (printLoaderCount + 1) % LOADER_MAP.length
+      process.stdout.write(
+        `\r${LOADER_MAP[printLoaderCount]}  ${
+          catchingUp
+            ? `Catching up... ${linesRead.toLocaleString()} lines read.`
+            : `Processed/exported: ${processed.toLocaleString()}/${exported.toLocaleString()}. Latest block exported: ${latestBlockHeightExported.toLocaleString()}. Latest block: ${latestBlockHeight.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. Webhooks queued: ${webhooksQueued.toLocaleString()}.`
+        }`
+      )
+    }
+
+    // Print latest statistics every 100ms.
+    const logInterval = setInterval(printStatistics, 100)
+    // Allow process to exit even though this interval is alive.
+    logInterval.unref()
+
+    const printStatisticsAndExit = () => {
+      printStatistics()
+      clearInterval(logInterval)
+      exit()
+    }
 
     // Wait for responses from export promises and update/display statistics.
-    const flushToDb = async () => {
+    const processPendingEvents = async () => {
       if (pendingIndexerEvents.length === 0) {
         return
       }
@@ -142,7 +192,9 @@ const main = async () => {
         computationsUpdated: _computationsUpdated,
         computationsDestroyed: _computationsDestroyed,
         transformations: _transformations,
-      } = await exporter(parsedEvents, !catchingUp)
+        webhooksQueued: _webhooksFired,
+        lastBlockHeightExported,
+      } = await exporter(parsedEvents, !options.update)
 
       // Update meilisearch indexes.
       await updateIndexesForContracts(updatedContracts)
@@ -150,11 +202,11 @@ const main = async () => {
       // Update statistics.
       processed += pendingIndexerEvents.length
       exported += parsedEvents.length
-      lastBlockHeightExported =
-        pendingIndexerEvents[pendingIndexerEvents.length - 1].blockHeight
+      latestBlockHeightExported = lastBlockHeightExported
       computationsUpdated += _computationsUpdated
       computationsDestroyed += _computationsDestroyed
       transformations += _transformations
+      webhooksQueued += _webhooksFired
 
       // Clear queue.
       pendingIndexerEvents.length = 0
@@ -165,7 +217,7 @@ const main = async () => {
       try {
         reading = true
 
-        const fileStream = fs.createReadStream(eventsFile, {
+        const fileStream = fs.createReadStream(config.eventsFile, {
           start: bytesRead,
         })
         const rl = readline.createInterface({
@@ -174,7 +226,15 @@ const main = async () => {
           crlfDelay: Infinity,
         })
 
+        let lastBlockHeightSeen = 0
         for await (const line of rl) {
+          if (shuttingDown) {
+            printStatisticsAndExit()
+            return
+          }
+
+          linesRead++
+
           if (!line) {
             continue
           }
@@ -195,22 +255,30 @@ const main = async () => {
             continue
           }
 
-          // If event is from a block before the start block, skip.
-          if (options.block && event.blockHeight < Number(options.block)) {
-            lastBlockHeightExported = event.blockHeight
+          // If event is from a block before the initial block, skip.
+          if (event.blockHeight < initialBlock) {
+            lastBlockHeightSeen = event.blockHeight
             continue
+          } else if (catchingUp) {
+            catchingUp = false
+          }
+
+          // If we have enough events and reached the first event of the next
+          // block, flush the previous events to the DB. This ensures we batch
+          // all events from the same block together.
+          if (
+            pendingIndexerEvents.length >= BULK_INSERT_SIZE &&
+            event.blockHeight > lastBlockHeightSeen
+          ) {
+            await processPendingEvents()
           }
 
           pendingIndexerEvents.push(event)
-
-          // If we have enough events, flush them to the DB.
-          if (pendingIndexerEvents.length === BULK_INSERT_SIZE) {
-            await flushToDb()
-          }
+          lastBlockHeightSeen = event.blockHeight
         }
 
         // Flush remaining events.
-        await flushToDb()
+        await processPendingEvents()
 
         // Update bytes read so we can start at this point in the next read.
         bytesRead += fileStream.bytesRead
@@ -220,16 +288,16 @@ const main = async () => {
           pendingRead = false
           read()
         } else {
+          if (shuttingDown) {
+            printStatisticsAndExit()
+            return
+          }
+
           reading = false
 
-          // If we get to the end and there's no pending read, we're caught up.
-          // If this is the first time we've caught up, clear all cached
-          // computations and start updating computation validity for future
-          // reads/exports.
+          // If we made it to the end of the file, we are no longer catching up.
           if (catchingUp) {
-            computationsDestroyed += await Computation.destroy({ where: {} })
             catchingUp = false
-            console.log()
           }
         }
       } catch (err) {
@@ -239,41 +307,34 @@ const main = async () => {
 
     // Watch file for changes every second and intelligently re-activate read
     // when more data is available.
-    const file = fs.watchFile(eventsFile, { interval: 1000 }, (curr, prev) => {
-      // If modified, read if not already reading, and store that there is data
-      // to read otherwise.
-      if (curr.mtime > prev.mtime) {
-        if (!reading) {
-          read()
-        } else {
-          pendingRead = true
+    const file = fs.watchFile(
+      config.eventsFile,
+      { interval: 1000 },
+      (curr, prev) => {
+        if (shuttingDown) {
+          return
+        }
+
+        // If modified, read if not already reading, and store that there is
+        // data to read otherwise.
+        if (curr.mtime > prev.mtime) {
+          if (!reading) {
+            read()
+          } else {
+            pendingRead = true
+          }
         }
       }
-    })
+    )
     file.on('error', reject)
 
     // Start reading file.
     read()
-
-    // Print latest statistics every 100ms.
-    let printLoaderCount = 0
-    const logInterval = setInterval(() => {
-      printLoaderCount = (printLoaderCount + 1) % LOADER_MAP.length
-      process.stdout.write(
-        `\r${
-          LOADER_MAP[printLoaderCount]
-        }  Processed/exported: ${processed.toLocaleString()}/${exported.toLocaleString()}. Latest block exported: ${lastBlockHeightExported.toLocaleString()}. Latest block: ${latestBlockHeight.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. ${
-          catchingUp ? 'Catching up...' : 'Caught up.'
-        }`
-      )
-    }, 100)
-    // Allow process to exit even though this interval is alive.
-    logInterval.unref()
   })
 }
 
 // Update db state. Returns latest block height for log.
-const updateState = async (): Promise<number> => {
+const updateState = async (): Promise<State> => {
   const { statusEndpoint } = loadConfig()
   const { data } = await axios.get(statusEndpoint, {
     // https://stackoverflow.com/a/74735197
@@ -286,23 +347,32 @@ const updateState = async (): Promise<number> => {
   )
 
   // Update state singleton with latest information.
-  await State.upsert({
-    singleton: true,
-    latestBlockHeight,
-    latestBlockTimeUnixMs,
-  })
+  const [, [state]] = await State.update(
+    {
+      latestBlockHeight,
+      latestBlockTimeUnixMs,
+    },
+    {
+      where: {
+        singleton: true,
+      },
+      returning: true,
+    }
+  )
 
-  return latestBlockHeight
+  return state
 }
 
 const exporter = async (
   parsedEvents: ParsedEvent[],
-  updateComputations: boolean
+  dontUpdateComputations = false
 ): Promise<{
   contracts: Contract[]
   computationsUpdated: number
   computationsDestroyed: number
   transformations: number
+  webhooksQueued: number
+  lastBlockHeightExported: number
 }> => {
   const state = await State.getSingleton()
   if (!state) {
@@ -325,6 +395,13 @@ const exporter = async (
     }
   )
 
+  // Get updated contracts.
+  const contracts = await Contract.findAll({
+    where: {
+      address: uniqueContracts,
+    },
+  })
+
   // Unique index on [blockHeight, contractAddress, key] ensures that we don't
   // insert duplicate events. If we encounter a duplicate, we update the
   // `value`, `valueJson`, and `delete` fields in case event processing for a
@@ -332,13 +409,24 @@ const exporter = async (
   const exportedEvents = await Event.bulkCreate(parsedEvents, {
     updateOnDuplicate: ['value', 'valueJson', 'delete'],
   })
+  // Add contracts to events.
+  exportedEvents.forEach((event) => {
+    event.contract = contracts.find(
+      (contract) => contract.address === event.contractAddress
+    )!
+  })
 
   // Transform events as needed.
-  const transformations = await Transformation.transformEvents(parsedEvents)
+  const transformations = await Transformation.transformParsedEvents(
+    parsedEvents
+  )
+
+  // Queue webhooks as needed.
+  const webhooksQueued = await PendingWebhook.queueWebhooks(exportedEvents)
 
   let updated = 0
   let destroyed = 0
-  if (updateComputations) {
+  if (!dontUpdateComputations) {
     const computationUpdates =
       await updateComputationValidityDependentOnChanges(
         exportedEvents,
@@ -348,19 +436,39 @@ const exporter = async (
     destroyed = computationUpdates.destroyed
   }
 
-  // Get updated contracts.
-  const contracts = await Contract.findAll({
-    where: {
-      address: uniqueContracts,
+  // Store last block height exported.
+  const lastBlockHeightExported =
+    parsedEvents[parsedEvents.length - 1].blockHeight
+  await State.update(
+    {
+      lastBlockHeightExported: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('lastBlockHeightExported'),
+        lastBlockHeightExported
+      ),
     },
-  })
+    {
+      where: {
+        singleton: true,
+      },
+    }
+  )
 
   return {
     contracts,
     computationsUpdated: updated,
     computationsDestroyed: destroyed,
     transformations: transformations.length,
+    lastBlockHeightExported,
+    webhooksQueued: webhooksQueued || 0,
   }
 }
 
 main()
+
+process.on('SIGINT', () => {
+  shuttingDown = true
+  if (!reading) {
+    exit()
+  }
+})

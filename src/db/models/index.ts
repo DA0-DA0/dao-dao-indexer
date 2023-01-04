@@ -1,5 +1,6 @@
 export * from './Computation'
 export * from './Contract'
 export * from './Event'
+export * from './PendingWebhook'
 export * from './State'
 export * from './Transformation'

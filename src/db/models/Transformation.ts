@@ -147,7 +147,7 @@ export class Transformation extends Model {
     }
   }
 
-  static async transformEvents(
+  static async transformParsedEvents(
     events: ParsedEvent[]
   ): Promise<Transformation[]> {
     const { codeIds } = loadConfig()

@@ -3,6 +3,12 @@ module.exports = {
     {
       name: 'exporter',
       script: 'dist/scripts/export.js',
+      kill_timeout: 30000,
+    },
+    {
+      name: 'webhooks',
+      script: 'dist/scripts/webhooks.js',
+      kill_timeout: 30000,
     },
     {
       name: 'server_testnet',

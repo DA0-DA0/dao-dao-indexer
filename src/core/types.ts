@@ -4,7 +4,7 @@ import { SequelizeOptions } from 'sequelize-typescript'
 import { Event, Transformation } from '@/db'
 
 export interface Config {
-  eventsFile?: string
+  eventsFile: string
   statusEndpoint: string
   db: { uri?: string } & Pick<
     SequelizeOptions,
@@ -254,4 +254,24 @@ export type Transformer<V = any> = {
 
 export type TransformerMap = {
   [key: string]: Transformer
+}
+
+export type Webhook<V = any> = {
+  codeIdsKeys: string[]
+  matches: (event: Event) => boolean
+  endpoint: {
+    url: string
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+    headers?: Record<string, string>
+  }
+  // If returns undefined, the webhook will not be called.
+  getValue: (
+    event: Event,
+    getLastEvent: () => Promise<Event | null>
+  ) => V | undefined | Promise<V | undefined>
+}
+
+export type PendingWebhook = {
+  endpoint: Webhook['endpoint']
+  value: any
 }

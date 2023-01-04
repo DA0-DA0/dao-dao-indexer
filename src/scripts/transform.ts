@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import { Op } from 'sequelize'
 
-import { ParsedEvent, loadConfig } from '@/core'
+import { loadConfig } from '@/core'
 import {
   Contract,
   Event,
@@ -50,7 +50,7 @@ const main = async () => {
   let processed = 0
   let computationsUpdated = 0
   let computationsDestroyed = 0
-  let transformations = 0
+  let transformed = 0
 
   const addressFilter = addresses?.length
     ? {
@@ -75,7 +75,7 @@ const main = async () => {
     process.stdout.write(
       `\r${
         LOADER_MAP[printLoaderCount]
-      }  Transformed: ${transformations.toLocaleString()}. Event processed/total: ${processed.toLocaleString()}/${total.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Latest block height: ${latestBlockHeight.toLocaleString()}`
+      }  Transformed: ${transformed.toLocaleString()}. Event processed/total: ${processed.toLocaleString()}/${total.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Latest block height: ${latestBlockHeight.toLocaleString()}`
     )
   }, 100)
   // Allow process to exit even though this interval is alive.
@@ -129,26 +129,14 @@ const main = async () => {
     processed += events.length
     latestBlockHeight = newLatestBlockHeight
 
-    const parsedEvents = events.map(
-      (event): ParsedEvent => ({
-        codeId: event.contract.codeId,
-        contractAddress: event.contractAddress,
-        blockHeight: event.blockHeight,
-        blockTimeUnixMs: event.blockTimeUnixMs,
-        blockTimestamp: event.blockTimestamp,
-        key: event.key,
-        value: event.value,
-        valueJson: event.valueJson,
-        delete: event.delete,
-      })
+    const transformations = await Transformation.transformParsedEvents(
+      events.map((event) => event.asParsedEvent)
     )
 
-    const _transformations = await Transformation.transformEvents(parsedEvents)
-
-    transformations += _transformations.length
+    transformed += transformations.length
 
     const { updated, destroyed } =
-      await updateComputationValidityDependentOnChanges([], _transformations)
+      await updateComputationValidityDependentOnChanges([], transformations)
 
     computationsUpdated += updated
     computationsDestroyed += destroyed

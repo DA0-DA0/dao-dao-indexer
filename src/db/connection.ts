@@ -2,7 +2,14 @@ import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
 import { loadConfig } from '@/core'
 
-import { Computation, Contract, Event, State, Transformation } from './models'
+import {
+  Computation,
+  Contract,
+  Event,
+  PendingWebhook,
+  State,
+  Transformation,
+} from './models'
 
 let sequelize: Sequelize | undefined
 
@@ -30,7 +37,14 @@ export const loadDb = async (
     logging: db.logging ?? logging ? console.log : false,
 
     // Tell Sequelize what models we have.
-    models: [Computation, Contract, Event, State, Transformation],
+    models: [
+      Computation,
+      Contract,
+      Event,
+      PendingWebhook,
+      State,
+      Transformation,
+    ],
   }
 
   // If URI present, use it. Otherwise, use options directly.

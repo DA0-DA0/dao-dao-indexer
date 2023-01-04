@@ -1,3 +1,5 @@
+import { Worker } from 'worker_threads'
+
 import { Op, WhereOptions } from 'sequelize'
 import {
   AllowNull,
@@ -9,7 +11,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { Block, SplitDependentKeys, getDependentKey } from '@/core'
+import { Block, ParsedEvent, SplitDependentKeys, getDependentKey } from '@/core'
 
 import { Contract } from './Contract'
 
@@ -76,7 +78,7 @@ export class Event extends Model {
 
   @AllowNull
   @Column(DataType.JSONB)
-  valueJson!: object | null
+  valueJson!: any | null
 
   @AllowNull(false)
   @Column
@@ -153,5 +155,24 @@ export class Event extends Model {
 
   get dependentKey(): string {
     return getDependentKey(this.contractAddress, this.key)
+  }
+
+  get asParsedEvent(): ParsedEvent {
+    // `Contract` must be included before using this getter.
+    if (!this.contract) {
+      throw new Error('Contract must be included when querying for this Event.')
+    }
+
+    return {
+      codeId: this.contract.codeId,
+      contractAddress: this.contractAddress,
+      blockHeight: this.blockHeight,
+      blockTimeUnixMs: this.blockTimeUnixMs,
+      blockTimestamp: this.blockTimestamp,
+      key: this.key,
+      value: this.value,
+      valueJson: this.valueJson,
+      delete: this.delete,
+    }
   }
 }
