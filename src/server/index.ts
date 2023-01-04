@@ -73,9 +73,9 @@ router.get('/:type/:address/(.+)', async (ctx) => {
   const { type, address } = ctx.params
 
   // Validate type.
-  if (type !== 'contract' && type !== 'wallet') {
+  if (type !== 'contract' && type !== 'wallet' && type !== 'generic') {
     ctx.status = 400
-    ctx.body = 'type must be contract or wallet'
+    ctx.body = 'type must be contract, wallet, or generic'
     return
   }
 

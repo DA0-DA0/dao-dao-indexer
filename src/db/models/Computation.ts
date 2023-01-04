@@ -13,21 +13,16 @@ import { Transformation } from './Transformation'
     // with args for a target address at a given block height.
     {
       unique: true,
-      fields: ['blockHeight', 'targetAddress', 'formula', 'args'],
+      fields: ['targetAddress', 'formula', 'args', 'blockHeight'],
     },
     {
-      // Speeds up queries. Composite indexes are most efficient when equality
-      // tests are first and ranges second.
-      fields: ['targetAddress', 'blockHeight'],
-    },
-    // TODO: Combine the below indexes? Or separate into 3 single indexes?
-    {
-      // Speeds up export invalidation queries.
-      fields: ['dependentEvents', 'blockHeight'],
+      fields: ['targetAddress'],
     },
     {
-      // Speeds up export invalidation queries.
-      fields: ['dependentTransformations', 'blockHeight'],
+      fields: ['blockHeight'],
+    },
+    {
+      fields: ['latestBlockHeightValid'],
     },
   ],
 })

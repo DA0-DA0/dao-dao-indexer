@@ -148,36 +148,37 @@ export type WalletFormula<R = any, Args extends Record<string, string> = {}> = (
   env: WalletEnv<Args>
 ) => Promise<R>
 
+export type GenericFormula<
+  R = any,
+  Args extends Record<string, string> = {}
+> = (env: Env<Args>) => Promise<R>
+
+export type TypedFormula =
+  | {
+      type: 'contract'
+      formula: ContractFormula<any, any>
+    }
+  | {
+      type: 'wallet'
+      formula: WalletFormula<any, any>
+    }
+  | {
+      type: 'generic'
+      formula: GenericFormula<any, any>
+    }
+
 export type ComputeOptions = {
   targetAddress: string
   args: Record<string, any>
   block: Block
-} & (
-  | {
-      type: 'contract'
-      formula: ContractFormula
-    }
-  | {
-      type: 'wallet'
-      formula: WalletFormula
-    }
-)
+} & TypedFormula
 
 export type ComputeRangeOptions = {
   targetAddress: string
   args: Record<string, any>
   blockStart: Block
   blockEnd: Block
-} & (
-  | {
-      type: 'contract'
-      formula: ContractFormula
-    }
-  | {
-      type: 'wallet'
-      formula: WalletFormula
-    }
-)
+} & TypedFormula
 
 export interface ComputationOutput {
   // Undefined if formula did not use any keys.
