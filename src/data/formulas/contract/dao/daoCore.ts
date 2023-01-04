@@ -52,6 +52,7 @@ interface DumpState {
   // Extra.
   votingModuleInfo?: ContractInfo
   createdAt?: string
+  adminConfig?: Config | null
 }
 
 interface Cw20Balance {
@@ -68,6 +69,8 @@ interface InboxItem {
   proposalModuleAddress: string
   proposals: ProposalResponse<any>[]
 }
+
+const CONTRACT_NAMES = ['cw-core', 'cwd-core', 'dao-core']
 
 export const config: ContractFormula<Config | undefined> = async ({
   contractAddress,
@@ -174,6 +177,27 @@ export const dumpState: ContractFormula<DumpState | undefined> = async (
     return undefined
   }
 
+  // Check if admin is a DAO core contract that is not this one, and load config
+  // if so.
+  let adminConfig: Config | undefined | null = null
+  const adminInfo =
+    adminResponse && adminResponse !== env.contractAddress
+      ? await info({
+          ...env,
+          contractAddress: adminResponse,
+        })
+      : undefined
+  if (
+    adminResponse &&
+    adminInfo &&
+    CONTRACT_NAMES.some((name) => adminInfo.contract.includes(name))
+  ) {
+    adminConfig = await config({
+      ...env,
+      contractAddress: adminResponse,
+    })
+  }
+
   return {
     // Same as contract query.
     admin: adminResponse,
@@ -190,6 +214,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = async (
     // Extra.
     votingModuleInfo,
     createdAt,
+    adminConfig,
   }
 }
 
