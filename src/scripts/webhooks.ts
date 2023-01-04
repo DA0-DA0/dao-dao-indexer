@@ -28,6 +28,8 @@ const main = async () => {
   await loadConfig(config)
   await loadDb()
 
+  console.log(`\n\n[${new Date().toISOString()}] Firing webhooks...`)
+
   // Statistics.
   let printLoaderCount = 0
   let succeeded = 0
