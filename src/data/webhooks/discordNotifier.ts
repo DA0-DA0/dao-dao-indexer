@@ -64,8 +64,7 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
           {
             title: `Proposal ${proposalId}`,
             url:
-              config.daoDaoBase +
-              `/dao/${event.contractAddress}/proposals/${proposalId}`,
+              config.daoDaoBase + `/dao/${daoAddress}/proposals/${proposalId}`,
           },
         ],
       },
