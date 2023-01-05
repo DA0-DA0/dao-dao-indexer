@@ -1,9 +1,9 @@
 import { WhereOptions } from 'sequelize'
 import { SequelizeOptions } from 'sequelize-typescript'
 
-import { Event, Transformation } from '@/db'
+import { Event, State, Transformation } from '@/db'
 
-export interface Config {
+export type Config = {
   eventsFile: string
   statusEndpoint: string
   db: { uri?: string } & Pick<
@@ -38,6 +38,9 @@ export interface Config {
   }
   // Map some arbitary string to a list of code IDs.
   codeIds: Record<string, number[] | undefined>
+
+  // Other config options.
+  [key: string]: any
 }
 
 export type FormulaGetter = <T>(
@@ -127,6 +130,17 @@ export type Env<Args extends Record<string, string> = {}> = {
   prefetchTransformations: FormulaPrefetchTransformations
   // Arguments may or may not be present, so force formula to handle undefined.
   args: Partial<Args>
+}
+
+export interface EnvOptions {
+  block: Block
+  args?: Record<string, any>
+  dependencies?: SetDependencies
+  onFetch?: (
+    events: Event[],
+    transformations: Transformation[]
+  ) => void | Promise<void>
+  cache?: Cache
 }
 
 export type ContractEnv<Args extends Record<string, string> = {}> =
@@ -264,29 +278,34 @@ type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>
   }[Keys]
 
+export type WebhookEndpoint = {
+  url: string
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  headers?: Record<string, string>
+}
+
 export type Webhook<V = any> = {
   filter: RequireAtLeastOne<{
     codeIdsKeys: string[]
     contractAddresses: string[]
     matches: (event: Event) => boolean
   }>
-  endpoint: {
-    url: string
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-    headers?: Record<string, string>
-  }
+  endpoint: WebhookEndpoint | ((event: Event) => WebhookEndpoint)
   // If returns undefined, the webhook will not be called.
   getValue: (
     event: Event,
-    getLastEvent: () => Promise<Event | null>
+    getLastEvent: () => Promise<Event | null>,
+    env: ContractEnv
   ) => V | undefined | Promise<V | undefined>
 }
+
+export type WebhookMaker = (config: Config, state: State) => Webhook
 
 export type ProcessedWebhook<V = any> = Omit<Webhook<V>, 'filter'> & {
   filter: (event: Event) => boolean
 }
 
 export type PendingWebhook = {
-  endpoint: Webhook['endpoint']
+  endpoint: WebhookEndpoint
   value: any
 }

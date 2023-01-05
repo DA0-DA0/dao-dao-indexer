@@ -1,16 +1,20 @@
 import { Config, ProcessedWebhook, Webhook } from '@/core'
+import { State } from '@/db'
 
-// Add webhooks here.
-const _webhooks: Webhook[] = []
+import { makeProposalCreated } from './discordNotifier'
 
 let processedWebhooks: ProcessedWebhook[] | undefined
-export const getProcessedWebhooks = ({
-  codeIds,
-}: Config): ProcessedWebhook[] => {
+export const getProcessedWebhooks = (
+  config: Config,
+  state: State
+): ProcessedWebhook[] => {
   if (!processedWebhooks) {
+    // Add webhooks here.
+    const _webhooks: Webhook[] = [makeProposalCreated(config, state)]
+
     processedWebhooks = _webhooks.map(({ filter, ...webhook }) => {
       const allCodeIds = filter.codeIdsKeys?.flatMap(
-        (key) => codeIds?.[key] ?? []
+        (key) => config.codeIds?.[key] ?? []
       )
 
       return {

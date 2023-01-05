@@ -18,6 +18,10 @@ export class State extends Model {
   singleton!: boolean
 
   @AllowNull(false)
+  @Column(DataType.STRING)
+  chainId!: string
+
+  @AllowNull(false)
   @Column(DataType.BIGINT)
   latestBlockHeight!: number
 

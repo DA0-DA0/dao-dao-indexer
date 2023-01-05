@@ -95,17 +95,20 @@ export const proposalModules: ContractFormula<
   }
 
   return await Promise.all(
-    proposalModules.map(async (data): Promise<ProposalModuleWithInfo> => {
-      const contractInfo = await info({
-        ...env,
-        contractAddress: data.address,
-      })
+    proposalModules.map(
+      async (data, index): Promise<ProposalModuleWithInfo> => {
+        const contractInfo = await info({
+          ...env,
+          contractAddress: data.address,
+        })
 
-      return {
-        ...data,
-        info: contractInfo,
+        return {
+          ...data,
+          prefix: data.prefix || indexToProposalModulePrefix(index),
+          info: contractInfo,
+        }
       }
-    })
+    )
   )
 }
 
@@ -424,4 +427,20 @@ const OPEN_PROPOSALS_MAP: Record<
   // Multiple choice
   'cwd-proposal-multiple': multipleChoiceOpenProposals,
   'dao-proposal-multiple': multipleChoiceOpenProposals,
+}
+
+// Helpers
+
+// V1 proposal module don't have prefixes, so we need to generate them.
+const indexToProposalModulePrefix = (index: number) => {
+  index += 1
+  let prefix = ''
+  while (index > 0) {
+    const letterIndex = (index - 1) % 26
+    // capital A = 65, Z = 90
+    prefix = String.fromCharCode(65 + letterIndex) + prefix
+    index = ((index - letterIndex) / 26) | 0
+  }
+
+  return prefix
 }

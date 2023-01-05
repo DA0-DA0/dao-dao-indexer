@@ -3,9 +3,8 @@ import { Op, Sequelize } from 'sequelize'
 import { Event, Transformation } from '@/db'
 
 import {
-  Block,
-  Cache,
   Env,
+  EnvOptions,
   FormulaDateGetter,
   FormulaDateWithValueMatchGetter,
   FormulaGetter,
@@ -16,7 +15,6 @@ import {
   FormulaTransformationMapGetter,
   FormulaTransformationMatchGetter,
   FormulaTransformationMatchesGetter,
-  SetDependencies,
 } from './types'
 import {
   dbKeyForKeys,
@@ -26,19 +24,16 @@ import {
 } from './utils'
 
 // Generate environment for computation.
-export const getEnv = (
-  block: Block,
-  args: Record<string, any>,
-  dependencies: SetDependencies,
-  onFetch?: (
-    events: Event[],
-    transformations: Transformation[]
-  ) => void | Promise<void>,
-  cache: Cache = {
+export const getEnv = ({
+  block,
+  args = {},
+  dependencies,
+  onFetch,
+  cache = {
     events: {},
     transformations: {},
-  }
-): Env<{}> => {
+  },
+}: EnvOptions): Env<{}> => {
   // Most recent event at or below this block.
   const blockHeightFilter = {
     blockHeight: {
@@ -49,7 +44,7 @@ export const getEnv = (
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
     const dependentKey = getDependentKey(contractAddress, key)
-    dependencies.events.add(dependentKey)
+    dependencies?.events.add(dependentKey)
 
     // Check cache.
     const cachedEvent = cache.events[dependentKey]
@@ -96,7 +91,7 @@ export const getEnv = (
           dbKeyForKeys(...name, '')
         : dbKeyForKeys(name, '')) + ','
     const dependentKey = getDependentKey(contractAddress, keyPrefix)
-    dependencies.events.add(dependentKey)
+    dependencies?.events.add(dependentKey)
 
     // Check cache.
     const cachedEvents = cache.events[dependentKey]
@@ -171,7 +166,7 @@ export const getEnv = (
   ) => {
     const key = dbKeyForKeys(...keys)
     const dependentKey = getDependentKey(contractAddress, key)
-    dependencies.events.add(dependentKey)
+    dependencies?.events.add(dependentKey)
 
     // Check cache.
     const cachedEvent = cache.events[dependentKey]
@@ -215,7 +210,7 @@ export const getEnv = (
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
-    dependencies.events.add(getDependentKey(contractAddress, key))
+    dependencies?.events.add(getDependentKey(contractAddress, key))
 
     // The cache consists of the most recent events for each key, but this
     // fetches the first event, so we can't use the cache.
@@ -248,7 +243,7 @@ export const getEnv = (
   const getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter =
     async (contractAddress, keys, where) => {
       const key = dbKeyForKeys(...keys)
-      dependencies.events.add(getDependentKey(contractAddress, key))
+      dependencies?.events.add(getDependentKey(contractAddress, key))
 
       // The cache consists of the most recent events for each key, but this
       // fetches the first event, so we can't use the cache.
@@ -288,7 +283,7 @@ export const getEnv = (
           dbKeyForKeys(...key.keys, '') + ','
     )
     keys.forEach((key) =>
-      dependencies.events.add(getDependentKey(contractAddress, key))
+      dependencies?.events.add(getDependentKey(contractAddress, key))
     )
 
     const nonMapKeys = keys.filter((_, index) => {
@@ -378,7 +373,7 @@ export const getEnv = (
     where
   ) => {
     const dependentKey = getDependentKey(contractAddress, nameLike)
-    dependencies.transformations.add(dependentKey)
+    dependencies?.transformations.add(dependentKey)
 
     // Check cache.
     const cachedTransformations = cache.transformations[dependentKey]
@@ -456,7 +451,7 @@ export const getEnv = (
   ) => {
     const mapNamePrefix = namePrefix + ':'
     const dependentKey = getDependentKey(contractAddress, mapNamePrefix)
-    dependencies.transformations.add(dependentKey)
+    dependencies?.transformations.add(dependentKey)
 
     // Check cache.
     const cachedTransformations = cache.transformations[dependentKey]
@@ -534,7 +529,7 @@ export const getEnv = (
           name.name + ':'
     )
     names.forEach((key) =>
-      dependencies.transformations.add(getDependentKey(contractAddress, key))
+      dependencies?.transformations.add(getDependentKey(contractAddress, key))
     )
 
     const nonMapNames = names.filter((_, index) => {
@@ -634,7 +629,9 @@ export const getEnv = (
     nameLike,
     where
   ) => {
-    dependencies.transformations.add(getDependentKey(contractAddress, nameLike))
+    dependencies?.transformations.add(
+      getDependentKey(contractAddress, nameLike)
+    )
 
     // The cache consists of the most recent transformations for each name, but
     // this fetches the first transformation, so we can't use the cache.

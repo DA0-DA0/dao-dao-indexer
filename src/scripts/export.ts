@@ -341,6 +341,7 @@ const updateState = async (): Promise<State> => {
     headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
   })
 
+  const chainId = data.result.node_info.network
   const latestBlockHeight = Number(data.result.sync_info.latest_block_height)
   const latestBlockTimeUnixMs = Date.parse(
     data.result.sync_info.latest_block_time
@@ -349,6 +350,7 @@ const updateState = async (): Promise<State> => {
   // Update state singleton with latest information.
   const [, [state]] = await State.update(
     {
+      chainId,
       latestBlockHeight,
       latestBlockTimeUnixMs,
     },
@@ -422,7 +424,10 @@ const exporter = async (
   )
 
   // Queue webhooks as needed.
-  const webhooksQueued = await PendingWebhook.queueWebhooks(exportedEvents)
+  const webhooksQueued = await PendingWebhook.queueWebhooks(
+    state,
+    exportedEvents
+  )
 
   let updated = 0
   let destroyed = 0

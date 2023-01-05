@@ -12,10 +12,11 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { Webhook, loadConfig } from '@/core'
+import { WebhookEndpoint, getEnv, loadConfig } from '@/core'
 import { getProcessedWebhooks } from '@/data/webhooks'
 
 import { Event } from './Event'
+import { State } from './State'
 
 @Table({
   timestamps: true,
@@ -31,7 +32,7 @@ export class PendingWebhook extends Model {
 
   @AllowNull(false)
   @Column(DataType.JSONB)
-  endpoint!: Webhook['endpoint']
+  endpoint!: WebhookEndpoint
 
   @AllowNull(false)
   @Column(DataType.JSONB)
@@ -42,8 +43,8 @@ export class PendingWebhook extends Model {
   failures!: number
 
   // Events must be loaded with `Contract` included.
-  static async queueWebhooks(events: Event[]): Promise<number> {
-    const webhooks = getProcessedWebhooks(loadConfig())
+  static async queueWebhooks(state: State, events: Event[]): Promise<number> {
+    const webhooks = getProcessedWebhooks(loadConfig(), state)
     if (webhooks.length === 0) {
       return 0
     }
@@ -56,41 +57,48 @@ export class PendingWebhook extends Model {
           )
 
           return webhooksForEvent.map(async (webhook) => {
-            const value = await webhook.getValue(event, async () => {
-              // Find most recent event for this contract and key before this
-              // block.
+            const value = await webhook.getValue(
+              event,
+              async () => {
+                // Find most recent event for this contract and key before this
+                // block.
 
-              // Check events in case the most recent event is in the current
-              // group of events.
-              const previousEvent = events
-                .filter(
-                  (e) =>
-                    e.contractAddress === event.contractAddress &&
-                    e.key === e.key &&
-                    e.blockHeight < event.blockHeight
-                )
-                .slice(-1)[0]
+                // Check events in case the most recent event is in the current
+                // group of events.
+                const previousEvent = events
+                  .filter(
+                    (e) =>
+                      e.contractAddress === event.contractAddress &&
+                      e.key === e.key &&
+                      e.blockHeight < event.blockHeight
+                  )
+                  .slice(-1)[0]
 
-              if (previousEvent) {
-                return previousEvent.valueJson
-              }
+                if (previousEvent) {
+                  return previousEvent.valueJson
+                }
 
-              // Fallback to database.
-              return (
-                (
-                  await Event.findOne({
-                    where: {
-                      contractAddress: event.contractAddress,
-                      key: event.key,
-                      blockHeight: {
-                        [Op.lt]: event.blockHeight,
+                // Fallback to database.
+                return (
+                  (
+                    await Event.findOne({
+                      where: {
+                        contractAddress: event.contractAddress,
+                        key: event.key,
+                        blockHeight: {
+                          [Op.lt]: event.blockHeight,
+                        },
                       },
-                    },
-                    order: [['blockHeight', 'DESC']],
-                  })
-                )?.valueJson ?? null
-              )
-            })
+                      order: [['blockHeight', 'DESC']],
+                    })
+                  )?.valueJson ?? null
+                )
+              },
+              {
+                ...getEnv({ block: event.block }),
+                contractAddress: event.contractAddress,
+              }
+            )
 
             if (value === undefined) {
               return
@@ -98,7 +106,10 @@ export class PendingWebhook extends Model {
 
             return {
               eventId: event.id,
-              endpoint: webhook.endpoint,
+              endpoint:
+                typeof webhook.endpoint === 'function'
+                  ? webhook.endpoint(event)
+                  : webhook.endpoint,
               value,
               failures: 0,
             }
@@ -110,7 +121,7 @@ export class PendingWebhook extends Model {
         w
       ): w is {
         eventId: number
-        endpoint: Webhook['endpoint']
+        endpoint: WebhookEndpoint
         value: any
         failures: number
       } => w !== undefined

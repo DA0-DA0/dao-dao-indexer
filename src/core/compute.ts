@@ -49,7 +49,12 @@ export const compute = async ({
     transformations: new Set<string>(),
   }
 
-  const env = getEnv(block, args, dependencies, onFetch)
+  const env = getEnv({
+    block,
+    args,
+    dependencies,
+    onFetch,
+  })
   const value =
     options.type === 'contract'
       ? await options.formula({
@@ -167,7 +172,13 @@ export const computeRange = async ({
       transformations: new Set<string>(),
     }
 
-    const env = getEnv(block, args, dependencies, onFetch, initialCache)
+    const env = getEnv({
+      block,
+      args,
+      dependencies,
+      onFetch,
+      cache: initialCache,
+    })
     const value =
       options.type === 'contract'
         ? await options.formula({
