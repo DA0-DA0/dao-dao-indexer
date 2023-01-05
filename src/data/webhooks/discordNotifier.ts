@@ -20,10 +20,17 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
       event.valueJson.status === Status.Open,
   },
-  endpoint: (event) => ({
-    url: `https://discord-notifier.dao-dao.workers.dev/${state.chainId}/${event.contractAddress}/notify`,
-    method: 'POST',
-  }),
+  endpoint: async (_, env) => {
+    const daoAddress = await dao(env)
+    if (!daoAddress) {
+      return
+    }
+
+    return {
+      url: `https://discord-notifier.dao-dao.workers.dev/${state.chainId}/${daoAddress}/notify`,
+      method: 'POST',
+    }
+  },
   getValue: async (event, getLastEvent, env) => {
     // Only fire the webhook the first time this exists.
     if ((await getLastEvent()) !== null) {

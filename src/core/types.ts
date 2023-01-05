@@ -290,7 +290,12 @@ export type Webhook<V = any> = {
     contractAddresses: string[]
     matches: (event: Event) => boolean
   }>
-  endpoint: WebhookEndpoint | ((event: Event) => WebhookEndpoint)
+  // If returns undefined, the webhook will not be called.
+  endpoint:
+    | WebhookEndpoint
+    | undefined
+    | ((event: Event, env: ContractEnv) => WebhookEndpoint | undefined)
+    | ((event: Event, env: ContractEnv) => Promise<WebhookEndpoint | undefined>)
   // If returns undefined, the webhook will not be called.
   getValue: (
     event: Event,

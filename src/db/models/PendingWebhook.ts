@@ -57,6 +57,10 @@ export class PendingWebhook extends Model {
           )
 
           return webhooksForEvent.map(async (webhook) => {
+            const env = {
+              ...getEnv({ block: event.block }),
+              contractAddress: event.contractAddress,
+            }
             const value = await webhook.getValue(
               event,
               async () => {
@@ -94,22 +98,21 @@ export class PendingWebhook extends Model {
                   )?.valueJson ?? null
                 )
               },
-              {
-                ...getEnv({ block: event.block }),
-                contractAddress: event.contractAddress,
-              }
+              env
             )
 
-            if (value === undefined) {
+            const endpoint =
+              typeof webhook.endpoint === 'function'
+                ? await webhook.endpoint(event, env)
+                : webhook.endpoint
+
+            if (value === undefined || endpoint === undefined) {
               return
             }
 
             return {
               eventId: event.id,
-              endpoint:
-                typeof webhook.endpoint === 'function'
-                  ? webhook.endpoint(event)
-                  : webhook.endpoint,
+              endpoint,
               value,
               failures: 0,
             }
