@@ -61,7 +61,7 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
       apiKey: config.discordNotifierApiKey,
       data: {
         content:
-          `**Proposal ${proposalId}:** ` +
+          `:tada: **Proposal ${proposalId}** :tada:\n` +
           config.daoDaoBase +
           `/dao/${daoAddress}/proposals/${proposalId}`,
       },
