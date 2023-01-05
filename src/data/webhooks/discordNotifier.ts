@@ -51,14 +51,17 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
     const proposalId = `${proposalModule.prefix}${proposalNum}`
 
     return {
-      embeds: [
-        {
-          title: `Proposal ${proposalId}`,
-          url:
-            config.daoDaoBase +
-            `/dao/${event.contractAddress}/proposals/${proposalId}`,
-        },
-      ],
+      apiKey: config.discordNotifierApiKey,
+      data: {
+        embeds: [
+          {
+            title: `Proposal ${proposalId}`,
+            url:
+              config.daoDaoBase +
+              `/dao/${event.contractAddress}/proposals/${proposalId}`,
+          },
+        ],
+      },
     }
   },
 })
