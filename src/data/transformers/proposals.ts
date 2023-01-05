@@ -1,6 +1,8 @@
 import { Transformer } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
+import { Status } from '../formulas/contract/proposal/types'
+
 const CODE_IDS_KEYS = ['dao-proposal-single']
 
 const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
@@ -13,7 +15,8 @@ export const proposed: Transformer = {
     // Starts with proposals or proposals_v2.
     (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
       event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
-    !!event.valueJson.proposer,
+    !!event.valueJson.proposer &&
+    event.valueJson.status === Status.Open,
   name: (event) => {
     // "proposals"|"proposals_v2", proposalId
     const [, proposalId] = dbKeyToKeys(event.key, [false, true])
