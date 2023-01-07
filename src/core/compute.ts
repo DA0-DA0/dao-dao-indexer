@@ -23,8 +23,12 @@ export const compute = async ({
 }: ComputeOptions): Promise<ComputationOutput> => {
   // Store the latest block that we've seen for all keys accessed. This is when
   // this computation became valid, i.e. the earliest this computation could
-  // have been made to get this output.
-  let latestBlock: Block | undefined
+  // have been made to get this output. If the formula is dynamic by block, then
+  // the current block is the earliest/latest block this is valid for (i.e. it's
+  // only valid at this block).
+  let latestBlock: Block | undefined = options.formula.dynamicByBlock
+    ? block
+    : undefined
 
   const onFetch = async (
     events: Event[],
@@ -110,8 +114,12 @@ export const computeRange = async ({
     transformationsUsed: Transformation[]
   }> => {
     // Store the latest block that we've seen for all keys accessed. This is the
-    // earliest this computation could have been made.
-    let latestBlock: Block | undefined
+    // earliest this computation could have been made. If the formula is dynamic
+    // by block, then the current block is the earliest/latest block this is
+    // valid for (i.e. it's only valid at this block).
+    let latestBlock: Block | undefined = options.formula.dynamicByBlock
+      ? block
+      : undefined
 
     // Store the events and transformations used for this computation.
     let eventsUsed: Event[] = []
@@ -213,9 +221,15 @@ export const computeRange = async ({
     // Only store result if it's the first result or different from the most
     // recently stored result.
     if (!previousResult || result.value !== previousResult.value) {
-      // If there is a previous result, update its latest valid block height to
-      // just before this one, since there's now a new value.
-      if (previousResult && result.latestBlock) {
+      // If there is a previous result and the formula is not dynamic by block
+      // height, update its latest valid block height to just before this one,
+      // since there's now a new value. If the formula is dynamic by block, then
+      // the previous result's latest valid block height is already correct.
+      if (
+        previousResult &&
+        result.latestBlock &&
+        !options.formula.dynamicByBlock
+      ) {
         previousResult.latestBlockHeightValid = result.latestBlock.height - 1
       }
 
