@@ -31,7 +31,11 @@ export const getContractFormula = (
           formulaPath[formulaPath.length - 1]
         ]
       : undefined
-  return typeof formula === 'function' ? formula : undefined
+  return formula &&
+    'compute' in formula &&
+    typeof formula.compute === 'function'
+    ? (formula as ContractFormula<any, any>)
+    : undefined
 }
 
 export const getWalletFormula = (
@@ -57,7 +61,11 @@ export const getWalletFormula = (
           formulaPath[formulaPath.length - 1]
         ]
       : undefined
-  return typeof formula === 'function' ? formula : undefined
+  return formula &&
+    'compute' in formula &&
+    typeof formula.compute === 'function'
+    ? (formula as WalletFormula<any, any>)
+    : undefined
 }
 
 export const getGenericFormula = (
@@ -83,7 +91,11 @@ export const getGenericFormula = (
           formulaPath[formulaPath.length - 1]
         ]
       : undefined
-  return typeof formula === 'function' ? formula : undefined
+  return formula &&
+    'compute' in formula &&
+    typeof formula.compute === 'function'
+    ? (formula as GenericFormula<any, any>)
+    : undefined
 }
 
 export const getTypedFormula = (
