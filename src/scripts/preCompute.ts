@@ -174,7 +174,7 @@ export const main = async () => {
       if (outputs.length > 0) {
         await Computation.createFromComputationOutputs(
           targetAddress,
-          options.formula,
+          typedFormula,
           args,
           outputs
         )

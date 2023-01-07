@@ -7,7 +7,7 @@ import { Computation, Event, Transformation } from './models'
 
 // Update validity of computations dependent on changed keys in three ways:
 //
-//    1. the computation starts being valid after the earliest block
+//    1. the computation starts being valid at or after the earliest block
 //    2. the computation starts being valid before the earliest block and has
 //       been determined to be valid after the earliest block
 //    3. the most recent computation for a formula has been determined to be
@@ -75,7 +75,7 @@ export const updateComputationValidityDependentOnChanges = async (
     { earliestBlockHeight: Infinity, latestBlockHeight: -Infinity }
   )
 
-  // 1. Destroy those starting after the earliest block.
+  // 1. Destroy those starting at or after the earliest block.
   const destroyed = await Computation.destroy({
     where: {
       ...makeWhereComputationsAffected(
@@ -106,6 +106,7 @@ export const updateComputationValidityDependentOnChanges = async (
       latestBlockHeightValid: {
         [Op.gte]: earliestBlockHeight,
       },
+      validityExtendable: true,
     },
   })
 
@@ -156,6 +157,7 @@ export const updateComputationValidityDependentOnChanges = async (
       latestBlockHeightValid: {
         [Op.lt]: earliestBlockHeight,
       },
+      validityExtendable: true,
     },
     order: [
       // Need to be first so we can use DISTINCT ON.

@@ -57,11 +57,11 @@ export const compute = async ({
   })
   const value =
     options.type === 'contract'
-      ? await options.formula({
+      ? await options.formula.compute({
           ...env,
           contractAddress: targetAddress,
         })
-      : await options.formula({
+      : await options.formula.compute({
           ...env,
           walletAddress: targetAddress,
         })
@@ -181,11 +181,11 @@ export const computeRange = async ({
     })
     const value =
       options.type === 'contract'
-        ? await options.formula({
+        ? await options.formula.compute({
             ...env,
             contractAddress: targetAddress,
           })
-        : await options.formula({
+        : await options.formula.compute({
             ...env,
             walletAddress: targetAddress,
           })

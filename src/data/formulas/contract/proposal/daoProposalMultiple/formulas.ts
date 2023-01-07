@@ -7,34 +7,44 @@ import { ProposalResponse, Status, VoteInfo } from '../types'
 import { isPassed, isRejected } from './status'
 import { Ballot, MultipleChoiceProposal } from './types'
 
-export const config: ContractFormula = async ({ contractAddress, get }) =>
-  await get(contractAddress, 'config')
+export const config: ContractFormula = {
+  compute: async ({ contractAddress, get }) =>
+    await get(contractAddress, 'config'),
+}
 
-export const dao: ContractFormula<string | undefined> = async (env) =>
-  (await config(env))?.dao
+export const dao: ContractFormula<string | undefined> = {
+  compute: async (env) => (await config.compute(env))?.dao,
+}
 
 export const proposal: ContractFormula<
   ProposalResponse<MultipleChoiceProposal> | undefined,
   { id: string }
-> = async (env) => {
-  const {
-    contractAddress,
-    get,
-    args: { id },
-  } = env
+> = {
+  // This formula depends on the block height/time to check expiration.
+  dynamicByBlock: true,
+  compute: async (env) => {
+    const {
+      contractAddress,
+      get,
+      args: { id },
+    } = env
 
-  const idNum = Number(id)
-  const _proposal =
-    (await get<MultipleChoiceProposal>(contractAddress, 'proposals', idNum)) ??
-    undefined
+    const idNum = Number(id)
+    const _proposal =
+      (await get<MultipleChoiceProposal>(
+        contractAddress,
+        'proposals',
+        idNum
+      )) ?? undefined
 
-  return _proposal && intoResponse(env, _proposal, idNum)
+    return _proposal && intoResponse(env, _proposal, idNum)
+  },
 }
 
-export const creationPolicy: ContractFormula = async ({
-  contractAddress,
-  get,
-}) => await get(contractAddress, 'creation_policy')
+export const creationPolicy: ContractFormula = {
+  compute: async ({ contractAddress, get }) =>
+    await get(contractAddress, 'creation_policy'),
+}
 
 export const listProposals: ContractFormula<
   ProposalResponse<MultipleChoiceProposal>[],
@@ -42,37 +52,43 @@ export const listProposals: ContractFormula<
     limit?: string
     startAfter?: string
   }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    args: { limit, startAfter },
-  } = env
-
-  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
-  const startAfterNum = startAfter ? Math.max(0, Number(startAfter)) : -Infinity
-
-  const proposals =
-    (await getMap<number, MultipleChoiceProposal>(
+> = {
+  // This formula depends on the block height/time to check expiration.
+  dynamicByBlock: true,
+  compute: async (env) => {
+    const {
       contractAddress,
-      'proposals',
-      {
-        numericKeys: true,
-      }
-    )) ?? {}
+      getMap,
+      args: { limit, startAfter },
+    } = env
 
-  const proposalIds = Object.keys(proposals)
-    .map(Number)
-    // Ascending by proposal ID.
-    .sort((a, b) => a - b)
-    .filter((id) => id > startAfterNum)
-    .slice(0, limitNum)
+    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+    const startAfterNum = startAfter
+      ? Math.max(0, Number(startAfter))
+      : -Infinity
 
-  const proposalResponses = await Promise.all(
-    proposalIds.map((id) => intoResponse(env, proposals[id], id))
-  )
+    const proposals =
+      (await getMap<number, MultipleChoiceProposal>(
+        contractAddress,
+        'proposals',
+        {
+          numericKeys: true,
+        }
+      )) ?? {}
 
-  return proposalResponses
+    const proposalIds = Object.keys(proposals)
+      .map(Number)
+      // Ascending by proposal ID.
+      .sort((a, b) => a - b)
+      .filter((id) => id > startAfterNum)
+      .slice(0, limitNum)
+
+    const proposalResponses = await Promise.all(
+      proposalIds.map((id) => intoResponse(env, proposals[id], id))
+    )
+
+    return proposalResponses
+  },
 }
 
 export const reverseProposals: ContractFormula<
@@ -81,91 +97,97 @@ export const reverseProposals: ContractFormula<
     limit?: string
     startBefore?: string
   }
-> = async (env) => {
-  const {
-    contractAddress,
-    getMap,
-    args: { limit, startBefore },
-  } = env
-
-  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
-  const startBeforeNum = startBefore
-    ? Math.max(0, Number(startBefore))
-    : Infinity
-
-  const proposals =
-    (await getMap<number, MultipleChoiceProposal>(
+> = {
+  // This formula depends on the block height/time to check expiration.
+  dynamicByBlock: true,
+  compute: async (env) => {
+    const {
       contractAddress,
-      'proposals',
-      {
-        numericKeys: true,
-      }
-    )) ?? {}
+      getMap,
+      args: { limit, startBefore },
+    } = env
 
-  const proposalIds = Object.keys(proposals)
-    .map(Number)
-    // Descending by proposal ID.
-    .sort((a, b) => b - a)
-    .filter((id) => id < startBeforeNum)
-    .slice(0, limitNum)
+    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+    const startBeforeNum = startBefore
+      ? Math.max(0, Number(startBefore))
+      : Infinity
 
-  const proposalResponses = await Promise.all(
-    proposalIds.map((id) => intoResponse(env, proposals[id], id))
-  )
+    const proposals =
+      (await getMap<number, MultipleChoiceProposal>(
+        contractAddress,
+        'proposals',
+        {
+          numericKeys: true,
+        }
+      )) ?? {}
 
-  return proposalResponses
+    const proposalIds = Object.keys(proposals)
+      .map(Number)
+      // Descending by proposal ID.
+      .sort((a, b) => b - a)
+      .filter((id) => id < startBeforeNum)
+      .slice(0, limitNum)
+
+    const proposalResponses = await Promise.all(
+      proposalIds.map((id) => intoResponse(env, proposals[id], id))
+    )
+
+    return proposalResponses
+  },
 }
 
-export const proposalCount: ContractFormula<number> = async ({
-  contractAddress,
-  get,
-}) =>
-  // V1 may have no proposal_count set, so default to 0.
-  (await get(contractAddress, 'proposal_count')) ?? 0
+export const proposalCount: ContractFormula<number> = {
+  compute: async ({ contractAddress, get }) =>
+    // V1 may have no proposal_count set, so default to 0.
+    (await get(contractAddress, 'proposal_count')) ?? 0,
+}
 
-export const nextProposalId: ContractFormula<number> = async (env) =>
-  (await proposalCount(env)) + 1
+export const nextProposalId: ContractFormula<number> = {
+  compute: async (env) => (await proposalCount.compute(env)) + 1,
+}
 
 export const vote: ContractFormula<
   VoteInfo<Ballot> | undefined,
   { proposalId: string; voter: string }
-> = async ({
-  contractAddress,
-  get,
-  getDateKeyModified,
-  args: { proposalId, voter },
-}) => {
-  if (!proposalId) {
-    throw new Error('missing `proposalId`')
-  }
-  if (!voter) {
-    throw new Error('missing `voter`')
-  }
-
-  const ballot = await get<Ballot>(
+> = {
+  compute: async ({
     contractAddress,
-    'ballots',
-    Number(proposalId),
-    voter
-  )
-  if (!ballot) {
-    return undefined
-  }
+    get,
+    getDateKeyModified,
+    args: { proposalId, voter },
+  }) => {
+    if (!proposalId) {
+      throw new Error('missing `proposalId`')
+    }
+    if (!voter) {
+      throw new Error('missing `voter`')
+    }
 
-  const votedAt = (
-    await getDateKeyModified(
+    const ballot = await get<Ballot>(
       contractAddress,
       'ballots',
       Number(proposalId),
       voter
     )
-  )?.toISOString()
+    if (!ballot) {
+      return undefined
+    }
 
-  return {
-    voter,
-    ...ballot,
-    votedAt,
-  }
+    const votedAt = (
+      await getDateKeyModified(
+        contractAddress,
+        'ballots',
+        Number(proposalId),
+        voter
+      )
+    )?.toISOString()
+
+    return {
+      voter,
+      ...ballot,
+      votedAt,
+    }
+  },
 }
 
 export const listVotes: ContractFormula<
@@ -175,82 +197,95 @@ export const listVotes: ContractFormula<
     limit?: string
     startBefore?: string
   }
-> = async ({
-  contractAddress,
-  getMap,
-  getDateKeyModified,
-  args: { proposalId, limit, startBefore },
-}) => {
-  const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+> = {
+  compute: async ({
+    contractAddress,
+    getMap,
+    getDateKeyModified,
+    args: { proposalId, limit, startBefore },
+  }) => {
+    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
-  const ballots =
-    (await getMap<string, Ballot>(contractAddress, [
-      'ballots',
-      Number(proposalId),
-    ])) ?? {}
-  const voters = Object.keys(ballots)
-    // Ascending by voter address.
-    .sort((a, b) => a.localeCompare(b))
-    .filter((voter) => !startBefore || voter.localeCompare(startBefore) < 0)
-    .slice(0, limitNum)
+    const ballots =
+      (await getMap<string, Ballot>(contractAddress, [
+        'ballots',
+        Number(proposalId),
+      ])) ?? {}
+    const voters = Object.keys(ballots)
+      // Ascending by voter address.
+      .sort((a, b) => a.localeCompare(b))
+      .filter((voter) => !startBefore || voter.localeCompare(startBefore) < 0)
+      .slice(0, limitNum)
 
-  const votesCastAt = await Promise.all(
-    voters.map((voter) =>
-      getDateKeyModified(contractAddress, 'ballots', Number(proposalId), voter)
+    const votesCastAt = await Promise.all(
+      voters.map((voter) =>
+        getDateKeyModified(
+          contractAddress,
+          'ballots',
+          Number(proposalId),
+          voter
+        )
+      )
     )
-  )
 
-  return voters.map((voter, index) => ({
-    voter,
-    ...ballots[voter],
-    votedAt: votesCastAt[index]?.toISOString(),
-  }))
+    return voters.map((voter, index) => ({
+      voter,
+      ...ballots[voter],
+      votedAt: votesCastAt[index]?.toISOString(),
+    }))
+  },
 }
 
 export const proposalCreatedAt: ContractFormula<
   string | undefined,
   { id: string }
-> = async ({ contractAddress, getDateKeyFirstSet, args: { id } }) =>
-  (
-    await getDateKeyFirstSet(contractAddress, 'proposals', Number(id))
-  )?.toISOString()
+> = {
+  compute: async ({ contractAddress, getDateKeyFirstSet, args: { id } }) =>
+    (
+      await getDateKeyFirstSet(contractAddress, 'proposals', Number(id))
+    )?.toISOString(),
+}
 
 // Return open proposals. If an address is passed, returns only proposals with
 // no votes from the address.
 export const openProposals: ContractFormula<
   ProposalResponse<MultipleChoiceProposal>[],
   { address?: string }
-> = async (env) => {
-  const openProposals = (
-    await listProposals({
-      ...env,
-      args: {},
-    })
-  ).filter(({ proposal }) => proposal.status === Status.Open)
+> = {
+  // This formula depends on the block height/time to check expiration.
+  dynamicByBlock: true,
+  compute: async (env) => {
+    const openProposals = (
+      await listProposals.compute({
+        ...env,
+        args: {},
+      })
+    ).filter(({ proposal }) => proposal.status === Status.Open)
 
-  // Get votes for the given address for each open proposal. If no address,
-  // don't filter by vote.
-  const openProposalVotes = env.args.address
-    ? await Promise.all(
-        openProposals.map(({ id }) =>
-          vote({
-            ...env,
-            args: {
-              proposalId: id.toString(),
-              voter: env.args.address!,
-            },
-          })
+    // Get votes for the given address for each open proposal. If no address,
+    // don't filter by vote.
+    const openProposalVotes = env.args.address
+      ? await Promise.all(
+          openProposals.map(({ id }) =>
+            vote.compute({
+              ...env,
+              args: {
+                proposalId: id.toString(),
+                voter: env.args.address!,
+              },
+            })
+          )
         )
-      )
-    : undefined
+      : undefined
 
-  // Filter out proposals with votes if address provided.
-  const openProposalsWithoutVotes =
-    env.args.address && openProposalVotes
-      ? openProposals.filter((_, index) => !openProposalVotes[index])
-      : openProposals
+    // Filter out proposals with votes if address provided.
+    const openProposalsWithoutVotes =
+      env.args.address && openProposalVotes
+        ? openProposals.filter((_, index) => !openProposalVotes[index])
+        : openProposals
 
-  return openProposalsWithoutVotes
+    return openProposalsWithoutVotes
+  },
 }
 
 // Helpers
@@ -273,7 +308,7 @@ const intoResponse = async (
     }
   }
 
-  const createdAt = await proposalCreatedAt({
+  const createdAt = await proposalCreatedAt.compute({
     ...env,
     args: {
       id: id.toString(),

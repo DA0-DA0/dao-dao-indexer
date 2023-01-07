@@ -156,18 +156,34 @@ export type WalletEnv<Args extends Record<string, string> = {}> = Env<Args> & {
 export type ContractFormula<
   R = any,
   Args extends Record<string, string> = {}
-> = (env: ContractEnv<Args>) => Promise<R>
+> = {
+  compute: (env: ContractEnv<Args>) => Promise<R>
+  // If true, the formula is dynamic based on block input. This likely means
+  // that some expiration is being computed, which affects the output of the
+  // formula without any state changing.
+  dynamicByBlock?: boolean
+}
 
-export type WalletFormula<R = any, Args extends Record<string, string> = {}> = (
-  env: WalletEnv<Args>
-) => Promise<R>
+export type WalletFormula<R = any, Args extends Record<string, string> = {}> = {
+  compute: (env: WalletEnv<Args>) => Promise<R>
+  // If true, the formula is dynamic based on block input. This likely means
+  // that some expiration is being computed, which affects the output of the
+  // formula without any state changing.
+  dynamicByBlock?: boolean
+}
 
 export type GenericFormula<
   R = any,
   Args extends Record<string, string> = {}
-> = (env: Env<Args>) => Promise<R>
+> = {
+  compute: (env: Env<Args>) => Promise<R>
+  // If true, the formula is dynamic based on block input. This likely means
+  // that some expiration is being computed, which affects the output of the
+  // formula without any state changing.
+  dynamicByBlock?: boolean
+}
 
-export type TypedFormula =
+export type TypedFormula = { name: string } & (
   | {
       type: 'contract'
       formula: ContractFormula<any, any>
@@ -180,6 +196,7 @@ export type TypedFormula =
       type: 'generic'
       formula: GenericFormula<any, any>
     }
+)
 
 export type ComputeOptions = {
   targetAddress: string

@@ -79,6 +79,7 @@ export const updateIndexesForContracts = async (
       const documents = await Promise.all(
         matchingContracts.map(async (contract) => {
           const { block, value } = await compute({
+            name: formulaName,
             type: 'contract',
             targetAddress: contract.address,
             formula,

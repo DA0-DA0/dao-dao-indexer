@@ -21,7 +21,7 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
       event.valueJson.status === Status.Open,
   },
   endpoint: async (_, env) => {
-    const daoAddress = await dao(env)
+    const daoAddress = await dao.compute(env)
     if (!daoAddress) {
       return
     }
@@ -38,9 +38,9 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
     }
 
     // Get proposal modules for this DAO so we can extract the prefix.
-    const daoAddress = await dao(env)
+    const daoAddress = await dao.compute(env)
     const proposalModules = daoAddress
-      ? await activeProposalModules({
+      ? await activeProposalModules.compute({
           ...env,
           contractAddress: daoAddress,
         })

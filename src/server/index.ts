@@ -260,7 +260,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
           const createdMissingComputations =
             await Computation.createFromComputationOutputs(
               address,
-              formulaName,
+              typedFormula,
               args,
               missingComputations
             )
@@ -313,7 +313,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
         // Cache computations for future queries.
         await Computation.createFromComputationOutputs(
           address,
-          formulaName,
+          typedFormula,
           args,
           rangeComputations
         )
@@ -384,7 +384,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
         // Cache computation for future queries.
         await Computation.createFromComputationOutputs(
           address,
-          formulaName,
+          typedFormula,
           args,
           [
             {

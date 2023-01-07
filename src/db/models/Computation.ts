@@ -1,7 +1,7 @@
 import { Op } from 'sequelize'
 import { AllowNull, Column, DataType, Model, Table } from 'sequelize-typescript'
 
-import { Block, ComputationOutput } from '@/core'
+import { Block, ComputationOutput, TypedFormula } from '@/core'
 
 import { Event } from './Event'
 import { Transformation } from './Transformation'
@@ -43,6 +43,13 @@ export class Computation extends Model {
   @Column(DataType.BIGINT)
   latestBlockHeightValid!: number
 
+  // If true, the computation's output is valid up to the latest block and
+  // cannot be extended. This may be true if the formula depends on the block
+  // height/time.
+  @AllowNull(false)
+  @Column(DataType.BOOLEAN)
+  validityExtendable!: boolean
+
   @AllowNull(false)
   @Column(DataType.TEXT)
   formula!: string
@@ -74,7 +81,7 @@ export class Computation extends Model {
 
   static async createFromComputationOutputs(
     targetAddress: string,
-    formula: string,
+    { name: formulaName, formula }: TypedFormula,
     args: Record<string, any>,
     computationOutputs: ComputationOutput[]
   ): Promise<Computation[]> {
@@ -82,7 +89,7 @@ export class Computation extends Model {
       computationOutputs.map(
         ({ block, value, dependencies, latestBlockHeightValid }) => ({
           targetAddress,
-          formula,
+          formula: formulaName,
           args: JSON.stringify(args),
           dependentEvents: dependencies.events,
           dependentTransformations: dependencies.transformations,
@@ -94,6 +101,7 @@ export class Computation extends Model {
           blockHeight: block?.height ?? -1,
           blockTimeUnixMs: block?.timeUnixMs ?? -1,
           latestBlockHeightValid: latestBlockHeightValid ?? block?.height ?? -1,
+          validityExtendable: !formula.dynamicByBlock,
           output:
             typeof value !== undefined && typeof value !== null
               ? JSON.stringify(value)
@@ -118,7 +126,8 @@ export class Computation extends Model {
     }
   }
 
-  // Returns whether or not the computation is valid at the requested block.
+  // Returns whether or not the computation is valid at the requested block. Try
+  // to update validity if we need to and are able to.
   async updateValidityUpToBlockHeight(
     upToBlockHeight: number,
     // If undefined, default to starting after its saved latest valid block.
@@ -137,6 +146,11 @@ export class Computation extends Model {
       this.latestBlockHeightValid >= upToBlockHeight
     ) {
       return true
+    }
+
+    // If validity cannot be extended, it's not valid.
+    if (!this.validityExtendable) {
+      return false
     }
 
     // If passed a block height to start from, start there as long as it's after

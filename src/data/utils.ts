@@ -16,7 +16,9 @@ export const getContractFormula = (
     .slice(0, -1)
     .reduce(
       (acc, key) =>
-        typeof acc === 'object' && acc[key] ? acc[key] : undefined,
+        typeof acc === 'object' && key in acc
+          ? (acc as NestedFormulaMap<ContractFormula<any, any>>)[key]
+          : undefined,
       contractFormulas as
         | NestedFormulaMap<ContractFormula<any, any>>
         | ContractFormula<any, any>
@@ -25,7 +27,9 @@ export const getContractFormula = (
 
   const formula =
     typeof formulaBase === 'object'
-      ? formulaBase[formulaPath[formulaPath.length - 1]]
+      ? (formulaBase as NestedFormulaMap<ContractFormula<any, any>>)[
+          formulaPath[formulaPath.length - 1]
+        ]
       : undefined
   return typeof formula === 'function' ? formula : undefined
 }
@@ -38,7 +42,9 @@ export const getWalletFormula = (
     .slice(0, -1)
     .reduce(
       (acc, key) =>
-        typeof acc === 'object' && acc[key] ? acc[key] : undefined,
+        typeof acc === 'object' && key in acc
+          ? (acc as NestedFormulaMap<WalletFormula<any, any>>)[key]
+          : undefined,
       walletFormulas as
         | NestedFormulaMap<WalletFormula<any, any>>
         | WalletFormula<any, any>
@@ -47,7 +53,9 @@ export const getWalletFormula = (
 
   const formula =
     typeof formulaBase === 'object'
-      ? formulaBase[formulaPath[formulaPath.length - 1]]
+      ? (formulaBase as NestedFormulaMap<WalletFormula<any, any>>)[
+          formulaPath[formulaPath.length - 1]
+        ]
       : undefined
   return typeof formula === 'function' ? formula : undefined
 }
@@ -60,7 +68,9 @@ export const getGenericFormula = (
     .slice(0, -1)
     .reduce(
       (acc, key) =>
-        typeof acc === 'object' && acc[key] ? acc[key] : undefined,
+        typeof acc === 'object' && key in acc
+          ? (acc as NestedFormulaMap<GenericFormula<any, any>>)[key]
+          : undefined,
       genericFormulas as
         | NestedFormulaMap<GenericFormula<any, any>>
         | GenericFormula<any, any>
@@ -69,7 +79,9 @@ export const getGenericFormula = (
 
   const formula =
     typeof formulaBase === 'object'
-      ? formulaBase[formulaPath[formulaPath.length - 1]]
+      ? (formulaBase as NestedFormulaMap<GenericFormula<any, any>>)[
+          formulaPath[formulaPath.length - 1]
+        ]
       : undefined
   return typeof formula === 'function' ? formula : undefined
 }
@@ -98,5 +110,8 @@ export const getTypedFormula = (
     throw new Error(`Formula not found: ${formulaName}`)
   }
 
-  return typeAndFormula as TypedFormula
+  return {
+    name: formulaName,
+    ...typeAndFormula,
+  } as TypedFormula
 }
