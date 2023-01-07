@@ -26,29 +26,19 @@ export const proposal: ContractFormula<
   compute: async (env) => {
     const {
       contractAddress,
-      get,
+      getTransformationMatch,
       args: { id },
     } = env
 
     const idNum = Number(id)
+    const proposal = (
+      await getTransformationMatch<SingleChoiceProposal>(
+        contractAddress,
+        `proposal:${id}`
+      )
+    )?.value
 
-    const proposalV1 = await get<SingleChoiceProposal>(
-      contractAddress,
-      'proposals',
-      idNum
-    )
-    const proposalV2 = await get<SingleChoiceProposal>(
-      contractAddress,
-      'proposals_v2',
-      idNum
-    )
-
-    const proposal = proposalV1 ?? proposalV2
-
-    return (
-      proposal &&
-      intoResponse(env, proposal, idNum, { v2: proposal === proposalV2 })
-    )
+    return proposal && intoResponse(env, proposal, idNum)
   },
 }
 
@@ -69,7 +59,7 @@ export const listProposals: ContractFormula<
   compute: async (env) => {
     const {
       contractAddress,
-      getMap,
+      getTransformationMap,
       args: { limit, startAfter },
     } = env
 
@@ -78,21 +68,11 @@ export const listProposals: ContractFormula<
       ? Math.max(0, Number(startAfter))
       : -Infinity
 
-    const proposalsV1 = await getMap<number, SingleChoiceProposal>(
-      contractAddress,
-      'proposals',
-      {
-        numericKeys: true,
-      }
-    )
-    const proposalsV2 = await getMap<number, SingleChoiceProposal>(
-      contractAddress,
-      'proposals_v2',
-      {
-        numericKeys: true,
-      }
-    )
-    const proposals = proposalsV1 ?? proposalsV2 ?? {}
+    const proposals =
+      (await getTransformationMap<number, SingleChoiceProposal>(
+        contractAddress,
+        'proposal'
+      )) ?? {}
 
     const proposalIds = Object.keys(proposals)
       .map(Number)
@@ -102,9 +82,7 @@ export const listProposals: ContractFormula<
       .slice(0, limitNum)
 
     const proposalResponses = await Promise.all(
-      proposalIds.map((id) =>
-        intoResponse(env, proposals[id], id, { v2: proposals === proposalsV2 })
-      )
+      proposalIds.map((id) => intoResponse(env, proposals[id], id))
     )
 
     return proposalResponses
@@ -123,7 +101,7 @@ export const reverseProposals: ContractFormula<
   compute: async (env) => {
     const {
       contractAddress,
-      getMap,
+      getTransformationMap,
       args: { limit, startBefore },
     } = env
 
@@ -132,21 +110,11 @@ export const reverseProposals: ContractFormula<
       ? Math.max(0, Number(startBefore))
       : Infinity
 
-    const proposalsV1 = await getMap<number, SingleChoiceProposal>(
-      contractAddress,
-      'proposals',
-      {
-        numericKeys: true,
-      }
-    )
-    const proposalsV2 = await getMap<number, SingleChoiceProposal>(
-      contractAddress,
-      'proposals_v2',
-      {
-        numericKeys: true,
-      }
-    )
-    const proposals = proposalsV1 ?? proposalsV2 ?? {}
+    const proposals =
+      (await getTransformationMap<number, SingleChoiceProposal>(
+        contractAddress,
+        'proposal'
+      )) ?? {}
 
     const proposalIds = Object.keys(proposals)
       .map(Number)
@@ -156,11 +124,7 @@ export const reverseProposals: ContractFormula<
       .slice(0, limitNum)
 
     const proposalResponses = await Promise.all(
-      proposalIds.map((id) =>
-        intoResponse(env, proposals[id], id, {
-          v2: proposals === proposalsV2,
-        })
-      )
+      proposalIds.map((id) => intoResponse(env, proposals[id], id))
     )
 
     return proposalResponses
@@ -177,6 +141,7 @@ export const nextProposalId: ContractFormula<number> = {
   compute: async (env) => (await proposalCount.compute(env)) + 1,
 }
 
+// TODO: Use transformed.
 export const vote: ContractFormula<
   VoteInfo<Ballot> | undefined,
   { proposalId: string; voter: string }
@@ -221,6 +186,7 @@ export const vote: ContractFormula<
   },
 }
 
+// TODO: Use transformed.
 export const listVotes: ContractFormula<
   VoteInfo<Ballot>[],
   {
@@ -271,10 +237,9 @@ export const proposalCreatedAt: ContractFormula<
   string | undefined,
   { id: string }
 > = {
-  compute: async ({ contractAddress, getDateKeyFirstSet, args: { id } }) =>
+  compute: async ({ contractAddress, getDateFirstTransformed, args: { id } }) =>
     (
-      (await getDateKeyFirstSet(contractAddress, 'proposals_v2', Number(id))) ??
-      (await getDateKeyFirstSet(contractAddress, 'proposals', Number(id)))
+      await getDateFirstTransformed(contractAddress, `proposal:${id}`)
     )?.toISOString(),
 }
 
@@ -326,8 +291,7 @@ export const openProposals: ContractFormula<
 const intoResponse = async (
   env: ContractEnv,
   proposal: SingleChoiceProposal,
-  id: number,
-  { v2 }: { v2: boolean }
+  id: number
 ): Promise<ProposalResponse<SingleChoiceProposal>> => {
   // Update status.
   if (proposal.status === Status.Open) {
@@ -354,28 +318,20 @@ const intoResponse = async (
     proposal.status === Status.ExecutionFailed
   ) {
     executedAt = (
-      await env.getDateKeyFirstSetWithValueMatch(
-        env.contractAddress,
-        [v2 ? 'proposals_v2' : 'proposals', id],
-        {
-          status: {
-            [Op.in]: ['executed', 'execution_failed'],
-          },
-        }
-      )
+      await env.getDateFirstTransformed(env.contractAddress, `proposal:${id}`, {
+        status: {
+          [Op.in]: ['executed', 'execution_failed'],
+        },
+      })
     )?.toISOString()
   }
 
   let closedAt: string | undefined
   if (proposal.status === Status.Closed) {
     closedAt = (
-      await env.getDateKeyFirstSetWithValueMatch(
-        env.contractAddress,
-        [v2 ? 'proposals_v2' : 'proposals', id],
-        {
-          status: 'closed',
-        }
-      )
+      await env.getDateFirstTransformed(env.contractAddress, `proposal:${id}`, {
+        status: 'closed',
+      })
     )?.toISOString()
   }
 
@@ -386,9 +342,9 @@ const intoResponse = async (
       closedAt ||
       // If not yet executed nor closed, completed when it was passed/rejected.
       (
-        await env.getDateKeyFirstSetWithValueMatch(
+        await env.getDateFirstTransformed(
           env.contractAddress,
-          [v2 ? 'proposals_v2' : 'proposals', id],
+          `proposal:${id}`,
           {
             status: {
               [Op.in]: ['passed', 'rejected'],

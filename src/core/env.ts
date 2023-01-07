@@ -405,7 +405,7 @@ export const getEnv = ({
                 contractAddress,
               }),
               ...(where && {
-                valueJson: where,
+                value: where,
               }),
               ...blockHeightFilter,
             },
@@ -512,7 +512,8 @@ export const getEnv = ({
     // If transformations found, create map.
     const map: Record<string | number, any> = {}
     for (const transformation of definedTransformations) {
-      map[transformation.name.slice(namePrefix.length)] = transformation.value
+      map[transformation.name.slice(mapNamePrefix.length)] =
+        transformation.value
     }
 
     return map
@@ -646,7 +647,7 @@ export const getEnv = ({
           contractAddress,
         }),
         ...(where && {
-          valueJson: where,
+          value: where,
         }),
         ...blockHeightFilter,
       },

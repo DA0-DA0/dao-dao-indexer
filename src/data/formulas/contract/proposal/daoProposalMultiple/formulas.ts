@@ -25,19 +25,19 @@ export const proposal: ContractFormula<
   compute: async (env) => {
     const {
       contractAddress,
-      get,
+      getTransformationMatch,
       args: { id },
     } = env
 
     const idNum = Number(id)
-    const _proposal =
-      (await get<MultipleChoiceProposal>(
+    const proposal = (
+      await getTransformationMatch<MultipleChoiceProposal>(
         contractAddress,
-        'proposals',
-        idNum
-      )) ?? undefined
+        `proposal:${id}`
+      )
+    )?.value
 
-    return _proposal && intoResponse(env, _proposal, idNum)
+    return proposal && intoResponse(env, proposal, idNum)
   },
 }
 
@@ -58,7 +58,7 @@ export const listProposals: ContractFormula<
   compute: async (env) => {
     const {
       contractAddress,
-      getMap,
+      getTransformationMap,
       args: { limit, startAfter },
     } = env
 
@@ -68,12 +68,9 @@ export const listProposals: ContractFormula<
       : -Infinity
 
     const proposals =
-      (await getMap<number, MultipleChoiceProposal>(
+      (await getTransformationMap<number, MultipleChoiceProposal>(
         contractAddress,
-        'proposals',
-        {
-          numericKeys: true,
-        }
+        'proposal'
       )) ?? {}
 
     const proposalIds = Object.keys(proposals)
@@ -103,7 +100,7 @@ export const reverseProposals: ContractFormula<
   compute: async (env) => {
     const {
       contractAddress,
-      getMap,
+      getTransformationMap,
       args: { limit, startBefore },
     } = env
 
@@ -113,12 +110,9 @@ export const reverseProposals: ContractFormula<
       : Infinity
 
     const proposals =
-      (await getMap<number, MultipleChoiceProposal>(
+      (await getTransformationMap<number, MultipleChoiceProposal>(
         contractAddress,
-        'proposals',
-        {
-          numericKeys: true,
-        }
+        'proposal'
       )) ?? {}
 
     const proposalIds = Object.keys(proposals)
@@ -146,6 +140,7 @@ export const nextProposalId: ContractFormula<number> = {
   compute: async (env) => (await proposalCount.compute(env)) + 1,
 }
 
+// TODO: Use transformed.
 export const vote: ContractFormula<
   VoteInfo<Ballot> | undefined,
   { proposalId: string; voter: string }
@@ -190,6 +185,7 @@ export const vote: ContractFormula<
   },
 }
 
+// TODO: Use transformed.
 export const listVotes: ContractFormula<
   VoteInfo<Ballot>[],
   {
@@ -240,9 +236,9 @@ export const proposalCreatedAt: ContractFormula<
   string | undefined,
   { id: string }
 > = {
-  compute: async ({ contractAddress, getDateKeyFirstSet, args: { id } }) =>
+  compute: async ({ contractAddress, getDateFirstTransformed, args: { id } }) =>
     (
-      await getDateKeyFirstSet(contractAddress, 'proposals', Number(id))
+      await getDateFirstTransformed(contractAddress, `proposal:${id}`)
     )?.toISOString(),
 }
 
@@ -321,28 +317,20 @@ const intoResponse = async (
     proposal.status === Status.ExecutionFailed
   ) {
     executedAt = (
-      await env.getDateKeyFirstSetWithValueMatch(
-        env.contractAddress,
-        ['proposals', id],
-        {
-          status: {
-            [Op.in]: ['executed', 'execution_failed'],
-          },
-        }
-      )
+      await env.getDateFirstTransformed(env.contractAddress, `proposal:${id}`, {
+        status: {
+          [Op.in]: ['executed', 'execution_failed'],
+        },
+      })
     )?.toISOString()
   }
 
   let closedAt: string | undefined
   if (proposal.status === Status.Closed) {
     closedAt = (
-      await env.getDateKeyFirstSetWithValueMatch(
-        env.contractAddress,
-        ['proposals', id],
-        {
-          status: 'closed',
-        }
-      )
+      await env.getDateFirstTransformed(env.contractAddress, `proposal:${id}`, {
+        status: 'closed',
+      })
     )?.toISOString()
   }
 
@@ -353,9 +341,9 @@ const intoResponse = async (
       closedAt ||
       // If not yet executed nor closed, completed when it was passed/rejected.
       (
-        await env.getDateKeyFirstSetWithValueMatch(
+        await env.getDateFirstTransformed(
           env.contractAddress,
-          ['proposals', id],
+          `proposal:${id}`,
           {
             status: {
               [Op.in]: ['passed', 'rejected'],

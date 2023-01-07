@@ -48,3 +48,17 @@ export const voteCast: Transformer = {
     }
   },
 }
+
+export const proposal: Transformer = {
+  codeIdsKeys: CODE_IDS_KEYS,
+  matches: (event) =>
+    // Starts with proposals or proposals_v2.
+    event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
+    event.key.startsWith(KEY_PREFIX_PROPOSALS_V2),
+  name: (event) => {
+    // "proposals"|"proposals_v2", proposalId
+    const [, proposalId] = dbKeyToKeys(event.key, [false, true])
+    return `proposal:${proposalId}`
+  },
+  getValue: (event) => event.valueJson,
+}
