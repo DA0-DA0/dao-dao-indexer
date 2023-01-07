@@ -24,8 +24,3 @@ export interface ProposalResponse<Proposal> {
   executedAt?: string
   closedAt?: string
 }
-
-export type VoteInfo<Ballot> = Ballot & {
-  voter: string
-  votedAt?: string
-}

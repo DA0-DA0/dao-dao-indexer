@@ -2,8 +2,9 @@ import { Op } from 'sequelize'
 
 import { ContractEnv, ContractFormula } from '@/core'
 
+import { VoteCast, VoteInfo } from '../../../../types'
 import { isExpirationExpired } from '../../../utils'
-import { ProposalResponse, Status, VoteInfo } from '../types'
+import { ProposalResponse, Status } from '../types'
 import { isPassed, isRejected } from './status'
 import { Ballot, SingleChoiceProposal } from './types'
 
@@ -141,15 +142,13 @@ export const nextProposalId: ContractFormula<number> = {
   compute: async (env) => (await proposalCount.compute(env)) + 1,
 }
 
-// TODO: Use transformed.
 export const vote: ContractFormula<
   VoteInfo<Ballot> | undefined,
   { proposalId: string; voter: string }
 > = {
   compute: async ({
     contractAddress,
-    get,
-    getDateKeyModified,
+    getTransformationMatch,
     args: { proposalId, voter },
   }) => {
     if (!proposalId) {
@@ -159,34 +158,23 @@ export const vote: ContractFormula<
       throw new Error('missing `voter`')
     }
 
-    const ballot = await get<Ballot>(
-      contractAddress,
-      'ballots',
-      Number(proposalId),
-      voter
-    )
-    if (!ballot) {
-      return
-    }
-
-    const votedAt = (
-      await getDateKeyModified(
+    const voteCast = (
+      await getTransformationMatch<VoteCast<Ballot>>(
         contractAddress,
-        'ballots',
-        Number(proposalId),
-        voter
+        `voteCast:${voter}:${proposalId}`
       )
-    )?.toISOString()
+    )?.value
 
-    return {
-      voter,
-      ...ballot,
-      votedAt,
-    }
+    return (
+      voteCast && {
+        voter,
+        ...voteCast.vote,
+        votedAt: voteCast.votedAt,
+      }
+    )
   },
 }
 
-// TODO: Use transformed.
 export const listVotes: ContractFormula<
   VoteInfo<Ballot>[],
   {
@@ -197,39 +185,29 @@ export const listVotes: ContractFormula<
 > = {
   compute: async ({
     contractAddress,
-    getMap,
-    getDateKeyModified,
+    getTransformationMatches,
     args: { proposalId, limit, startAfter },
   }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
-    const ballots =
-      (await getMap<string, Ballot>(contractAddress, [
-        'ballots',
-        Number(proposalId),
-      ])) ?? {}
-    const voters = Object.keys(ballots)
-      // Ascending by voter address.
-      .sort((a, b) => a.localeCompare(b))
-      .filter((voter) => !startAfter || voter.localeCompare(startAfter) > 0)
-      .slice(0, limitNum)
-
-    const votesCastAt = await Promise.all(
-      voters.map((voter) =>
-        getDateKeyModified(
-          contractAddress,
-          'ballots',
-          Number(proposalId),
-          voter
-        )
-      )
+    const voteInfos = (
+      (await getTransformationMatches<VoteCast<Ballot>>(
+        contractAddress,
+        `voteCast:%:${proposalId}`
+      )) ?? []
+    ).map(
+      ({ value: { voter, vote, votedAt } }): VoteInfo<Ballot> => ({
+        voter,
+        ...vote,
+        votedAt,
+      })
     )
 
-    return voters.map((voter, index) => ({
-      voter,
-      ...ballots[voter],
-      votedAt: votesCastAt[index]?.toISOString(),
-    }))
+    // Ascending by voter address.
+    return voteInfos
+      .sort((a, b) => a.voter.localeCompare(b.voter))
+      .filter(({ voter }) => !startAfter || voter.localeCompare(startAfter) > 0)
+      .slice(0, limitNum)
   },
 }
 

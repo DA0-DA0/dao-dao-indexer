@@ -1,5 +1,7 @@
 import { WalletFormula } from '@/core'
 
+import { VoteCast } from '../../types'
+
 export const created: WalletFormula<
   | {
       proposalModule: string
@@ -23,26 +25,23 @@ export const created: WalletFormula<
 }
 
 export const votesCast: WalletFormula<
-  | {
+  | ({
       proposalModule: string
       proposalId: number
-      vote: any
-      votedAt: string
-    }[]
+    } & Omit<VoteCast, 'voter'>)[]
   | undefined
 > = {
   compute: async ({ walletAddress, getTransformationMatches }) => {
     // Votes for dao-proposal-single and dao-proposal-multiple.
-    const voteCastTransformations = await getTransformationMatches<{
-      proposalId: number
-      vote: any
-      votedAt: string
-    }>(undefined, `voteCast:${walletAddress}:%`)
+    const voteCastTransformations = await getTransformationMatches<VoteCast>(
+      undefined,
+      `voteCast:${walletAddress}:%`
+    )
 
     return voteCastTransformations?.map(
-      ({ contractAddress, value: { proposalId, vote, votedAt } }) => ({
+      ({ contractAddress, name, value: { vote, votedAt } }) => ({
         proposalModule: contractAddress,
-        proposalId,
+        proposalId: Number(name.split(':')[2]),
         vote,
         votedAt,
       })

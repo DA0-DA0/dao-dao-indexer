@@ -27,3 +27,11 @@ export interface ProposalModule {
   prefix: string
   status: 'Enabled' | 'Disabled'
 }
+
+export type VoteCast<Vote = any> = {
+  voter: string
+  vote: Vote
+  votedAt: string
+}
+
+export type VoteInfo<Vote = any> = Omit<VoteCast, 'vote'> & Vote

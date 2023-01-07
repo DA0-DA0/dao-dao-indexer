@@ -2,6 +2,7 @@ import { Transformer } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
 import { Status } from '../formulas/contract/proposal/types'
+import { VoteCast } from '../types'
 
 const CODE_IDS_KEYS = ['dao-proposal-single']
 
@@ -39,13 +40,14 @@ export const voteCast: Transformer = {
   },
   getValue: (event) => {
     // "ballots", proposalId, address
-    const [, proposalId] = dbKeyToKeys(event.key, [false, true, false])
+    const [, proposalId, voter] = dbKeyToKeys(event.key, [false, true, false])
 
     return {
       proposalId,
+      voter,
       vote: event.valueJson,
       votedAt: event.blockTimestamp.toISOString(),
-    }
+    } as VoteCast
   },
 }
 
