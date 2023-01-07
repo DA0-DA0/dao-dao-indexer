@@ -22,7 +22,7 @@ export const proposal: ContractFormula<
   { id: string }
 > = {
   // This formula depends on the block height/time to check expiration.
-  dynamicByBlock: true,
+  dynamic: true,
   compute: async (env) => {
     const {
       contractAddress,
@@ -65,7 +65,7 @@ export const listProposals: ContractFormula<
   }
 > = {
   // This formula depends on the block height/time to check expiration.
-  dynamicByBlock: true,
+  dynamic: true,
   compute: async (env) => {
     const {
       contractAddress,
@@ -119,7 +119,7 @@ export const reverseProposals: ContractFormula<
   }
 > = {
   // This formula depends on the block height/time to check expiration.
-  dynamicByBlock: true,
+  dynamic: true,
   compute: async (env) => {
     const {
       contractAddress,
@@ -285,7 +285,7 @@ export const openProposals: ContractFormula<
   { address?: string }
 > = {
   // This formula depends on the block height/time to check expiration.
-  dynamicByBlock: true,
+  dynamic: true,
   compute: async (env) => {
     const openProposals = (
       await listProposals.compute({

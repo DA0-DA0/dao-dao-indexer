@@ -225,7 +225,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
 
 export const paused: ContractFormula<PausedResponse> = {
   // This formula depends on the block height/time to check expiration.
-  dynamicByBlock: true,
+  dynamic: true,
   compute: async ({ contractAddress, block, getTransformationMatch }) => {
     const expiration = (
       await getTransformationMatch<Expiration>(contractAddress, 'paused')
@@ -387,7 +387,7 @@ export const openProposals: ContractFormula<
   { address?: string }
 > = {
   // This formula depends on the block height/time to check expiration.
-  dynamicByBlock: true,
+  dynamic: true,
   compute: async (env) => {
     const proposalModules = await activeProposalModules.compute(env)
 

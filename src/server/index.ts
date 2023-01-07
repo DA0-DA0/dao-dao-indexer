@@ -158,6 +158,15 @@ router.get('/:type/:address/(.+)', async (ctx) => {
     return
   }
 
+  // If formula is dynamic, we can't compute it over a range since we need
+  // specific blocks to compute it for.
+  if (typedFormula.formula.dynamic && blocks) {
+    ctx.status = 400
+    ctx.body =
+      'cannot compute dynamic formula over a range of blocks (compute it for specific blocks instead)'
+    return
+  }
+
   try {
     const state = await State.getSingleton()
     if (!state) {
@@ -351,16 +360,18 @@ router.get('/:type/:address/(.+)', async (ctx) => {
       if (block === undefined) {
         block = state.latestBlock
       }
-      // Get most recent computation.
-      const existingComputation = await Computation.findOne({
-        where: {
-          ...computationWhere,
-          blockHeight: {
-            [Op.lte]: block.height,
-          },
-        },
-        order: [['blockHeight', 'DESC']],
-      })
+      // Get most recent computation if this formula does not change each block.
+      const existingComputation = typedFormula.formula.dynamic
+        ? null
+        : await Computation.findOne({
+            where: {
+              ...computationWhere,
+              blockHeight: {
+                [Op.lte]: block.height,
+              },
+            },
+            order: [['blockHeight', 'DESC']],
+          })
 
       // If found existing computation, check its validity.
       const existingComputationValid =
@@ -381,19 +392,22 @@ router.get('/:type/:address/(.+)', async (ctx) => {
 
         computation = computationOutput.value
 
-        // Cache computation for future queries.
-        await Computation.createFromComputationOutputs(
-          address,
-          typedFormula,
-          args,
-          [
-            {
-              ...computationOutput,
-              // Valid up to the current block.
-              latestBlockHeightValid: block.height,
-            },
-          ]
-        )
+        // Cache computation for future queries if this formula does not change
+        // each block.
+        if (!typedFormula.formula.dynamic) {
+          await Computation.createFromComputationOutputs(
+            address,
+            typedFormula,
+            args,
+            [
+              {
+                ...computationOutput,
+                // Valid up to the current block.
+                latestBlockHeightValid: block.height,
+              },
+            ]
+          )
+        }
       }
     }
 

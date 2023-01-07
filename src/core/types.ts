@@ -161,7 +161,7 @@ export type ContractFormula<
   // If true, the formula is dynamic based on block input. This likely means
   // that some expiration is being computed, which affects the output of the
   // formula without any state changing.
-  dynamicByBlock?: boolean
+  dynamic?: boolean
 }
 
 export type WalletFormula<R = any, Args extends Record<string, string> = {}> = {
@@ -169,7 +169,7 @@ export type WalletFormula<R = any, Args extends Record<string, string> = {}> = {
   // If true, the formula is dynamic based on block input. This likely means
   // that some expiration is being computed, which affects the output of the
   // formula without any state changing.
-  dynamicByBlock?: boolean
+  dynamic?: boolean
 }
 
 export type GenericFormula<
@@ -180,7 +180,7 @@ export type GenericFormula<
   // If true, the formula is dynamic based on block input. This likely means
   // that some expiration is being computed, which affects the output of the
   // formula without any state changing.
-  dynamicByBlock?: boolean
+  dynamic?: boolean
 }
 
 export type TypedFormula = { name: string } & (

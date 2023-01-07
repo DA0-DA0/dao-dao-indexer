@@ -101,7 +101,7 @@ export class Computation extends Model {
           blockHeight: block?.height ?? -1,
           blockTimeUnixMs: block?.timeUnixMs ?? -1,
           latestBlockHeightValid: latestBlockHeightValid ?? block?.height ?? -1,
-          validityExtendable: !formula.dynamicByBlock,
+          validityExtendable: !formula.dynamic,
           output:
             typeof value !== undefined && typeof value !== null
               ? JSON.stringify(value)
