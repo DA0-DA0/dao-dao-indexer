@@ -25,7 +25,8 @@ export type Denom =
 export interface ProposalModule {
   address: string
   prefix: string
-  status: 'Enabled' | 'Disabled'
+  // v2 changed case.
+  status: 'enabled' | 'Enabled' | 'disabled' | 'Disabled'
 }
 
 export type VoteCast<Vote = any> = {

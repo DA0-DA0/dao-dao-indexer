@@ -121,7 +121,9 @@ export const activeProposalModules: ContractFormula<
 > = {
   compute: async (env) => {
     const modules = await proposalModules.compute(env)
-    return modules?.filter((module) => module.status === 'Enabled')
+    return modules?.filter(
+      (module) => module.status === 'enabled' || module.status === 'Enabled'
+    )
   },
 }
 
