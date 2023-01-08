@@ -273,11 +273,11 @@ const intoResponse = async (
 ): Promise<ProposalResponse<SingleChoiceProposal>> => {
   // Update status.
   if (proposal.status === Status.Open) {
-    if (isPassed(proposal, env.block)) {
+    if (isPassed(env, proposal)) {
       proposal.status = Status.Passed
     } else if (
-      isExpirationExpired(proposal.expiration, env.block) ||
-      isRejected(proposal, env.block)
+      isExpirationExpired(env, proposal.expiration) ||
+      isRejected(env, proposal)
     ) {
       proposal.status = Status.Rejected
     }

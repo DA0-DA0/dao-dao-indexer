@@ -26,6 +26,7 @@ import {
 // Generate environment for computation.
 export const getEnv = ({
   block,
+  useBlockDate = false,
   args = {},
   dependencies,
   onFetch,
@@ -669,6 +670,7 @@ export const getEnv = ({
 
   return {
     block,
+    date: useBlockDate ? new Date(block.timeUnixMs) : new Date(),
     get,
     getMap,
     getDateKeyModified,

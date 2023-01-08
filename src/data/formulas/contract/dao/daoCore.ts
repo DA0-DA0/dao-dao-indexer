@@ -228,12 +228,14 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
 export const paused: ContractFormula<PausedResponse> = {
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
-  compute: async ({ contractAddress, block, getTransformationMatch }) => {
+  compute: async (env) => {
+    const { contractAddress, getTransformationMatch } = env
+
     const expiration = (
       await getTransformationMatch<Expiration>(contractAddress, 'paused')
     )?.value
 
-    return !expiration || isExpirationExpired(expiration, block)
+    return !expiration || isExpirationExpired(env, expiration)
       ? { Unpaused: {} }
       : { Paused: { expiration } }
   },

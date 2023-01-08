@@ -1,4 +1,4 @@
-import { Block } from '@/core'
+import { Env } from '@/core'
 
 import { isExpirationExpired } from '../../../utils'
 import { doesVoteCountPass } from '../utils/math'
@@ -12,10 +12,10 @@ import {
 
 // https://github.com/DA0-DA0/dao-contracts/blob/fa567797e2f42e70296a2d6f889f341ff80f0695/contracts/proposal/dao-proposal-multiple/src/proposal.rs#L86
 export const isPassed = (
-  proposal: MultipleChoiceProposal,
-  block: Block
+  env: Env,
+  proposal: MultipleChoiceProposal
 ): boolean => {
-  const expired = isExpirationExpired(proposal.expiration, block)
+  const expired = isExpirationExpired(env, proposal.expiration)
 
   if (proposal.allow_revoting && !expired) {
     return false
@@ -23,7 +23,7 @@ export const isPassed = (
 
   if (
     proposal.min_voting_period &&
-    !isExpirationExpired(proposal.min_voting_period, block)
+    !isExpirationExpired(env, proposal.min_voting_period)
   ) {
     return false
   }
@@ -58,10 +58,10 @@ export const isPassed = (
 
 // https://github.com/DA0-DA0/dao-contracts/blob/fa567797e2f42e70296a2d6f889f341ff80f0695/contracts/proposal/dao-proposal-multiple/src/proposal.rs#L137
 export const isRejected = (
-  proposal: MultipleChoiceProposal,
-  block: Block
+  env: Env,
+  proposal: MultipleChoiceProposal
 ): boolean => {
-  const expired = isExpirationExpired(proposal.expiration, block)
+  const expired = isExpirationExpired(env, proposal.expiration)
 
   if (proposal.allow_revoting && !expired) {
     return false

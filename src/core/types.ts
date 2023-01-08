@@ -117,6 +117,10 @@ export type FormulaPrefetchTransformations = (
 
 export type Env<Args extends Record<string, string> = {}> = {
   block: Block
+  // If latest block is being used, this will be the current date. If fetching
+  // at a specific block, this will be the date of that block.
+  date: Date
+
   get: FormulaGetter
   getMap: FormulaMapGetter
   getDateKeyModified: FormulaDateGetter
@@ -134,6 +138,10 @@ export type Env<Args extends Record<string, string> = {}> = {
 
 export interface EnvOptions {
   block: Block
+  // If latest block is being used, this will be false. If fetching at a
+  // specific block, this will be true.
+  useBlockDate?: boolean
+
   args?: Record<string, any>
   dependencies?: SetDependencies
   onFetch?: (
