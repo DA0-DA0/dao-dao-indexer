@@ -61,51 +61,75 @@ export class PendingWebhook extends Model {
               ...getEnv({ block: event.block }),
               contractAddress: event.contractAddress,
             }
-            const value = await webhook.getValue(
-              event,
-              async () => {
-                // Find most recent event for this contract and key before this
-                // block.
 
-                // Check events in case the most recent event is in the current
-                // group of events.
-                const previousEvent = events
-                  .filter(
-                    (e) =>
-                      e.contractAddress === event.contractAddress &&
-                      e.key === e.key &&
-                      e.blockHeight < event.blockHeight
-                  )
-                  .slice(-1)[0]
+            // Wrap in try/catch in case a webhook errors. Don't want to prevent
+            // other webhooks from sending.
+            let value
+            try {
+              value = await webhook.getValue(
+                event,
+                async () => {
+                  // Find most recent event for this contract and key before
+                  // this block.
 
-                if (previousEvent) {
-                  return previousEvent.valueJson
-                }
+                  // Check events in case the most recent event is in the
+                  // current group of events.
+                  const previousEvent = events
+                    .filter(
+                      (e) =>
+                        e.contractAddress === event.contractAddress &&
+                        e.key === e.key &&
+                        e.blockHeight < event.blockHeight
+                    )
+                    .slice(-1)[0]
 
-                // Fallback to database.
-                return (
-                  (
-                    await Event.findOne({
-                      where: {
-                        contractAddress: event.contractAddress,
-                        key: event.key,
-                        blockHeight: {
-                          [Op.lt]: event.blockHeight,
+                  if (previousEvent) {
+                    return previousEvent.valueJson
+                  }
+
+                  // Fallback to database.
+                  return (
+                    (
+                      await Event.findOne({
+                        where: {
+                          contractAddress: event.contractAddress,
+                          key: event.key,
+                          blockHeight: {
+                            [Op.lt]: event.blockHeight,
+                          },
                         },
-                      },
-                      order: [['blockHeight', 'DESC']],
-                    })
-                  )?.valueJson ?? null
-                )
-              },
-              env
-            )
+                        order: [['blockHeight', 'DESC']],
+                      })
+                    )?.valueJson ?? null
+                  )
+                },
+                env
+              )
+            } catch (error) {
+              // TODO: Store somewhere.
+              console.error(
+                `Error getting webhook value for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
+              )
+            }
 
-            const endpoint =
-              typeof webhook.endpoint === 'function'
-                ? await webhook.endpoint(event, env)
-                : webhook.endpoint
+            // Wrap in try/catch in case a webhook errors. Don't want to prevent
+            // other webhooks from sending.
+            let endpoint
+            try {
+              endpoint =
+                typeof webhook.endpoint === 'function'
+                  ? await webhook.endpoint(event, env)
+                  : webhook.endpoint
+            } catch (error) {
+              // TODO: Store somewhere.
+              console.error(
+                `Error getting webhook endpoint for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
+              )
+            }
 
+            // If value or endpoint is undefined, one either errored or the
+            // function returned undefined. In either case, don't send a
+            // webhook.
             if (value === undefined || endpoint === undefined) {
               return
             }

@@ -31,7 +31,19 @@ export const getProcessedWebhooks = (
           }
 
           if (match && filter.matches) {
-            match &&= filter.matches(event)
+            // Wrap in try/catch in case a webhook errors. Don't want to prevent
+            // other webhooks from sending.
+            try {
+              match &&= filter.matches(event)
+            } catch (error) {
+              // TODO: Store somewhere.
+              console.error(
+                `Error matching webhook for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
+              )
+
+              // On error, do not match.
+              match = false
+            }
           }
 
           return match
