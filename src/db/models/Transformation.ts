@@ -170,34 +170,64 @@ export class Transformation extends Model {
     // because some transformations may depend on the value of previous
     // transformations, which may exist in this current set of uncommitted
     // transformations. Thus, we need to evaluate them sequentially.
-    const unevaluatedTransformations: {
-      event: ParsedEvent
-      transformer: Transformer
-      pendingTransformation: PendingTransformation
-    }[] = events.flatMap((event) => {
-      const transformersForEvent = transformers.filter(
-        (transformer, index) =>
-          // Those with no code IDs are always included.
-          (transformerCodeIds[index] === null ||
-            transformerCodeIds[index]!.includes(event.codeId)) &&
-          transformer.matches(event)
-      )
+    const unevaluatedTransformations: UnevaluatedEventTransformation[] =
+      events.flatMap((event) => {
+        const transformersForEvent = transformers.filter(
+          (transformer, index) => {
+            // Those with no code IDs are always included.
+            if (
+              transformerCodeIds[index] !== null &&
+              !transformerCodeIds[index]!.includes(event.codeId)
+            ) {
+              return false
+            }
 
-      return transformersForEvent.map((transformer) => ({
-        event,
-        transformer,
-        pendingTransformation: {
-          contractAddress: event.contractAddress,
-          blockHeight: event.blockHeight,
-          blockTimeUnixMs: event.blockTimeUnixMs,
-          name:
-            typeof transformer.name === 'string'
-              ? transformer.name
-              : transformer.name(event),
-          value: undefined,
-        },
-      }))
-    })
+            // Wrap in try/catch in case a transformer errors. Don't want to prevent
+            // other events from transforming correctly.
+            try {
+              return transformer.matches(event)
+            } catch (error) {
+              // TODO: Store somewhere.
+              console.error(
+                `Error matching transformer for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
+              )
+              return false
+            }
+          }
+        )
+
+        return transformersForEvent
+          .map((transformer) => {
+            // Wrap in try/catch in case a transformer errors. Don't want to
+            // prevent other events from transforming correctly.
+            let name
+            try {
+              name =
+                typeof transformer.name === 'string'
+                  ? transformer.name
+                  : transformer.name(event)
+            } catch (error) {
+              // TODO: Store somewhere.
+              console.error(
+                `Error getting transformation name for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
+              )
+              return undefined
+            }
+
+            return {
+              event,
+              transformer,
+              pendingTransformation: {
+                contractAddress: event.contractAddress,
+                blockHeight: event.blockHeight,
+                blockTimeUnixMs: event.blockTimeUnixMs,
+                name,
+                value: undefined,
+              },
+            }
+          })
+          .filter((t): t is UnevaluatedEventTransformation => !!t)
+      })
 
     const evaluatedTransformations: PendingTransformation[] = []
 
@@ -207,64 +237,73 @@ export class Transformation extends Model {
       transformer,
       pendingTransformation,
     } of unevaluatedTransformations) {
-      pendingTransformation.value =
-        event.delete && !transformer.manuallyTransformDeletes
-          ? null
-          : (await transformer.getValue(event, async () => {
-              // Find most recent transformation for this contract and name before
-              // this block.
+      // Wrap in try/catch in case a transformer errors. Don't want to prevent
+      // other events from transforming correctly.
+      try {
+        pendingTransformation.value =
+          event.delete && !transformer.manuallyTransformDeletes
+            ? null
+            : (await transformer.getValue(event, async () => {
+                // Find most recent transformation for this contract and name before
+                // this block.
 
-              // Check evaluated transformations in case the most recent
-              // transformation is in the current group of events.
-              const evaluatedTransformation = evaluatedTransformations
-                .filter(
-                  (transformation) =>
-                    transformation.contractAddress ===
-                      pendingTransformation.contractAddress &&
-                    transformation.name === pendingTransformation.name
-                )
-                .slice(-1)[0]
+                // Check evaluated transformations in case the most recent
+                // transformation is in the current group of events.
+                const evaluatedTransformation = evaluatedTransformations
+                  .filter(
+                    (transformation) =>
+                      transformation.contractAddress ===
+                        pendingTransformation.contractAddress &&
+                      transformation.name === pendingTransformation.name
+                  )
+                  .slice(-1)[0]
 
-              if (evaluatedTransformation) {
-                return evaluatedTransformation.value
-              }
+                if (evaluatedTransformation) {
+                  return evaluatedTransformation.value
+                }
 
-              // Fallback to database.
-              return (
-                (
-                  await Transformation.findOne({
-                    where: {
-                      contractAddress: event.contractAddress,
-                      name: pendingTransformation.name,
-                      blockHeight: {
-                        [Op.lt]: event.blockHeight,
+                // Fallback to database.
+                return (
+                  (
+                    await Transformation.findOne({
+                      where: {
+                        contractAddress: event.contractAddress,
+                        name: pendingTransformation.name,
+                        blockHeight: {
+                          [Op.lt]: event.blockHeight,
+                        },
                       },
-                    },
-                    order: [['blockHeight', 'DESC']],
-                  })
-                )?.value ?? null
-              )
-            })) ?? null
+                      order: [['blockHeight', 'DESC']],
+                    })
+                  )?.value ?? null
+                )
+              })) ?? null
 
-      // Update the latest transformation for the same contract, name, and block
-      // height if it exists. We want this newer transformation to be able to
-      // access the previous value during its evaluation, in case the
-      // transformation is iterating on values, such as a counter, but only one
-      // transformation can exist for a contract, name, and block height set.
-      const latestTransformation = evaluatedTransformations
-        .filter(
-          (transformation) =>
-            transformation.contractAddress ===
-              pendingTransformation.contractAddress &&
-            transformation.name === pendingTransformation.name &&
-            transformation.blockHeight === pendingTransformation.blockHeight
+        // Update the latest transformation for the same contract, name, and block
+        // height if it exists. We want this newer transformation to be able to
+        // access the previous value during its evaluation, in case the
+        // transformation is iterating on values, such as a counter, but only one
+        // transformation can exist for a contract, name, and block height set.
+        const latestTransformation = evaluatedTransformations
+          .filter(
+            (transformation) =>
+              transformation.contractAddress ===
+                pendingTransformation.contractAddress &&
+              transformation.name === pendingTransformation.name &&
+              transformation.blockHeight === pendingTransformation.blockHeight
+          )
+          .slice(-1)[0]
+
+        if (latestTransformation) {
+          latestTransformation.value = pendingTransformation.value
+        } else {
+          evaluatedTransformations.push(pendingTransformation)
+        }
+      } catch (error) {
+        // TODO: Store somewhere.
+        console.error(
+          `Error transforming event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
         )
-        .slice(-1)[0]
-
-      if (latestTransformation) {
-        latestTransformation.value = pendingTransformation.value
-      } else {
-        evaluatedTransformations.push(pendingTransformation)
       }
     }
 
@@ -281,4 +320,10 @@ type PendingTransformation = {
   blockTimeUnixMs: number
   name: string
   value: any | null
+}
+
+type UnevaluatedEventTransformation = {
+  event: ParsedEvent
+  transformer: Transformer
+  pendingTransformation: PendingTransformation
 }
