@@ -1,7 +1,10 @@
 import { WebhookMaker } from '@/core'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
-import { activeProposalModules } from '../formulas/contract/dao/daoCore'
+import {
+  activeProposalModules,
+  config as daoCoreConfig,
+} from '../formulas/contract/dao/daoCore'
 import { dao } from '../formulas/contract/proposal/daoProposalSingle'
 import { Status } from '../formulas/contract/proposal/types'
 
@@ -37,19 +40,26 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
       return
     }
 
-    // Get proposal modules for this DAO so we can extract the prefix.
+    // Get DAO config and proposal modules for this DAO so we can retrieve the
+    // DAO's name and the prefix for this proposal module.
     const daoAddress = await dao.compute(env)
-    const proposalModules = daoAddress
-      ? await activeProposalModules.compute({
-          ...env,
-          contractAddress: daoAddress,
-        })
-      : undefined
+    if (!daoAddress) {
+      return
+    }
+
+    const daoConfig = await daoCoreConfig.compute({
+      ...env,
+      contractAddress: daoAddress,
+    })
+    const proposalModules = await activeProposalModules.compute({
+      ...env,
+      contractAddress: daoAddress,
+    })
     const proposalModule = proposalModules?.find(
       (proposalModule) => proposalModule.address === event.contractAddress
     )
 
-    if (!proposalModule) {
+    if (!daoConfig || !proposalModule) {
       return
     }
 
@@ -61,7 +71,7 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
       apiKey: config.discordNotifierApiKey,
       data: {
         content:
-          `:tada: **Proposal ${proposalId}** :tada:\n` +
+          `:tada: ${daoConfig.name} — **Proposal ${proposalId}** :tada:\n` +
           config.daoDaoBase +
           `/dao/${daoAddress}/proposals/${proposalId}`,
       },
