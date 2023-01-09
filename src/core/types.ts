@@ -289,6 +289,11 @@ export type Transformer<V = any> = {
     event: ParsedEvent,
     getLastValue: () => Promise<V | null>
   ) => V | null | Promise<V | null>
+  // By default, a transformation gets created with a value of `null` if the
+  // event is a delete event, skipping evaluation of `getValue`. If
+  // `manuallyTransformDelete` is set to true, `getValue` will be called and the
+  // value returned will be used instead, as if it were not a delete event.
+  manuallyTransformDeletes?: boolean
 }
 
 export type TransformerMap = {

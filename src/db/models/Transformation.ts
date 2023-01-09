@@ -208,41 +208,43 @@ export class Transformation extends Model {
       pendingTransformation,
     } of unevaluatedTransformations) {
       pendingTransformation.value =
-        (await transformer.getValue(event, async () => {
-          // Find most recent transformation for this contract and name before
-          // this block.
+        event.delete && !transformer.manuallyTransformDeletes
+          ? null
+          : (await transformer.getValue(event, async () => {
+              // Find most recent transformation for this contract and name before
+              // this block.
 
-          // Check evaluated transformations in case the most recent
-          // transformation is in the current group of events.
-          const evaluatedTransformation = evaluatedTransformations
-            .filter(
-              (transformation) =>
-                transformation.contractAddress ===
-                  pendingTransformation.contractAddress &&
-                transformation.name === pendingTransformation.name
-            )
-            .slice(-1)[0]
+              // Check evaluated transformations in case the most recent
+              // transformation is in the current group of events.
+              const evaluatedTransformation = evaluatedTransformations
+                .filter(
+                  (transformation) =>
+                    transformation.contractAddress ===
+                      pendingTransformation.contractAddress &&
+                    transformation.name === pendingTransformation.name
+                )
+                .slice(-1)[0]
 
-          if (evaluatedTransformation) {
-            return evaluatedTransformation.value
-          }
+              if (evaluatedTransformation) {
+                return evaluatedTransformation.value
+              }
 
-          // Fallback to database.
-          return (
-            (
-              await Transformation.findOne({
-                where: {
-                  contractAddress: event.contractAddress,
-                  name: pendingTransformation.name,
-                  blockHeight: {
-                    [Op.lt]: event.blockHeight,
-                  },
-                },
-                order: [['blockHeight', 'DESC']],
-              })
-            )?.value ?? null
-          )
-        })) ?? null
+              // Fallback to database.
+              return (
+                (
+                  await Transformation.findOne({
+                    where: {
+                      contractAddress: event.contractAddress,
+                      name: pendingTransformation.name,
+                      blockHeight: {
+                        [Op.lt]: event.blockHeight,
+                      },
+                    },
+                    order: [['blockHeight', 'DESC']],
+                  })
+                )?.value ?? null
+              )
+            })) ?? null
 
       // Update the latest transformation for the same contract, name, and block
       // height if it exists. We want this newer transformation to be able to
@@ -268,7 +270,7 @@ export class Transformation extends Model {
 
     // Save all pending transformations.
     return await Transformation.bulkCreate(evaluatedTransformations, {
-      updateOnDuplicate: ['value', 'delete'],
+      updateOnDuplicate: ['value'],
     })
   }
 }
