@@ -10,12 +10,14 @@
   "meilisearch": {
     "host": "http://localhost:7700",
     "apiKey": "masterKey",
-    "indexes": [{
-      "index": "daos",
-      "filterableAttributes": ["value.name", "value.description"],
-      "formula": "daoCore/config",
-      "codeIds": [1]
-    }]
+    "indexes": [
+      {
+        "index": "daos",
+        "filterableAttributes": ["value.name", "value.description"],
+        "formula": "daoCore/config",
+        "codeIdsKeys": ["dao-core"]
+      }
+    ]
   },
   "codeIds": {
     "dao-core": [

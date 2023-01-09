@@ -31,8 +31,8 @@ export type Config = {
       filterableAttributes?: string[]
       formula: string
       args?: Record<string, any>
-      // One of `codeIds` or `contractAddresses` these must be present.
-      codeIds?: number[]
+      // One of `codeIdsKeys` or `contractAddresses` must be present.
+      codeIdsKeys?: number[]
       contractAddresses?: string[]
     }[]
   }

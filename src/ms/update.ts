@@ -9,10 +9,10 @@ import { loadMeilisearch } from './client'
 export const updateIndexesForContracts = async (
   contracts?: Contract[]
 ): Promise<number> => {
-  const { meilisearch } = loadConfig()
+  const config = loadConfig()
 
   // If no meilisearch in config, nothing to update.
-  if (!meilisearch) {
+  if (!config.meilisearch) {
     return 0
   }
 
@@ -30,13 +30,15 @@ export const updateIndexesForContracts = async (
     index,
     formula: formulaName,
     args = {},
-    codeIds,
+    codeIdsKeys,
     contractAddresses,
-  } of meilisearch.indexes) {
+  } of config.meilisearch.indexes) {
     const formula = getContractFormula(formulaName)
     if (!formula) {
       throw new Error(`Formula ${formulaName} not found`)
     }
+
+    const codeIds = codeIdsKeys?.flatMap((key) => config.codeIds?.[key] ?? [])
 
     if (!codeIds?.length && !contractAddresses?.length) {
       throw new Error(
