@@ -370,6 +370,7 @@ const updateState = async (): Promise<State> => {
   return state
 }
 
+// TODO: Create pipeline architecture, handle errors better, etc.
 const exporter = async (
   parsedEvents: ParsedEvent[],
   dontUpdateComputations = false,
