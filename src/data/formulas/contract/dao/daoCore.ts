@@ -88,7 +88,7 @@ export const proposalModules: ContractFormula<
     const proposalModules = Object.values(
       (await getTransformationMap<string, ProposalModule>(
         contractAddress,
-        'proposalModules'
+        'proposalModule'
       )) ?? {}
     )
 
@@ -137,7 +137,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       'config',
       'info',
       {
-        name: 'proposalModules',
+        name: 'proposalModule',
         map: true,
       },
       'votingModule',
@@ -261,28 +261,43 @@ export const votingModule: ContractFormula<string | undefined> = {
 }
 
 export const item: ContractFormula<string | undefined, { key: string }> = {
-  compute: async ({ contractAddress, get, args: { key } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { key },
+  }) => {
     if (!key) {
       throw new Error('missing `key`')
     }
 
-    return await get<string | undefined>(contractAddress, 'items', key)
+    return (
+      await getTransformationMatch<string | undefined>(
+        contractAddress,
+        `item:${key}`
+      )
+    )?.value
   },
 }
 
-export const listItems: ContractFormula<string[]> = {
-  compute: async ({ contractAddress, getMap }) =>
-    Object.keys((await getMap<string>(contractAddress, 'items')) ?? {}),
+export const listItems: ContractFormula<[string, string][]> = {
+  compute: async ({ contractAddress, getTransformationMap }) =>
+    Object.entries(
+      (await getTransformationMap<string>(contractAddress, 'item')) ?? {}
+    ),
 }
 
 export const cw20List: ContractFormula<string[]> = {
-  compute: async ({ contractAddress, getMap }) =>
-    Object.keys((await getMap<string>(contractAddress, 'cw20s')) ?? {}),
+  compute: async ({ contractAddress, getTransformationMap }) =>
+    Object.keys(
+      (await getTransformationMap<string>(contractAddress, 'cw20')) ?? {}
+    ),
 }
 
 export const cw721List: ContractFormula<string[]> = {
-  compute: async ({ contractAddress, getMap }) =>
-    Object.keys((await getMap<string>(contractAddress, 'cw721s')) ?? {}),
+  compute: async ({ contractAddress, getTransformationMap }) =>
+    Object.keys(
+      (await getTransformationMap<string>(contractAddress, 'cw721')) ?? {}
+    ),
 }
 
 export const cw20Balances: ContractFormula<Cw20Balance[]> = {
@@ -307,11 +322,13 @@ export const cw20Balances: ContractFormula<Cw20Balance[]> = {
 }
 
 export const listSubDaos: ContractFormula<SubDao[]> = {
-  compute: async ({ contractAddress, getMap }) => {
+  compute: async ({ contractAddress, getTransformationMap }) => {
     // V2. V1 doesn't have sub DAOs; use empty map if undefined.
     const subDaoMap =
-      (await getMap<string, string | undefined>(contractAddress, 'sub_daos')) ??
-      {}
+      (await getTransformationMap<string, string | undefined>(
+        contractAddress,
+        'subDao'
+      )) ?? {}
 
     return Object.entries(subDaoMap).map(([addr, charter]) => ({
       addr,
