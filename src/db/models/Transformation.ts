@@ -104,7 +104,11 @@ export class Transformation extends Model {
         // Dependent keys for any contract start with "%:".
         const [contractAddress, name] = dependentKey.startsWith('%:')
           ? ['', dependentKey]
-          : dependentKey.split(':')
+          : [
+              dependentKey.split(':')[0],
+              // name can have colons in it, so rejoin rest of string.
+              dependentKey.split(':').slice(1).join(':'),
+            ]
         return {
           ...acc,
           [contractAddress]: [...(acc[contractAddress] ?? []), name],
