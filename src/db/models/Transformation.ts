@@ -120,12 +120,19 @@ export class Transformation extends Model {
     return {
       [Op.or]: Object.entries(dependentNamesByContract).map(
         ([contractAddress, dependentKeys]) => {
-          const { nonMapKeys, mapPrefixes } = Transformation.splitDependentKeys(
+          const { mapPrefixes } = Transformation.splitDependentKeys(
             dependentKeys!
           )
 
-          const exactNames = nonMapKeys.filter((name) => !name.includes('%'))
-          const wildcardNames = nonMapKeys.filter((name) => name.includes('%'))
+          // It's also possible that a map prefix is a non-map name, since names
+          // can contain any character, including a colon (which is the map
+          // separator), so we need to check all names as non-map matches.
+          const exactNames = dependentKeys!.filter(
+            (name) => !name.includes('%')
+          )
+          const wildcardNames = dependentKeys!.filter((name) =>
+            name.includes('%')
+          )
 
           return {
             // Only include if contract address is defined.
@@ -134,7 +141,7 @@ export class Transformation extends Model {
             // `src/db/utils.ts`.
             name: {
               [Op.or]: [
-                // Where name is one of the non-map names.
+                // Where name is one of the names.
                 ...(exactNames.length > 0 ? [{ [Op.in]: exactNames }] : []),
                 ...wildcardNames.map((name) => ({
                   [Op.like]: name,
