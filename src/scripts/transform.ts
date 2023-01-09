@@ -36,8 +36,13 @@ const main = async () => {
     'comma separated list of contract addresses to transform',
     (value) => value.split(',')
   )
+  program.option(
+    // Adds inverted `update` boolean to the options object.
+    '--no-update',
+    "don't update computation validity based on new events or transformations"
+  )
   program.parse()
-  const { config, initial, batch, addresses } = program.opts()
+  const { config, initial, batch, addresses, update } = program.opts()
 
   console.log(`\n[${new Date().toISOString()}] Transforming existing events...`)
 
@@ -135,8 +140,12 @@ const main = async () => {
 
     transformed += transformations.length
 
-    const { updated, destroyed } =
-      await updateComputationValidityDependentOnChanges([], transformations)
+    const { updated, destroyed } = update
+      ? await updateComputationValidityDependentOnChanges([], transformations)
+      : {
+          updated: 0,
+          destroyed: 0,
+        }
 
     computationsUpdated += updated
     computationsDestroyed += destroyed
