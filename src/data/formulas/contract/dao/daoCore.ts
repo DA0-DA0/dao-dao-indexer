@@ -4,8 +4,14 @@ import { ContractInfo, Expiration, ProposalModule } from '../../../types'
 import { isExpirationExpired } from '../../utils'
 import { info, instantiatedAt } from '../common'
 import { balance } from '../external/cw20'
-import { openProposals as multipleChoiceOpenProposals } from '../proposal/daoProposalMultiple'
-import { openProposals as singleChoiceOpenProposals } from '../proposal/daoProposalSingle'
+import {
+  openProposals as multipleChoiceOpenProposals,
+  proposalCount as multipleChoiceProposalCount,
+} from '../proposal/daoProposalMultiple'
+import {
+  openProposals as singleChoiceOpenProposals,
+  proposalCount as singleChoiceProposalCount,
+} from '../proposal/daoProposalSingle'
 import { ProposalResponse } from '../proposal/types'
 import {
   totalPower as daoVotingCw20StakedTotalPower,
@@ -55,6 +61,7 @@ interface DumpState {
   votingModuleInfo?: ContractInfo
   createdAt?: string
   adminConfig?: Config | null
+  proposalCount?: number
 }
 
 interface Cw20Balance {
@@ -154,6 +161,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       activeProposalModuleCount,
       totalProposalModuleCount,
       createdAt,
+      proposalCountResponse,
     ] = await Promise.all([
       admin.compute(env),
       config.compute(env),
@@ -179,6 +187,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       ),
       // Extra.
       instantiatedAt.compute(env),
+      proposalCount.compute(env),
     ])
 
     // If no config, this must not be a DAO core contract.
@@ -223,6 +232,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       votingModuleInfo,
       createdAt,
       adminConfig,
+      proposalCount: proposalCountResponse,
     }
   },
 }
@@ -463,6 +473,52 @@ const OPEN_PROPOSALS_MAP: Record<
   'cwd-proposal-multiple': multipleChoiceOpenProposals,
   'dao-proposal-multiple': multipleChoiceOpenProposals,
 }
+
+export const proposalCount: ContractFormula<number | undefined> = {
+  compute: async (env) => {
+    const proposalModules = await activeProposalModules.compute(env)
+    if (!proposalModules) {
+      return undefined
+    }
+
+    // Get proposal count for each proposal module.
+    const proposalCounts = await Promise.all(
+      proposalModules.map(async ({ address: proposalModuleAddress, info }) => {
+        if (!info) {
+          return 0
+        }
+
+        const proposalCountFormula =
+          PROPOSAL_COUNT_MAP[info.contract.replace('crates.io:', '')]
+        const proposalCount = await proposalCountFormula?.compute({
+          ...env,
+          contractAddress: proposalModuleAddress,
+        })
+
+        return proposalCount ?? 0
+      })
+    )
+
+    // Sum.
+    return proposalCounts.reduce((a, b) => a + b)
+  },
+}
+
+// Map contract name to proposal count formula.
+const PROPOSAL_COUNT_MAP: Record<string, ContractFormula<number> | undefined> =
+  {
+    // Single choice
+    // V1
+    'cw-govmod-single': singleChoiceProposalCount,
+    'cw-proposal-single': singleChoiceProposalCount,
+    // V2
+    'cwd-proposal-single': singleChoiceProposalCount,
+    'dao-proposal-single': singleChoiceProposalCount,
+
+    // Multiple choice
+    'cwd-proposal-multiple': multipleChoiceProposalCount,
+    'dao-proposal-multiple': multipleChoiceProposalCount,
+  }
 
 // Helpers
 
