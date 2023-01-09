@@ -9,8 +9,10 @@ export const makeTransformer = (
   const dbKeys = [keyOrKeys || name].flat().map((key) => dbKeyForKeys(key))
 
   return {
-    codeIdsKeys,
-    matches: (event) => dbKeys.includes(event.key),
+    filter: {
+      codeIdsKeys,
+      matches: (event) => dbKeys.includes(event.key),
+    },
     name,
     getValue: (event) => event.valueJson,
   }
@@ -37,9 +39,11 @@ export const makeTransformerForMap = <V = any>(
     .map((key) => dbKeyForKeys(key, ''))
 
   return {
-    codeIdsKeys,
-    matches: (event) =>
-      dbKeyPrefixes.some((prefix) => event.key.startsWith(prefix)),
+    filter: {
+      codeIdsKeys,
+      matches: (event) =>
+        dbKeyPrefixes.some((prefix) => event.key.startsWith(prefix)),
+    },
     name: (event) => {
       const [, key] = dbKeyToKeys(event.key, [false, numericKey])
       return `${mapPrefix}:${key}`

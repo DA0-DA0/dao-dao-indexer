@@ -281,9 +281,20 @@ export type ParsedEvent = {
   delete: boolean
 }
 
+type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
+  {
+    [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>
+  }[Keys]
+
 export type Transformer<V = any> = {
-  codeIdsKeys: string[]
-  matches: (event: ParsedEvent) => boolean
+  filter: RequireAtLeastOne<{
+    codeIdsKeys: string[]
+    contractAddresses: string[]
+    matches: (event: ParsedEvent) => boolean
+  }>
   name: string | ((event: ParsedEvent) => string)
   getValue: (
     event: ParsedEvent,
@@ -296,17 +307,11 @@ export type Transformer<V = any> = {
   manuallyTransformDeletes?: boolean
 }
 
-export type TransformerMap = {
-  [key: string]: Transformer
-}
+export type TransformerMaker = (config: Config) => Transformer
 
-type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
-  T,
-  Exclude<keyof T, Keys>
-> &
-  {
-    [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>
-  }[Keys]
+export type ProcessedTransformer<V = any> = Omit<Transformer<V>, 'filter'> & {
+  filter: (event: ParsedEvent) => boolean
+}
 
 export type WebhookEndpoint = {
   url: string

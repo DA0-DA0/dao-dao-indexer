@@ -75,14 +75,15 @@ const main = async () => {
 
   // Print latest statistics every 100ms.
   let printLoaderCount = 0
-  const logInterval = setInterval(() => {
+  const printStatistics = () => {
     printLoaderCount = (printLoaderCount + 1) % LOADER_MAP.length
     process.stdout.write(
       `\r${
         LOADER_MAP[printLoaderCount]
       }  Transformed: ${transformed.toLocaleString()}. Event processed/total: ${processed.toLocaleString()}/${total.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Latest block height: ${latestBlockHeight.toLocaleString()}`
     )
-  }, 100)
+  }
+  const logInterval = setInterval(printStatistics, 100)
   // Allow process to exit even though this interval is alive.
   logInterval.unref()
 
@@ -153,6 +154,7 @@ const main = async () => {
 
   clearInterval(logInterval)
 
+  printStatistics()
   console.log(`\n[${new Date().toISOString()}] Transforming complete.`)
 
   await sequelize.close()

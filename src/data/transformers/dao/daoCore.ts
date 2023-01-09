@@ -1,39 +1,35 @@
-import { Transformer } from '@/core/types'
 import { dbKeyToKeys } from '@/core/utils'
 
-import { ProposalModule } from '../types'
-import { makeTransformer, makeTransformerForMap } from './utils'
+import { ProposalModule } from '../../types'
+import { makeTransformer, makeTransformerForMap } from '../utils'
 
 const CODE_IDS_KEYS = ['dao-core']
 
-export const config = makeTransformer(CODE_IDS_KEYS, 'config', [
-  'config',
-  'config_v2',
-])
-export const paused = makeTransformer(CODE_IDS_KEYS, 'paused')
-export const admin = makeTransformer(CODE_IDS_KEYS, 'admin')
-export const nominatedAdmin = makeTransformer(
+const config = makeTransformer(CODE_IDS_KEYS, 'config', ['config', 'config_v2'])
+const paused = makeTransformer(CODE_IDS_KEYS, 'paused')
+const admin = makeTransformer(CODE_IDS_KEYS, 'admin')
+const nominatedAdmin = makeTransformer(
   CODE_IDS_KEYS,
   'nominatedAdmin',
   'nominated_admin'
 )
-export const votingModule = makeTransformer(
+const votingModule = makeTransformer(
   CODE_IDS_KEYS,
   'votingModule',
   'voting_module'
 )
-export const activeProposalModuleCount = makeTransformer(
+const activeProposalModuleCount = makeTransformer(
   CODE_IDS_KEYS,
   'activeProposalModuleCount',
   'active_proposal_module_count'
 )
-export const totalProposalModuleCount = makeTransformer(
+const totalProposalModuleCount = makeTransformer(
   CODE_IDS_KEYS,
   'totalProposalModuleCount',
   'total_proposal_module_count'
 )
 
-export const proposalModules = makeTransformerForMap<ProposalModule>(
+const proposalModules = makeTransformerForMap<ProposalModule>(
   CODE_IDS_KEYS,
   'proposalModule',
   ['proposal_modules', 'proposal_modules_v2'],
@@ -62,11 +58,22 @@ export const proposalModules = makeTransformerForMap<ProposalModule>(
   }
 )
 
-export const subDaos = makeTransformerForMap(
-  CODE_IDS_KEYS,
-  'subDao',
-  'sub_daos'
-)
-export const items = makeTransformerForMap(CODE_IDS_KEYS, 'item', 'items')
-export const cw20s = makeTransformerForMap(CODE_IDS_KEYS, 'cw20', 'cw20s')
-export const cw721s = makeTransformerForMap(CODE_IDS_KEYS, 'cw721', 'cw721s')
+const subDaos = makeTransformerForMap(CODE_IDS_KEYS, 'subDao', 'sub_daos')
+const items = makeTransformerForMap(CODE_IDS_KEYS, 'item', 'items')
+const cw20s = makeTransformerForMap(CODE_IDS_KEYS, 'cw20', 'cw20s')
+const cw721s = makeTransformerForMap(CODE_IDS_KEYS, 'cw721', 'cw721s')
+
+export default [
+  config,
+  paused,
+  admin,
+  nominatedAdmin,
+  votingModule,
+  activeProposalModuleCount,
+  totalProposalModuleCount,
+  proposalModules,
+  subDaos,
+  items,
+  cw20s,
+  cw721s,
+]

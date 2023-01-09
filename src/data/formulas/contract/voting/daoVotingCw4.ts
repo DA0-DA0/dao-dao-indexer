@@ -1,36 +1,40 @@
 import { ContractFormula } from '@/core'
 
 export const votingPower: ContractFormula<string, { address: string }> = {
-  compute: async ({ contractAddress, get, args: { address } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { address },
+  }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    const weight = await get<string | undefined>(
-      contractAddress,
-      'user_weights',
-      address
+    return (
+      (
+        await getTransformationMatch<string>(
+          contractAddress,
+          `userWeight:${address}`
+        )
+      )?.value || '0'
     )
-    return weight || '0'
   },
 }
 
 export const totalPower: ContractFormula<string> = {
-  compute: async ({ contractAddress, get }) => {
-    const weight = await get<string | undefined>(
-      contractAddress,
-      'total_weight'
-    )
-    return weight || '0'
-  },
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'totalWeight'))
+      ?.value || '0',
 }
 
 export const groupContract: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'group_contract'),
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'group_contract'))
+      ?.value,
 }
 
 export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'dao_address'),
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'daoAddress'))
+      ?.value,
 }

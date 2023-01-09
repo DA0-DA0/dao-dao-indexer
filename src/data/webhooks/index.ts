@@ -1,4 +1,4 @@
-import { Config, ProcessedWebhook, Webhook } from '@/core'
+import { Config, ProcessedWebhook, Webhook, WebhookMaker } from '@/core'
 import { State } from '@/db'
 
 import { makeProposalCreated } from './discordNotifier'
@@ -9,8 +9,17 @@ export const getProcessedWebhooks = (
   state: State
 ): ProcessedWebhook[] => {
   if (!processedWebhooks) {
-    // Add webhooks here.
-    const _webhooks: Webhook[] = [makeProposalCreated(config, state)]
+    const webhookMakers: WebhookMaker[] = [
+      // Add webhook makers here.
+      makeProposalCreated,
+    ]
+
+    const _webhooks: Webhook[] = [
+      // Add webhooks here.
+
+      // Makers.
+      ...webhookMakers.map((maker) => maker(config, state)),
+    ]
 
     processedWebhooks = _webhooks.map(({ filter, ...webhook }) => {
       const allCodeIds = filter.codeIdsKeys?.flatMap(

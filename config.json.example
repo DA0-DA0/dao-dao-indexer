@@ -13,21 +13,35 @@
     "indexes": [
       {
         "index": "daos",
-        "filterableAttributes": ["value.name", "value.description"],
-        "formula": "daoCore/config",
+        "filterableAttributes": [
+          "value.config.name",
+          "value.config.description",
+          "value.proposalCount"
+        ],
+        "formula": "daoCore/dumpState",
         "codeIdsKeys": ["dao-core"]
       }
     ]
   },
   "codeIds": {
     "dao-core": [
-      12, 161, 222, 252, 695, 843, 875, 1967, 2105, 2670, 2773, 3351, 3739
+      12, 161, 222, 252, 452, 695, 843, 875, 1967, 2105, 2670, 2773, 3351, 3457,
+      3739
     ],
     "dao-proposal-single": [
-      13, 164, 225, 257, 694, 696, 844, 879, 918, 1968, 2106, 2591, 2642, 2644,
-      2646, 2726, 2739, 2752, 2754, 2758, 2759, 2762, 2769, 2862, 2934, 3014,
-      3015, 3018, 3020
-    ]
+      13, 164, 225, 257, 453, 694, 696, 844, 879, 918, 1968, 2106, 2591, 2642,
+      2644, 2646, 2726, 2739, 2752, 2754, 2758, 2759, 2762, 2769, 2862, 2934,
+      3014, 3015, 3018, 3020, 3463
+    ],
+    "dao-proposal-multiple": [878, 3462],
+    "dao-voting-cw20-staked": [159, 220, 221, 451, 880, 2669, 3352, 3464],
+    "dao-voting-cw4": [221, 450, 698, 846, 881, 1970, 3465],
+    "dao-voting-cw721-staked": [799, 882, 3466],
+    "dao-voting-native-staked": [883, 3467],
+    "cw20-stake": [
+      57, 158, 219, 449, 690, 871, 1259, 2283, 2665, 3354, 3430, 3454
+    ],
+    "cw4-group": [78, 872, 3472]
   },
   "daoDaoBase": "https://testnet.daodao.zone"
 }

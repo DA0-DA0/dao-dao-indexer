@@ -12,13 +12,12 @@ import {
 import {
   Block,
   ParsedEvent,
+  ProcessedTransformer,
   SplitDependentKeys,
-  Transformer,
-  TransformerMap,
   getDependentKey,
   loadConfig,
 } from '@/core'
-import * as transformerMap from '@/data/transformers'
+import { getProcessedTransformers } from '@/data/transformers'
 
 import { Contract } from './Contract'
 
@@ -161,17 +160,10 @@ export class Transformation extends Model {
   static async transformParsedEvents(
     events: ParsedEvent[]
   ): Promise<Transformation[]> {
-    const { codeIds } = loadConfig()
-
-    const transformers = Object.values(transformerMap as TransformerMap)
-    // Collect each transformer's total set of code IDs to use for filtering by
-    // matching keys with the config.
-    const transformerCodeIds = transformers.map(({ codeIdsKeys }) =>
-      codeIdsKeys.length
-        ? codeIdsKeys.flatMap((key) => codeIds?.[key] ?? [])
-        : // Those with no code IDs are always included.
-          null
-    )
+    const transformers = getProcessedTransformers(loadConfig())
+    if (transformers.length === 0) {
+      return []
+    }
 
     // Collect all pending transformations before evaluating them. This is
     // because some transformations may depend on the value of previous
@@ -179,28 +171,8 @@ export class Transformation extends Model {
     // transformations. Thus, we need to evaluate them sequentially.
     const unevaluatedTransformations: UnevaluatedEventTransformation[] =
       events.flatMap((event) => {
-        const transformersForEvent = transformers.filter(
-          (transformer, index) => {
-            // Those with no code IDs are always included.
-            if (
-              transformerCodeIds[index] !== null &&
-              !transformerCodeIds[index]!.includes(event.codeId)
-            ) {
-              return false
-            }
-
-            // Wrap in try/catch in case a transformer errors. Don't want to prevent
-            // other events from transforming correctly.
-            try {
-              return transformer.matches(event)
-            } catch (error) {
-              // TODO: Store somewhere.
-              console.error(
-                `Error matching transformer for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
-              )
-              return false
-            }
-          }
+        const transformersForEvent = transformers.filter((transformer) =>
+          transformer.filter(event)
         )
 
         return transformersForEvent
@@ -314,6 +286,10 @@ export class Transformation extends Model {
       }
     }
 
+    if (evaluatedTransformations.length === 0) {
+      return []
+    }
+
     // Save all pending transformations.
     return await Transformation.bulkCreate(evaluatedTransformations, {
       updateOnDuplicate: ['value'],
@@ -331,6 +307,6 @@ type PendingTransformation = {
 
 type UnevaluatedEventTransformation = {
   event: ParsedEvent
-  transformer: Transformer
+  transformer: ProcessedTransformer
   pendingTransformation: PendingTransformation
 }
