@@ -98,8 +98,11 @@ export const proposalModules: ContractFormula<
     }
 
     return await Promise.all(
-      proposalModules.map(
-        async (data, index): Promise<ProposalModuleWithInfo> => {
+      proposalModules
+        // Reverse since the getter returns them in descending order, and v1
+        // prefixes are in ascending order.
+        .reverse()
+        .map(async (data, index): Promise<ProposalModuleWithInfo> => {
           const contractInfo = await info.compute({
             ...env,
             contractAddress: data.address,
@@ -110,8 +113,7 @@ export const proposalModules: ContractFormula<
             prefix: data.prefix || indexToProposalModulePrefix(index),
             info: contractInfo,
           }
-        }
-      )
+        })
     )
   },
 }
