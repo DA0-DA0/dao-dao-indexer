@@ -35,9 +35,14 @@ program.option(
   (value) => parseInt(value, 10)
 )
 program.option(
-  // Adds inverted `update` to the options object.
-  '-n, --no-update',
+  // Adds inverted `update` boolean to the options object.
+  '--no-update',
   "don't update computation validity based on new events or transformations"
+)
+program.option(
+  // Adds inverted `webhooks` boolean to the options object.
+  '--no-webhooks',
+  "don't send webhooks"
 )
 program.parse()
 const options = program.opts()
@@ -194,7 +199,7 @@ const main = async () => {
         transformations: _transformations,
         webhooksQueued: _webhooksFired,
         lastBlockHeightExported,
-      } = await exporter(parsedEvents, !options.update)
+      } = await exporter(parsedEvents, !options.update, !options.webhooks)
 
       // Update meilisearch indexes.
       await updateIndexesForContracts(updatedContracts)
@@ -367,7 +372,8 @@ const updateState = async (): Promise<State> => {
 
 const exporter = async (
   parsedEvents: ParsedEvent[],
-  dontUpdateComputations = false
+  dontUpdateComputations = false,
+  dontSendWebhooks = false
 ): Promise<{
   contracts: Contract[]
   computationsUpdated: number
@@ -424,10 +430,9 @@ const exporter = async (
   )
 
   // Queue webhooks as needed.
-  const webhooksQueued = await PendingWebhook.queueWebhooks(
-    state,
-    exportedEvents
-  )
+  const webhooksQueued = dontSendWebhooks
+    ? 0
+    : await PendingWebhook.queueWebhooks(state, exportedEvents)
 
   let updated = 0
   let destroyed = 0
