@@ -94,51 +94,53 @@ router.get('/:type/:address/(.+)', async (ctx) => {
   // If blocks passed, validate that it's a range of two blocks.
   let blocks: [Block, Block] | undefined
   let step = 1
-  if (_blocks && typeof _blocks === 'string') {
-    const [startBlock, endBlock] = _blocks.split('..')
-    if (!startBlock || !endBlock) {
-      ctx.status = 400
-      ctx.body = 'blocks must be a range of two numbers'
-      return
-    }
+  //! Disable range computation for now since they can take very long and take
+  //! up server resources.
+  // if (_blocks && typeof _blocks === 'string') {
+  //   const [startBlock, endBlock] = _blocks.split('..')
+  //   if (!startBlock || !endBlock) {
+  //     ctx.status = 400
+  //     ctx.body = 'blocks must be a range of two numbers'
+  //     return
+  //   }
 
-    try {
-      blocks = [
-        validateBlockString(startBlock, 'the start block'),
-        validateBlockString(endBlock, 'the end block'),
-      ]
-    } catch (err) {
-      ctx.status = 400
-      ctx.body = err instanceof Error ? err.message : err
-      return
-    }
+  //   try {
+  //     blocks = [
+  //       validateBlockString(startBlock, 'the start block'),
+  //       validateBlockString(endBlock, 'the end block'),
+  //     ]
+  //   } catch (err) {
+  //     ctx.status = 400
+  //     ctx.body = err instanceof Error ? err.message : err
+  //     return
+  //   }
 
-    if (
-      blocks[0].height >= blocks[1].height ||
-      blocks[0].timeUnixMs >= blocks[1].timeUnixMs
-    ) {
-      ctx.status = 400
-      ctx.body = 'the start block must be less than the end block'
-      return
-    }
+  //   if (
+  //     blocks[0].height >= blocks[1].height ||
+  //     blocks[0].timeUnixMs >= blocks[1].timeUnixMs
+  //   ) {
+  //     ctx.status = 400
+  //     ctx.body = 'the start block must be less than the end block'
+  //     return
+  //   }
 
-    // If step passed, validate.
-    if (_step && typeof _step === 'string') {
-      const parsedStep = parseInt(_step, 10)
-      if (isNaN(parsedStep) || parsedStep < 1) {
-        ctx.status = 400
-        ctx.body = 'step must be a positive integer'
-        return
-      }
-      step = parsedStep
-    }
+  //   // If step passed, validate.
+  //   if (_step && typeof _step === 'string') {
+  //     const parsedStep = parseInt(_step, 10)
+  //     if (isNaN(parsedStep) || parsedStep < 1) {
+  //       ctx.status = 400
+  //       ctx.body = 'step must be a positive integer'
+  //       return
+  //     }
+  //     step = parsedStep
+  //   }
 
-    // if (blocks[1].height - blocks[0].height > 446400) {
-    //   ctx.status = 400
-    //   ctx.body = 'the range cannot be larger than 446400 blocks'
-    //   return
-    // }
-  }
+  //   // if (blocks[1].height - blocks[0].height > 446400) {
+  //   //   ctx.status = 400
+  //   //   ctx.body = 'the range cannot be larger than 446400 blocks'
+  //   //   return
+  //   // }
+  // }
 
   // Validate that formula exists.
   const formulaName = ctx.path.split('/').slice(3).join('/')
