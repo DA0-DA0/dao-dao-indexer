@@ -221,10 +221,10 @@ export const proposalCreatedAt: ContractFormula<
     )?.toISOString(),
 }
 
-// Return open proposals. If an address is passed, returns only proposals with
-// no votes from the address.
+// Return open proposals. If an address is passed, adds a flag indicating if
+// they've voted or not.
 export const openProposals: ContractFormula<
-  ProposalResponse<SingleChoiceProposal>[],
+  (ProposalResponse<SingleChoiceProposal> & { voted?: boolean })[],
   { address?: string }
 > = {
   // This formula depends on the block height/time to check expiration.
@@ -254,12 +254,15 @@ export const openProposals: ContractFormula<
       : undefined
 
     // Filter out proposals with votes if address provided.
-    const openProposalsWithoutVotes =
+    const openProposalsWithVotes =
       env.args.address && openProposalVotes
-        ? openProposals.filter((_, index) => !openProposalVotes[index])
+        ? openProposals.map((proposal, index) => ({
+            ...proposal,
+            voted: !!openProposalVotes[index],
+          }))
         : openProposals
 
-    return openProposalsWithoutVotes
+    return openProposalsWithVotes
   },
 }
 
