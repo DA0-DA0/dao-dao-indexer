@@ -60,9 +60,12 @@ interface DumpState {
   // Extra.
   votingModuleInfo?: ContractInfo
   createdAt?: string
-  adminConfig?: Config | null
-  // If adminConfig is present, check if it has this current DAO as a SubDAO.
-  adminRegisteredSubDao?: boolean
+  adminInfo?: {
+    admin?: string
+    config: Config
+    // Check if it has this current DAO as a SubDAO.
+    registeredSubDao?: boolean
+  } | null
   proposalCount?: number
 }
 
@@ -198,10 +201,12 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
     }
 
     // Check if admin is a DAO core contract that is not this one, and load
-    // config if so. Also check if the current DAO is registered as a SubDAO.
+    // config if so. Also check if the current DAO is registered as a SubDAO,
+    // and load its admin.
     let adminConfig: Config | undefined | null = null
+    let adminAdmin: string | undefined
     let adminRegisteredSubDao: boolean | undefined
-    const adminInfo =
+    const adminContractInfo =
       adminResponse && adminResponse !== env.contractAddress
         ? await info.compute({
             ...env,
@@ -210,14 +215,19 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
         : undefined
     if (
       adminResponse &&
-      adminInfo &&
-      CONTRACT_NAMES.some((name) => adminInfo.contract.includes(name))
+      adminContractInfo &&
+      CONTRACT_NAMES.some((name) => adminContractInfo.contract.includes(name))
     ) {
       adminConfig = await config.compute({
         ...env,
         contractAddress: adminResponse,
       })
       if (adminConfig) {
+        adminAdmin = await admin.compute({
+          ...env,
+          contractAddress: adminResponse,
+        })
+
         const adminSubDaos = await listSubDaos.compute({
           ...env,
           contractAddress: adminResponse,
@@ -243,8 +253,11 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       // Extra.
       votingModuleInfo,
       createdAt,
-      adminConfig,
-      adminRegisteredSubDao,
+      adminInfo: adminConfig && {
+        admin: adminAdmin,
+        config: adminConfig,
+        registeredSubDao: adminRegisteredSubDao,
+      },
       proposalCount: proposalCountResponse,
     }
   },
