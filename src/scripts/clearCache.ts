@@ -60,9 +60,11 @@ export const main = async () => {
         options.addresses || options.formulas
           ? ` matching filters:\n${[
               options.addresses
-                ? `wallet/contract addresses: ${options.addresses}`
+                ? `wallet/contract addresses: ${options.addresses.split(',')}`
                 : '',
-              options.formulas ? `formulas: ${options.formulas}` : '',
+              options.formulas
+                ? `formulas: ${options.formulas.split(',')}`
+                : '',
             ]
               .filter(Boolean)
               .join('\n')}`
