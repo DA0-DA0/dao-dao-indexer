@@ -63,6 +63,7 @@ interface DumpState {
   adminInfo?: {
     admin?: string
     config: Config
+    info?: ContractInfo
     // Check if it has this current DAO as a SubDAO.
     registeredSubDao?: boolean
   } | null
@@ -204,6 +205,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
     // config if so. Also check if the current DAO is registered as a SubDAO,
     // and load its admin.
     let adminConfig: Config | undefined | null = null
+    let adminInfo: ContractInfo | undefined
     let adminAdmin: string | undefined
     let adminRegisteredSubDao: boolean | undefined
     const adminContractInfo =
@@ -218,6 +220,10 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       adminContractInfo &&
       CONTRACT_NAMES.some((name) => adminContractInfo.contract.includes(name))
     ) {
+      adminInfo = await info.compute({
+        ...env,
+        contractAddress: adminResponse,
+      })
       adminConfig = await config.compute({
         ...env,
         contractAddress: adminResponse,
@@ -255,6 +261,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       createdAt,
       adminInfo: adminConfig && {
         admin: adminAdmin,
+        info: adminInfo,
         config: adminConfig,
         registeredSubDao: adminRegisteredSubDao,
       },
