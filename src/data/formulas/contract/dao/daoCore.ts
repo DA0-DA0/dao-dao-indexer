@@ -201,9 +201,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       return undefined
     }
 
-    // Check if admin is a DAO core contract that is not this one, and load
-    // config if so. Also check if the current DAO is registered as a SubDAO,
-    // and load its admin.
+    // Load admin info if admin is a DAO core contract.
     let adminConfig: Config | undefined | null = null
     let adminInfo: ContractInfo | undefined
     let adminAdmin: string | undefined
@@ -220,20 +218,21 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       adminContractInfo &&
       CONTRACT_NAMES.some((name) => adminContractInfo.contract.includes(name))
     ) {
-      adminInfo = await info.compute({
-        ...env,
-        contractAddress: adminResponse,
-      })
       adminConfig = await config.compute({
         ...env,
         contractAddress: adminResponse,
       })
       if (adminConfig) {
+        adminInfo = await info.compute({
+          ...env,
+          contractAddress: adminResponse,
+        })
         adminAdmin = await admin.compute({
           ...env,
           contractAddress: adminResponse,
         })
 
+        // Check if the current DAO is registered as a SubDAO.
         const adminSubDaos = await listSubDaos.compute({
           ...env,
           contractAddress: adminResponse,
