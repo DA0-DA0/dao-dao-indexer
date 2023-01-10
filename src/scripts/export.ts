@@ -120,6 +120,14 @@ const main = async () => {
     let catchingUp = true
     let linesRead = 0
 
+    const setNotCatchingUp = () => {
+      catchingUp = false
+      // Tell pm2 we're ready.
+      if (process.send) {
+        process.send('ready')
+      }
+    }
+
     const printStatistics = () => {
       printLoaderCount = (printLoaderCount + 1) % LOADER_MAP.length
       process.stdout.write(
@@ -265,7 +273,7 @@ const main = async () => {
             lastBlockHeightSeen = event.blockHeight
             continue
           } else if (catchingUp) {
-            catchingUp = false
+            setNotCatchingUp()
           }
 
           // If we have enough events and reached the first event of the next
@@ -302,7 +310,7 @@ const main = async () => {
 
           // If we made it to the end of the file, we are no longer catching up.
           if (catchingUp) {
-            catchingUp = false
+            setNotCatchingUp()
           }
         }
       } catch (err) {

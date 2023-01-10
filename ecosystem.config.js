@@ -3,6 +3,8 @@ module.exports = {
     {
       name: 'exporter',
       script: 'dist/scripts/export.js',
+      wait_ready: true,
+      listen_timeout: 10000,
       kill_timeout: 30000,
     },
     {

@@ -67,6 +67,9 @@ const main = async () => {
       (request) => request.status === 'fulfilled'
     ).length
     failed += requests.filter((request) => request.status === 'rejected').length
+
+    // Wait one second between webhook checks so we're not spamming the DB.
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   printStatistics()
