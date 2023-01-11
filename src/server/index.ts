@@ -72,8 +72,9 @@ router.get('/:type/:address/(.+)', async (ctx) => {
   const {
     block: _block,
     blocks: _blocks,
+    blockStep: _blockStep,
     times: _times,
-    step: _step,
+    timeStep: _timeStep,
     ...args
   } = ctx.query
   const { type, address } = ctx.params
@@ -99,7 +100,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
 
   // If blocks passed, validate that it's a range of two blocks.
   let blocks: [Block, Block] | undefined
-  let step = 1
+  let blockStep: number | undefined
   if (_blocks && typeof _blocks === 'string') {
     const [startBlock, endBlock] = _blocks.split('..')
     if (!startBlock || !endBlock) {
@@ -128,15 +129,15 @@ router.get('/:type/:address/(.+)', async (ctx) => {
       return
     }
 
-    // If step passed, validate.
-    if (_step && typeof _step === 'string') {
-      const parsedStep = parseInt(_step, 10)
+    // If block step passed, validate.
+    if (_blockStep && typeof _blockStep === 'string') {
+      const parsedStep = parseInt(_blockStep, 10)
       if (isNaN(parsedStep) || parsedStep < 1) {
         ctx.status = 400
         ctx.body = 'step must be a positive integer'
         return
       }
-      step = parsedStep
+      blockStep = parsedStep
     }
 
     // if (blocks[1].height - blocks[0].height > 446400) {
@@ -149,6 +150,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
   // If times passed, validate that it's a range with either a start or a
   // start/end pair.
   let times: [number, number | undefined] | undefined
+  let timeStep: number | undefined
   if (_times && typeof _times === 'string') {
     const [startTime, endTime] = _times.split('..')
     if (!startTime) {
@@ -175,6 +177,17 @@ router.get('/:type/:address/(.+)', async (ctx) => {
       ctx.status = 400
       ctx.body = 'the start time must be less than the end time'
       return
+    }
+
+    // If time step passed, validate.
+    if (_timeStep && typeof _timeStep === 'string') {
+      const parsedStep = parseInt(_timeStep, 10)
+      if (isNaN(parsedStep) || parsedStep < 1) {
+        ctx.status = 400
+        ctx.body = 'step must be a positive integer'
+        return
+      }
+      timeStep = parsedStep
     }
   }
 
@@ -405,15 +418,18 @@ router.get('/:type/:address/(.+)', async (ctx) => {
         )
       }
 
-      // Skip to match block step.
-      if (step === 1) {
+      // Skip to match step.
+      if (
+        (blockStep === undefined || blockStep === 1) &&
+        (timeStep === undefined || timeStep === 1)
+      ) {
         computation = outputs
-      } else {
+      } else if (blockStep) {
         computation = []
         for (
           let blockHeight = blocks[0].height;
           blockHeight <= blocks[1].height;
-          blockHeight += step
+          blockHeight += blockStep
         ) {
           // Sorted ascending by block height, so find first computation with
           // block height greater than desired block height and use the
@@ -422,6 +438,27 @@ router.get('/:type/:address/(.+)', async (ctx) => {
           if (index > 0) {
             computation.push({
               at: blockHeight,
+              ...outputs[index - 1],
+            })
+            // Remove all computations before the one we just added, keeping the
+            // current one in case nothing has changed in the next step.
+            outputs.splice(0, index - 1)
+          }
+        }
+      } else if (times && timeStep) {
+        computation = []
+        for (
+          let blockTime = blocks[0].timeUnixMs;
+          blockTime <= blocks[1].timeUnixMs;
+          blockTime += timeStep
+        ) {
+          // Sorted ascending by block height, so find first computation with
+          // block height greater than desired block height and use the previous
+          // to get the latest value at the target block height.
+          const index = outputs.findIndex((c) => c.blockTimeUnixMs > blockTime)
+          if (index > 0) {
+            computation.push({
+              at: blockTime,
               ...outputs[index - 1],
             })
             // Remove all computations before the one we just added, keeping the
