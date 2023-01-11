@@ -431,9 +431,9 @@ router.get('/:type/:address/(.+)', async (ctx) => {
           blockHeight <= blocks[1].height;
           blockHeight += blockStep
         ) {
-          // Sorted ascending by block height, so find first computation with
-          // block height greater than desired block height and use the
-          // previous to get the latest value at the target block height.
+          // Sorted ascending by block, so find first computation with block
+          // height greater than desired block height and use the previous to
+          // get the latest value at the target block height.
           const index = outputs.findIndex((c) => c.blockHeight > blockHeight)
           if (index > 0) {
             computation.push({
@@ -452,9 +452,9 @@ router.get('/:type/:address/(.+)', async (ctx) => {
           blockTime <= blocks[1].timeUnixMs;
           blockTime += timeStep
         ) {
-          // Sorted ascending by block height, so find first computation with
-          // block height greater than desired block height and use the previous
-          // to get the latest value at the target block height.
+          // Sorted ascending by block, so find first computation with block
+          // time greater than desired block time and use the previous to get
+          // the latest value at the target block time.
           const index = outputs.findIndex((c) => c.blockTimeUnixMs > blockTime)
           if (index > 0) {
             computation.push({
