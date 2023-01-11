@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { Block, compute, computeRange, loadConfig } from '@/core'
 import { getTypedFormula } from '@/data'
-import { Computation, Contract, State, closeDb, loadDb } from '@/db'
+import { Computation, Contract, Event, State, closeDb, loadDb } from '@/db'
 
 import { validateBlockString } from './validate'
 
@@ -69,7 +69,13 @@ app.use(async (ctx, next) => {
 
 // Formula computer.
 router.get('/:type/:address/(.+)', async (ctx) => {
-  const { block: _block, blocks: _blocks, step: _step, ...args } = ctx.query
+  const {
+    block: _block,
+    blocks: _blocks,
+    times: _times,
+    step: _step,
+    ...args
+  } = ctx.query
   const { type, address } = ctx.params
 
   // Validate type.
@@ -140,6 +146,38 @@ router.get('/:type/:address/(.+)', async (ctx) => {
     // }
   }
 
+  // If times passed, validate that it's a range with either a start or a
+  // start/end pair.
+  let times: [number, number | undefined] | undefined
+  if (_times && typeof _times === 'string') {
+    const [startTime, endTime] = _times.split('..')
+    if (!startTime) {
+      ctx.status = 400
+      ctx.body = 'times must be just a start time or both a start and end time'
+      return
+    }
+
+    try {
+      times = [
+        parseInt(startTime, 10),
+        endTime ? parseInt(endTime, 10) : undefined,
+      ]
+    } catch (err) {
+      ctx.status = 400
+      ctx.body = err instanceof Error ? err.message : err
+      return
+    }
+
+    if (
+      times[0] >= (times[1] || Number.MAX_SAFE_INTEGER) ||
+      (times[1] && times[1] < 0)
+    ) {
+      ctx.status = 400
+      ctx.body = 'the start time must be less than the end time'
+      return
+    }
+  }
+
   // Validate that formula exists.
   const formulaName = ctx.path.split('/').slice(3).join('/')
   let typedFormula
@@ -179,6 +217,45 @@ router.get('/:type/:address/(.+)', async (ctx) => {
       targetAddress: address,
       formula: formulaName,
       args: JSON.stringify(args),
+    }
+
+    // If times passed, compute blocks that correlate with those times.
+    if (times) {
+      // If times are negative, subtract from latest block.
+      if (times[0] < 0) {
+        times[0] = state.latestBlockTimeUnixMs + times[0]
+      }
+      if (times[1] && times[1] < 0) {
+        times[1] = state.latestBlockTimeUnixMs + times[1]
+      }
+
+      const startBlock = (
+        await Event.findOne({
+          where: {
+            blockTimeUnixMs: {
+              [Op.lte]: times[0],
+            },
+          },
+          order: [['blockHeight', 'DESC']],
+        })
+      )?.block
+      // Use latest block if no end time exists.
+      const endBlock = times[1]
+        ? (
+            await Event.findOne({
+              where: {
+                blockTimeUnixMs: {
+                  [Op.lte]: times[1],
+                },
+              },
+              order: [['blockHeight', 'DESC']],
+            })
+          )?.block
+        : state.latestBlock
+
+      if (startBlock && endBlock) {
+        blocks = [startBlock, endBlock]
+      }
     }
 
     // If blocks passed, compute range. A range query will probably return with
