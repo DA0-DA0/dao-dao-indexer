@@ -259,7 +259,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
               [Op.lte]: time,
             },
           },
-          order: [['blockHeight', 'DESC']],
+          order: [['blockTimeUnixMs', 'DESC']],
         })
       )?.block
     }
@@ -281,7 +281,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
               [Op.lte]: times[0],
             },
           },
-          order: [['blockHeight', 'DESC']],
+          order: [['blockTimeUnixMs', 'DESC']],
         })
       )?.block
       // Use latest block if no end time exists.
@@ -293,7 +293,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
                   [Op.lte]: times[1],
                 },
               },
-              order: [['blockHeight', 'DESC']],
+              order: [['blockTimeUnixMs', 'DESC']],
             })
           )?.block
         : state.latestBlock

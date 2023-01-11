@@ -39,6 +39,10 @@ import { Contract } from './Contract'
       // Speed up ordering queries.
       fields: ['blockHeight'],
     },
+    {
+      // Speed up ordering queries.
+      fields: ['blockTimeUnixMs'],
+    },
   ],
 })
 export class Event extends Model {
