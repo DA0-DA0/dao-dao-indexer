@@ -73,6 +73,7 @@ router.get('/:type/:address/(.+)', async (ctx) => {
     block: _block,
     blocks: _blocks,
     blockStep: _blockStep,
+    time: _time,
     times: _times,
     timeStep: _timeStep,
     ...args
@@ -145,6 +146,18 @@ router.get('/:type/:address/(.+)', async (ctx) => {
     //   ctx.body = 'the range cannot be larger than 446400 blocks'
     //   return
     // }
+  }
+
+  // If time passed, validate.
+  let time: number | undefined
+  if (_time && typeof _time === 'string') {
+    try {
+      time = parseInt(_time, 10)
+    } catch (err) {
+      ctx.status = 400
+      ctx.body = err instanceof Error ? err.message : err
+      return
+    }
   }
 
   // If times passed, validate that it's a range with either a start or a
@@ -232,14 +245,33 @@ router.get('/:type/:address/(.+)', async (ctx) => {
       args: JSON.stringify(args),
     }
 
+    // If time passed, compute block that correlates with that time.
+    if (time) {
+      // If time is negative, subtract from latest block.
+      if (time < 0) {
+        time += state.latestBlockTimeUnixMs
+      }
+
+      block = (
+        await Event.findOne({
+          where: {
+            blockTimeUnixMs: {
+              [Op.lte]: time,
+            },
+          },
+          order: [['blockHeight', 'DESC']],
+        })
+      )?.block
+    }
+
     // If times passed, compute blocks that correlate with those times.
     if (times) {
       // If times are negative, subtract from latest block.
       if (times[0] < 0) {
-        times[0] = state.latestBlockTimeUnixMs + times[0]
+        times[0] += state.latestBlockTimeUnixMs
       }
       if (times[1] && times[1] < 0) {
-        times[1] = state.latestBlockTimeUnixMs + times[1]
+        times[1] += state.latestBlockTimeUnixMs
       }
 
       const startBlock = (
