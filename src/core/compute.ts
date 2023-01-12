@@ -11,6 +11,7 @@ import {
   ComputeOptions,
   ComputeRangeOptions,
   Dependencies,
+  FormulaType,
   SetDependencies,
   SplitDependentKeys,
 } from './types'
@@ -60,7 +61,7 @@ export const compute = async ({
     onFetch,
   })
   const value =
-    options.type === 'contract'
+    options.type === FormulaType.Contract
       ? await options.formula.compute({
           ...env,
           contractAddress: targetAddress,
@@ -188,7 +189,7 @@ export const computeRange = async ({
       cache: initialCache,
     })
     const value =
-      options.type === 'contract'
+      options.type === FormulaType.Contract
         ? await options.formula.compute({
             ...env,
             contractAddress: targetAddress,

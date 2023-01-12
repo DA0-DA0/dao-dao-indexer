@@ -1,7 +1,13 @@
 import { Command } from 'commander'
 import { Op } from 'sequelize'
 
-import { Block, computeRange, loadConfig, validateBlockString } from '@/core'
+import {
+  Block,
+  FormulaType,
+  computeRange,
+  loadConfig,
+  validateBlockString,
+} from '@/core'
 import { getTypedFormula } from '@/data'
 import { Computation, Contract, Event, State, loadDb } from '@/db'
 
@@ -115,7 +121,7 @@ export const main = async () => {
     throw new Error('No state found.')
   }
 
-  const typedFormula = getTypedFormula('contract', options.formula)
+  const typedFormula = getTypedFormula(FormulaType.Contract, options.formula)
 
   const initialStart = new Date()
   console.log(

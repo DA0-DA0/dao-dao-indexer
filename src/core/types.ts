@@ -191,17 +191,23 @@ export type GenericFormula<
   dynamic?: boolean
 }
 
+export enum FormulaType {
+  Contract = 'contract',
+  Wallet = 'wallet',
+  Generic = 'generic',
+}
+
 export type TypedFormula = { name: string } & (
   | {
-      type: 'contract'
+      type: FormulaType.Contract
       formula: ContractFormula<any, any>
     }
   | {
-      type: 'wallet'
+      type: FormulaType.Wallet
       formula: WalletFormula<any, any>
     }
   | {
-      type: 'generic'
+      type: FormulaType.Generic
       formula: GenericFormula<any, any>
     }
 )

@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { compute, loadConfig } from '@/core'
+import { FormulaType, compute, loadConfig } from '@/core'
 import { getContractFormula } from '@/data'
 import { Contract, State } from '@/db'
 
@@ -82,7 +82,7 @@ export const updateIndexesForContracts = async (
         matchingContracts.map(async (contract) => {
           const { block, value } = await compute({
             name: formulaName,
-            type: 'contract',
+            type: FormulaType.Contract,
             targetAddress: contract.address,
             formula,
             args,

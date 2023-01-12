@@ -1,5 +1,6 @@
 import {
   ContractFormula,
+  FormulaType,
   GenericFormula,
   NestedFormulaMap,
   TypedFormula,
@@ -99,16 +100,16 @@ export const getGenericFormula = (
 }
 
 export const getTypedFormula = (
-  type: 'contract' | 'wallet' | 'generic',
+  type: FormulaType,
   formulaName: string
 ): TypedFormula => {
   const typeAndFormula =
-    type === 'contract'
+    type === FormulaType.Contract
       ? {
           type,
           formula: getContractFormula(formulaName),
         }
-      : type === 'wallet'
+      : type === FormulaType.Wallet
       ? {
           type,
           formula: getWalletFormula(formulaName),

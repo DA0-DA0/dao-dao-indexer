@@ -1,7 +1,14 @@
 import Router from '@koa/router'
 import { Op } from 'sequelize'
 
-import { Block, compute, computeRange } from '@/core'
+import {
+  Block,
+  FormulaType,
+  FormulaTypeValues,
+  compute,
+  computeRange,
+  typeIsFormulaType,
+} from '@/core'
 import { getTypedFormula } from '@/data'
 import {
   Account,
@@ -24,7 +31,44 @@ export const computer: Router.Middleware = async (ctx) => {
     timeStep: _timeStep,
     ...args
   } = ctx.query
-  let { key, type, address } = ctx.params
+
+  // Support both /:key/:type/:address/:formula and /:type/:address/:formula
+  // with `key` in the `x-api-key` header.
+  const paths = ctx.path.split('/').slice(1)
+  let key: string | undefined
+  let type: FormulaType | undefined
+  let address: string | undefined
+  let formulaName: string | undefined
+
+  if (paths.length < 3) {
+    ctx.status = 400
+    ctx.body = 'missing required parameters'
+    return
+  }
+
+  // Validate type, which may be one of the first two path items.
+
+  // /:type/:address/:formula
+  if (typeIsFormulaType(paths[0])) {
+    key =
+      typeof ctx.headers['x-api-key'] === 'string'
+        ? ctx.headers['x-api-key']
+        : undefined
+    type = paths[0]
+    address = paths[1]
+    formulaName = paths.slice(2).join('/')
+  }
+  // /:key/:type/:address/:formula
+  else if (typeIsFormulaType(paths[1])) {
+    key = paths[0]
+    type = paths[1]
+    address = paths[2]
+    formulaName = paths.slice(3).join('/')
+  } else {
+    ctx.status = 400
+    ctx.body = `type must be one of: ${FormulaTypeValues.join(', ')}`
+    return
+  }
 
   // Validate API key.
   if (!key) {
@@ -39,10 +83,17 @@ export const computer: Router.Middleware = async (ctx) => {
     return
   }
 
-  // Validate type.
-  if (type !== 'contract' && type !== 'wallet' && type !== 'generic') {
+  // Validate address.
+  if (!address) {
     ctx.status = 400
-    ctx.body = 'type must be contract, wallet, or generic'
+    ctx.body = 'missing address'
+    return
+  }
+
+  // Validate formulaName.
+  if (!formulaName) {
+    ctx.status = 400
+    ctx.body = 'missing formula'
     return
   }
 
@@ -164,7 +215,6 @@ export const computer: Router.Middleware = async (ctx) => {
   }
 
   // Validate that formula exists.
-  const formulaName = ctx.path.split('/').slice(4).join('/')
   let typedFormula
   try {
     typedFormula = getTypedFormula(type, formulaName)
@@ -175,7 +225,7 @@ export const computer: Router.Middleware = async (ctx) => {
   }
 
   // If type is "contract", validate that contract exists.
-  if (type === 'contract' && !(await Contract.findByPk(address))) {
+  if (type === FormulaType.Contract && !(await Contract.findByPk(address))) {
     ctx.status = 404
     ctx.body = 'contract not found'
     return

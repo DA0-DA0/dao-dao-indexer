@@ -2,7 +2,7 @@
 // Recreate cw-storage-plus key nesting format. Output is a comma-separated list
 // of uint8 values that represents a byte array. See `Event` model for more
 
-import { Block } from './types'
+import { Block, FormulaType } from './types'
 
 // information.
 export const dbKeyForKeys = (...keys: (string | number)[]): string => {
@@ -115,3 +115,7 @@ export const validateBlockString = (block: string, subject: string): Block => {
     timeUnixMs: blockTimeUnixMs,
   }
 }
+
+export const FormulaTypeValues = Object.values(FormulaType)
+export const typeIsFormulaType = (type: string): type is FormulaType =>
+  FormulaTypeValues.includes(type as FormulaType)

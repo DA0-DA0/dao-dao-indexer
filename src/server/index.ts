@@ -72,7 +72,7 @@ router.get('/ping', (ctx) => {
 })
 
 // Formula computer.
-router.get('/:key/:type/:address/(.+)', computer)
+router.get('/(.+)', computer)
 
 // Enable router.
 app.use(router.routes()).use(router.allowedMethods())
