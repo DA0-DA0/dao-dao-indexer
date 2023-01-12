@@ -363,10 +363,8 @@ export const proposalCreatedAt: ContractFormula<
     args: { id },
   }) =>
     (
-      await getDateFirstTransformed(contractAddress, `proposal:${id}`)
-    )?.toISOString() ??
-    // Fallback to events.
-    (
+      (await getDateFirstTransformed(contractAddress, `proposal:${id}`)) ??
+      // Fallback to events.
       (await getDateKeyFirstSet(contractAddress, 'proposals_v2', Number(id))) ??
       (await getDateKeyFirstSet(contractAddress, 'proposals', Number(id)))
     )?.toISOString(),

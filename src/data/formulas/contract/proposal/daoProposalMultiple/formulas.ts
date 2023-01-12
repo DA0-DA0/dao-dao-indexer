@@ -27,16 +27,20 @@ export const proposal: ContractFormula<
     const {
       contractAddress,
       getTransformationMatch,
+      get,
       args: { id },
     } = env
 
     const idNum = Number(id)
-    const proposal = (
-      await getTransformationMatch<MultipleChoiceProposal>(
-        contractAddress,
-        `proposal:${id}`
-      )
-    )?.value
+    const proposal =
+      (
+        await getTransformationMatch<MultipleChoiceProposal>(
+          contractAddress,
+          `proposal:${id}`
+        )
+      )?.value ??
+      // Fallback to events.
+      (await get<MultipleChoiceProposal>(contractAddress, 'proposals', idNum))
 
     return proposal && intoResponse(env, proposal, idNum)
   },
@@ -60,6 +64,7 @@ export const listProposals: ContractFormula<
     const {
       contractAddress,
       getTransformationMap,
+      getMap,
       args: { limit, startAfter },
     } = env
 
@@ -72,7 +77,14 @@ export const listProposals: ContractFormula<
       (await getTransformationMap<number, MultipleChoiceProposal>(
         contractAddress,
         'proposal'
-      )) ?? {}
+      )) ??
+      // Fallback to events.
+      (await getMap<number, MultipleChoiceProposal>(
+        contractAddress,
+        'proposals',
+        { numericKeys: true }
+      )) ??
+      {}
 
     const proposalIds = Object.keys(proposals)
       .map(Number)
@@ -102,6 +114,7 @@ export const reverseProposals: ContractFormula<
     const {
       contractAddress,
       getTransformationMap,
+      getMap,
       args: { limit, startBefore },
     } = env
 
@@ -114,7 +127,14 @@ export const reverseProposals: ContractFormula<
       (await getTransformationMap<number, MultipleChoiceProposal>(
         contractAddress,
         'proposal'
-      )) ?? {}
+      )) ??
+      // Fallback to events.
+      (await getMap<number, MultipleChoiceProposal>(
+        contractAddress,
+        'proposals',
+        { numericKeys: true }
+      )) ??
+      {}
 
     const proposalIds = Object.keys(proposals)
       .map(Number)
@@ -148,6 +168,8 @@ export const vote: ContractFormula<
   compute: async ({
     contractAddress,
     getTransformationMatch,
+    get,
+    getDateKeyModified,
     args: { proposalId, voter },
   }) => {
     if (!proposalId) {
@@ -157,12 +179,39 @@ export const vote: ContractFormula<
       throw new Error('missing `voter`')
     }
 
-    const voteCast = (
+    let voteCast = (
       await getTransformationMatch<VoteCast<Ballot>>(
         contractAddress,
         `voteCast:${voter}:${proposalId}`
       )
     )?.value
+
+    // Falback to events.
+    if (!voteCast) {
+      const ballot = await get<Ballot>(
+        contractAddress,
+        'ballots',
+        Number(proposalId),
+        voter
+      )
+
+      if (ballot) {
+        const votedAt = (
+          await getDateKeyModified(
+            contractAddress,
+            'ballots',
+            Number(proposalId),
+            voter
+          )
+        )?.toISOString()
+
+        voteCast = {
+          voter,
+          vote: ballot,
+          votedAt,
+        }
+      }
+    }
 
     return (
       voteCast && {
@@ -185,28 +234,65 @@ export const listVotes: ContractFormula<
   compute: async ({
     contractAddress,
     getTransformationMatches,
+    getMap,
+    getDateKeyModified,
     args: { proposalId, limit, startAfter },
   }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
-    const voteInfos = (
-      (await getTransformationMatches<VoteCast<Ballot>>(
+    let votesCast = (
+      await getTransformationMatches<VoteCast<Ballot>>(
         contractAddress,
         `voteCast:%:${proposalId}`
-      )) ?? []
-    ).map(
-      ({ value: { voter, vote, votedAt } }): VoteInfo<Ballot> => ({
+      )
+    )?.map(({ value }) => value)
+
+    // Fallback to events.
+    if (!votesCast) {
+      const ballots =
+        (await getMap<string, Ballot>(contractAddress, [
+          'ballots',
+          Number(proposalId),
+        ])) ?? {}
+      const voters = Object.keys(ballots)
+        // Ascending by voter address.
+        .sort((a, b) => a.localeCompare(b))
+        .filter((voter) => !startAfter || voter.localeCompare(startAfter) > 0)
+        .slice(0, limitNum)
+
+      const votesCastAt = await Promise.all(
+        voters.map((voter) =>
+          getDateKeyModified(
+            contractAddress,
+            'ballots',
+            Number(proposalId),
+            voter
+          )
+        )
+      )
+
+      votesCast = voters.map((voter, index) => ({
+        voter,
+        vote: ballots[voter],
+        votedAt: votesCastAt[index]?.toISOString(),
+      }))
+    } else {
+      // Ascending by voter address.
+      votesCast = votesCast
+        .sort((a, b) => a.voter.localeCompare(b.voter))
+        .filter(
+          ({ voter }) => !startAfter || voter.localeCompare(startAfter) > 0
+        )
+        .slice(0, limitNum)
+    }
+
+    return votesCast.map(
+      ({ voter, vote, votedAt }): VoteInfo<Ballot> => ({
         voter,
         ...vote,
         votedAt,
       })
     )
-
-    // Ascending by voter address.
-    return voteInfos
-      .sort((a, b) => a.voter.localeCompare(b.voter))
-      .filter(({ voter }) => !startAfter || voter.localeCompare(startAfter) > 0)
-      .slice(0, limitNum)
   },
 }
 
@@ -214,9 +300,16 @@ export const proposalCreatedAt: ContractFormula<
   string | undefined,
   { id: string }
 > = {
-  compute: async ({ contractAddress, getDateFirstTransformed, args: { id } }) =>
+  compute: async ({
+    contractAddress,
+    getDateFirstTransformed,
+    getDateKeyFirstSet,
+    args: { id },
+  }) =>
     (
-      await getDateFirstTransformed(contractAddress, `proposal:${id}`)
+      (await getDateFirstTransformed(contractAddress, `proposal:${id}`)) ??
+      // Fallback to events.
+      (await getDateKeyFirstSet(contractAddress, 'proposals', Number(id)))
     )?.toISOString(),
 }
 
@@ -298,20 +391,46 @@ const intoResponse = async (
     proposal.status === Status.ExecutionFailed
   ) {
     executedAt = (
-      await env.getDateFirstTransformed(env.contractAddress, `proposal:${id}`, {
-        status: {
-          [Op.in]: ['executed', 'execution_failed'],
-        },
-      })
+      (await env.getDateFirstTransformed(
+        env.contractAddress,
+        `proposal:${id}`,
+        {
+          status: {
+            [Op.in]: ['executed', 'execution_failed'],
+          },
+        }
+      )) ??
+      // Fallback to events.
+      (await env.getDateKeyFirstSetWithValueMatch(
+        env.contractAddress,
+        ['proposals', id],
+        {
+          status: {
+            [Op.in]: ['executed', 'execution_failed'],
+          },
+        }
+      ))
     )?.toISOString()
   }
 
   let closedAt: string | undefined
   if (proposal.status === Status.Closed) {
     closedAt = (
-      await env.getDateFirstTransformed(env.contractAddress, `proposal:${id}`, {
-        status: 'closed',
-      })
+      (await env.getDateFirstTransformed(
+        env.contractAddress,
+        `proposal:${id}`,
+        {
+          status: 'closed',
+        }
+      )) ??
+      // Fallback to events.
+      (await env.getDateKeyFirstSetWithValueMatch(
+        env.contractAddress,
+        ['proposals', id],
+        {
+          status: 'closed',
+        }
+      ))
     )?.toISOString()
   }
 
@@ -322,7 +441,7 @@ const intoResponse = async (
       closedAt ||
       // If not yet executed nor closed, completed when it was passed/rejected.
       (
-        await env.getDateFirstTransformed(
+        (await env.getDateFirstTransformed(
           env.contractAddress,
           `proposal:${id}`,
           {
@@ -330,7 +449,17 @@ const intoResponse = async (
               [Op.in]: ['passed', 'rejected'],
             },
           }
-        )
+        )) ??
+        // Fallback to events.
+        (await env.getDateKeyFirstSetWithValueMatch(
+          env.contractAddress,
+          ['proposals', id],
+          {
+            status: {
+              [Op.in]: ['passed', 'rejected'],
+            },
+          }
+        ))
       )?.toISOString()
   }
 
