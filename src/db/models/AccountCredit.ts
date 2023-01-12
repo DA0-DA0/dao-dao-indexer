@@ -41,7 +41,7 @@ export class AccountCredit extends Model {
   @AllowNull(false)
   @ForeignKey(() => Account)
   @Column
-  accountAddress!: string
+  accountId!: number
 
   @BelongsTo(() => Account)
   account!: Account

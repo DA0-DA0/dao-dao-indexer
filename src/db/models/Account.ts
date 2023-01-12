@@ -8,7 +8,6 @@ import {
   Default,
   HasMany,
   Model,
-  PrimaryKey,
   Table,
 } from 'sequelize-typescript'
 
@@ -27,7 +26,7 @@ import { AccountCredit, AccountCreditScope } from './AccountCredit'
   ],
 })
 export class Account extends Model {
-  @PrimaryKey
+  @AllowNull(false)
   @Column
   address!: string
 
