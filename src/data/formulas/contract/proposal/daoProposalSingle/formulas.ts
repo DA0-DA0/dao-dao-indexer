@@ -28,18 +28,41 @@ export const proposal: ContractFormula<
     const {
       contractAddress,
       getTransformationMatch,
+      get,
       args: { id },
     } = env
 
     const idNum = Number(id)
-    const proposal = (
+    let proposal = (
       await getTransformationMatch<SingleChoiceProposal>(
         contractAddress,
         `proposal:${id}`
       )
     )?.value
 
-    return proposal && intoResponse(env, proposal, idNum)
+    // Fallback to events.
+    let v2 = false
+    if (!proposal) {
+      // V2.
+      const proposalV2 = await get<SingleChoiceProposal>(
+        contractAddress,
+        'proposals_v2',
+        idNum
+      )
+      if (proposalV2) {
+        proposal = proposalV2
+        v2 = true
+      } else {
+        // V1.
+        proposal = await get<SingleChoiceProposal>(
+          contractAddress,
+          'proposals',
+          idNum
+        )
+      }
+    }
+
+    return proposal && intoResponse(env, proposal, idNum, { v2 })
   },
 }
 
@@ -61,6 +84,7 @@ export const listProposals: ContractFormula<
     const {
       contractAddress,
       getTransformationMap,
+      getMap,
       args: { limit, startAfter },
     } = env
 
@@ -69,11 +93,36 @@ export const listProposals: ContractFormula<
       ? Math.max(0, Number(startAfter))
       : -Infinity
 
-    const proposals =
-      (await getTransformationMap<number, SingleChoiceProposal>(
+    let proposals = await getTransformationMap<number, SingleChoiceProposal>(
+      contractAddress,
+      'proposal'
+    )
+
+    // Fallback to events.
+    let v2 = false
+    if (!proposals) {
+      // V2.
+      const proposalsV2 = await getMap<number, SingleChoiceProposal>(
         contractAddress,
-        'proposal'
-      )) ?? {}
+        'proposals_v2',
+        { numericKeys: true }
+      )
+      if (proposalsV2) {
+        proposals = proposalsV2
+        v2 = true
+      } else {
+        // V1.
+        proposals = await getMap<number, SingleChoiceProposal>(
+          contractAddress,
+          'proposals',
+          { numericKeys: true }
+        )
+      }
+    }
+
+    if (!proposals) {
+      return []
+    }
 
     const proposalIds = Object.keys(proposals)
       .map(Number)
@@ -83,7 +132,7 @@ export const listProposals: ContractFormula<
       .slice(0, limitNum)
 
     const proposalResponses = await Promise.all(
-      proposalIds.map((id) => intoResponse(env, proposals[id], id))
+      proposalIds.map((id) => intoResponse(env, proposals![id], id, { v2 }))
     )
 
     return proposalResponses
@@ -103,6 +152,7 @@ export const reverseProposals: ContractFormula<
     const {
       contractAddress,
       getTransformationMap,
+      getMap,
       args: { limit, startBefore },
     } = env
 
@@ -111,11 +161,36 @@ export const reverseProposals: ContractFormula<
       ? Math.max(0, Number(startBefore))
       : Infinity
 
-    const proposals =
-      (await getTransformationMap<number, SingleChoiceProposal>(
+    let proposals = await getTransformationMap<number, SingleChoiceProposal>(
+      contractAddress,
+      'proposal'
+    )
+
+    // Fallback to events.
+    let v2 = false
+    if (!proposals) {
+      // V2.
+      const proposalsV2 = await getMap<number, SingleChoiceProposal>(
         contractAddress,
-        'proposal'
-      )) ?? {}
+        'proposals_v2',
+        { numericKeys: true }
+      )
+      if (proposalsV2) {
+        proposals = proposalsV2
+        v2 = true
+      } else {
+        // V1.
+        proposals = await getMap<number, SingleChoiceProposal>(
+          contractAddress,
+          'proposals',
+          { numericKeys: true }
+        )
+      }
+    }
+
+    if (!proposals) {
+      return []
+    }
 
     const proposalIds = Object.keys(proposals)
       .map(Number)
@@ -125,7 +200,7 @@ export const reverseProposals: ContractFormula<
       .slice(0, limitNum)
 
     const proposalResponses = await Promise.all(
-      proposalIds.map((id) => intoResponse(env, proposals[id], id))
+      proposalIds.map((id) => intoResponse(env, proposals![id], id, { v2 }))
     )
 
     return proposalResponses
@@ -149,6 +224,8 @@ export const vote: ContractFormula<
   compute: async ({
     contractAddress,
     getTransformationMatch,
+    get,
+    getDateKeyModified,
     args: { proposalId, voter },
   }) => {
     if (!proposalId) {
@@ -158,12 +235,39 @@ export const vote: ContractFormula<
       throw new Error('missing `voter`')
     }
 
-    const voteCast = (
+    let voteCast = (
       await getTransformationMatch<VoteCast<Ballot>>(
         contractAddress,
         `voteCast:${voter}:${proposalId}`
       )
     )?.value
+
+    // Falback to events.
+    if (!voteCast) {
+      const ballot = await get<Ballot>(
+        contractAddress,
+        'ballots',
+        Number(proposalId),
+        voter
+      )
+
+      if (ballot) {
+        const votedAt = (
+          await getDateKeyModified(
+            contractAddress,
+            'ballots',
+            Number(proposalId),
+            voter
+          )
+        )?.toISOString()
+
+        voteCast = {
+          voter,
+          vote: ballot,
+          votedAt,
+        }
+      }
+    }
 
     return (
       voteCast && {
@@ -186,28 +290,65 @@ export const listVotes: ContractFormula<
   compute: async ({
     contractAddress,
     getTransformationMatches,
+    getMap,
+    getDateKeyModified,
     args: { proposalId, limit, startAfter },
   }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
-    const voteInfos = (
-      (await getTransformationMatches<VoteCast<Ballot>>(
+    let votesCast = (
+      await getTransformationMatches<VoteCast<Ballot>>(
         contractAddress,
         `voteCast:%:${proposalId}`
-      )) ?? []
-    ).map(
-      ({ value: { voter, vote, votedAt } }): VoteInfo<Ballot> => ({
+      )
+    )?.map(({ value }) => value)
+
+    // Fallback to events.
+    if (!votesCast) {
+      const ballots =
+        (await getMap<string, Ballot>(contractAddress, [
+          'ballots',
+          Number(proposalId),
+        ])) ?? {}
+      const voters = Object.keys(ballots)
+        // Ascending by voter address.
+        .sort((a, b) => a.localeCompare(b))
+        .filter((voter) => !startAfter || voter.localeCompare(startAfter) > 0)
+        .slice(0, limitNum)
+
+      const votesCastAt = await Promise.all(
+        voters.map((voter) =>
+          getDateKeyModified(
+            contractAddress,
+            'ballots',
+            Number(proposalId),
+            voter
+          )
+        )
+      )
+
+      votesCast = voters.map((voter, index) => ({
+        voter,
+        vote: ballots[voter],
+        votedAt: votesCastAt[index]?.toISOString(),
+      }))
+    } else {
+      // Ascending by voter address.
+      votesCast = votesCast
+        .sort((a, b) => a.voter.localeCompare(b.voter))
+        .filter(
+          ({ voter }) => !startAfter || voter.localeCompare(startAfter) > 0
+        )
+        .slice(0, limitNum)
+    }
+
+    return votesCast.map(
+      ({ voter, vote, votedAt }): VoteInfo<Ballot> => ({
         voter,
         ...vote,
         votedAt,
       })
     )
-
-    // Ascending by voter address.
-    return voteInfos
-      .sort((a, b) => a.voter.localeCompare(b.voter))
-      .filter(({ voter }) => !startAfter || voter.localeCompare(startAfter) > 0)
-      .slice(0, limitNum)
   },
 }
 
@@ -215,9 +356,19 @@ export const proposalCreatedAt: ContractFormula<
   string | undefined,
   { id: string }
 > = {
-  compute: async ({ contractAddress, getDateFirstTransformed, args: { id } }) =>
+  compute: async ({
+    contractAddress,
+    getDateFirstTransformed,
+    getDateKeyFirstSet,
+    args: { id },
+  }) =>
     (
       await getDateFirstTransformed(contractAddress, `proposal:${id}`)
+    )?.toISOString() ??
+    // Fallback to events.
+    (
+      (await getDateKeyFirstSet(contractAddress, 'proposals_v2', Number(id))) ??
+      (await getDateKeyFirstSet(contractAddress, 'proposals', Number(id)))
     )?.toISOString(),
 }
 
@@ -272,7 +423,8 @@ export const openProposals: ContractFormula<
 const intoResponse = async (
   env: ContractEnv,
   proposal: SingleChoiceProposal,
-  id: number
+  id: number,
+  { v2 }: { v2: boolean }
 ): Promise<ProposalResponse<SingleChoiceProposal>> => {
   // Update status.
   if (proposal.status === Status.Open) {
@@ -299,20 +451,46 @@ const intoResponse = async (
     proposal.status === Status.ExecutionFailed
   ) {
     executedAt = (
-      await env.getDateFirstTransformed(env.contractAddress, `proposal:${id}`, {
-        status: {
-          [Op.in]: ['executed', 'execution_failed'],
-        },
-      })
+      (await env.getDateFirstTransformed(
+        env.contractAddress,
+        `proposal:${id}`,
+        {
+          status: {
+            [Op.in]: ['executed', 'execution_failed'],
+          },
+        }
+      )) ??
+      // Fallback to events.
+      (await env.getDateKeyFirstSetWithValueMatch(
+        env.contractAddress,
+        [v2 ? 'proposals_v2' : 'proposals', id],
+        {
+          status: {
+            [Op.in]: ['executed', 'execution_failed'],
+          },
+        }
+      ))
     )?.toISOString()
   }
 
   let closedAt: string | undefined
   if (proposal.status === Status.Closed) {
     closedAt = (
-      await env.getDateFirstTransformed(env.contractAddress, `proposal:${id}`, {
-        status: 'closed',
-      })
+      (await env.getDateFirstTransformed(
+        env.contractAddress,
+        `proposal:${id}`,
+        {
+          status: 'closed',
+        }
+      )) ??
+      // Fallback to events.
+      (await env.getDateKeyFirstSetWithValueMatch(
+        env.contractAddress,
+        [v2 ? 'proposals_v2' : 'proposals', id],
+        {
+          status: 'closed',
+        }
+      ))
     )?.toISOString()
   }
 
@@ -323,7 +501,7 @@ const intoResponse = async (
       closedAt ||
       // If not yet executed nor closed, completed when it was passed/rejected.
       (
-        await env.getDateFirstTransformed(
+        (await env.getDateFirstTransformed(
           env.contractAddress,
           `proposal:${id}`,
           {
@@ -331,7 +509,17 @@ const intoResponse = async (
               [Op.in]: ['passed', 'rejected'],
             },
           }
-        )
+        )) ??
+        // Fallback to events.
+        (await env.getDateKeyFirstSetWithValueMatch(
+          env.contractAddress,
+          [v2 ? 'proposals_v2' : 'proposals', id],
+          {
+            status: {
+              [Op.in]: ['passed', 'rejected'],
+            },
+          }
+        ))
       )?.toISOString()
   }
 

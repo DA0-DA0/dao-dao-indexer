@@ -4,6 +4,7 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   compute: async ({
     contractAddress,
     getTransformationMatch,
+    get,
     args: { address },
   }) => {
     if (!address) {
@@ -16,25 +17,35 @@ export const votingPower: ContractFormula<string, { address: string }> = {
           contractAddress,
           `userWeight:${address}`
         )
-      )?.value || '0'
+      )?.value ||
+      // Fallback to events.
+      (await get<string>(contractAddress, 'user_weights', address)) ||
+      '0'
     )
   },
 }
 
 export const totalPower: ContractFormula<string> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
+  compute: async ({ contractAddress, getTransformationMatch, get }) =>
     (await getTransformationMatch<string>(contractAddress, 'totalWeight'))
-      ?.value || '0',
+      ?.value ||
+    // Fallback to events.
+    (await get<string>(contractAddress, 'total_weight')) ||
+    '0',
 }
 
 export const groupContract: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'group_contract'))
-      ?.value,
+  compute: async ({ contractAddress, getTransformationMatch, get }) =>
+    (await getTransformationMatch<string>(contractAddress, 'groupContract'))
+      ?.value ??
+    // Fallback to events.
+    (await get<string>(contractAddress, 'group_contract')),
 }
 
 export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
+  compute: async ({ contractAddress, getTransformationMatch, get }) =>
     (await getTransformationMatch<string>(contractAddress, 'daoAddress'))
-      ?.value,
+      ?.value ??
+    // Fallback to events.
+    (await get<string>(contractAddress, 'dao_address')),
 }

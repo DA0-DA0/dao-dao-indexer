@@ -88,22 +88,58 @@ interface InboxItem {
 const CONTRACT_NAMES = ['cw-core', 'cwd-core', 'dao-core']
 
 export const config: ContractFormula<Config | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value,
+  compute: async ({ contractAddress, getTransformationMatch, get }) =>
+    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value ??
+    // Fallback to events.
+    // V2.
+    (await get<Config>(contractAddress, 'config_v2')) ??
+    // V1.
+    (await get<Config>(contractAddress, 'config')),
 }
 
 export const proposalModules: ContractFormula<
   ProposalModuleWithInfo[] | undefined
 > = {
   compute: async (env) => {
-    const { contractAddress, getTransformationMap } = env
+    const { contractAddress, getTransformationMap, getMap } = env
 
-    const proposalModules = Object.values(
-      (await getTransformationMap<string, ProposalModule>(
-        contractAddress,
-        'proposalModule'
-      )) ?? {}
+    const proposalModules: ProposalModule[] = []
+
+    const transformedMap = await getTransformationMap<string, ProposalModule>(
+      contractAddress,
+      'proposalModule'
     )
+
+    // Transformed.
+    if (transformedMap) {
+      proposalModules.push(...Object.values(transformedMap))
+    } else {
+      // Fallback to events.
+      // V2.
+      const proposalModuleMap = await getMap<string, ProposalModule>(
+        contractAddress,
+        'proposal_modules_v2'
+      )
+      if (proposalModuleMap) {
+        proposalModules.push(...Object.values(proposalModuleMap))
+      }
+      // V1.
+      else {
+        const proposalModuleAddresses = Object.keys(
+          (await getMap<string, string>(contractAddress, 'proposal_modules')) ??
+            {}
+        )
+        proposalModules.push(
+          ...proposalModuleAddresses.map((address) => ({
+            address,
+            // V1 modules don't have a prefix.
+            prefix: '',
+            // V1 modules are always enabled.
+            status: 'Enabled' as const,
+          }))
+        )
+      }
+    }
 
     // If no proposal modules, this must not be a DAO core contract.
     if (!proposalModules.length) {
@@ -183,14 +219,34 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
           : undefined,
       })),
       // V2
-      env.getTransformationMatch<number | undefined>(
-        env.contractAddress,
-        'activeProposalModuleCount'
-      ),
-      env.getTransformationMatch<number | undefined>(
-        env.contractAddress,
-        'totalProposalModuleCount'
-      ),
+      env
+        .getTransformationMatch<number | undefined>(
+          env.contractAddress,
+          'activeProposalModuleCount'
+        )
+        .then(
+          (transformation) =>
+            transformation?.value ??
+            // Fallback to events.
+            env.get<number | undefined>(
+              env.contractAddress,
+              'active_proposal_module_count'
+            )
+        ),
+      env
+        .getTransformationMatch<number | undefined>(
+          env.contractAddress,
+          'totalProposalModuleCount'
+        )
+        .then(
+          (transformation) =>
+            transformation?.value ??
+            // Fallback to events.
+            env.get<number | undefined>(
+              env.contractAddress,
+              'total_proposal_module_count'
+            )
+        ),
       // Extra.
       instantiatedAt.compute(env),
       proposalCount.compute(env),
@@ -252,9 +308,9 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       voting_module,
       // V1 doesn't have these counts; all proposal modules are active.
       active_proposal_module_count:
-        activeProposalModuleCount?.value ?? proposal_modules?.length ?? 0,
+        activeProposalModuleCount ?? proposal_modules?.length ?? 0,
       total_proposal_module_count:
-        totalProposalModuleCount?.value ?? proposal_modules?.length ?? 0,
+        totalProposalModuleCount ?? proposal_modules?.length ?? 0,
       // Extra.
       votingModuleInfo,
       createdAt,
@@ -273,11 +329,13 @@ export const paused: ContractFormula<PausedResponse> = {
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
-    const { contractAddress, getTransformationMatch } = env
+    const { contractAddress, getTransformationMatch, get } = env
 
-    const expiration = (
-      await getTransformationMatch<Expiration>(contractAddress, 'paused')
-    )?.value
+    const expiration =
+      (await getTransformationMatch<Expiration>(contractAddress, 'paused'))
+        ?.value ??
+      // Fallback to events.
+      (await get<Expiration | undefined>(contractAddress, 'paused'))
 
     return !expiration || isExpirationExpired(env, expiration)
       ? { Unpaused: {} }
@@ -286,26 +344,33 @@ export const paused: ContractFormula<PausedResponse> = {
 }
 
 export const admin: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'admin'))?.value,
+  compute: async ({ contractAddress, getTransformationMatch, get }) =>
+    (await getTransformationMatch<string>(contractAddress, 'admin'))?.value ??
+    // Fallback to events.
+    (await get<string>(contractAddress, 'admin')),
 }
 
 export const adminNomination: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
+  compute: async ({ contractAddress, getTransformationMatch, get }) =>
     (await getTransformationMatch<string>(contractAddress, 'nominatedAdmin'))
-      ?.value,
+      ?.value ??
+    // Fallback to events.
+    (await get<string>(contractAddress, 'nominated_admin')),
 }
 
 export const votingModule: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
+  compute: async ({ contractAddress, getTransformationMatch, get }) =>
     (await getTransformationMatch<string>(contractAddress, 'votingModule'))
-      ?.value,
+      ?.value ??
+    // Fallback to events.
+    (await get<string>(contractAddress, 'voting_module')),
 }
 
 export const item: ContractFormula<string | undefined, { key: string }> = {
   compute: async ({
     contractAddress,
     getTransformationMatch,
+    get,
     args: { key },
   }) => {
     if (!key) {
@@ -313,32 +378,45 @@ export const item: ContractFormula<string | undefined, { key: string }> = {
     }
 
     return (
-      await getTransformationMatch<string | undefined>(
-        contractAddress,
-        `item:${key}`
-      )
-    )?.value
+      (
+        await getTransformationMatch<string | undefined>(
+          contractAddress,
+          `item:${key}`
+        )
+      )?.value ??
+      // Fallback to events.
+      (await get<string | undefined>(contractAddress, 'items', key))
+    )
   },
 }
 
 export const listItems: ContractFormula<[string, string][]> = {
-  compute: async ({ contractAddress, getTransformationMap }) =>
+  compute: async ({ contractAddress, getTransformationMap, getMap }) =>
     Object.entries(
-      (await getTransformationMap<string>(contractAddress, 'item')) ?? {}
+      (await getTransformationMap<string>(contractAddress, 'item')) ??
+        // Fallback to events.
+        (await getMap<string>(contractAddress, 'items')) ??
+        {}
     ),
 }
 
 export const cw20List: ContractFormula<string[]> = {
-  compute: async ({ contractAddress, getTransformationMap }) =>
+  compute: async ({ contractAddress, getTransformationMap, getMap }) =>
     Object.keys(
-      (await getTransformationMap<string>(contractAddress, 'cw20')) ?? {}
+      (await getTransformationMap<string>(contractAddress, 'cw20')) ??
+        // Fallback to events.
+        (await getMap<string>(contractAddress, 'cw20s')) ??
+        {}
     ),
 }
 
 export const cw721List: ContractFormula<string[]> = {
-  compute: async ({ contractAddress, getTransformationMap }) =>
+  compute: async ({ contractAddress, getTransformationMap, getMap }) =>
     Object.keys(
-      (await getTransformationMap<string>(contractAddress, 'cw721')) ?? {}
+      (await getTransformationMap<string>(contractAddress, 'cw721')) ??
+        // Fallback to events.
+        (await getMap<string>(contractAddress, 'cw721s')) ??
+        {}
     ),
 }
 
@@ -364,13 +442,16 @@ export const cw20Balances: ContractFormula<Cw20Balance[]> = {
 }
 
 export const listSubDaos: ContractFormula<SubDao[]> = {
-  compute: async ({ contractAddress, getTransformationMap }) => {
+  compute: async ({ contractAddress, getTransformationMap, getMap }) => {
     // V2. V1 doesn't have sub DAOs; use empty map if undefined.
     const subDaoMap =
       (await getTransformationMap<string, string | undefined>(
         contractAddress,
         'subDao'
-      )) ?? {}
+      )) ??
+      // Fallback to events.
+      (await getMap<string, string | undefined>(contractAddress, 'sub_daos')) ??
+      {}
 
     return Object.entries(subDaoMap).map(([addr, charter]) => ({
       addr,
