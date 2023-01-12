@@ -46,9 +46,9 @@ export class AccountCredit extends Model {
   @BelongsTo(() => Account)
   account!: Account
 
-  @AllowNull(false)
+  @AllowNull
   @Column
-  transactionHash!: string
+  transactionHash!: string | null
 
   @AllowNull(false)
   @Column
