@@ -47,7 +47,7 @@ export class AccountCredit extends Model {
   account!: Account
 
   @AllowNull
-  @Column
+  @Column(DataType.STRING)
   transactionHash!: string | null
 
   @AllowNull(false)
