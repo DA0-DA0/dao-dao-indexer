@@ -3,6 +3,8 @@ import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 import { loadConfig } from '@/core'
 
 import {
+  Account,
+  AccountCredit,
   Computation,
   Contract,
   Event,
@@ -38,6 +40,8 @@ export const loadDb = async (
 
     // Tell Sequelize what models we have.
     models: [
+      Account,
+      AccountCredit,
       Computation,
       Contract,
       Event,
