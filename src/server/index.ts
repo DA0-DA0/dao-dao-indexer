@@ -65,6 +65,9 @@ app.use(async (ctx, next) => {
   ctx.set('X-Response-Time', `${ms}ms`)
 })
 
+// Ping.
+router.get('/ping', () => new Response('pong'))
+
 // Formula computer.
 router.get('/:key/:type/:address/(.+)', computer)
 
