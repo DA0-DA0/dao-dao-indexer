@@ -66,7 +66,10 @@ app.use(async (ctx, next) => {
 })
 
 // Ping.
-router.get('/ping', () => new Response('pong'))
+router.get('/ping', (ctx) => {
+  ctx.status = 200
+  ctx.body = 'pong'
+})
 
 // Formula computer.
 router.get('/:key/:type/:address/(.+)', computer)
