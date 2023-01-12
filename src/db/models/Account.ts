@@ -47,7 +47,7 @@ export class Account extends Model {
   @Column
   nonce!: number
 
-  @HasMany(() => AccountCredit, 'accountAddress')
+  @HasMany(() => AccountCredit, 'accountId')
   credits!: AccountCredit[]
 
   public static generateKeyAndHash(): {
