@@ -52,12 +52,12 @@ export class AccountCredit extends Model {
 
   @AllowNull(false)
   @Column
-  amount!: number
+  amount!: bigint
 
   @AllowNull(false)
   @Default(0)
   @Column
-  used!: number
+  used!: bigint
 
   @AllowNull(false)
   @Column(DataType.ARRAY(DataType.STRING))
