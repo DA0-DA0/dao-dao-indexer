@@ -568,8 +568,12 @@ export const computer: Router.Middleware = async (ctx) => {
         computation = computationOutput.value
 
         // Cache computation for future queries if this formula does not change
-        // each block.
-        if (!typedFormula.formula.dynamic) {
+        // each block and if it outputted a non-undefined/non-null value.
+        if (
+          !typedFormula.formula.dynamic &&
+          computationOutput.value !== undefined &&
+          computationOutput.value !== null
+        ) {
           await Computation.createFromComputationOutputs(
             address,
             typedFormula,
