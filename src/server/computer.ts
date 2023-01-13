@@ -7,6 +7,7 @@ import {
   FormulaTypeValues,
   compute,
   computeRange,
+  loadConfig,
   typeIsFormulaType,
 } from '@/core'
 import { getTypedFormula } from '@/data'
@@ -22,6 +23,8 @@ import {
 import { validateBlockString } from './validate'
 
 export const computer: Router.Middleware = async (ctx) => {
+  const config = loadConfig()
+
   const {
     block: _block,
     blocks: _blocks,
@@ -224,11 +227,34 @@ export const computer: Router.Middleware = async (ctx) => {
     return
   }
 
-  // If type is "contract", validate that contract exists.
-  if (type === FormulaType.Contract && !(await Contract.findByPk(address))) {
-    ctx.status = 404
-    ctx.body = 'contract not found'
-    return
+  // If type is "contract"...
+  if (typedFormula.type === FormulaType.Contract) {
+    const contract = await Contract.findByPk(address)
+
+    // ...validate that contract exists.
+    if (!contract) {
+      ctx.status = 404
+      ctx.body = 'contract not found'
+      return
+    }
+
+    // ...validate that filter is satisfied.
+    if (typedFormula.formula.filter) {
+      let allowed = true
+
+      if (typedFormula.formula.filter.codeIdsKeys?.length) {
+        const allCodeIds = typedFormula.formula.filter.codeIdsKeys.flatMap(
+          (key) => config.codeIds?.[key] ?? []
+        )
+        allowed &&= allCodeIds.includes(contract.codeId)
+      }
+
+      if (!allowed) {
+        ctx.status = 405
+        ctx.body = `the ${formulaName} formula does not apply to contract ${address}`
+        return
+      }
+    }
   }
 
   // If formula is dynamic, we can't compute it over a range since we need

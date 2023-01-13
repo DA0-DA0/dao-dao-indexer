@@ -1,6 +1,11 @@
 import { ContractFormula } from '@/core'
 
 export const votingPower: ContractFormula<string, { address: string }> = {
+  // Filter by code ID since someone may modify the contract.
+  filter: {
+    codeIdsKeys: ['dao-voting-cw4'],
+  },
+
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -26,6 +31,11 @@ export const votingPower: ContractFormula<string, { address: string }> = {
 }
 
 export const totalPower: ContractFormula<string> = {
+  // Filter by code ID since someone may modify the contract.
+  filter: {
+    codeIdsKeys: ['dao-voting-cw4'],
+  },
+
   compute: async ({ contractAddress, getTransformationMatch, get }) =>
     (await getTransformationMatch<string>(contractAddress, 'totalWeight'))
       ?.value ||

@@ -1,7 +1,7 @@
 import { WhereOptions } from 'sequelize'
 import { SequelizeOptions } from 'sequelize-typescript'
 
-import { Event, State, Transformation } from '@/db'
+import { Contract, Event, State, Transformation } from '@/db'
 
 export type Config = {
   eventsFile: string
@@ -37,7 +37,7 @@ export type Config = {
     }[]
   }
   // Map some arbitary string to a list of code IDs.
-  codeIds: Record<string, number[] | undefined>
+  codeIds?: Record<string, number[] | undefined>
 
   // Other config options.
   [key: string]: any
@@ -115,11 +115,28 @@ export type FormulaPrefetchTransformations = (
   )[]
 ) => Promise<void>
 
+export type FormulaContractCodeIdGetter = (
+  contractAddress: string
+) => Promise<number | undefined>
+
+export type FormulaCodeIdsForKeysGetter = (...keys: string[]) => number[]
+
+export type FormulaContractMatchesCodeIdKeysGetter = (
+  contractAddress: string,
+  ...keys: string[]
+) => Promise<boolean>
+
+export type FormulaCodeIdKeyForContractGetter = (
+  contractAddress: string
+) => Promise<string | undefined>
+
 export type Env<Args extends Record<string, string> = {}> = {
   block: Block
   // If latest block is being used, this will be the current date. If fetching
   // at a specific block, this will be the date of that block.
   date: Date
+  // Arguments may or may not be present, so force formula to handle undefined.
+  args: Partial<Args>
 
   get: FormulaGetter
   getMap: FormulaMapGetter
@@ -132,8 +149,11 @@ export type Env<Args extends Record<string, string> = {}> = {
   getDateFirstTransformed: FormulaTransformationDateGetter
   prefetch: FormulaPrefetch
   prefetchTransformations: FormulaPrefetchTransformations
-  // Arguments may or may not be present, so force formula to handle undefined.
-  args: Partial<Args>
+
+  getContractCodeId: FormulaContractCodeIdGetter
+  getCodeIdsForKeys: FormulaCodeIdsForKeysGetter
+  contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter
+  getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
 }
 
 export interface EnvOptions {
@@ -161,35 +181,33 @@ export type WalletEnv<Args extends Record<string, string> = {}> = Env<Args> & {
 }
 
 // Formulas compute a value for the state at one block height.
-export type ContractFormula<
-  R = any,
-  Args extends Record<string, string> = {}
-> = {
-  compute: (env: ContractEnv<Args>) => Promise<R>
+export type Formula<R = any, E extends Env = Env> = {
+  compute: (env: E) => Promise<R>
   // If true, the formula is dynamic based on block input. This likely means
   // that some expiration is being computed, which affects the output of the
   // formula without any state changing.
   dynamic?: boolean
 }
 
-export type WalletFormula<R = any, Args extends Record<string, string> = {}> = {
-  compute: (env: WalletEnv<Args>) => Promise<R>
-  // If true, the formula is dynamic based on block input. This likely means
-  // that some expiration is being computed, which affects the output of the
-  // formula without any state changing.
-  dynamic?: boolean
+export type ContractFormula<
+  R = any,
+  Args extends Record<string, string> = {}
+> = Formula<R, ContractEnv<Args>> & {
+  // If filters not satisfied, returns a 405 status.
+  filter?: RequireAtLeastOne<{
+    codeIdsKeys: string[]
+  }>
 }
+
+export type WalletFormula<
+  R = any,
+  Args extends Record<string, string> = {}
+> = Formula<R, WalletEnv<Args>>
 
 export type GenericFormula<
   R = any,
   Args extends Record<string, string> = {}
-> = {
-  compute: (env: Env<Args>) => Promise<R>
-  // If true, the formula is dynamic based on block input. This likely means
-  // that some expiration is being computed, which affects the output of the
-  // formula without any state changing.
-  dynamic?: boolean
-}
+> = Formula<R, Env<Args>>
 
 export enum FormulaType {
   Contract = 'contract',
@@ -245,10 +263,12 @@ export interface SetDependencies {
 }
 
 export type CacheMap<T> = Record<string, T[] | null | undefined>
+export type CacheMapSingle<T> = Record<string, T | null | undefined>
 
 export interface Cache {
   events: CacheMap<Event>
   transformations: CacheMap<Transformation>
+  contracts: CacheMapSingle<Contract>
 }
 
 export interface SplitDependentKeys {

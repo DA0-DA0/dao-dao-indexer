@@ -1,10 +1,15 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { Event, Transformation } from '@/db'
+import { Contract, Event, Transformation } from '@/db'
 
+import { loadConfig } from './config'
 import {
   Env,
   EnvOptions,
+  FormulaCodeIdKeyForContractGetter,
+  FormulaCodeIdsForKeysGetter,
+  FormulaContractCodeIdGetter,
+  FormulaContractMatchesCodeIdKeysGetter,
   FormulaDateGetter,
   FormulaDateWithValueMatchGetter,
   FormulaGetter,
@@ -33,6 +38,7 @@ export const getEnv = ({
   cache = {
     events: {},
     transformations: {},
+    contracts: {},
   },
 }: EnvOptions): Env<{}> => {
   // Most recent event at or below this block.
@@ -668,9 +674,66 @@ export const getEnv = ({
     return date
   }
 
+  const getContractCodeId: FormulaContractCodeIdGetter = async (
+    contractAddress
+  ) => {
+    // Get contract from cache.
+    const cachedContract = cache.contracts[contractAddress]
+
+    // If found contract, return code ID.
+    if (cachedContract) {
+      return cachedContract.codeId
+    }
+    // If contract was previously found to not exist, return undefined.
+    else if (cachedContract === null) {
+      return
+    }
+
+    // Find contract in database.
+    const contract = await Contract.findOne({
+      where: {
+        address: contractAddress,
+      },
+    })
+
+    // Cache contract.
+    cache.contracts[contractAddress] = contract
+
+    return contract?.codeId
+  }
+
+  // Get code ID key map from config.
+  const config = loadConfig()
+  const getCodeIdsForKeys: FormulaCodeIdsForKeysGetter = (...keys) =>
+    keys.flatMap((key) => config.codeIds?.[key] ?? [])
+
+  const contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter =
+    async (contractAddress, ...keys) => {
+      const codeId = await getContractCodeId(contractAddress)
+      return codeId !== undefined && getCodeIdsForKeys(...keys).includes(codeId)
+    }
+
+  // Tries to find the code ID of this contract in the code ID keys and returns
+  // the first match.
+  const getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter = async (
+    contractAddress
+  ) => {
+    const codeId = await getContractCodeId(contractAddress)
+    if (codeId === undefined) {
+      return
+    }
+
+    const codeIdKeys = Object.entries(config.codeIds ?? {}).flatMap(
+      ([key, value]) => (value?.includes(codeId) ? [key] : [])
+    )
+    return codeIdKeys[0]
+  }
+
   return {
     block,
     date: useBlockDate ? new Date(block.timeUnixMs) : new Date(),
+    args,
+
     get,
     getMap,
     getDateKeyModified,
@@ -682,6 +745,9 @@ export const getEnv = ({
     getDateFirstTransformed,
     prefetch,
     prefetchTransformations,
-    args,
+    getContractCodeId,
+    getCodeIdsForKeys,
+    contractMatchesCodeIdKeys,
+    getCodeIdKeyForContract,
   }
 }

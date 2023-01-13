@@ -13,6 +13,11 @@ export const stakingContract: ContractFormula<string | undefined> = {
 }
 
 export const votingPower: ContractFormula<string, { address: string }> = {
+  // Filter by code ID since someone may modify the contract.
+  filter: {
+    codeIdsKeys: ['dao-voting-cw20-staked'],
+  },
+
   compute: async (env) => {
     if (!env.args.address) {
       throw new Error('missing `address`')
@@ -29,6 +34,11 @@ export const votingPower: ContractFormula<string, { address: string }> = {
 }
 
 export const totalPower: ContractFormula<string> = {
+  // Filter by code ID since someone may modify the contract.
+  filter: {
+    codeIdsKeys: ['dao-voting-cw20-staked'],
+  },
+
   compute: async (env) => {
     const stakingContractAddress = (await stakingContract.compute(env)) ?? ''
     const power = await totalStaked.compute({

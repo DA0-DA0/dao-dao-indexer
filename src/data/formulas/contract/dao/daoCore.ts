@@ -470,14 +470,20 @@ export const votingPower: ContractFormula<
 > = {
   compute: async (env) => {
     const votingModuleAddress = (await votingModule.compute(env)) ?? ''
-    const votingModuleInfo = await info.compute({
-      ...env,
-      contractAddress: votingModuleAddress,
-    })
+    if (!votingModuleAddress) {
+      return
+    }
 
-    const votingPowerFormula =
-      votingModuleInfo &&
-      VOTING_POWER_MAP[votingModuleInfo.contract.replace('crates.io:', '')]
+    const codeIdKey = await env.getCodeIdKeyForContract(votingModuleAddress)
+    // Unrecognized contract.
+    if (!codeIdKey) {
+      return
+    }
+
+    // Find formula matching code ID key.
+    const votingPowerFormula = VOTING_POWER_FORMULAS.find((formula) =>
+      formula.filter?.codeIdsKeys?.includes(codeIdKey)
+    )
     return await votingPowerFormula?.compute({
       ...env,
       contractAddress: votingModuleAddress,
@@ -488,14 +494,20 @@ export const votingPower: ContractFormula<
 export const totalPower: ContractFormula<string | undefined> = {
   compute: async (env) => {
     const votingModuleAddress = (await votingModule.compute(env)) ?? ''
-    const votingModuleInfo = await info.compute({
-      ...env,
-      contractAddress: votingModuleAddress,
-    })
+    if (!votingModuleAddress) {
+      return
+    }
 
-    const totalPowerFormula =
-      votingModuleInfo &&
-      TOTAL_POWER_MAP[votingModuleInfo.contract.replace('crates.io:', '')]
+    const codeIdKey = await env.getCodeIdKeyForContract(votingModuleAddress)
+    // Unrecognized contract.
+    if (!codeIdKey) {
+      return
+    }
+
+    // Find formula matching code ID key.
+    const totalPowerFormula = TOTAL_POWER_FORMULAS.find((formula) =>
+      formula.filter?.codeIdsKeys?.includes(codeIdKey)
+    )
     return await totalPowerFormula?.compute({
       ...env,
       contractAddress: votingModuleAddress,
@@ -503,28 +515,15 @@ export const totalPower: ContractFormula<string | undefined> = {
   },
 }
 
-// Map contract name to voting power formula.
-const VOTING_POWER_MAP: Record<
-  string,
-  ContractFormula<string, { address: string }> | undefined
-> = {
-  'cw4-voting': daoVotingCw4VotingPower,
-  'cwd-voting-cw4': daoVotingCw4VotingPower,
-  'dao-voting-cw4': daoVotingCw4VotingPower,
-  'cw20-staked-balance-voting': daoVotingCw20StakedVotingPower,
-  'cwd-voting-cw20-staked': daoVotingCw20StakedVotingPower,
-  'dao-voting-cw20-staked': daoVotingCw20StakedVotingPower,
-}
-
-// Map contract name to total power formula.
-const TOTAL_POWER_MAP: Record<string, ContractFormula<string> | undefined> = {
-  'cw4-voting': daoVotingCw4TotalPower,
-  'cwd-voting-cw4': daoVotingCw4TotalPower,
-  'dao-voting-cw4': daoVotingCw4TotalPower,
-  'cw20-staked-balance-voting': daoVotingCw20StakedTotalPower,
-  'cwd-voting-cw20-staked': daoVotingCw20StakedTotalPower,
-  'dao-voting-cw20-staked': daoVotingCw20StakedTotalPower,
-}
+// These formulas must have code ID filters set so we can match them.
+const VOTING_POWER_FORMULAS: ContractFormula<string, { address: string }>[] = [
+  daoVotingCw4VotingPower,
+  daoVotingCw20StakedVotingPower,
+]
+const TOTAL_POWER_FORMULAS: ContractFormula<string>[] = [
+  daoVotingCw4TotalPower,
+  daoVotingCw20StakedTotalPower,
+]
 
 // Return open proposals without votes from the given address. If no address
 // provided, just return open proposals.

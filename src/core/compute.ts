@@ -1,12 +1,13 @@
 import { Op } from 'sequelize'
 
-import { Event, Transformation } from '@/db'
+import { Contract, Event, Transformation } from '@/db'
 
 import { getEnv } from './env'
 import {
   Block,
   Cache,
   CacheMap,
+  CacheMapSingle,
   ComputationOutput,
   ComputeOptions,
   ComputeRangeOptions,
@@ -66,10 +67,12 @@ export const compute = async ({
           ...env,
           contractAddress: targetAddress,
         })
-      : await options.formula.compute({
+      : options.type === FormulaType.Wallet
+      ? await options.formula.compute({
           ...env,
           walletAddress: targetAddress,
         })
+      : await options.formula.compute(env)
 
   return {
     block: latestBlock,
@@ -104,6 +107,9 @@ export const computeRange = async ({
   // All transformations for contractAddress:name pairs, sorted ascending by
   // block height.
   const allTransformations: Record<string, Transformation[] | undefined> = {}
+
+  // Cache contracts across all computations since they stay constant.
+  const contractCache: CacheMapSingle<Contract> = {}
 
   const computeForBlockInRange = async (
     block: Block
@@ -155,6 +161,7 @@ export const computeRange = async ({
     const initialCache: Cache = {
       events: {},
       transformations: {},
+      contracts: contractCache,
     }
 
     if (allDependencies.events.size > 0) {
@@ -194,10 +201,12 @@ export const computeRange = async ({
             ...env,
             contractAddress: targetAddress,
           })
-        : await options.formula.compute({
+        : options.type === FormulaType.Wallet
+        ? await options.formula.compute({
             ...env,
             walletAddress: targetAddress,
           })
+        : await options.formula.compute(env)
 
     return {
       latestBlock,
