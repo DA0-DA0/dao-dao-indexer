@@ -97,6 +97,11 @@ router.get('/error', (ctx) => {
 })
 
 router.get('/error-response', (ctx) => {
+  try {
+    throw new Error('Test error')
+  } catch (err) {
+    Sentry.captureException(err)
+  }
   ctx.status = 500
   ctx.body = 'error!'
 })
