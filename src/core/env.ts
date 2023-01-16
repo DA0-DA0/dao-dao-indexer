@@ -488,6 +488,7 @@ export const getEnv = ({
               Sequelize.literal(
                 'DISTINCT ON("name") \'\''
               ) as unknown as string,
+              'id',
               'name',
               'contractAddress',
               'blockHeight',
@@ -586,6 +587,7 @@ export const getEnv = ({
         // the query. This ensures we use the most recent version of the name
         // for each contract.
         Sequelize.literal('DISTINCT ON("name") \'\'') as unknown as string,
+        'id',
         'name',
         'contractAddress',
         'blockHeight',
