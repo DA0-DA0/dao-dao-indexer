@@ -1,5 +1,4 @@
 import Router from '@koa/router'
-import * as Sentry from '@sentry/node'
 import { Op } from 'sequelize'
 
 import {
@@ -21,6 +20,7 @@ import {
   State,
 } from '@/db'
 
+import { captureSentryException } from './sentry'
 import { validateBlockString } from './validate'
 
 export const computer: Router.Middleware = async (ctx) => {
@@ -631,6 +631,6 @@ export const computer: Router.Middleware = async (ctx) => {
     ctx.status = 500
     ctx.body = err instanceof Error ? err.message : `${err}`
 
-    Sentry.captureException(err)
+    captureSentryException(err, ctx)
   }
 }

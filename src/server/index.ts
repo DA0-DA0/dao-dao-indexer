@@ -9,6 +9,7 @@ import { loadConfig } from '@/core'
 import { closeDb, loadDb } from '@/db'
 
 import { computer } from './computer'
+import { captureSentryException } from './sentry'
 
 // Parse arguments.
 const program = new Command()
@@ -33,14 +34,9 @@ if (config.sentryDsn) {
     dsn: config.sentryDsn,
   })
 
-  // Add Sentry on error hook.
+  // Add Sentry error handler.
   app.on('error', (err, ctx) => {
-    Sentry.withScope((scope) => {
-      scope.addEventProcessor((event) =>
-        Sentry.addRequestDataToEvent(event, ctx.request)
-      )
-      Sentry.captureException(err)
-    })
+    captureSentryException(err, ctx)
   })
 }
 
@@ -90,6 +86,12 @@ app.use(async (ctx, next) => {
 router.get('/ping', (ctx) => {
   ctx.status = 200
   ctx.body = 'pong'
+})
+
+router.get('/error', (ctx) => {
+  ctx.status = 500
+  ctx.body = 'test!'
+  captureSentryException(new Error('Test error'), ctx)
 })
 
 // Formula computer.
