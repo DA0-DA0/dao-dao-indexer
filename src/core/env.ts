@@ -454,7 +454,7 @@ export const getEnv = ({
 
     return transformations.map((transformation) => ({
       contractAddress: transformation.contractAddress,
-      codeId: transformation.Contract.codeId,
+      codeId: transformation.contract.codeId,
       name: transformation.name,
       value: transformation.value as any,
     }))
@@ -506,6 +506,7 @@ export const getEnv = ({
               ['name', 'ASC'],
               ['blockHeight', 'DESC'],
             ],
+            include: Contract,
           })
 
     // Cache transformations, null if nonexistent.
@@ -601,6 +602,7 @@ export const getEnv = ({
         ['name', 'ASC'],
         ['blockHeight', 'DESC'],
       ],
+      include: Contract,
     })
 
     // Call hook.

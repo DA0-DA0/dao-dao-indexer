@@ -53,7 +53,7 @@ export class Transformation extends Model {
   contractAddress!: string
 
   @BelongsTo(() => Contract)
-  Contract!: Contract
+  contract!: Contract
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
