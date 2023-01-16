@@ -81,6 +81,7 @@ const main = async () => {
     include: [
       {
         model: Contract,
+        required: true,
         ...(codeIds.length > 0 && {
           where: {
             codeId: {
