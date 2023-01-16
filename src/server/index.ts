@@ -36,7 +36,7 @@ if (config.sentryDsn) {
 
   // Add Sentry error handler.
   app.on('error', (err, ctx) => {
-    captureSentryException(err, ctx)
+    captureSentryException(ctx, err)
   })
 }
 
@@ -86,12 +86,6 @@ app.use(async (ctx, next) => {
 router.get('/ping', (ctx) => {
   ctx.status = 200
   ctx.body = 'pong'
-})
-
-router.get('/error', (ctx) => {
-  ctx.status = 500
-  ctx.body = 'test!'
-  captureSentryException(new Error('Test error'), ctx)
 })
 
 // Formula computer.

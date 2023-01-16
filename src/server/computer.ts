@@ -267,8 +267,8 @@ export const computer: Router.Middleware = async (ctx) => {
     return
   }
 
+  let state = await State.getSingleton()
   try {
-    const state = await State.getSingleton()
     if (!state) {
       throw new Error('State not found')
     }
@@ -631,6 +631,17 @@ export const computer: Router.Middleware = async (ctx) => {
     ctx.status = 500
     ctx.body = err instanceof Error ? err.message : `${err}`
 
-    captureSentryException(err, ctx)
+    captureSentryException(ctx, err, {
+      tags: {
+        blockHeight: state?.latestBlockHeight,
+        blockTimeUnixMs: state?.latestBlockTimeUnixMs,
+        key,
+        type,
+        address,
+        formulaName,
+        accountId: account?.id,
+        accountName: account?.name,
+      },
+    })
   }
 }
