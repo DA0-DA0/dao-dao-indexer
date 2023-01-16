@@ -114,9 +114,7 @@ export const getEnv = ({
               // to cast to unknown and back to string to insert this at the
               // beginning of the query. This ensures we use the most recent
               // version of the key.
-              Sequelize.literal(
-                'DISTINCT ON("key") \'key\''
-              ) as unknown as string,
+              Sequelize.literal('DISTINCT ON("key") \'\'') as unknown as string,
               'key',
               'contractAddress',
               'blockHeight',
@@ -325,7 +323,7 @@ export const getEnv = ({
         // DISTINCT ON is not directly supported by Sequelize, so we need to
         // cast to unknown and back to string to insert this at the beginning of
         // the query. This ensures we use the most recent version of the key.
-        Sequelize.literal('DISTINCT ON("key") \'key\'') as unknown as string,
+        Sequelize.literal('DISTINCT ON("key") \'\'') as unknown as string,
         'key',
         'contractAddress',
         'blockHeight',
@@ -399,8 +397,9 @@ export const getEnv = ({
               // beginning of the query. This ensures we use the most recent
               // version of the name for each contract.
               Sequelize.literal(
-                'DISTINCT ON("name", "contractAddress") \'name\''
+                'DISTINCT ON("name", "contractAddress") \'\''
               ) as unknown as string,
+              'id',
               'name',
               'contractAddress',
               'blockHeight',
@@ -487,7 +486,7 @@ export const getEnv = ({
               // beginning of the query. This ensures we use the most recent
               // version of the name for each contract.
               Sequelize.literal(
-                'DISTINCT ON("name") \'name\''
+                'DISTINCT ON("name") \'\''
               ) as unknown as string,
               'name',
               'contractAddress',
@@ -585,7 +584,7 @@ export const getEnv = ({
         // cast to unknown and back to string to insert this at the beginning of
         // the query. This ensures we use the most recent version of the name
         // for each contract.
-        Sequelize.literal('DISTINCT ON("name") \'name\'') as unknown as string,
+        Sequelize.literal('DISTINCT ON("name") \'\'') as unknown as string,
         'name',
         'contractAddress',
         'blockHeight',

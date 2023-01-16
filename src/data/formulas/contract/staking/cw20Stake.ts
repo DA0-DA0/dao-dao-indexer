@@ -40,17 +40,15 @@ export const totalStaked: ContractFormula<string> = {
 }
 
 export const stakedValue: ContractFormula<string, { address: string }> = {
+  filter: {
+    codeIdsKeys: ['cw20-stake'],
+  },
   compute: async (env) => {
     if (!env.args.address) {
       throw new Error('missing `address`')
     }
 
-    await env.prefetch(
-      env.contractAddress,
-      'balance',
-      { keys: ['staked_balances', env.args.address] },
-      'total_staked'
-    )
+    await env.prefetch(env.contractAddress, 'balance', 'total_staked')
 
     const balance = Number(await totalValue.compute(env))
     const staked = Number(await stakedBalance.compute(env))
