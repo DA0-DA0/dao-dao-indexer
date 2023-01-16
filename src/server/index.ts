@@ -92,20 +92,6 @@ router.get('/ping', (ctx) => {
   ctx.body = 'pong'
 })
 
-router.get('/error', (ctx) => {
-  throw new Error('Test error')
-})
-
-router.get('/error-response', (ctx) => {
-  try {
-    throw new Error('Test error')
-  } catch (err) {
-    Sentry.captureException(err)
-  }
-  ctx.status = 500
-  ctx.body = 'error!'
-})
-
 // Formula computer.
 router.get('/(.+)', computer)
 
