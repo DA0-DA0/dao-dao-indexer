@@ -377,7 +377,8 @@ export const getEnv = ({
   const getTransformationMatches: FormulaTransformationMatchesGetter = async (
     contractAddress,
     nameLike,
-    where
+    where,
+    whereCodeId
   ) => {
     const dependentKey = getDependentKey(contractAddress, nameLike)
     dependencies?.transformations.add(dependentKey)
@@ -424,6 +425,15 @@ export const getEnv = ({
               // transformation for the (contractAddress,name) pair.
               ['blockHeight', 'DESC'],
             ],
+            include: [
+              {
+                model: Contract,
+                required: true,
+                where: whereCodeId && {
+                  codeId: whereCodeId,
+                },
+              },
+            ],
           })
 
     // Cache transformations, null if nonexistent.
@@ -443,6 +453,7 @@ export const getEnv = ({
 
     return transformations.map((transformation) => ({
       contractAddress: transformation.contractAddress,
+      codeId: transformation.contract.codeId,
       name: transformation.name,
       value: transformation.value as any,
     }))

@@ -83,12 +83,19 @@ export type FormulaDateWithValueMatchGetter = (
 export type FormulaTransformationMatchesGetter = <T>(
   contractAddress: string | undefined,
   nameLike: string,
-  whereClause?: any
-) => Promise<{ contractAddress: string; name: string; value: T }[] | undefined>
+  whereClause?: any,
+  whereCodeId?: any
+) => Promise<
+  | { contractAddress: string; codeId: number; name: string; value: T }[]
+  | undefined
+>
 
 export type FormulaTransformationMatchGetter = <T>(
   ...args: Parameters<FormulaTransformationMatchesGetter>
-) => Promise<{ contractAddress: string; name: string; value: T } | undefined>
+) => Promise<
+  | { contractAddress: string; codeId: number; name: string; value: T }
+  | undefined
+>
 
 export type FormulaTransformationDateGetter = (
   ...parameters: Parameters<FormulaTransformationMatchGetter>
