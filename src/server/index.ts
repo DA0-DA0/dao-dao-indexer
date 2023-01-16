@@ -1,5 +1,6 @@
 import cors from '@koa/cors'
 import Router from '@koa/router'
+import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 import Koa from 'koa'
 import { v4 as uuidv4 } from 'uuid'
@@ -19,9 +20,29 @@ program.option(
 program.parse()
 const options = program.opts()
 
+// Load config with config option.
+const config = loadConfig(options.config)
+
 // Setup app.
 const app = new Koa()
 const router = new Router()
+
+// Add Sentry error reporting.
+if (config.sentryDsn) {
+  Sentry.init({
+    dsn: config.sentryDsn,
+  })
+
+  // Add Sentry on error hook.
+  app.on('error', (err, ctx) => {
+    Sentry.withScope((scope) => {
+      scope.addEventProcessor((event) =>
+        Sentry.addRequestDataToEvent(event, ctx.request)
+      )
+      Sentry.captureException(err)
+    })
+  })
+}
 
 // CORS.
 const allowedOrigins = [
@@ -79,9 +100,6 @@ app.use(router.routes()).use(router.allowedMethods())
 
 // Start.
 const main = async () => {
-  // Load config with config option.
-  loadConfig(options.config)
-
   // Connect to DB.
   await loadDb()
 

@@ -37,6 +37,8 @@ export type Config = {
   }
   // Map some arbitary string to a list of code IDs.
   codeIds?: Record<string, number[] | undefined>
+  // If present, sets up Sentry error reporting.
+  sentryDsn?: string
 
   // Other config options.
   [key: string]: any
