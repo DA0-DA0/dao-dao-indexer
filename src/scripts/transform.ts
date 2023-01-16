@@ -37,17 +37,28 @@ const main = async () => {
     (value) => value.split(',')
   )
   program.option(
+    '-k, --code-ids-keys <keys>',
+    'comma separated list of code IDs keys from the config to transform'
+  )
+  program.option(
     // Adds inverted `update` boolean to the options object.
     '--no-update',
     "don't update computation validity based on new events or transformations"
   )
   program.parse()
-  const { config, initial, batch, addresses, update } = program.opts()
+  const {
+    config: _config,
+    initial,
+    batch,
+    addresses,
+    update,
+    codeIdsKeys,
+  } = program.opts()
 
   console.log(`\n[${new Date().toISOString()}] Transforming existing events...`)
 
   // Load config with config option.
-  loadConfig(config)
+  const config = loadConfig(_config)
 
   // Load DB on start.
   const sequelize = await loadDb()
@@ -63,6 +74,24 @@ const main = async () => {
       }
     : {}
 
+  const codeIds = (
+    codeIdsKeys && typeof codeIdsKeys === 'string' ? codeIdsKeys.split(',') : []
+  ).flatMap((key) => config.codeIds?.[key] ?? [])
+  const includeContract = {
+    include: [
+      {
+        model: Contract,
+        ...(codeIds.length > 0 && {
+          where: {
+            codeId: {
+              [Op.in]: codeIds,
+            },
+          },
+        }),
+      },
+    ],
+  }
+
   let latestBlockHeight = initial
   const total = await Event.count({
     where: {
@@ -71,6 +100,7 @@ const main = async () => {
         [Op.gte]: latestBlockHeight,
       },
     },
+    ...includeContract,
   })
 
   // Print latest statistics every 100ms.
@@ -105,7 +135,7 @@ const main = async () => {
           },
         }),
       },
-      include: Contract,
+      ...includeContract,
       limit: batch,
       order: [['blockHeight', 'ASC']],
     })
