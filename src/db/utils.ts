@@ -131,7 +131,7 @@ export const updateComputationValidityDependentOnChanges = async (
       // to unknown and back to string to insert this at the beginning of the
       // query. This ensures we use the most recent computation for the formula.
       Sequelize.literal(
-        'DISTINCT ON("formula", "args", "targetAddress") \'\''
+        'DISTINCT ON("formula", "args", "targetAddress") \'id\''
       ) as unknown as string,
       'id',
       'targetAddress',
