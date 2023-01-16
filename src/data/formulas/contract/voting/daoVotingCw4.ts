@@ -9,7 +9,6 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   compute: async ({
     contractAddress,
     getTransformationMatch,
-    get,
     args: { address },
   }) => {
     if (!address) {
@@ -22,10 +21,7 @@ export const votingPower: ContractFormula<string, { address: string }> = {
           contractAddress,
           `userWeight:${address}`
         )
-      )?.value ||
-      // Fallback to events.
-      (await get<string>(contractAddress, 'user_weights', address)) ||
-      '0'
+      )?.value || '0'
     )
   },
 }

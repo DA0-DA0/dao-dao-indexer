@@ -11,17 +11,25 @@ export const config: ContractFormula<any | undefined> = {
 }
 
 export const stakedBalance: ContractFormula<string, { address: string }> = {
-  compute: async ({ contractAddress, get, args: { address } }) => {
+  filter: {
+    codeIdsKeys: ['cw20-stake'],
+  },
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { address },
+  }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
     return (
-      (await get<string | undefined>(
-        contractAddress,
-        'staked_balances',
-        address
-      )) ?? '0'
+      (
+        await getTransformationMatch<string | undefined>(
+          contractAddress,
+          `stakedBalance:${address}`
+        )
+      )?.value ?? '0'
     )
   },
 }

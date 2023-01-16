@@ -1,4 +1,3 @@
-import { WhereOptions } from 'sequelize'
 import { SequelizeOptions } from 'sequelize-typescript'
 
 import { Contract, Event, State, Transformation } from '@/db'
@@ -78,13 +77,13 @@ export type FormulaDateGetter = (
 export type FormulaDateWithValueMatchGetter = (
   contractAddress: string,
   keys: (string | number)[],
-  whereClause: WhereOptions
+  whereClause: any
 ) => Promise<Date | undefined>
 
 export type FormulaTransformationMatchesGetter = <T>(
   contractAddress: string | undefined,
   nameLike: string,
-  whereClause?: WhereOptions
+  whereClause?: any
 ) => Promise<{ contractAddress: string; name: string; value: T }[] | undefined>
 
 export type FormulaTransformationMatchGetter = <T>(
