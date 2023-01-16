@@ -454,7 +454,7 @@ export const getEnv = ({
 
     return transformations.map((transformation) => ({
       contractAddress: transformation.contractAddress,
-      codeId: transformation.contract.codeId,
+      codeId: transformation.Contract.codeId,
       name: transformation.name,
       value: transformation.value as any,
     }))
