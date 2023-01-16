@@ -9,6 +9,7 @@ import common from './common'
 import dao from './dao'
 import external from './external'
 import proposal from './proposal'
+import staking from './staking'
 import voting from './voting'
 
 let processedTransformers: ProcessedTransformer[] | undefined
@@ -26,6 +27,7 @@ export const getProcessedTransformers = (
       ...dao,
       ...external,
       ...proposal,
+      ...staking,
       ...voting,
 
       // Makers.
