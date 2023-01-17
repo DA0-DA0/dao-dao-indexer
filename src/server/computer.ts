@@ -87,6 +87,8 @@ export const computer: Router.Middleware = async (ctx) => {
     return
   }
 
+  // TODO: Use CORS options from account.
+
   // Validate address.
   if (!address) {
     ctx.status = 400

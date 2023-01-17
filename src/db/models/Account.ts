@@ -47,6 +47,11 @@ export class Account extends Model {
   @Column
   nonce!: number
 
+  // TODO: Implement CORS per-account.
+  // @AllowNull
+  // @Column(DataType.ARRAY(DataType.STRING))
+  // cors!: string[] | null
+
   @HasMany(() => AccountCredit, 'accountId')
   credits!: AccountCredit[]
 
