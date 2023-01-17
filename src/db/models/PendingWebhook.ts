@@ -166,7 +166,10 @@ export class PendingWebhook extends Model {
       await axios(this.endpoint.url, {
         method: this.endpoint.method,
         // https://stackoverflow.com/a/74735197
-        headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
+        headers: {
+          'Accept-Encoding': 'gzip,deflate,compress',
+          ...this.endpoint.headers,
+        },
         data: this.value,
       })
 
