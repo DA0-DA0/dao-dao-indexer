@@ -8,7 +8,7 @@ const KEY_PREFIX_STAKED_BALANCES = dbKeyForKeys('staked_balances', '')
 const KEY_PREFIX_USER_WEIGHTS = dbKeyForKeys('user_weights', '')
 
 // Fire webhook when a cw20-stake balance or dao-voting-cw4 user weight is set.
-export const addPendingFollow: WebhookMaker = (config, state) => ({
+export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
   filter: {
     codeIdsKeys: [CW20_STAKE_CODE_IDS_KEY, DAO_VOTING_CW4_CODE_IDS_KEY],
     matches: (event) =>

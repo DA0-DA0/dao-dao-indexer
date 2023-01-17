@@ -2,6 +2,7 @@ import { Config, ProcessedWebhook, Webhook, WebhookMaker } from '@/core'
 import { State } from '@/db'
 
 import { makeProposalCreated } from './discordNotifier'
+import { makeAddPendingFollow } from './following'
 
 let processedWebhooks: ProcessedWebhook[] | undefined
 export const getProcessedWebhooks = (
@@ -12,6 +13,7 @@ export const getProcessedWebhooks = (
     const webhookMakers: WebhookMaker[] = [
       // Add webhook makers here.
       makeProposalCreated,
+      makeAddPendingFollow,
     ]
 
     const _webhooks: Webhook[] = [
