@@ -18,6 +18,7 @@
           "value.config.description",
           "value.proposalCount"
         ],
+        "sortableAttributes": ["value.proposalCount"],
         "formula": "daoCore/dumpState",
         "codeIdsKeys": ["dao-core"]
       }

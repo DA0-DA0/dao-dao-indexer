@@ -13,7 +13,11 @@ export const setupMeilisearch = async () => {
   const client = await loadMeilisearch()
 
   // Create indexes if they don't exist.
-  for (const { index, filterableAttributes } of meilisearch.indexes) {
+  for (const {
+    index,
+    filterableAttributes,
+    sortableAttributes,
+  } of meilisearch.indexes) {
     try {
       const clientIndex = await client.getIndex(index)
       if (clientIndex.primaryKey !== 'contractAddress') {
@@ -35,6 +39,9 @@ export const setupMeilisearch = async () => {
       'value',
       ...(filterableAttributes || []),
     ])
-    await clientIndex.updateSortableAttributes(['blockHeight'])
+    await clientIndex.updateSortableAttributes([
+      'blockHeight',
+      ...(sortableAttributes || []),
+    ])
   }
 }

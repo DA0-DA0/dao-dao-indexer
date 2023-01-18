@@ -28,6 +28,7 @@ export type Config = {
     indexes: {
       index: string
       filterableAttributes?: string[]
+      sortableAttributes?: string[]
       formula: string
       args?: Record<string, any>
       // One of `codeIdsKeys` or `contractAddresses` must be present.
