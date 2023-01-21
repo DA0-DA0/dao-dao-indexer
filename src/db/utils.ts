@@ -123,60 +123,63 @@ export const updateComputationValidityDependentOnChanges = async (
     )
   )
 
-  // 3. Update those most recent which start before the earliest block and have
-  //    been deemed valid before the earliest block.
-  const toUpdateExtendingRange = await Computation.findAll({
-    attributes: [
-      // DISTINCT ON is not directly supported by Sequelize, so we need to cast
-      // to unknown and back to string to insert this at the beginning of the
-      // query. This ensures we use the most recent computation for the formula.
-      Sequelize.literal(
-        'DISTINCT ON("formula", "args", "targetAddress") \'\''
-      ) as unknown as string,
-      'id',
-      'targetAddress',
-      'blockHeight',
-      'blockTimeUnixMs',
-      'latestBlockHeightValid',
-      'formula',
-      'args',
-      'dependentEvents',
-      'dependentTransformations',
-      'output',
-    ],
-    where: {
-      ...makeWhereComputationsAffected(
-        escape,
-        dependentEvents,
-        dependentTransformations,
-        `"blockHeight" < ${earliestBlockHeight} AND "latestBlockHeightValid" < ${earliestBlockHeight}`
-      ),
-      blockHeight: {
-        [Op.lt]: earliestBlockHeight,
-      },
-      latestBlockHeightValid: {
-        [Op.lt]: earliestBlockHeight,
-      },
-      validityExtendable: true,
-    },
-    order: [
-      // Need to be first so we can use DISTINCT ON.
-      ['formula', 'ASC'],
-      ['args', 'ASC'],
-      ['targetAddress', 'ASC'],
+  // COMMENTING OUT FOR NOW: Too inefficient. Need to index Computation's
+  // dependencies or rewrite dependency system.
 
-      ['blockHeight', 'DESC'],
-    ],
-  })
+  // // 3. Update those most recent which start before the earliest block and have
+  // //    been deemed valid before the earliest block.
+  // const toUpdateExtendingRange = await Computation.findAll({
+  //   attributes: [
+  //     // DISTINCT ON is not directly supported by Sequelize, so we need to cast
+  //     // to unknown and back to string to insert this at the beginning of the
+  //     // query. This ensures we use the most recent computation for the formula.
+  //     Sequelize.literal(
+  //       'DISTINCT ON("formula", "args", "targetAddress") \'\''
+  //     ) as unknown as string,
+  //     'id',
+  //     'targetAddress',
+  //     'blockHeight',
+  //     'blockTimeUnixMs',
+  //     'latestBlockHeightValid',
+  //     'formula',
+  //     'args',
+  //     'dependentEvents',
+  //     'dependentTransformations',
+  //     'output',
+  //   ],
+  //   where: {
+  //     ...makeWhereComputationsAffected(
+  //       escape,
+  //       dependentEvents,
+  //       dependentTransformations,
+  //       `"blockHeight" < ${earliestBlockHeight} AND "latestBlockHeightValid" < ${earliestBlockHeight}`
+  //     ),
+  //     blockHeight: {
+  //       [Op.lt]: earliestBlockHeight,
+  //     },
+  //     latestBlockHeightValid: {
+  //       [Op.lt]: earliestBlockHeight,
+  //     },
+  //     validityExtendable: true,
+  //   },
+  //   order: [
+  //     // Need to be first so we can use DISTINCT ON.
+  //     ['formula', 'ASC'],
+  //     ['args', 'ASC'],
+  //     ['targetAddress', 'ASC'],
 
-  await Promise.all(
-    toUpdateExtendingRange.map((computation) =>
-      computation.updateValidityUpToBlockHeight(latestBlockHeight)
-    )
-  )
+  //     ['blockHeight', 'DESC'],
+  //   ],
+  // })
+
+  // await Promise.all(
+  //   toUpdateExtendingRange.map((computation) =>
+  //     computation.updateValidityUpToBlockHeight(latestBlockHeight)
+  //   )
+  // )
 
   return {
-    updated: toUpdateInRange.length + toUpdateExtendingRange.length,
+    updated: toUpdateInRange.length, // + toUpdateExtendingRange.length,
     destroyed,
   }
 }
