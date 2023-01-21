@@ -24,6 +24,13 @@ import { Transformation } from './Transformation'
     {
       fields: ['latestBlockHeightValid'],
     },
+    // Speed up export invalidation queries.
+    {
+      fields: ['dependentEvents'],
+    },
+    {
+      fields: ['dependentTransformations'],
+    },
   ],
 })
 export class Computation extends Model {
