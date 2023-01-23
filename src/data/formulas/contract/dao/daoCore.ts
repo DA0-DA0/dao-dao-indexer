@@ -516,10 +516,10 @@ export const totalPower: ContractFormula<string | undefined> = {
 }
 
 // These formulas must have code ID filters set so we can match them.
-const VOTING_POWER_FORMULAS: ContractFormula<string, { address: string }>[] = [
-  daoVotingCw4VotingPower,
-  daoVotingCw20StakedVotingPower,
-]
+const VOTING_POWER_FORMULAS: ContractFormula<
+  string | undefined,
+  { address: string }
+>[] = [daoVotingCw4VotingPower, daoVotingCw20StakedVotingPower]
 const TOTAL_POWER_FORMULAS: ContractFormula<string>[] = [
   daoVotingCw4TotalPower,
   daoVotingCw20StakedTotalPower,
