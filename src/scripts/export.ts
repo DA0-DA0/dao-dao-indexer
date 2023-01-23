@@ -407,8 +407,9 @@ const exporter = async (
       codeId: parsedEvents.find((event) => event.contractAddress === address)!
         .codeId,
     })),
+    // When contract is migrated, codeId changes.
     {
-      ignoreDuplicates: true,
+      updateOnDuplicate: ['codeId'],
     }
   )
 
