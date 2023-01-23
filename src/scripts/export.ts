@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import readline from 'readline'
-import { Worker } from 'worker_threads'
 
+import * as Sentry from '@sentry/node'
 import axios from 'axios'
 import { Command } from 'commander'
 import { Sequelize } from 'sequelize'
@@ -54,6 +54,13 @@ const options = program.opts()
 
 // Load config with config option.
 const config = loadConfig(options.config)
+
+// Add Sentry error reporting.
+if (config.sentryDsn) {
+  Sentry.init({
+    dsn: config.sentryDsn,
+  })
+}
 
 // Read state.
 let reading = false
@@ -319,6 +326,15 @@ const main = async () => {
           }
         }
       } catch (err) {
+        Sentry.captureException(err, {
+          tags: {
+            script: 'export',
+          },
+          extra: {
+            bytesRead,
+            latestBlockHeight,
+          },
+        })
         reject(err)
       }
     }
@@ -405,18 +421,40 @@ const exporter = async (
     ...new Set(parsedEvents.map((event) => event.contractAddress)),
   ]
 
-  // Ensure contract exists before creating events. `address` is unique.
-  await Contract.bulkCreate(
-    uniqueContracts.map((address) => ({
-      address,
-      codeId: parsedEvents.find((event) => event.contractAddress === address)!
-        .codeId,
-    })),
-    // When contract is migrated, codeId changes.
-    {
-      updateOnDuplicate: ['codeId'],
+  // Try to create contracts up to 3 times. This has previously failed due to a
+  // deadlock.
+  let contractCreationAttempts = 3
+  while (contractCreationAttempts > 0) {
+    try {
+      // Ensure contract exists before creating events. `address` is unique.
+      await Contract.bulkCreate(
+        uniqueContracts.map((address) => ({
+          address,
+          codeId: parsedEvents.find(
+            (event) => event.contractAddress === address
+          )!.codeId,
+        })),
+        // When contract is migrated, codeId changes.
+        {
+          updateOnDuplicate: ['codeId'],
+        }
+      )
+
+      // Break on success.
+      break
+    } catch (err) {
+      console.error(err)
+      Sentry.captureException(err, {
+        tags: {
+          script: 'export',
+        },
+        extra: {
+          uniqueContracts,
+        },
+      })
+      contractCreationAttempts--
     }
-  )
+  }
 
   // Get updated contracts.
   const contracts = await Contract.findAll({
