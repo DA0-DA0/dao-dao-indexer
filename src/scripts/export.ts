@@ -20,7 +20,6 @@ import { setupMeilisearch, updateIndexesForContracts } from '@/ms'
 
 import { objectMatchesStructure } from './utils'
 
-const BULK_INSERT_SIZE = 500
 const LOADER_MAP = ['—', '\\', '|', '/']
 
 // Parse arguments.
@@ -30,9 +29,15 @@ program.option(
   'path to config file, falling back to config.json'
 )
 program.option(
-  '-b, --block <height>',
+  '-i, --initial <block height>',
   'block height to start exporting from, falling back to after the last exported block',
   (value) => parseInt(value, 10)
+)
+program.option(
+  '-b, --batch <size>',
+  'batch size',
+  (value) => parseInt(value, 10),
+  1000
 )
 program.option(
   // Adds inverted `update` boolean to the options object.
@@ -90,7 +95,7 @@ const main = async () => {
   const initialState = await updateState()
 
   const initialBlock =
-    (options.block as number | undefined) ??
+    (options.initial as number | undefined) ??
     // Start at the next block after the last exported block if no command line
     // argument passed for `block`.
     (initialState.lastBlockHeightExported ?? 0) + 1
@@ -280,7 +285,7 @@ const main = async () => {
           // block, flush the previous events to the DB. This ensures we batch
           // all events from the same block together.
           if (
-            pendingIndexerEvents.length >= BULK_INSERT_SIZE &&
+            pendingIndexerEvents.length >= options.batch &&
             event.blockHeight > lastBlockHeightSeen
           ) {
             await processPendingEvents()

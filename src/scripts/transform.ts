@@ -26,7 +26,7 @@ const main = async () => {
     0
   )
   program.option(
-    '-b, --batch <path>',
+    '-b, --batch <size>',
     'batch size',
     (value) => parseInt(value, 10),
     50000
