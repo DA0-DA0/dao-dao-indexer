@@ -20,7 +20,7 @@ const main = async () => {
     '-b, --batch <size>',
     'batch size',
     (value) => parseInt(value, 10),
-    3000
+    1000
   )
   program.parse()
   const { config, batch } = program.opts()
