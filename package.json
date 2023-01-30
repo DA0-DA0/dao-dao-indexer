@@ -16,6 +16,7 @@
     "webhooks": "node dist/scripts/webhooks.js",
     "transform": "node dist/scripts/transform.js",
     "pre-compute": "node dist/scripts/preCompute.js",
+    "revalidate": "node dist/scripts/revalidate.js",
     "flood": "node dist/scripts/flood.js",
     "serve": "node dist/server/index.js",
     "serve:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js\"",
@@ -30,6 +31,7 @@
   "author": "Noah Saso <noah@noah.zone>",
   "devDependencies": {
     "@types/koa": "^2.13.5",
+    "@types/lodash.isequal": "^4.5.6",
     "@types/node": "^18.11.10",
     "@types/prettier": "^2.7.1",
     "@types/uuid": "^9.0.0",
@@ -59,6 +61,7 @@
     "axios": "^1.2.1",
     "commander": "^9.4.1",
     "koa": "^2.13.4",
+    "lodash.isequal": "^4.5.0",
     "meilisearch": "^0.30.0",
     "pg": "^8.8.0",
     "pg-hstore": "^2.3.4",

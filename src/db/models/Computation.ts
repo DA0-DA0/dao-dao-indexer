@@ -1,7 +1,15 @@
+import isEqual from 'lodash.isequal'
 import { Op } from 'sequelize'
 import { AllowNull, Column, DataType, Model, Table } from 'sequelize-typescript'
 
-import { Block, ComputationOutput, TypedFormula } from '@/core'
+import {
+  Block,
+  ComputationOutput,
+  FormulaType,
+  TypedFormula,
+  compute,
+} from '@/core'
+import { getTypedFormula } from '@/data'
 
 import { Event } from './Event'
 import { Transformation } from './Transformation'
@@ -50,12 +58,16 @@ export class Computation extends Model {
   @Column(DataType.BIGINT)
   latestBlockHeightValid!: number
 
-  // If true, the computation's output is valid up to the latest block and
-  // cannot be extended. This may be true if the formula depends on the block
+  // If false, the computation's output is valid up to the latest block and
+  // cannot be extended. This may be false if the formula depends on the block
   // height/time.
   @AllowNull(false)
   @Column(DataType.BOOLEAN)
   validityExtendable!: boolean
+
+  @AllowNull(false)
+  @Column(DataType.TEXT)
+  type!: FormulaType
 
   @AllowNull(false)
   @Column(DataType.TEXT)
@@ -86,9 +98,15 @@ export class Computation extends Model {
   @Column(DataType.TEXT)
   output!: string | null
 
+  static getOutputForValue(value: any): string | null {
+    return typeof value !== undefined && typeof value !== null
+      ? JSON.stringify(value)
+      : null
+  }
+
   static async createFromComputationOutputs(
     targetAddress: string,
-    { name: formulaName, formula }: TypedFormula,
+    { type, name: formulaName, formula }: TypedFormula,
     args: Record<string, any>,
     computationOutputs: ComputationOutput[]
   ): Promise<Computation[]> {
@@ -96,6 +114,7 @@ export class Computation extends Model {
       computationOutputs.map(
         ({ block, value, dependencies, latestBlockHeightValid }) => ({
           targetAddress,
+          type,
           formula: formulaName,
           args: JSON.stringify(args),
           dependentEvents: dependencies.events,
@@ -109,10 +128,7 @@ export class Computation extends Model {
           blockTimeUnixMs: block?.timeUnixMs ?? -1,
           latestBlockHeightValid: latestBlockHeightValid ?? block?.height ?? -1,
           validityExtendable: !formula.dynamic,
-          output:
-            typeof value !== undefined && typeof value !== null
-              ? JSON.stringify(value)
-              : null,
+          output: Computation.getOutputForValue(value),
         })
       ),
       {
@@ -231,5 +247,53 @@ export class Computation extends Model {
       latestBlockHeightValid: firstNewerItem.blockHeight - 1,
     })
     return false
+  }
+
+  // Recomputes the formula and checks if the initial block, output, or
+  // dependencies change. If one of them changes, it is replaced with the new
+  // computation. Otherwise, its output and validity are updated. Returns true
+  // if it stayed the same, and false if it got replaced.
+  async revalidate(): Promise<boolean> {
+    const typedFormula = getTypedFormula(this.type, this.formula)
+
+    const args = JSON.parse(this.args)
+    const computation = await compute({
+      ...typedFormula,
+      targetAddress: this.targetAddress,
+      args,
+      block: this.block,
+    })
+
+    // If the output, initial block, or dependencies changed, delete the
+    // computation.
+    if (
+      Computation.getOutputForValue(computation.value) !== this.output ||
+      (computation.block?.height ?? -1) !== this.blockHeight ||
+      !isEqual(computation.dependencies, {
+        events: this.dependentEvents,
+        transformations: this.dependentTransformations,
+      })
+    ) {
+      await this.destroy()
+
+      // Create new computation from the new output to replace this one.
+      await Computation.createFromComputationOutputs(
+        this.targetAddress,
+        typedFormula,
+        args,
+        [computation]
+      )
+
+      return false
+    }
+
+    // If everything is the same but latest valid block is different, update.
+    if (computation.latestBlockHeightValid !== this.latestBlockHeightValid) {
+      await this.update({
+        latestBlockHeightValid: computation.latestBlockHeightValid,
+      })
+    }
+
+    return true
   }
 }
