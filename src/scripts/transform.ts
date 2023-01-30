@@ -68,30 +68,37 @@ const main = async () => {
   let computationsDestroyed = 0
   let transformed = 0
 
-  const addressFilter = addresses?.length
-    ? {
-        contractAddress: addresses,
-      }
-    : {}
-
   const codeIds = (
     codeIdsKeys && typeof codeIdsKeys === 'string' ? codeIdsKeys.split(',') : []
   ).flatMap((key) => config.codeIds?.[key] ?? [])
-  const includeContract = {
-    include: [
-      {
-        model: Contract,
-        required: true,
-        ...(codeIds.length > 0 && {
+  const contracts =
+    codeIds.length > 0
+      ? await Contract.findAll({
           where: {
             codeId: {
               [Op.in]: codeIds,
             },
           },
-        }),
+        })
+      : undefined
+  const includeContract = {
+    include: [
+      {
+        model: Contract,
+        required: true,
       },
     ],
   }
+
+  const addressFilter =
+    addresses?.length || contracts?.length
+      ? {
+          contractAddress: [
+            ...(addresses || []),
+            ...(contracts?.map((contract) => contract.address) || []),
+          ],
+        }
+      : {}
 
   let latestBlockHeight = initial
   const total = await Event.count({
