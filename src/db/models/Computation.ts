@@ -99,9 +99,7 @@ export class Computation extends Model {
   output!: string | null
 
   static getOutputForValue(value: any): string | null {
-    return typeof value !== undefined && typeof value !== null
-      ? JSON.stringify(value)
-      : null
+    return value !== undefined && value !== null ? JSON.stringify(value) : null
   }
 
   static async createFromComputationOutputs(
