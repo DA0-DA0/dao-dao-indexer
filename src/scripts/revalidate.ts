@@ -5,7 +5,7 @@ import { Command } from 'commander'
 import { Op } from 'sequelize'
 
 import { loadConfig } from '@/core'
-import { Computation, Event, loadDb } from '@/db'
+import { Computation, Contract, loadDb } from '@/db'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 
@@ -22,14 +22,18 @@ const main = async () => {
     (value) => parseInt(value, 10),
     1000
   )
+  program.option(
+    '-k, --code-ids-keys <keys>',
+    'comma separated list of code IDs keys from the config to revalidate'
+  )
   program.parse()
-  const { config, batch } = program.opts()
+  const { config: _config, batch, codeIdsKeys } = program.opts()
 
   console.log(`\n[${new Date().toISOString()}] Revalidating computations...`)
   const start = Date.now()
 
   // Load config with config option.
-  loadConfig(config)
+  const config = loadConfig(_config)
 
   // Load DB on start.
   const sequelize = await loadDb()
@@ -39,7 +43,28 @@ const main = async () => {
   let replaced = 0
   const formulasReplaced = new Set<string>()
 
-  const total = await Computation.count()
+  const codeIds = (
+    codeIdsKeys && typeof codeIdsKeys === 'string' ? codeIdsKeys.split(',') : []
+  ).flatMap((key) => config.codeIds?.[key] ?? [])
+  const contracts =
+    codeIds.length > 0
+      ? await Contract.findAll({
+          where: {
+            codeId: {
+              [Op.in]: codeIds,
+            },
+          },
+        })
+      : undefined
+  const contractWhere = contracts?.length
+    ? {
+        targetAddress: contracts.map((contract) => contract.address),
+      }
+    : undefined
+
+  const total = await Computation.count({
+    where: contractWhere,
+  })
 
   // Print latest statistics every 100ms.
   let printLoaderCount = 0
@@ -66,6 +91,7 @@ const main = async () => {
         id: {
           [Op.gt]: latestId,
         },
+        ...contractWhere,
       },
       limit: batch,
       order: [['id', 'ASC']],
