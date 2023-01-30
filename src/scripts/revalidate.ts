@@ -20,12 +20,13 @@ const main = async () => {
     '-b, --batch <size>',
     'batch size',
     (value) => parseInt(value, 10),
-    300
+    3000
   )
   program.parse()
   const { config, batch } = program.opts()
 
   console.log(`\n[${new Date().toISOString()}] Revalidating computations...`)
+  const start = Date.now()
 
   // Load config with config option.
   loadConfig(config)
@@ -49,7 +50,10 @@ const main = async () => {
         LOADER_MAP[printLoaderCount]
       }  Updated/replaced: ${updated.toLocaleString()}/${replaced.toLocaleString()}. Processed: ${(
         updated + replaced
-      ).toLocaleString()}/${total.toLocaleString()}.`
+      ).toLocaleString()}/${total.toLocaleString()}. Elapsed: ${(
+        (Date.now() - start) /
+        1000
+      ).toFixed(0)} seconds.`
     )
   }
   const logInterval = setInterval(printStatistics, 100)
