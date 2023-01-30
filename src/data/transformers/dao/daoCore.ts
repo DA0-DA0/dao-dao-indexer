@@ -32,14 +32,19 @@ const totalProposalModuleCount = makeTransformer(
 const proposalModules = makeTransformerForMap<ProposalModule>(
   CODE_IDS_KEYS,
   'proposalModule',
-  ['proposal_modules', 'proposal_modules_v2'],
+  ['governance_modules', 'proposal_modules', 'proposal_modules_v2'],
   {
     getValue: (event) => {
-      // "proposal_modules"|"proposal_modules_v2", address
+      // "governance_modules"|"proposal_modules"|"proposal_modules_v2", address
       const [namespace, address] = dbKeyToKeys(event.key, [false, false])
 
       // V1
-      if (namespace === 'proposal_modules') {
+      if (
+        // beta
+        namespace === 'governance_modules' ||
+        // official deploy
+        namespace === 'proposal_modules'
+      ) {
         return {
           address,
           // V1 modules don't have a prefix.
