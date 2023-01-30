@@ -36,6 +36,7 @@ const main = async () => {
   let latestId = 0
   let updated = 0
   let replaced = 0
+  const formulasReplaced = new Set<string>()
 
   const total = await Computation.count()
 
@@ -44,9 +45,11 @@ const main = async () => {
   const printStatistics = () => {
     printLoaderCount = (printLoaderCount + 1) % LOADER_MAP.length
     process.stdout.write(
-      `\r${LOADER_MAP[printLoaderCount]}  Processed: ${(
+      `\r${
+        LOADER_MAP[printLoaderCount]
+      }  Updated/replaced: ${updated.toLocaleString()}/${replaced.toLocaleString()}. Processed: ${(
         updated + replaced
-      ).toLocaleString()}. Updated/replaced: ${updated.toLocaleString()}/${replaced.toLocaleString()}. Total: ${total.toLocaleString()}.`
+      ).toLocaleString()}/${total.toLocaleString()}.`
     )
   }
   const logInterval = setInterval(printStatistics, 100)
@@ -77,6 +80,21 @@ const main = async () => {
 
     updated += revalidations.reduce((acc, valid) => acc + (valid ? 1 : 0), 0)
     replaced += revalidations.reduce((acc, valid) => acc + (valid ? 0 : 1), 0)
+
+    // Log formulas that were replaced if not yet replaced.
+    revalidations.forEach((valid, i) => {
+      if (valid) {
+        return
+      }
+
+      const formula = computations[i].formula
+      if (!formulasReplaced.has(formula)) {
+        formulasReplaced.add(formula)
+        console.log(
+          `\n[${new Date().toISOString()}] Replaced formula: ${formula}`
+        )
+      }
+    })
   }
 
   clearInterval(logInterval)
