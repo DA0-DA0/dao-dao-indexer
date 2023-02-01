@@ -2,8 +2,7 @@ import { Transformer } from '@/core'
 
 import { makeTransformer } from '../utils'
 
-// There are so many CW20 contracts, just don't filter by them and transform all
-// with key `balance`.
+// There are so many CW20 contracts, just don't filter by code ID.
 const CODE_IDS_KEYS: string[] = []
 
 const tokenInfo: Transformer = makeTransformer(

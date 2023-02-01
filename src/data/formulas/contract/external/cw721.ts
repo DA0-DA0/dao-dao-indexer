@@ -23,25 +23,35 @@ type NftInfo = Pick<TokenInfo, 'token_uri' | 'extension'>
 type OwnerOfInfo = Pick<TokenInfo, 'owner' | 'approvals'>
 
 export const minter: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get<string>(contractAddress, 'minter'),
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'minter'))?.value,
 }
 
 export const contractInfo: ContractFormula<ContractInfo | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get<ContractInfo>(contractAddress, 'nft_info'),
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<ContractInfo>(contractAddress, 'nftInfo'))
+      ?.value,
 }
 
 export const nftInfo: ContractFormula<
   NftInfo | undefined,
   { tokenId: string }
 > = {
-  compute: async ({ contractAddress, get, args: { tokenId } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { tokenId },
+  }) => {
     if (!tokenId) {
       throw new Error('missing `tokenId`')
     }
 
-    const info = await get<TokenInfo>(contractAddress, 'tokens', tokenId)
+    const info = (
+      await getTransformationMatch<TokenInfo>(
+        contractAddress,
+        `token:${tokenId}`
+      )
+    )?.value
 
     return (
       info && {
@@ -56,12 +66,21 @@ export const ownerOf: ContractFormula<
   OwnerOfInfo | undefined,
   { tokenId: string }
 > = {
-  compute: async ({ contractAddress, get, args: { tokenId } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { tokenId },
+  }) => {
     if (!tokenId) {
       throw new Error('missing `tokenId`')
     }
 
-    const info = await get<TokenInfo>(contractAddress, 'tokens', tokenId)
+    const info = (
+      await getTransformationMatch<TokenInfo>(
+        contractAddress,
+        `token:${tokenId}`
+      )
+    )?.value
 
     return (
       info && {
@@ -126,8 +145,9 @@ export const allOperators: ContractFormula<
 }
 
 export const numTokens: ContractFormula<number> = {
-  compute: async ({ contractAddress, get }) =>
-    (await get<number>(contractAddress, 'num_tokens')) ?? 0,
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<number>(contractAddress, 'numTokens'))
+      ?.value ?? 0,
 }
 
 export const tokens: ContractFormula<
@@ -136,7 +156,7 @@ export const tokens: ContractFormula<
 > = {
   compute: async ({
     contractAddress,
-    getMap,
+    getTransformationMap,
     args: { owner, limit, startAfter },
   }) => {
     if (!owner) {
@@ -146,7 +166,10 @@ export const tokens: ContractFormula<
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     const tokensMap =
-      (await getMap<string>(contractAddress, ['tokens__owner', owner])) ?? {}
+      (await getTransformationMap<string>(
+        contractAddress,
+        `tokenOwner:${owner}`
+      )) ?? {}
     const tokens = Object.keys(tokensMap)
       // Ascending by token ID.
       .sort(([a], [b]) => a.localeCompare(b))
@@ -163,10 +186,15 @@ export const allTokens: ContractFormula<
   string[],
   { limit?: string; startAfter?: string }
 > = {
-  compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMap,
+    args: { limit, startAfter },
+  }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
-    const tokensMap = (await getMap<string>(contractAddress, 'tokens')) ?? {}
+    const tokensMap =
+      (await getTransformationMap<string>(contractAddress, 'token')) ?? {}
     const tokens = Object.keys(tokensMap)
       // Ascending by token ID.
       .sort(([a], [b]) => a.localeCompare(b))
@@ -183,7 +211,11 @@ export const approvalsForSpender: ContractFormula<
   Approval[] | undefined,
   { tokenId: string; spender: string }
 > = {
-  compute: async ({ contractAddress, get, args: { tokenId, spender } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { tokenId, spender },
+  }) => {
     if (!tokenId) {
       throw new Error('missing `tokenId`')
     }
@@ -191,7 +223,12 @@ export const approvalsForSpender: ContractFormula<
       throw new Error('missing `spender`')
     }
 
-    const info = await get<TokenInfo>(contractAddress, 'tokens', tokenId)
+    const info = (
+      await getTransformationMatch<TokenInfo>(
+        contractAddress,
+        `token:${tokenId}`
+      )
+    )?.value
     if (!info) {
       return
     }
@@ -217,11 +254,22 @@ export const approvals: ContractFormula<
   Approval[] | undefined,
   { tokenId: string }
 > = {
-  compute: async ({ contractAddress, get, args: { tokenId } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { tokenId },
+  }) => {
     if (!tokenId) {
       throw new Error('missing `tokenId`')
     }
 
-    return (await get<TokenInfo>(contractAddress, 'tokens', tokenId))?.approvals
+    const info = (
+      await getTransformationMatch<TokenInfo>(
+        contractAddress,
+        `token:${tokenId}`
+      )
+    )?.value
+
+    return info?.approvals
   },
 }
