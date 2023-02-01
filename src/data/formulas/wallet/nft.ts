@@ -1,5 +1,7 @@
 import { WalletFormula } from '@/core'
 
+import { info } from '../contract/common'
+
 export const collections: WalletFormula<string[]> = {
   compute: async (env) => {
     const { walletAddress, getTransformationMatches } = env
@@ -13,6 +15,20 @@ export const collections: WalletFormula<string[]> = {
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
-    return Array.from(new Set(cw721Contracts))
+    const uniqueAddresses = Array.from(new Set(cw721Contracts))
+
+    // Filter by those with 721 in the contract name.
+    const cw721ContractInfos = await Promise.all(
+      uniqueAddresses.map((contractAddress) =>
+        info.compute({
+          ...env,
+          contractAddress,
+        })
+      )
+    )
+
+    return uniqueAddresses.filter((_, index) =>
+      cw721ContractInfos[index]?.contract?.includes('721')
+    )
   },
 }
