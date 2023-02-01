@@ -6,7 +6,7 @@ import Koa from 'koa'
 import { v4 as uuidv4 } from 'uuid'
 
 import { loadConfig } from '@/core'
-import { closeDb, loadDb } from '@/db'
+import { State, closeDb, loadDb } from '@/db'
 
 import { computer } from './computer'
 import { captureSentryException } from './sentry'
@@ -88,6 +88,20 @@ app.use(async (ctx, next) => {
 router.get('/ping', (ctx) => {
   ctx.status = 200
   ctx.body = 'pong'
+})
+
+// Status.
+router.get('/status', async (ctx) => {
+  const state = await State.findOne()
+  if (!state) {
+    throw new Error('State not found')
+  }
+
+  ctx.status = 200
+  ctx.body = {
+    latestBlock: state.latestBlock,
+    lastBlockHeightExported: state.lastBlockHeightExported,
+  }
 })
 
 // Formula computer.
