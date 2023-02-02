@@ -43,8 +43,8 @@ export const compute = async ({
 
     // If latest is unset, or if we found a later block height, update.
     if (
-      latestBlock === undefined ||
-      latestItem.blockHeight > latestBlock.height
+      latestItem &&
+      (latestBlock === undefined || latestItem.blockHeight > latestBlock.height)
     ) {
       latestBlock = latestItem.block
     }
@@ -150,8 +150,9 @@ export const computeRange = async ({
 
       // If latest is unset, or if we found a later block height, update.
       if (
-        latestBlock === undefined ||
-        latestItem.blockHeight > latestBlock.height
+        latestItem &&
+        (latestBlock === undefined ||
+          latestItem.blockHeight > latestBlock.height)
       ) {
         latestBlock = latestItem.block
       }
