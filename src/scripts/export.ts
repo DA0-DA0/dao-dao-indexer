@@ -94,11 +94,13 @@ const main = async () => {
   if (!(await State.findOne({ where: { singleton: true } }))) {
     await State.create({
       singleton: true,
+      chainId: '',
       latestBlockHeight: 0,
       latestBlockTimeUnixMs: 0,
       lastBlockHeightExported: 0,
     })
   }
+  // Update state with latest from RPC.
   const initialState = await updateState()
 
   const initialBlock =
