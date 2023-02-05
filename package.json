@@ -10,7 +10,6 @@
     "build:watch": "concurrently --raw \"tsc -w\" \"tsc-alias -w\"",
     "db:setup": "node dist/scripts/db/setup.js",
     "db:alter": "node dist/scripts/db/alter.js",
-    "db:migrate": "node dist/scripts/db/migrate.js",
     "clear-cache": "node dist/scripts/clearCache.js",
     "export": "node dist/scripts/export.js",
     "export:prod": "npm run build && pm2 reload ecosystem.config.js --only exporter,webhooks",
