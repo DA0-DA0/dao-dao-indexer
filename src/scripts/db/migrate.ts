@@ -41,8 +41,8 @@ const main = async () => {
     }))
 
   try {
-    await sequelize.query('DROP TABLE IF EXISTS "AccountCredits";')
-    await sequelize.query('DROP TABLE IF EXISTS "Accounts";')
+    await sequelize.query('DROP TABLE IF EXISTS "AccountCredits" CASCADE;')
+    await sequelize.query('DROP TABLE IF EXISTS "Accounts" CASCADE;')
 
     // Update the account models.
     await Account.sync({ force: true })
