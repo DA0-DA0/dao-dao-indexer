@@ -23,7 +23,7 @@
     "serve:dev": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js\"",
     "serve:dev:testnet": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js -c config.testnet.json\"",
     "serve:dev:mainnet": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/index.js -c config.mainnet.json\"",
-    "serve:prod": "npm run build && pm2 reload ecosystem.config.js --only server_testnet,server_mainnet,server_accounts",
+    "serve:prod": "npm run build && pm2 reload ecosystem.config.js --only server_accounts,server_juno-testnet,server_juno-mainnet",
     "deploy:server": "./scripts/deploy_server.sh",
     "deploy:exporter": "./scripts/deploy_exporter.sh",
     "search:update": "node dist/ms/runUpdate.js",
