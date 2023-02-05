@@ -92,7 +92,7 @@ export const stakedWithDaos: WalletFormula<CollectionWithTokens[]> = {
 
     const tokensGroupedByVotingContract = groupBy(
       contractsWithTokens,
-      'contractAddress'
+      'votingContract'
     )
 
     // Get NFT collection address from each contract's config.
