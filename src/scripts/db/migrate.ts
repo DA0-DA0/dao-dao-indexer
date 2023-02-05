@@ -31,9 +31,9 @@ const main = async () => {
   const sequelize = await loadDb({ logging: true })
 
   const seedAccounts = (
-    typeof options.accounts === 'string' ? options.accounts : ''
+    typeof options.accounts === 'string' ? options.accounts : undefined
   )
-    .split(',')
+    ?.split(',')
     .map((a) => ({
       name: a.split(':')[0],
       publicKey: a.split(':')[1],
@@ -50,20 +50,23 @@ const main = async () => {
     await AccountKeyCredit.sync({ force: true })
 
     // Seed with first users.
-    for (const account of seedAccounts) {
-      const newAccount = await Account.create({
-        publicKey: account.publicKey,
-      })
+    if (seedAccounts) {
+      for (const account of seedAccounts) {
+        const newAccount = await Account.create({
+          publicKey: account.publicKey,
+        })
 
-      const newKey = await newAccount.$create('key', {
-        name: account.name,
-        hashedKey: account.hashedKey,
-      })
+        const newKey = await newAccount.$create('key', {
+          name: account.name,
+          hashedKey: account.hashedKey,
+        })
 
-      await newKey.$create('credit', {
-        paymentSource: AccountKeyCreditPaymentSource.Manual,
-        paymentId: account.name,
-      })
+        await newKey.$create('credit', {
+          paymentSource: AccountKeyCreditPaymentSource.Manual,
+          paymentId: account.name,
+          amount: -1,
+        })
+      }
     }
 
     console.log('\nMigrated.')
