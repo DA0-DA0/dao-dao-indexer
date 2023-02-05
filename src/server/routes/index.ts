@@ -6,7 +6,12 @@ import { State } from '@/db'
 import { accountRouter } from './account'
 import { computer } from './computer'
 
-export const setupRouter = (app: Koa) => {
+type SetupRouterOptions = {
+  // Whether to run the account server. If false, runs indexer server.
+  accounts: boolean
+}
+
+export const setupRouter = (app: Koa, { accounts }: SetupRouterOptions) => {
   const router = new Router()
 
   // Ping.
@@ -29,11 +34,13 @@ export const setupRouter = (app: Koa) => {
     }
   })
 
-  // Account.
-  router.use('/account', accountRouter.routes(), accountRouter.allowedMethods())
-
-  // Formula computer. This must be the last route since it's a catch-all.
-  router.get('/(.+)', computer)
+  if (accounts) {
+    // Account API.
+    router.use(accountRouter.routes(), accountRouter.allowedMethods())
+  } else {
+    // Formula computer. This must be the last route since it's a catch-all.
+    router.get('/(.+)', computer)
+  }
 
   // Enable router.
   app.use(router.routes()).use(router.allowedMethods())

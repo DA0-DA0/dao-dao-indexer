@@ -28,5 +28,13 @@ module.exports = {
       wait_ready: true,
       listen_timeout: 10000,
     },
+    {
+      name: 'server_accounts',
+      script: 'dist/server/index.js',
+      args: ['-p', '3422', '-c', 'config.accounts.json', '-a'],
+      instances: 1,
+      wait_ready: true,
+      listen_timeout: 10000,
+    },
   ],
 }

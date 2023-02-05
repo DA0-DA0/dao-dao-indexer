@@ -18,6 +18,7 @@ program.option(
   '-c, --config <path>',
   'path to config file, falling back to config.json'
 )
+program.option('-a, --accounts', 'run account server instead of indexer server')
 program.parse()
 const options = program.opts()
 
@@ -62,7 +63,9 @@ app.use(async (ctx, next) => {
 })
 
 // Add routes.
-setupRouter(app)
+setupRouter(app, {
+  accounts: !!options.accounts,
+})
 
 // Start.
 const main = async () => {
