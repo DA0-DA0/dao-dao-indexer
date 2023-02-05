@@ -1,14 +1,13 @@
 import cors from '@koa/cors'
-import Router from '@koa/router'
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 import Koa from 'koa'
 import { v4 as uuidv4 } from 'uuid'
 
 import { loadConfig } from '@/core'
-import { State, closeDb, loadDb } from '@/db'
+import { closeDb, loadDb } from '@/db'
 
-import { computer } from './computer'
+import { setupRouter } from './routes'
 import { captureSentryException } from './sentry'
 
 // Parse arguments.
@@ -26,7 +25,6 @@ const config = loadConfig(options.config)
 
 // Setup app.
 const app = new Koa()
-const router = new Router()
 
 // Add Sentry error reporting.
 if (config.sentryDsn) {
@@ -40,30 +38,8 @@ if (config.sentryDsn) {
   })
 }
 
-// For now, allow all CORS origins, until accounts can set their own CORS.
+// Use CORS on all routes.
 app.use(cors())
-// // CORS.
-// const allowedOrigins = [
-//   // localhost
-//   /^https?:\/\/localhost(:\d+)?$/,
-//   // daodao.zone
-//   /^https:\/\/(www\.)?daodao\.zone$/,
-//   // testnet.daodao.zone
-//   /^https:\/\/testnet\.daodao\.zone$/,
-//   // Vercel preview URLs.
-//   /^https:\/\/dao-dao-[^\.]+-da0da0.vercel.app$/,
-// ]
-// app.use(
-//   cors({
-//     origin: (ctx) => {
-//       const origin = ctx.headers.origin
-//       if (origin && allowedOrigins.some((allowed) => allowed.test(origin))) {
-//         return origin
-//       }
-//       return 'https://daodao.zone'
-//     },
-//   })
-// )
 
 // Logger.
 app.use(async (ctx, next) => {
@@ -84,31 +60,8 @@ app.use(async (ctx, next) => {
   ctx.set('X-Response-Time', `${ms}ms`)
 })
 
-// Ping.
-router.get('/ping', (ctx) => {
-  ctx.status = 200
-  ctx.body = 'pong'
-})
-
-// Status.
-router.get('/status', async (ctx) => {
-  const state = await State.findOne()
-  if (!state) {
-    throw new Error('State not found')
-  }
-
-  ctx.status = 200
-  ctx.body = {
-    latestBlock: state.latestBlock,
-    lastBlockHeightExported: state.lastBlockHeightExported,
-  }
-})
-
-// Formula computer.
-router.get('/(.+)', computer)
-
-// Enable router.
-app.use(router.routes()).use(router.allowedMethods())
+// Add routes.
+setupRouter(app)
 
 // Start.
 const main = async () => {

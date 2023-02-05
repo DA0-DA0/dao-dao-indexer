@@ -20,8 +20,8 @@ import {
   State,
 } from '@/db'
 
-import { captureSentryException } from './sentry'
-import { validateBlockString } from './validate'
+import { captureSentryException } from '../sentry'
+import { validateBlockString } from '../validate'
 
 export const computer: Router.Middleware = async (ctx) => {
   const config = loadConfig()
@@ -86,8 +86,6 @@ export const computer: Router.Middleware = async (ctx) => {
     ctx.body = 'invalid API key'
     return
   }
-
-  // TODO: Use CORS options from account.
 
   // Validate address.
   if (!address) {
