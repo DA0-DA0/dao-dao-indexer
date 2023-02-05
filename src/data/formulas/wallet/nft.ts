@@ -1,7 +1,11 @@
+import groupBy from 'lodash.groupby'
+import { Op } from 'sequelize'
+
 import { WalletFormula } from '@/core'
 
 import { info } from '../contract/common'
 import { tokens } from '../contract/external/cw721'
+import { config } from '../contract/voting/daoVotingCw721Staked'
 
 type CollectionWithTokens = {
   collectionAddress: string
@@ -52,6 +56,69 @@ export const collections: WalletFormula<CollectionWithTokens[]> = {
         })
       )
     )
+
+    return collections
+  },
+}
+
+export const stakedWithDaos: WalletFormula<CollectionWithTokens[]> = {
+  compute: async (env) => {
+    const { walletAddress, getTransformationMatches, getCodeIdsForKeys } = env
+
+    // NFT voting contracts where the wallet address has staked tokens.
+    const daoVotingCw721StakedCodeIds = getCodeIdsForKeys(
+      'dao-voting-cw721-staked'
+    )
+    const contractsWithTokens =
+      (
+        await getTransformationMatches(
+          undefined,
+          `stakedNft:${walletAddress}:%`,
+          undefined,
+          daoVotingCw721StakedCodeIds.length > 0
+            ? {
+                [Op.in]: daoVotingCw721StakedCodeIds,
+              }
+            : undefined
+        )
+      )?.map(({ contractAddress, name }) => ({
+        votingContract: contractAddress,
+        tokenId: name.replace(`stakedNft:${walletAddress}:`, ''),
+      })) ?? []
+
+    const uniqueVotingContracts = Array.from(
+      new Set(contractsWithTokens.map(({ votingContract }) => votingContract))
+    )
+
+    const tokensGroupedByVotingContract = groupBy(
+      contractsWithTokens,
+      'contractAddress'
+    )
+
+    // Get NFT collection address from each contract's config.
+    const collectionAddresses = await Promise.all(
+      uniqueVotingContracts.map(
+        async (contractAddress) =>
+          (
+            await config.compute({
+              ...env,
+              contractAddress,
+            })
+          )?.nft_address
+      )
+    )
+
+    const collections = uniqueVotingContracts
+      .map((votingContract, index) => ({
+        collectionAddress: collectionAddresses[index],
+        tokens: tokensGroupedByVotingContract[votingContract]?.map(
+          ({ tokenId }) => tokenId
+        ),
+      }))
+      .filter(
+        (collection): collection is CollectionWithTokens =>
+          !!collection.collectionAddress
+      )
 
     return collections
   },

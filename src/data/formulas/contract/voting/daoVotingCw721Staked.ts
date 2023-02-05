@@ -1,13 +1,27 @@
 import { ContractFormula } from '@/core'
 
-export const config: ContractFormula = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'config'),
+type Config = {
+  owner?: string | null
+  nft_address: string
+  unstaking_duration?: any
+}
+
+const CODE_IDS_KEYS = ['dao-voting-cw721-staked']
+
+export const config: ContractFormula<Config | undefined> = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value,
 }
 
 export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'dao'),
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'dao'))?.value,
 }
 
 export const nftClaims: ContractFormula<any[], { address: string }> = {
@@ -30,9 +44,12 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   },
 }
 
-export const totalPower: ContractFormula<string> = {
-  compute: async ({ contractAddress, get }) =>
-    (await get<string>(contractAddress, 'tsn')) || '0',
+export const totalPower: ContractFormula<string | undefined> = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'tsn'))?.value,
 }
 
 export const stakedNfts: ContractFormula<
@@ -43,9 +60,12 @@ export const stakedNfts: ContractFormula<
     startAfter?: string
   }
 > = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
   compute: async ({
     contractAddress,
-    getMap,
+    getTransformationMap,
     args: { address, limit, startAfter },
   }) => {
     if (!address) {
@@ -55,7 +75,10 @@ export const stakedNfts: ContractFormula<
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     const stakedNfts =
-      (await getMap<string, any>(contractAddress, ['snpw', address])) ?? {}
+      (await getTransformationMap<string, any>(
+        contractAddress,
+        `stakedNft:${address}`
+      )) ?? {}
     const tokenIds = Object.keys(stakedNfts)
       // Ascending by token ID.
       .sort((a, b) => a.localeCompare(b))
