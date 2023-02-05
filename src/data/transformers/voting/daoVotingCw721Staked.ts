@@ -18,7 +18,7 @@ const stakedNftPerOwner: Transformer = {
   },
   name: (event) => {
     // "snpw", address, tokenId
-    const [, address, tokenId] = dbKeyToKeys(event.key, [false, true, false])
+    const [, address, tokenId] = dbKeyToKeys(event.key, [false, false, false])
     return `stakedNft:${address}:${tokenId}`
   },
   getValue: () => '',
