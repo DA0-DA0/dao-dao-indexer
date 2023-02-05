@@ -1,5 +1,6 @@
 export * from './Account'
-export * from './AccountCredit'
+export * from './AccountKey'
+export * from './AccountKeyCredit'
 export * from './Computation'
 export * from './Contract'
 export * from './Event'

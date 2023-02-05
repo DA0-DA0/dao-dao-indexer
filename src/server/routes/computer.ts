@@ -11,14 +11,7 @@ import {
   typeIsFormulaType,
 } from '@/core'
 import { getTypedFormula } from '@/data'
-import {
-  Account,
-  AccountCreditScope,
-  Computation,
-  Contract,
-  Event,
-  State,
-} from '@/db'
+import { AccountKey, Computation, Contract, Event, State } from '@/db'
 
 import { captureSentryException } from '../sentry'
 import { validateBlockString } from '../validate'
@@ -80,8 +73,8 @@ export const computer: Router.Middleware = async (ctx) => {
     ctx.body = 'missing API key'
     return
   }
-  const account = await Account.findAccountForKey(key)
-  if (!account) {
+  const accountKey = await AccountKey.findForKey(key)
+  if (!accountKey) {
     ctx.status = 401
     ctx.body = 'invalid API key'
     return
@@ -345,8 +338,20 @@ export const computer: Router.Middleware = async (ctx) => {
     // events that happened in the past. Each computation in the range indicates
     // what block it was first valid at, so the first one should too.
     if (blocks) {
+      // Cap end block at latest block.
+      if (blocks[1].height > state.latestBlockHeight) {
+        blocks[1] = state.latestBlock
+      }
+
       // Use account credit, failing if unavailable.
-      if (!(await account.useCredit(AccountCreditScope.Range))) {
+      if (
+        !(await accountKey.useCredit(
+          // Use 1 credit for the query, and 1 credit for every 10000 blocks.
+          // Querying 1 block uses 1 credit, 2-10000 blocks uses 2 credits,
+          // 10001-20000 uses 3, etc.
+          1 + Math.ceil((blocks[1].height - blocks[0].height) / 10000)
+        ))
+      ) {
         ctx.status = 402
         ctx.body = 'insufficient credits'
         return
@@ -357,11 +362,6 @@ export const computer: Router.Middleware = async (ctx) => {
         blockHeight: number
         blockTimeUnixMs: number
       }[] = []
-
-      // Cap end block at latest block.
-      if (blocks[1].height > state.latestBlockHeight) {
-        blocks[1] = state.latestBlock
-      }
 
       // Find existing start and end computations, and verify all are valid
       // between. If not, compute range.
@@ -546,13 +546,7 @@ export const computer: Router.Middleware = async (ctx) => {
       // Otherwise compute for single block.
 
       // Use account credit, failing if unavailable.
-      if (
-        !(await account.useCredit(
-          block === undefined || block.height === state.latestBlock.height
-            ? AccountCreditScope.Latest
-            : AccountCreditScope.Historical
-        ))
-      ) {
+      if (!(await accountKey.useCredit())) {
         ctx.status = 402
         ctx.body = 'insufficient credits'
         return
@@ -639,8 +633,8 @@ export const computer: Router.Middleware = async (ctx) => {
         type,
         address,
         formulaName,
-        accountId: account?.id,
-        accountName: account?.name,
+        accountId: accountKey?.id,
+        accountName: accountKey?.name,
       },
     })
   }

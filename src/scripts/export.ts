@@ -6,7 +6,12 @@ import axios from 'axios'
 import { Command } from 'commander'
 import { Sequelize } from 'sequelize'
 
-import { IndexerEvent, ParsedEvent, loadConfig } from '@/core'
+import {
+  IndexerEvent,
+  ParsedEvent,
+  loadConfig,
+  objectMatchesStructure,
+} from '@/core'
 import {
   Contract,
   Event,
@@ -17,8 +22,6 @@ import {
   updateComputationValidityDependentOnChanges,
 } from '@/db'
 import { setupMeilisearch, updateIndexesForContracts } from '@/ms'
-
-import { objectMatchesStructure } from './utils'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 

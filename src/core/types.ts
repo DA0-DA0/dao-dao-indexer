@@ -40,6 +40,20 @@ export type Config = {
   codeIds?: Record<string, number[] | undefined>
   // If present, sets up Sentry error reporting.
   sentryDsn?: string
+  // Payment info.
+  payment?: {
+    // cw-receipt contract address where payments are tracked
+    cwReceiptAddress: string
+    // cw-receipt webhook secret
+    cwReceiptWebhookSecret: string
+    // native denom accepted for payments
+    nativeDenomAccepted: string
+    // Value to scale the payment amount by to get the credit amount. If 1 $USDC
+    // is sent, since $USDC has 6 decimals, the payment amount will be 1e6. To
+    // give 1e4 credits, the scale factor would be 0.01 (1e-2), since 1e6 * 1e-2
+    // = 1e4.
+    creditScaleFactor: number
+  }
 
   // Other config options.
   [key: string]: any
@@ -374,7 +388,10 @@ export type Webhook<V = any> = {
   ) => V | undefined | Promise<V | undefined>
 }
 
-export type WebhookMaker = (config: Config, state: State) => Webhook
+export type WebhookMaker = (
+  config: Config,
+  state: State
+) => Webhook | null | undefined
 
 export type ProcessedWebhook<V = any> = Omit<Webhook<V>, 'filter'> & {
   filter: (event: Event) => boolean

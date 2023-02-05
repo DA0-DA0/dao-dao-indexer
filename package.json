@@ -8,8 +8,9 @@
     "prebuild": "rm -rf dist",
     "build": "tsc && tsc-alias",
     "build:watch": "concurrently --raw \"tsc -w\" \"tsc-alias -w\"",
-    "db:setup": "node dist/db/setup.js",
-    "db:alter": "node dist/db/alter.js",
+    "db:setup": "node dist/scripts/db/setup.js",
+    "db:alter": "node dist/scripts/db/alter.js",
+    "db:migrate": "node dist/scripts/db/migrate.js",
     "clear-cache": "node dist/scripts/clearCache.js",
     "export": "node dist/scripts/export.js",
     "export:prod": "npm run build && pm2 reload ecosystem.config.js --only exporter,webhooks",
@@ -30,12 +31,12 @@
   },
   "author": "Noah Saso <noah@noah.zone>",
   "devDependencies": {
+    "@types/crypto-js": "^4.1.1",
     "@types/koa": "^2.13.5",
     "@types/lodash.groupby": "^4.6.7",
     "@types/lodash.isequal": "^4.5.6",
     "@types/node": "^18.11.10",
     "@types/prettier": "^2.7.1",
-    "@types/uuid": "^9.0.0",
     "@types/validator": "^13.7.10",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
@@ -54,6 +55,9 @@
     "typescript": "^4.9.3"
   },
   "dependencies": {
+    "@cosmjs/amino": "^0.29.5",
+    "@cosmjs/crypto": "^0.29.5",
+    "@cosmjs/encoding": "^0.29.5",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "@sentry/node": "^7.31.0",
@@ -61,7 +65,9 @@
     "@types/koa__router": "^12.0.0",
     "axios": "^1.2.1",
     "commander": "^9.4.1",
+    "crypto-js": "^4.1.1",
     "koa": "^2.13.4",
+    "koa-body": "^6.0.1",
     "lodash.groupby": "^4.6.0",
     "lodash.isequal": "^4.5.0",
     "meilisearch": "^0.30.0",
@@ -69,7 +75,6 @@
     "pg-hstore": "^2.3.4",
     "reflect-metadata": "^0.1.13",
     "sequelize": "^6.26.0",
-    "sequelize-typescript": "^2.1.5",
-    "uuid": "^9.0.0"
+    "sequelize-typescript": "^2.1.5"
   }
 }

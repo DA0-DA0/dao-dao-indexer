@@ -3,6 +3,7 @@ import { State } from '@/db'
 
 import { makeProposalCreated } from './discordNotifier'
 import { makeAddPendingFollow } from './following'
+import { makeIndexerCwReceiptPaid } from './indexerCwReceipt'
 
 let processedWebhooks: ProcessedWebhook[] | undefined
 export const getProcessedWebhooks = (
@@ -14,6 +15,7 @@ export const getProcessedWebhooks = (
       // Add webhook makers here.
       makeProposalCreated,
       makeAddPendingFollow,
+      makeIndexerCwReceiptPaid,
     ]
 
     const _webhooks: Webhook[] = [
@@ -22,6 +24,9 @@ export const getProcessedWebhooks = (
       // Makers.
       ...webhookMakers.map((maker) => maker(config, state)),
     ]
+      // Filter out webhooks that could not be made (e.g. due to missing
+      // config).
+      .filter((webhook): webhook is Webhook => !!webhook)
 
     processedWebhooks = _webhooks.map(({ filter, ...webhook }) => {
       const allCodeIds = filter.codeIdsKeys?.flatMap(

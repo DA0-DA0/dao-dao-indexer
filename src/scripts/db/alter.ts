@@ -1,8 +1,7 @@
 import { Command } from 'commander'
 
 import { loadConfig } from '@/core'
-
-import { loadDb } from './connection'
+import { loadDb } from '@/db'
 
 export const main = async () => {
   // Parse arguments.

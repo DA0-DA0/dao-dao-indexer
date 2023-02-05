@@ -3,6 +3,7 @@ import Koa from 'koa'
 
 import { State } from '@/db'
 
+import { accountRouter } from './account'
 import { computer } from './computer'
 
 export const setupRouter = (app: Koa) => {
@@ -28,7 +29,10 @@ export const setupRouter = (app: Koa) => {
     }
   })
 
-  // Formula computer.
+  // Account.
+  router.use('/account', accountRouter.routes(), accountRouter.allowedMethods())
+
+  // Formula computer. This must be the last route since it's a catch-all.
   router.get('/(.+)', computer)
 
   // Enable router.

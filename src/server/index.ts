@@ -1,8 +1,9 @@
+import { randomUUID } from 'crypto'
+
 import cors from '@koa/cors'
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 import Koa from 'koa'
-import { v4 as uuidv4 } from 'uuid'
 
 import { loadConfig } from '@/core'
 import { closeDb, loadDb } from '@/db'
@@ -43,7 +44,7 @@ app.use(cors())
 
 // Logger.
 app.use(async (ctx, next) => {
-  const id = uuidv4()
+  const id = randomUUID()
   console.log(`[${id}] ${ctx.method} ${ctx.url} @ ${new Date().toISOString()}`)
 
   await next()

@@ -4,7 +4,8 @@ import { loadConfig } from '@/core'
 
 import {
   Account,
-  AccountCredit,
+  AccountKey,
+  AccountKeyCredit,
   Computation,
   Contract,
   Event,
@@ -41,7 +42,8 @@ export const loadDb = async (
     // Tell Sequelize what models we have.
     models: [
       Account,
-      AccountCredit,
+      AccountKey,
+      AccountKeyCredit,
       Computation,
       Contract,
       Event,
@@ -59,11 +61,6 @@ export const loadDb = async (
   } catch (error) {
     console.error('Unable to connect to the database:', error)
   }
-
-  // Alter the database to match any changes.
-  // await sequelize.sync({ alter: true })
-  // Drop all tables and recreate them.
-  // await sequelize.sync({ force: true })
 
   return sequelize
 }

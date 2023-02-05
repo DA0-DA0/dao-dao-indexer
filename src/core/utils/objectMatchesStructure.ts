@@ -5,6 +5,7 @@ type Structure = {
 
 // Check if object contains the expected structure.
 export const objectMatchesStructure = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   object: any | undefined | null,
   structure: Structure,
   options: {
