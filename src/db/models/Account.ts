@@ -47,10 +47,6 @@ export class Account extends Model {
   @Column
   nonce!: number
 
-  @AllowNull
-  @Column(DataType.ARRAY(DataType.STRING))
-  corsOrigins!: string[] | null
-
   @HasMany(() => AccountCredit, 'accountId')
   credits!: AccountCredit[]
 
