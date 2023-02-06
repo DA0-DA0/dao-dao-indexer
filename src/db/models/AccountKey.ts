@@ -13,7 +13,13 @@ import {
 } from 'sequelize-typescript'
 
 import { Account } from './Account'
-import { AccountKeyCredit } from './AccountKeyCredit'
+import { AccountKeyCredit, AccountKeyCreditApiJson } from './AccountKeyCredit'
+
+export type AccountKeyApiJson = {
+  name: string
+  description: string | null
+  credits: AccountKeyCreditApiJson[]
+}
 
 @Table({
   timestamps: true,
@@ -74,6 +80,17 @@ export class AccountKey extends Model {
         hashedKey,
       },
     })
+  }
+
+  public async getApiJson(): Promise<AccountKeyApiJson> {
+    // Load credits in case they haven't been loaded yet.
+    this.credits ||= (await this.$get('credits')) ?? ([] as AccountKeyCredit[])
+
+    return {
+      name: this.name,
+      description: this.description,
+      credits: this.credits.map((credit) => credit.apiJson),
+    }
   }
 
   // Check if this account has compute credit, and increase used if found.

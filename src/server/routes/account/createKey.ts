@@ -6,6 +6,7 @@ import { DefaultContext } from 'koa'
 import { objectMatchesStructure } from '@/core'
 import {
   AccountKey,
+  AccountKeyApiJson,
   AccountKeyCredit,
   AccountKeyCreditPaymentSource,
 } from '@/db'
@@ -16,8 +17,8 @@ type CreateKeyRequest = Pick<AccountKey, 'name' | 'description'>
 
 type CreateKeyResponse =
   | {
-      key: string
-      paymentId: string
+      apiKey: string
+      createdKey: AccountKeyApiJson
     }
   | {
       error: string
@@ -28,9 +29,6 @@ export const createKey: Router.Middleware<
   DefaultContext,
   CreateKeyResponse
 > = async (ctx) => {
-  // Generate key with hash, and create AccountKey.
-  const { key, hash } = AccountKey.generateKeyAndHash()
-
   if (
     !objectMatchesStructure(ctx.state.data, {
       name: {},
@@ -65,21 +63,23 @@ export const createKey: Router.Middleware<
   }
   ctx.state.data.description = ctx.state.data.description?.trim() || null
 
+  // Generate key with hash, and create AccountKey.
+  const { key: apiKey, hash: hashedKey } = AccountKey.generateKeyAndHash()
+
   const accountKey = await ctx.state.account.$create<AccountKey>('key', {
     name: ctx.state.data.name,
     description: ctx.state.data.description,
-    hashedKey: hash,
+    hashedKey,
   })
 
-  const paymentId = randomUUID()
   await accountKey.$create<AccountKeyCredit>('credit', {
     paymentSource: AccountKeyCreditPaymentSource.CwReceipt,
-    paymentId,
+    paymentId: randomUUID(),
   })
 
   ctx.status = 201
   ctx.body = {
-    key,
-    paymentId,
+    apiKey,
+    createdKey: await accountKey.getApiJson(),
   }
 }

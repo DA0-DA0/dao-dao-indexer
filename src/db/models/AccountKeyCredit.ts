@@ -18,6 +18,15 @@ export enum AccountKeyCreditPaymentSource {
   Manual = 'manual',
 }
 
+export type AccountKeyCreditApiJson = {
+  paymentSource: AccountKeyCreditPaymentSource
+  paymentId: string
+  paidFor: boolean
+  paidAt: string | null
+  amount: string // serialized bigint
+  used: string // serialized bigint
+}
+
 @Table({
   timestamps: true,
   indexes: [
@@ -88,6 +97,17 @@ export class AccountKeyCredit extends Model {
       // Keep original paidAt if already exists (i.e. we're updating).
       paidAt: this.paidAt || new Date(),
     })
+  }
+
+  get apiJson(): AccountKeyCreditApiJson {
+    return {
+      paymentSource: this.paymentSource,
+      paymentId: this.paymentId,
+      paidFor: this.paidFor,
+      paidAt: this.paidAt?.toISOString() || null,
+      amount: this.amount.toString(),
+      used: this.used.toString(),
+    }
   }
 
   // Compute the number of credits needed to query a range of blocks.
