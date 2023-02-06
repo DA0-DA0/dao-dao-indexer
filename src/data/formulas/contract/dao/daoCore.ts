@@ -634,13 +634,33 @@ const PROPOSAL_COUNT_MAP: Record<string, ContractFormula<number> | undefined> =
 
 // Returns contracts with an admin state key set to this DAO. Hopefully these
 // are mostly DAO contracts.
-export const potentialSubDaos: ContractFormula<string[]> = {
-  compute: async ({ contractAddress, getTransformationMatches }) => {
-    const contractsWithAdmin = (
-      await getTransformationMatches(undefined, 'admin', contractAddress)
-    )?.map((match) => match.contractAddress)
+export const potentialSubDaos: ContractFormula<
+  {
+    contractAddress: string
+    config: any
+  }[]
+> = {
+  compute: async (env) => {
+    const { contractAddress, getTransformationMatches } = env
 
-    return contractsWithAdmin ?? []
+    const contractsWithAdmin =
+      (
+        await getTransformationMatches(undefined, 'admin', contractAddress)
+      )?.map((match) => match.contractAddress) ?? []
+
+    const configs = await Promise.all(
+      contractsWithAdmin.map((contractAddress) =>
+        config.compute({
+          ...env,
+          contractAddress,
+        })
+      )
+    )
+
+    return contractsWithAdmin.map((contractAddress, index) => ({
+      contractAddress,
+      config: configs[index],
+    }))
   },
 }
 
