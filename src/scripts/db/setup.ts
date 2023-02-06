@@ -4,7 +4,7 @@ import { Command } from 'commander'
 
 import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
-import { loadDb } from '@/db'
+import { loadDb, setup } from '@/db'
 
 export const main = async () => {
   // Parse arguments.
@@ -36,13 +36,8 @@ export const main = async () => {
     async (answer) => {
       if (answer === 'y') {
         try {
-          // Add trigram index extension.
-          await dataSequelize.query('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
-          await dataSequelize.query('CREATE EXTENSION IF NOT EXISTS btree_gin;')
-
-          // Drop all tables and recreate them.
-          await dataSequelize.sync({ force: true })
-          await accountsSequelize.sync({ force: true })
+          await setup(dataSequelize)
+          await setup(accountsSequelize)
 
           console.log('\nDropped and recreated all tables.')
         } catch (err) {

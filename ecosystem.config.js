@@ -14,7 +14,7 @@ module.exports = {
     },
     {
       name: 'server_accounts',
-      script: 'dist/server/index.js',
+      script: 'dist/server/serve.js',
       args: ['-p', '3420', '-c', 'config.accounts.json', '-a'],
       instances: 1,
       wait_ready: true,
@@ -22,7 +22,7 @@ module.exports = {
     },
     {
       name: 'server_juno-testnet',
-      script: 'dist/server/index.js',
+      script: 'dist/server/serve.js',
       args: ['-p', '3430', '-c', 'config.testnet.json'],
       instances: 2,
       wait_ready: true,
@@ -30,7 +30,7 @@ module.exports = {
     },
     {
       name: 'server_juno-mainnet',
-      script: 'dist/server/index.js',
+      script: 'dist/server/serve.js',
       args: ['-p', '3431', '-c', 'config.mainnet.json'],
       instances: 2,
       wait_ready: true,

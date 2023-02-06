@@ -10,7 +10,9 @@ export const CONFIG_FILE = path.join(__dirname, '../../config.json')
 let config: Config
 export const loadConfig = (configOverride?: string) => {
   if (!config) {
-    const configPath = path.resolve(configOverride ?? CONFIG_FILE)
+    const configPath = path.resolve(
+      configOverride ?? process.env.CONFIG_FILE ?? CONFIG_FILE
+    )
 
     if (!fs.existsSync(configPath)) {
       throw new Error(`Config not found (${configPath}).`)

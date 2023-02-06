@@ -1,8 +1,8 @@
 import { makeSignDoc, serializeSignDoc } from '@cosmjs/amino'
 import { Secp256k1, Secp256k1Signature } from '@cosmjs/crypto'
 import { fromBase64, fromHex, toBech32 } from '@cosmjs/encoding'
-import Router from '@koa/router'
 import CryptoJS from 'crypto-js'
+import { Middleware } from 'koa'
 
 import { objectMatchesStructure } from '@/core/utils'
 import { Account } from '@/db'
@@ -13,10 +13,7 @@ import { AccountState, RequestBody } from './types'
 // the request is authorized. If successful, the `parsedBody` field will be set
 // on the request object, accessible by successive middleware and route
 // handlers.
-export const authMiddleware: Router.Middleware<AccountState> = async (
-  ctx,
-  next
-) => {
+export const authMiddleware: Middleware<AccountState> = async (ctx, next) => {
   // Parsed by koa-body.
   const body: RequestBody = ctx.request.body
 
@@ -37,7 +34,9 @@ export const authMiddleware: Router.Middleware<AccountState> = async (
     })
   ) {
     ctx.status = 400
-    ctx.body = 'Invalid body.'
+    ctx.body = {
+      error: 'Invalid body.',
+    }
     return
   }
 
@@ -55,14 +54,18 @@ export const authMiddleware: Router.Middleware<AccountState> = async (
   // Validate nonce.
   if (body.data.auth.nonce !== account.nonce) {
     ctx.status = 401
-    ctx.body = `Unauthorized. Expected nonce: ${account.nonce}`
+    ctx.body = {
+      error: `Unauthorized. Expected nonce: ${account.nonce}`,
+    }
     return
   }
 
   // Validate signature.
   if (!(await verifySignature(body))) {
     ctx.status = 401
-    ctx.body = 'Unauthorized. Invalid signature.'
+    ctx.body = {
+      error: 'Unauthorized. Invalid signature.',
+    }
     return
   }
 

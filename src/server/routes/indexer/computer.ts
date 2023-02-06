@@ -20,8 +20,8 @@ import {
   State,
 } from '@/db'
 
-import { captureSentryException } from '../sentry'
-import { validateBlockString } from '../validate'
+import { captureSentryException } from '../../sentry'
+import { validateBlockString } from '../../validate'
 
 export const computer: Router.Middleware = async (ctx) => {
   const config = loadConfig()

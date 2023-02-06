@@ -1,0 +1,24 @@
+{
+  "db": {
+    "data": {
+      "dialect": "postgres",
+      "host": "db",
+      "database": "test",
+      "username": "test",
+      "password": "test"
+    },
+    "accounts": {
+      "dialect": "postgres",
+      "host": "db",
+      "database": "test",
+      "username": "test",
+      "password": "test"
+    }
+  },
+  "payment": {
+    "cwReceiptAddress": "cwReceiptAddress",
+    "cwReceiptWebhookSecret": "cwReceiptWebhookSecret",
+    "nativeDenomAccepted": "nativeDenomAccepted",
+    "creditScaleFactor": 1
+  }
+}
