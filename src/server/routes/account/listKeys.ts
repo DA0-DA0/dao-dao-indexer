@@ -17,10 +17,11 @@ export const listKeys: Router.Middleware<AccountState> = async (ctx) => {
       name,
       description,
       credits: credits.map(
-        ({ paymentSource, paymentId, amount, used, paidFor }) => ({
+        ({ paymentSource, paymentId, amount, used, paidFor, paidAt }) => ({
           paymentSource,
           paymentId,
           paidFor,
+          paidAt: paidAt?.toISOString(),
           amount,
           used,
         })
