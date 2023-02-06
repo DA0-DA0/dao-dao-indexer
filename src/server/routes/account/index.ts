@@ -3,6 +3,7 @@ import { koaBody } from 'koa-body'
 
 import { authMiddleware } from './auth'
 import { createKey } from './createKey'
+import { getConfig } from './getConfig'
 import { getNonce } from './getNonce'
 import { listKeys } from './listKeys'
 import { resetKey } from './resetKey'
@@ -16,6 +17,9 @@ accountRouter.use(koaBody())
 // Webhook.
 // Called when a payment is made, adds to a credit.
 accountRouter.post('/webhook/:paymentSource', webhook)
+
+// Get config. Used by frontend for payments and to display pricing correctly.
+accountRouter.get('/config', getConfig)
 
 // Get nonce.
 accountRouter.get('/nonce/:publicKey', getNonce)
