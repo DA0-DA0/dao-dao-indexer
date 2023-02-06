@@ -637,7 +637,7 @@ const PROPOSAL_COUNT_MAP: Record<string, ContractFormula<number> | undefined> =
 export const potentialSubDaos: ContractFormula<
   {
     contractAddress: string
-    config: any
+    info: ContractInfo | undefined
   }[]
 > = {
   compute: async (env) => {
@@ -648,9 +648,9 @@ export const potentialSubDaos: ContractFormula<
         await getTransformationMatches(undefined, 'admin', contractAddress)
       )?.map((match) => match.contractAddress) ?? []
 
-    const configs = await Promise.all(
+    const infos = await Promise.all(
       contractsWithAdmin.map((contractAddress) =>
-        config.compute({
+        info.compute({
           ...env,
           contractAddress,
         })
@@ -659,7 +659,7 @@ export const potentialSubDaos: ContractFormula<
 
     return contractsWithAdmin.map((contractAddress, index) => ({
       contractAddress,
-      config: configs[index],
+      info: infos[index],
     }))
   },
 }
