@@ -11,7 +11,14 @@ import {
   typeIsFormulaType,
 } from '@/core'
 import { getTypedFormula } from '@/data'
-import { AccountKey, Computation, Contract, Event, State } from '@/db'
+import {
+  AccountKey,
+  AccountKeyCredit,
+  Computation,
+  Contract,
+  Event,
+  State,
+} from '@/db'
 
 import { captureSentryException } from '../sentry'
 import { validateBlockString } from '../validate'
@@ -346,10 +353,9 @@ export const computer: Router.Middleware = async (ctx) => {
       // Use account credit, failing if unavailable.
       if (
         !(await accountKey.useCredit(
-          // Use 1 credit for the query, and 1 credit for every 10000 blocks.
-          // Querying 1 block uses 1 credit, 2-10000 blocks uses 2 credits,
-          // 10001-20000 uses 3, etc.
-          1 + Math.ceil((blocks[1].height - blocks[0].height) / 10000)
+          AccountKeyCredit.creditsForBlockRange(
+            blocks[1].height - blocks[0].height
+          )
         ))
       ) {
         ctx.status = 402

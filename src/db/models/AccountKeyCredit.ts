@@ -89,4 +89,12 @@ export class AccountKeyCredit extends Model {
       paidAt: this.paidAt || new Date(),
     })
   }
+
+  // Compute the number of credits needed to query a range of blocks.
+  public static creditsForBlockRange(blocks: number): number {
+    // Use 1 credit for the query, and 1 credit for every 10,000 blocks.
+    // Querying 1 block uses 1 credit, 2-10,000 blocks uses 2 credits,
+    // 10,001-20,000 uses 3, etc.
+    return 1 + Math.ceil(blocks / 10000)
+  }
 }
