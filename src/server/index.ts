@@ -72,13 +72,17 @@ setupRouter(app, {
 
 // Start.
 const main = async () => {
-  // Connect to both DBs.
-  await loadDb({
-    type: DbType.Data,
-  })
+  // All servers need to connect to the accounts DB.
   await loadDb({
     type: DbType.Accounts,
   })
+  // Only connect to data if we're not serving the accounts API (i.e. we're
+  // serving indexer data).
+  if (!accounts) {
+    await loadDb({
+      type: DbType.Data,
+    })
+  }
 
   if (!options.port || isNaN(options.port)) {
     throw new Error('Port must be a number')

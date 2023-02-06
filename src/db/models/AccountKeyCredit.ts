@@ -71,7 +71,7 @@ export class AccountKeyCredit extends Model {
   hits!: bigint
 
   get paidFor(): boolean {
-    return this.paidAt !== null || this.amount > 0
+    return this.paidAt !== null || this.amount !== BigInt(0)
   }
 
   async registerCreditsPaidFor(
