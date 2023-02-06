@@ -1,12 +1,27 @@
 import Router from '@koa/router'
+import { DefaultContext, DefaultState } from 'koa'
 
 import { Account } from '@/db'
 
-export const getNonce: Router.Middleware = async (ctx) => {
+type GetNonceResponse =
+  | {
+      nonce: number
+    }
+  | {
+      error: string
+    }
+
+export const getNonce: Router.Middleware<
+  DefaultState,
+  DefaultContext,
+  GetNonceResponse
+> = async (ctx) => {
   const { publicKey } = ctx.params
   if (!publicKey) {
     ctx.status = 400
-    ctx.body = 'Missing public key.'
+    ctx.body = {
+      error: 'Missing public key.',
+    }
     return
   }
 

@@ -1,4 +1,5 @@
 import Router from '@koa/router'
+import { DefaultContext, DefaultState } from 'koa'
 
 import { loadConfig, objectMatchesStructure } from '@/core'
 import {
@@ -8,7 +9,19 @@ import {
   AccountKeyCreditPaymentSource,
 } from '@/db'
 
-export const webhook: Router.Middleware = async (ctx) => {
+type WebhookResponse =
+  | {
+      success: true
+    }
+  | {
+      error: string
+    }
+
+export const webhook: Router.Middleware<
+  DefaultState,
+  DefaultContext,
+  WebhookResponse
+> = async (ctx) => {
   const { payment } = loadConfig()
   if (!payment) {
     ctx.status = 400

@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto'
 
 import Router from '@koa/router'
+import { DefaultContext } from 'koa'
 
 import { objectMatchesStructure } from '@/core'
 import {
@@ -11,11 +12,22 @@ import {
 
 import { AccountState } from './types'
 
-type CreateKeyBody = Pick<AccountKey, 'name' | 'description'>
+type CreateKeyRequest = Pick<AccountKey, 'name' | 'description'>
 
-export const createKey: Router.Middleware<AccountState<CreateKeyBody>> = async (
-  ctx
-) => {
+type CreateKeyResponse =
+  | {
+      key: string
+      paymentId: string
+    }
+  | {
+      error: string
+    }
+
+export const createKey: Router.Middleware<
+  AccountState<CreateKeyRequest>,
+  DefaultContext,
+  CreateKeyResponse
+> = async (ctx) => {
   // Generate key with hash, and create AccountKey.
   const { key, hash } = AccountKey.generateKeyAndHash()
 

@@ -1,15 +1,26 @@
 import Router from '@koa/router'
+import { DefaultContext } from 'koa'
 
 import { objectMatchesStructure } from '@/core'
 import { AccountKey } from '@/db'
 
 import { AccountState } from './types'
 
-type ResetKeyBody = Pick<AccountKey, 'name'>
+type ResetKeyRequest = Pick<AccountKey, 'name'>
 
-export const resetKey: Router.Middleware<AccountState<ResetKeyBody>> = async (
-  ctx
-) => {
+type ResetKeyResponse =
+  | {
+      key: string
+    }
+  | {
+      error: string
+    }
+
+export const resetKey: Router.Middleware<
+  AccountState<ResetKeyRequest>,
+  DefaultContext,
+  ResetKeyResponse
+> = async (ctx) => {
   if (
     !objectMatchesStructure(ctx.state.data, {
       name: {},

@@ -1,8 +1,25 @@
 import Router from '@koa/router'
+import { DefaultContext, DefaultState } from 'koa'
 
 import { loadConfig } from '@/core/config'
 
-export const getConfig: Router.Middleware = async (ctx) => {
+type GetConfigResponse =
+  | {
+      config: {
+        cwReceiptPaymentAddress: string
+        nativeDenomAccepted: string
+        creditScaleFactor: number
+      }
+    }
+  | {
+      error: string
+    }
+
+export const getConfig: Router.Middleware<
+  DefaultState,
+  DefaultContext,
+  GetConfigResponse
+> = async (ctx) => {
   const { payment } = loadConfig()
   if (!payment) {
     ctx.status = 400

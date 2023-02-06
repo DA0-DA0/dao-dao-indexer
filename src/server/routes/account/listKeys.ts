@@ -1,10 +1,30 @@
 import Router from '@koa/router'
+import { DefaultContext } from 'koa'
 
-import { AccountKeyCredit } from '@/db'
+import { AccountKeyCredit, AccountKeyCreditPaymentSource } from '@/db'
 
 import { AccountState } from './types'
 
-export const listKeys: Router.Middleware<AccountState> = async (ctx) => {
+type ListKeysResponse = {
+  keys: {
+    name: string
+    description: string | null
+    credits: {
+      paymentSource: AccountKeyCreditPaymentSource
+      paymentId: string
+      paidFor: boolean
+      paidAt: string | null
+      amount: string // serialized bigint
+      used: string // serialized bigint
+    }[]
+  }[]
+}
+
+export const listKeys: Router.Middleware<
+  AccountState,
+  DefaultContext,
+  ListKeysResponse
+> = async (ctx) => {
   const keys = await ctx.state.account.$get('keys', {
     include: {
       model: AccountKeyCredit,
@@ -22,8 +42,8 @@ export const listKeys: Router.Middleware<AccountState> = async (ctx) => {
           paymentId,
           paidFor,
           paidAt: paidAt?.toISOString() || null,
-          amount,
-          used,
+          amount: amount.toString(),
+          used: used.toString(),
         })
       ),
     })),
