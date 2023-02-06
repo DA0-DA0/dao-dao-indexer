@@ -1,7 +1,8 @@
 import { Command } from 'commander'
 import { Op } from 'sequelize'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/core/config'
+import { DbType } from '@/core/types'
 import { PendingWebhook, loadDb } from '@/db'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
@@ -26,7 +27,14 @@ const main = async () => {
   const { config, batch } = program.opts()
 
   await loadConfig(config)
-  await loadDb()
+
+  // Connect to both DBs.
+  await loadDb({
+    type: DbType.Data,
+  })
+  await loadDb({
+    type: DbType.Accounts,
+  })
 
   console.log(`\n\n[${new Date().toISOString()}] Firing webhooks...`)
 

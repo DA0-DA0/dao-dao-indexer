@@ -5,7 +5,8 @@ import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 import Koa from 'koa'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/core/config'
+import { DbType } from '@/core/types'
 import { closeDb, loadDb } from '@/db'
 
 import { setupRouter } from './routes'
@@ -24,6 +25,8 @@ const options = program.opts()
 
 // Load config with config option.
 const config = loadConfig(options.config)
+
+const accounts = !!options.accounts
 
 // Setup app.
 const app = new Koa()
@@ -64,13 +67,18 @@ app.use(async (ctx, next) => {
 
 // Add routes.
 setupRouter(app, {
-  accounts: !!options.accounts,
+  accounts,
 })
 
 // Start.
 const main = async () => {
-  // Connect to DB.
-  await loadDb()
+  // Connect to both DBs.
+  await loadDb({
+    type: DbType.Data,
+  })
+  await loadDb({
+    type: DbType.Accounts,
+  })
 
   if (!options.port || isNaN(options.port)) {
     throw new Error('Port must be a number')

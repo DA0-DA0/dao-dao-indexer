@@ -1,6 +1,7 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/core/config'
+import { DbType } from '@/core/types'
 import { loadDb } from '@/db'
 
 export const main = async () => {
@@ -17,18 +18,27 @@ export const main = async () => {
   loadConfig(options.config)
 
   // Log when altering.
-  const sequelize = await loadDb({ logging: true })
+  const dataSequelize = await loadDb({
+    type: DbType.Data,
+    logging: true,
+  })
+  const accountsSequelize = await loadDb({
+    type: DbType.Accounts,
+    logging: true,
+  })
 
   try {
     // Alter the database to match any changes.
-    await sequelize.sync({ alter: true })
+    await dataSequelize.sync({ alter: true })
+    await accountsSequelize.sync({ alter: true })
 
     console.log('\nAltered.')
   } catch (err) {
     console.error(err)
   }
 
-  await sequelize.close()
+  await dataSequelize.close()
+  await accountsSequelize.close()
 }
 
 main()

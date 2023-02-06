@@ -2,26 +2,31 @@ import { SequelizeOptions } from 'sequelize-typescript'
 
 import { Contract, Event, State, Transformation } from '@/db'
 
+type DB = { uri?: string } & Pick<
+  SequelizeOptions,
+  | 'dialect'
+  | 'dialectModulePath'
+  | 'dialectOptions'
+  | 'storage'
+  | 'database'
+  | 'username'
+  | 'password'
+  | 'host'
+  | 'port'
+  | 'ssl'
+  | 'protocol'
+  | 'pool'
+  | 'schema'
+  | 'logging'
+>
+
 export type Config = {
   eventsFile: string
   statusEndpoint: string
-  db: { uri?: string } & Pick<
-    SequelizeOptions,
-    | 'dialect'
-    | 'dialectModulePath'
-    | 'dialectOptions'
-    | 'storage'
-    | 'database'
-    | 'username'
-    | 'password'
-    | 'host'
-    | 'port'
-    | 'ssl'
-    | 'protocol'
-    | 'pool'
-    | 'schema'
-    | 'logging'
-  >
+  db: {
+    data: DB
+    accounts: DB
+  }
   meilisearch?: {
     host: string
     apiKey?: string
@@ -400,4 +405,9 @@ export type ProcessedWebhook<V = any> = Omit<Webhook<V>, 'filter'> & {
 export type PendingWebhook = {
   endpoint: WebhookEndpoint
   value: any
+}
+
+export enum DbType {
+  Accounts = 'accounts',
+  Data = 'data',
 }

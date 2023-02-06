@@ -2,7 +2,8 @@ import * as readline from 'readline'
 
 import { Command } from 'commander'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/core/config'
+import { DbType } from '@/core/types'
 import { loadDb } from '@/db'
 
 export const main = async () => {
@@ -18,7 +19,12 @@ export const main = async () => {
   // Load config with config option.
   loadConfig(options.config)
 
-  const sequelize = await loadDb()
+  const dataSequelize = await loadDb({
+    type: DbType.Data,
+  })
+  const accountsSequelize = await loadDb({
+    type: DbType.Accounts,
+  })
 
   const rl = readline.createInterface({
     input: process.stdin,
@@ -31,11 +37,12 @@ export const main = async () => {
       if (answer === 'y') {
         try {
           // Add trigram index extension.
-          await sequelize.query('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
-          await sequelize.query('CREATE EXTENSION IF NOT EXISTS btree_gin;')
+          await dataSequelize.query('CREATE EXTENSION IF NOT EXISTS pg_trgm;')
+          await dataSequelize.query('CREATE EXTENSION IF NOT EXISTS btree_gin;')
 
           // Drop all tables and recreate them.
-          await sequelize.sync({ force: true })
+          await dataSequelize.sync({ force: true })
+          await accountsSequelize.sync({ force: true })
 
           console.log('\nDropped and recreated all tables.')
         } catch (err) {
@@ -45,7 +52,8 @@ export const main = async () => {
         console.log('Aborted.')
       }
 
-      await sequelize.close()
+      await dataSequelize.close()
+      await accountsSequelize.close()
       process.exit()
     }
   )

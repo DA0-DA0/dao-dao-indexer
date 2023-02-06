@@ -2,10 +2,18 @@
   "eventsFile": "/Users/user/.juno/indexer/.events.txt",
   "statusEndpoint": "http://localhost:26657/status",
   "db": {
-    "dialect": "postgres",
-    "host": "localhost",
-    "database": "db",
-    "username": "user"
+    "data": {
+      "dialect": "postgres",
+      "host": "localhost",
+      "database": "data_db",
+      "username": "user"
+    },
+    "accounts": {
+      "dialect": "postgres",
+      "host": "localhost",
+      "database": "accounts_db",
+      "username": "user"
+    }
   },
   "meilisearch": {
     "host": "http://localhost:7700",

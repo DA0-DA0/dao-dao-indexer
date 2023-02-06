@@ -2,12 +2,17 @@ import repl from 'repl'
 import { Context } from 'vm'
 
 import { Command } from 'commander'
+import { Op } from 'sequelize'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/core/config'
+import { DbType } from '@/core/types'
 import { loadDb } from '@/db'
 import * as Models from '@/db/models'
 
-const context: Context = {}
+// Global context available to repl.
+const context: Context = {
+  Op,
+}
 
 const setupImport = (imported: Record<string, unknown>) =>
   Object.entries(imported).forEach(([name, importedModule]) => {
@@ -28,8 +33,15 @@ const { config, logging } = program.opts()
 loadConfig(config)
 
 const main = async () => {
-  // Setup db.
-  await loadDb({ logging })
+  // Setup both DBs.
+  await loadDb({
+    type: DbType.Data,
+    logging,
+  })
+  await loadDb({
+    type: DbType.Accounts,
+    logging,
+  })
 
   // ADD TO CONTEXT
   setupImport(Models)

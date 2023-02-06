@@ -1,6 +1,6 @@
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
-import { loadConfig } from '@/core'
+import { DbType, loadConfig } from '@/core'
 
 import {
   Account,
@@ -14,47 +14,59 @@ import {
   Transformation,
 } from './models'
 
-let sequelize: Sequelize | undefined
+// List of models included in the database per type.
+const MODELS_FOR_TYPE: Record<DbType, SequelizeOptions['models']> = {
+  [DbType.Data]: [
+    Computation,
+    Contract,
+    Event,
+    PendingWebhook,
+    State,
+    Transformation,
+  ],
+  [DbType.Accounts]: [Account, AccountKey, AccountKeyCredit],
+}
+
+const sequelizeInstances: Partial<Record<DbType, Sequelize>> = {}
 
 // Tell Sequelize to parse int8 as BigInt instead of string.
 require('pg').defaults.parseInt8 = true
 
-export const loadDb = async (
-  {
-    logging,
-  }: {
-    logging: boolean | undefined
-  } = { logging: false }
-) => {
-  if (sequelize) {
-    return sequelize
+type LoadDbOptions = {
+  type?: DbType
+  logging?: boolean
+}
+
+export const loadDb = async ({
+  logging = false,
+  type = DbType.Data,
+}: LoadDbOptions = {}) => {
+  if (sequelizeInstances[type]) {
+    return sequelizeInstances[type]!
   }
 
   const { db } = loadConfig()
 
+  const dbConfig = db[type]
+  if (!dbConfig) {
+    throw new Error(`No database config found for type ${type}`)
+  }
+
   const options: SequelizeOptions = {
     // User config.
-    ...db,
+    ...dbConfig,
 
     // Allow options to override logging, but default to false.
-    logging: db.logging ?? logging ? console.log : false,
+    logging: dbConfig.logging ?? logging ? console.log : false,
 
     // Tell Sequelize what models we have.
-    models: [
-      Account,
-      AccountKey,
-      AccountKeyCredit,
-      Computation,
-      Contract,
-      Event,
-      PendingWebhook,
-      State,
-      Transformation,
-    ],
+    models: MODELS_FOR_TYPE[type],
   }
 
   // If URI present, use it. Otherwise, use options directly.
-  sequelize = db.uri ? new Sequelize(db.uri, options) : new Sequelize(options)
+  const sequelize = dbConfig.uri
+    ? new Sequelize(dbConfig.uri, options)
+    : new Sequelize(options)
 
   try {
     await sequelize.authenticate()
@@ -62,9 +74,14 @@ export const loadDb = async (
     console.error('Unable to connect to the database:', error)
   }
 
+  // Cache for loading later.
+  sequelizeInstances[type] = sequelize
+
   return sequelize
 }
 
 export const closeDb = async () => {
-  await sequelize?.close()
+  await Promise.all(
+    Object.values(sequelizeInstances).map((sequelize) => sequelize.close())
+  )
 }
