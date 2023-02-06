@@ -1,6 +1,7 @@
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
-import { DbType, loadConfig } from '@/core'
+import { loadConfig } from '@/core/config'
+import { DbType } from '@/core/types'
 
 import {
   Account,
