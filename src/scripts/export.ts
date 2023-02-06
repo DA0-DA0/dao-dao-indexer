@@ -137,14 +137,6 @@ const main = async () => {
     let catchingUp = true
     let linesRead = 0
 
-    const setNotCatchingUp = () => {
-      catchingUp = false
-      // Tell pm2 we're ready.
-      if (process.send) {
-        process.send('ready')
-      }
-    }
-
     const printStatistics = () => {
       printLoaderCount = (printLoaderCount + 1) % LOADER_MAP.length
       process.stdout.write(
@@ -256,6 +248,13 @@ const main = async () => {
           crlfDelay: Infinity,
         })
 
+        // Once we have successfully began reading (DB connected, file is open,
+        // etc.), tell pm2 we're ready. Only do this the first time by checking
+        // if we're still catching up.
+        if (catchingUp && process.send) {
+          process.send('ready')
+        }
+
         let lastBlockHeightSeen = 0
         for await (const line of rl) {
           if (shuttingDown) {
@@ -290,7 +289,7 @@ const main = async () => {
             lastBlockHeightSeen = event.blockHeight
             continue
           } else if (catchingUp) {
-            setNotCatchingUp()
+            catchingUp = false
           }
 
           // If we have enough events and reached the first event of the next
@@ -327,7 +326,7 @@ const main = async () => {
 
           // If we made it to the end of the file, we are no longer catching up.
           if (catchingUp) {
-            setNotCatchingUp()
+            catchingUp = false
           }
         }
       } catch (err) {
