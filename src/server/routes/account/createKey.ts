@@ -51,6 +51,19 @@ export const createKey: Router.Middleware<
     return
   }
 
+  // Verify name uniqueness.
+  if (
+    await ctx.state.account.$count('keys', {
+      where: { name: ctx.state.data.name },
+    })
+  ) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'Name already exists.',
+    }
+    return
+  }
+
   if (
     typeof ctx.state.data.description === 'string' &&
     ctx.state.data.description.trim().length > 255
