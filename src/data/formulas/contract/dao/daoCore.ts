@@ -632,6 +632,18 @@ const PROPOSAL_COUNT_MAP: Record<string, ContractFormula<number> | undefined> =
     'dao-proposal-multiple': multipleChoiceProposalCount,
   }
 
+// Returns contracts with an admin state key set to this DAO. Hopefully these
+// are mostly DAO contracts.
+export const potentialSubDaos: ContractFormula<string[]> = {
+  compute: async ({ contractAddress, getTransformationMatches }) => {
+    const contractsWithAdmin = (
+      await getTransformationMatches(undefined, 'admin', contractAddress)
+    )?.map((match) => match.contractAddress)
+
+    return contractsWithAdmin ?? []
+  },
+}
+
 // Helpers
 
 // V1 proposal module don't have prefixes, so we need to generate them.
