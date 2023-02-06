@@ -21,7 +21,7 @@ export const listKeys: Router.Middleware<AccountState> = async (ctx) => {
           paymentSource,
           paymentId,
           paidFor,
-          paidAt: paidAt?.toISOString(),
+          paidAt: paidAt?.toISOString() || null,
           amount,
           used,
         })
