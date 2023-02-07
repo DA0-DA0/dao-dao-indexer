@@ -21,6 +21,10 @@ import {
   totalPower as daoVotingCw4TotalPower,
   votingPower as daoVotingCw4VotingPower,
 } from '../voting/daoVotingCw4'
+import {
+  totalPower as daoVotingCw721StakedTotalPower,
+  votingPower as daoVotingCw721StakedVotingPower,
+} from '../voting/daoVotingCw721Staked'
 
 interface Config {
   automatically_add_cw20s: boolean
@@ -519,10 +523,15 @@ export const totalPower: ContractFormula<string | undefined> = {
 const VOTING_POWER_FORMULAS: ContractFormula<
   string | undefined,
   { address: string }
->[] = [daoVotingCw4VotingPower, daoVotingCw20StakedVotingPower]
+>[] = [
+  daoVotingCw4VotingPower,
+  daoVotingCw20StakedVotingPower,
+  daoVotingCw721StakedVotingPower,
+]
 const TOTAL_POWER_FORMULAS: ContractFormula<string>[] = [
   daoVotingCw4TotalPower,
   daoVotingCw20StakedTotalPower,
+  daoVotingCw721StakedTotalPower,
 ]
 
 // Return open proposals without votes from the given address. If no address

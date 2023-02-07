@@ -44,12 +44,13 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   },
 }
 
-export const totalPower: ContractFormula<string | undefined> = {
+export const totalPower: ContractFormula<string> = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
   compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'tsn'))?.value,
+    (await getTransformationMatch<string>(contractAddress, 'tsn'))?.value ||
+    '0',
 }
 
 export const stakedNfts: ContractFormula<
