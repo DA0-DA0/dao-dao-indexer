@@ -24,4 +24,21 @@ const stakedNftPerOwner: Transformer = {
   getValue: () => '',
 }
 
-export default [config, dao, totalStakedNfts, stakedNftPerOwner]
+const stakedNftOwner: Transformer = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+    matches: (event) => event.key.startsWith(KEY_PREFIX_SNPW),
+  },
+  name: (event) => {
+    // "snpw", address, tokenId
+    const [, , tokenId] = dbKeyToKeys(event.key, [false, false, false])
+    return `stakedNftOwner:${tokenId}`
+  },
+  getValue: (event) => {
+    // "snpw", address, tokenId
+    const [, address] = dbKeyToKeys(event.key, [false, false, false])
+    return address
+  },
+}
+
+export default [config, dao, totalStakedNfts, stakedNftPerOwner, stakedNftOwner]

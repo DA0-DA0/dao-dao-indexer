@@ -88,3 +88,28 @@ export const stakedNfts: ContractFormula<
     return tokenIds
   },
 }
+
+export const staker: ContractFormula<string | undefined, { tokenId: string }> =
+  {
+    filter: {
+      codeIdsKeys: CODE_IDS_KEYS,
+    },
+    compute: async ({
+      contractAddress,
+      getTransformationMatch,
+      args: { tokenId },
+    }) => {
+      if (!tokenId) {
+        throw new Error('missing `tokenId`')
+      }
+
+      const owner = (
+        await getTransformationMatch<string>(
+          contractAddress,
+          `stakedNftOwner:${tokenId}`
+        )
+      )?.value
+
+      return owner
+    },
+  }
