@@ -26,8 +26,12 @@ const main = async () => {
     '-k, --code-ids-keys <keys>',
     'comma separated list of code IDs keys from the config to revalidate'
   )
+  program.option(
+    '-f, --formulas <formulas>',
+    'comma separated list of formula names to revalidate'
+  )
   program.parse()
-  const { config: _config, batch, codeIdsKeys } = program.opts()
+  const { config: _config, batch, codeIdsKeys, formulas } = program.opts()
 
   console.log(`\n[${new Date().toISOString()}] Revalidating computations...`)
   const start = Date.now()
@@ -62,8 +66,18 @@ const main = async () => {
       }
     : undefined
 
+  const formulaWhere =
+    typeof formulas === 'string'
+      ? {
+          formula: formulas.split(','),
+        }
+      : {}
+
   const total = await Computation.count({
-    where: contractWhere,
+    where: {
+      ...contractWhere,
+      ...formulaWhere,
+    },
   })
 
   // Print latest statistics every 100ms.
@@ -92,6 +106,7 @@ const main = async () => {
           [Op.gt]: latestId,
         },
         ...contractWhere,
+        ...formulaWhere,
       },
       limit: batch,
       order: [['id', 'ASC']],
@@ -130,7 +145,18 @@ const main = async () => {
   clearInterval(logInterval)
 
   printStatistics()
-  console.log(`\n[${new Date().toISOString()}] Revalidation complete.`)
+  console.log(
+    `\n[${new Date().toISOString()}] Revalidation complete${
+      formulas
+        ? ` matching filters:\n${[
+            codeIdsKeys ? `code IDs keys: ${codeIdsKeys.split(',')}` : '',
+            formulas ? `formulas: ${formulas.split(',')}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n')}`
+        : ''
+    }`
+  )
 
   await sequelize.close()
 
