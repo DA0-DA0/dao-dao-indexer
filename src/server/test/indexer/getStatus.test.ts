@@ -1,0 +1,23 @@
+import request from 'supertest'
+
+import { serializeBlock } from '@/core/utils'
+import { State } from '@/db'
+
+import { app } from './app'
+
+describe('GET /status', () => {
+  it('returns the status', async () => {
+    const state = await State.getSingleton()
+    expect(state).toBeDefined()
+
+    await request(app.callback())
+      .get('/status')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .expect({
+        latestBlock: serializeBlock(state!.latestBlock),
+        lastBlockHeightExported:
+          state!.lastBlockHeightExported?.toString() || null,
+      })
+  })
+})

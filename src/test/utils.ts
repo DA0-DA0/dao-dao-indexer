@@ -46,8 +46,8 @@ export const getAccountWithSigner = async () => {
     paymentId: 'receipt',
     paidAt: new Date(),
     amount: 10,
-    used: 5,
-    hits: 2,
+    used: 0,
+    hits: 0,
   })
 
   // Add another key with only the not paid-for credit.

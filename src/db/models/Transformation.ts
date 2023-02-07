@@ -57,11 +57,11 @@ export class Transformation extends Model {
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: number
+  blockHeight!: bigint
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: number
+  blockTimeUnixMs!: bigint
 
   @AllowNull(false)
   @Column(DataType.TEXT)
@@ -299,8 +299,8 @@ export class Transformation extends Model {
 
 type PendingTransformation = {
   contractAddress: string
-  blockHeight: number
-  blockTimeUnixMs: number
+  blockHeight: bigint
+  blockTimeUnixMs: bigint
   name: string
   value: any | null
 }

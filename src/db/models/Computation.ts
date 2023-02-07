@@ -7,6 +7,8 @@ import {
   ComputationOutput,
   FormulaType,
   TypedFormula,
+  bigIntMax,
+  bigIntMin,
   compute,
 } from '@/core'
 import { getTypedFormula } from '@/data'
@@ -48,15 +50,15 @@ export class Computation extends Model {
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: number
+  blockHeight!: bigint
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: number
+  blockTimeUnixMs!: bigint
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  latestBlockHeightValid!: number
+  latestBlockHeightValid!: bigint
 
   // If false, the computation's output is valid up to the latest block and
   // cannot be extended. This may be false if the formula depends on the block
@@ -98,48 +100,6 @@ export class Computation extends Model {
   @Column(DataType.TEXT)
   output!: string | null
 
-  static getOutputForValue(value: any): string | null {
-    return value !== undefined && value !== null ? JSON.stringify(value) : null
-  }
-
-  static async createFromComputationOutputs(
-    targetAddress: string,
-    { type, name: formulaName, formula }: TypedFormula,
-    args: Record<string, any>,
-    computationOutputs: ComputationOutput[]
-  ): Promise<Computation[]> {
-    return await Computation.bulkCreate(
-      computationOutputs.map(
-        ({ block, value, dependencies, latestBlockHeightValid }) => ({
-          targetAddress,
-          type,
-          formula: formulaName,
-          args: JSON.stringify(args),
-          dependentEvents: dependencies.events,
-          dependentTransformations: dependencies.transformations,
-          // If no block, the computation must not have accessed any keys. It
-          // may be a constant formula, in which case it doesn't have any block
-          // context and should thus use an invalid block below the first
-          // possible block in case the formula is used in another computation
-          // that does access keys.
-          blockHeight: block?.height ?? -1,
-          blockTimeUnixMs: block?.timeUnixMs ?? -1,
-          latestBlockHeightValid: latestBlockHeightValid ?? block?.height ?? -1,
-          validityExtendable: !formula.dynamic,
-          output: Computation.getOutputForValue(value),
-        })
-      ),
-      {
-        updateOnDuplicate: [
-          'dependentEvents',
-          'dependentTransformations',
-          'output',
-          'latestBlockHeightValid',
-        ],
-      }
-    )
-  }
-
   get block(): Block {
     return {
       height: this.blockHeight,
@@ -150,9 +110,9 @@ export class Computation extends Model {
   // Returns whether or not the computation is valid at the requested block. Try
   // to update validity if we need to and are able to.
   async updateValidityUpToBlockHeight(
-    upToBlockHeight: number,
+    upToBlockHeight: bigint,
     // If undefined, default to starting after its saved latest valid block.
-    startFromBlockHeight?: number
+    startFromBlockHeight?: bigint
   ): Promise<boolean> {
     // If the requested block is before the computation's first valid block,
     // it's not valid for the requested block.
@@ -179,12 +139,12 @@ export class Computation extends Model {
     // after the computation's start block because we know there is an event or
     // transformation at that block. We want to find the _next_ dependency
     // starting at least after the first block.
-    const minBlockHeight = Math.max(
-      this.blockHeight + 1,
-      Math.min(
-        startFromBlockHeight ?? Infinity,
-        this.latestBlockHeightValid + 1
-      )
+    const afterLatest = this.latestBlockHeightValid + 1n
+    const minBlockHeight = bigIntMax(
+      this.blockHeight + 1n,
+      startFromBlockHeight === undefined
+        ? afterLatest
+        : bigIntMin(startFromBlockHeight, afterLatest)
     )
 
     const firstNewerEvent =
@@ -242,7 +202,7 @@ export class Computation extends Model {
     // afterwards. This may happen if a query caches a computation for a block
     // before the exporter has caught up to that block.
     await this.update({
-      latestBlockHeightValid: firstNewerItem.blockHeight - 1,
+      latestBlockHeightValid: firstNewerItem.blockHeight - 1n,
     })
     return false
   }
@@ -303,5 +263,47 @@ export class Computation extends Model {
     }
 
     return true
+  }
+
+  static getOutputForValue(value: any): string | null {
+    return value !== undefined && value !== null ? JSON.stringify(value) : null
+  }
+
+  static async createFromComputationOutputs(
+    targetAddress: string,
+    { type, name: formulaName, formula }: TypedFormula,
+    args: Record<string, any>,
+    computationOutputs: ComputationOutput[]
+  ): Promise<Computation[]> {
+    return await Computation.bulkCreate(
+      computationOutputs.map(
+        ({ block, value, dependencies, latestBlockHeightValid }) => ({
+          targetAddress,
+          type,
+          formula: formulaName,
+          args: JSON.stringify(args),
+          dependentEvents: dependencies.events,
+          dependentTransformations: dependencies.transformations,
+          // If no block, the computation must not have accessed any keys. It
+          // may be a constant formula, in which case it doesn't have any block
+          // context and should thus use an invalid block below the first
+          // possible block in case the formula is used in another computation
+          // that does access keys.
+          blockHeight: block?.height ?? -1,
+          blockTimeUnixMs: block?.timeUnixMs ?? -1,
+          latestBlockHeightValid: latestBlockHeightValid ?? block?.height ?? -1,
+          validityExtendable: !formula.dynamic,
+          output: Computation.getOutputForValue(value),
+        })
+      ),
+      {
+        updateOnDuplicate: [
+          'dependentEvents',
+          'dependentTransformations',
+          'output',
+          'latestBlockHeightValid',
+        ],
+      }
+    )
   }
 }

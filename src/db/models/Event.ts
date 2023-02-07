@@ -56,11 +56,11 @@ export class Event extends Model {
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: number
+  blockHeight!: bigint
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: number
+  blockTimeUnixMs!: bigint
 
   @AllowNull(false)
   @Column(DataType.DATE)
@@ -87,6 +87,36 @@ export class Event extends Model {
   @AllowNull(false)
   @Column
   delete!: boolean
+
+  get block(): Block {
+    return {
+      height: this.blockHeight,
+      timeUnixMs: this.blockTimeUnixMs,
+    }
+  }
+
+  get dependentKey(): string {
+    return getDependentKey(this.contractAddress, this.key)
+  }
+
+  get asParsedEvent(): ParsedEvent {
+    // `Contract` must be included before using this getter.
+    if (!this.contract) {
+      throw new Error('Contract must be included when querying for this Event.')
+    }
+
+    return {
+      codeId: this.contract.codeId,
+      contractAddress: this.contractAddress,
+      blockHeight: this.blockHeight,
+      blockTimeUnixMs: this.blockTimeUnixMs,
+      blockTimestamp: this.blockTimestamp,
+      key: this.key,
+      value: this.value,
+      valueJson: this.valueJson,
+      delete: this.delete,
+    }
+  }
 
   // Split dependent keys into two groups: non map keys and map prefixes. Map
   // prefixes end with a comma because they are missing the final key segment,
@@ -147,36 +177,6 @@ export class Event extends Model {
           }
         }
       ),
-    }
-  }
-
-  get block(): Block {
-    return {
-      height: this.blockHeight,
-      timeUnixMs: this.blockTimeUnixMs,
-    }
-  }
-
-  get dependentKey(): string {
-    return getDependentKey(this.contractAddress, this.key)
-  }
-
-  get asParsedEvent(): ParsedEvent {
-    // `Contract` must be included before using this getter.
-    if (!this.contract) {
-      throw new Error('Contract must be included when querying for this Event.')
-    }
-
-    return {
-      codeId: this.contract.codeId,
-      contractAddress: this.contractAddress,
-      blockHeight: this.blockHeight,
-      blockTimeUnixMs: this.blockTimeUnixMs,
-      blockTimestamp: this.blockTimestamp,
-      key: this.key,
-      value: this.value,
-      valueJson: this.valueJson,
-      delete: this.delete,
     }
   }
 }

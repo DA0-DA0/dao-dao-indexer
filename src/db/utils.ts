@@ -1,5 +1,7 @@
 import { Op, Sequelize } from 'sequelize'
 
+import { bigIntMax, bigIntMin } from '@/core/utils'
+
 import { loadDb } from './connection'
 import { Computation, Event, Transformation } from './models'
 
@@ -69,10 +71,16 @@ export const updateComputationValidityDependentOnChanges = async (
     ...transformations,
   ].reduce(
     (acc, { blockHeight }) => ({
-      earliestBlockHeight: Math.min(acc.earliestBlockHeight, blockHeight),
-      latestBlockHeight: Math.max(acc.latestBlockHeight, blockHeight),
+      earliestBlockHeight:
+        acc.earliestBlockHeight === -1n
+          ? blockHeight
+          : bigIntMin(acc.earliestBlockHeight, blockHeight),
+      latestBlockHeight:
+        acc.latestBlockHeight === -1n
+          ? blockHeight
+          : bigIntMin(acc.latestBlockHeight, blockHeight),
     }),
-    { earliestBlockHeight: Infinity, latestBlockHeight: -Infinity }
+    { earliestBlockHeight: -1n, latestBlockHeight: -1n }
   )
 
   // 1. Destroy those starting at or after the earliest block.
@@ -115,7 +123,7 @@ export const updateComputationValidityDependentOnChanges = async (
       computation.updateValidityUpToBlockHeight(
         // Update the validity at least to the latest block height affected, to
         // prevent future validity checks.
-        Math.max(computation.latestBlockHeightValid, latestBlockHeight),
+        bigIntMax(computation.latestBlockHeightValid, latestBlockHeight),
         // Restart validity check at the earliest block instead of the default
         // behavior of using the `latestBlockHeightValid` value.
         earliestBlockHeight

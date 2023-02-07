@@ -6,7 +6,7 @@
     "lint": "eslint .",
     "format": "eslint . --fix",
     "test": "docker compose -f compose.test.yml up --exit-code-from test",
-    "jest": "NODE_ENV=test node --nolazy --inspect=localhost:9227 ./node_modules/.bin/jest --runInBand",
+    "jest": "NODE_ENV=test node --nolazy --inspect=0.0.0.0:9227 ./node_modules/.bin/jest --runInBand",
     "coverage": "npm run test -- --coverage",
     "prebuild": "rm -rf dist",
     "build": "tsc && tsc-alias",

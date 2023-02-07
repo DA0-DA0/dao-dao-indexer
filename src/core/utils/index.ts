@@ -2,7 +2,7 @@
 // Recreate cw-storage-plus key nesting format. Output is a comma-separated list
 // of uint8 values that represents a byte array. See `Event` model for more
 
-import { Block, FormulaType } from '../types'
+import { Block, FormulaType, SerializedBlock } from '../types'
 
 // information.
 export const dbKeyForKeys = (...keys: (string | number)[]): string => {
@@ -93,16 +93,18 @@ export const getDependentKey = (
 ) => `${contractAddress || '%'}:${keyOrName}`
 
 export const validateBlockString = (block: string, subject: string): Block => {
-  const parsedBlock = block.split(':').map((s) => parseInt(s, 10))
+  let parsedBlock
+  try {
+    parsedBlock = block.split(':').map((s) => BigInt(s))
+  } catch (err) {
+    throw new Error(`${subject}'s values must be integers`)
+  }
 
   if (parsedBlock.length !== 2) {
     throw new Error(`${subject} must be a height:timeUnixMs pair`)
   }
 
   const [blockHeight, blockTimeUnixMs] = parsedBlock
-  if (isNaN(blockHeight) || isNaN(blockTimeUnixMs)) {
-    throw new Error(`${subject}'s values must be integers`)
-  }
 
   if (blockHeight < 1 || blockTimeUnixMs < 0) {
     throw new Error(
@@ -121,3 +123,18 @@ export const typeIsFormulaType = (type: string): type is FormulaType =>
   FormulaTypeValues.includes(type as FormulaType)
 
 export * from './objectMatchesStructure'
+
+// BigInt min and max functions.
+export const bigIntMax = (...args: bigint[]) =>
+  args.reduce((m, e) => (e > m ? e : m))
+export const bigIntMin = (...args: bigint[]) =>
+  args.reduce((m, e) => (e < m ? e : m))
+
+// Stringifies bigint fields.
+export const serializeBlock = ({
+  height,
+  timeUnixMs,
+}: Block): SerializedBlock => ({
+  height: height.toString(),
+  timeUnixMs: timeUnixMs.toString(),
+})

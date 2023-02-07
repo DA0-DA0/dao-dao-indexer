@@ -67,27 +67,38 @@ export class AccountKeyCredit extends Model {
   // Total number of credits allowed.
   @AllowNull(false)
   @Default(0n)
-  @Column
+  @Column(DataType.BIGINT)
   amount!: bigint
 
   // Total number of credits used.
   @AllowNull(false)
   @Default(0n)
-  @Column
+  @Column(DataType.BIGINT)
   used!: bigint
 
   // Total number of times this credit has been used.
   @AllowNull(false)
   @Default(0n)
-  @Column
+  @Column(DataType.BIGINT)
   hits!: bigint
 
   get paidFor(): boolean {
     return this.paidAt !== null
   }
 
+  get apiJson(): AccountKeyCreditApiJson {
+    return {
+      paymentSource: this.paymentSource,
+      paymentId: this.paymentId,
+      paidFor: this.paidFor,
+      paidAt: this.paidAt?.toISOString() || null,
+      amount: this.amount.toString(),
+      used: this.used.toString(),
+    }
+  }
+
   async registerCreditsPaidFor(
-    amount: number | bigint,
+    amount: number,
     // If true, will update even if already paid for.
     update: boolean
   ): Promise<void> {
@@ -102,22 +113,20 @@ export class AccountKeyCredit extends Model {
     })
   }
 
-  get apiJson(): AccountKeyCreditApiJson {
-    return {
-      paymentSource: this.paymentSource,
-      paymentId: this.paymentId,
-      paidFor: this.paidFor,
-      paidAt: this.paidAt?.toISOString() || null,
-      amount: this.amount.toString(),
-      used: this.used.toString(),
-    }
-  }
-
   // Compute the number of credits needed to query a range of blocks.
-  public static creditsForBlockRange(blocks: number): number {
-    // Use 1 credit for the query, and 1 credit for every 10,000 blocks.
-    // Querying 1 block uses 1 credit, 2-10,000 blocks uses 2 credits,
-    // 10,001-20,000 uses 3, etc.
-    return 1 + Math.ceil(blocks / 10000)
+  //
+  // Use 1 credit for the query, and 1 credit for every 10,000 blocks. Querying
+  // 1 block uses 1 credit, 2-10,000 blocks uses 2 credits, 10,001-20,000 uses
+  // 3, etc. Round up to the nearest credit.
+  public static creditsForBlockInterval(blockInterval: bigint): number {
+    if (blockInterval <= 0n) {
+      return 0
+    } else if (blockInterval === 1n) {
+      return 1
+    }
+
+    return Number(
+      1n + blockInterval / 10000n + (blockInterval % 10000n === 0n ? 0n : 1n)
+    )
   }
 }

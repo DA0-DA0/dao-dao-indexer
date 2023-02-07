@@ -1,13 +1,14 @@
 import Router from '@koa/router'
 import { DefaultContext, DefaultState } from 'koa'
 
-import { Block } from '@/core/types'
+import { SerializedBlock } from '@/core/types'
+import { serializeBlock } from '@/core/utils'
 import { State } from '@/db'
 
 type GetStatusResponse =
   | {
-      latestBlock: Block
-      lastBlockHeightExported: number | null
+      latestBlock: SerializedBlock
+      lastBlockHeightExported: string | null
     }
   | {
       error: string
@@ -29,7 +30,7 @@ export const getStatus: Router.Middleware<
 
   ctx.status = 200
   ctx.body = {
-    latestBlock: state.latestBlock,
-    lastBlockHeightExported: state.lastBlockHeightExported,
+    latestBlock: serializeBlock(state.latestBlock),
+    lastBlockHeightExported: state.lastBlockHeightExported?.toString() || null,
   }
 }

@@ -34,7 +34,7 @@ program.option(
 program.option(
   '-i, --initial <block height>',
   'block height to start exporting from, falling back to after the last exported block',
-  (value) => parseInt(value, 10)
+  (value) => BigInt(value)
 )
 program.option(
   '-b, --batch <size>',
@@ -71,7 +71,7 @@ let printLoaderCount = 0
 // When true, shut down ASAP.
 let shuttingDown = false
 
-let latestBlockHeightExported = 0
+let latestBlockHeightExported = 0n
 const exit = () => {
   console.log(
     `\n[${new Date().toISOString()}] Latest exported block with event: ${latestBlockHeightExported.toLocaleString()}. Exiting...`
@@ -94,23 +94,15 @@ const main = async () => {
   await setupMeilisearch()
 
   // Initialize state.
-  if (!(await State.getSingleton())) {
-    await State.create({
-      singleton: true,
-      chainId: '',
-      latestBlockHeight: 0,
-      latestBlockTimeUnixMs: 0,
-      lastBlockHeightExported: 0,
-    })
-  }
+  await State.createSingletonIfMissing()
   // Update state with latest from RPC.
   const initialState = await updateState()
 
   const initialBlock =
-    (options.initial as number | undefined) ??
+    (options.initial as bigint | undefined) ??
     // Start at the next block after the last exported block if no command line
     // argument passed for `block`.
-    (initialState.lastBlockHeightExported ?? 0) + 1
+    (initialState.lastBlockHeightExported ?? 0n) + 1n
 
   // Return promise that never resolves. Listen for file changes.
   return new Promise((_, reject) => {
@@ -197,8 +189,10 @@ const main = async () => {
           codeId: event.codeId,
           contractAddress: event.contractAddress,
           blockHeight: event.blockHeight,
-          blockTimeUnixMs: Math.round(event.blockTimeUnixMicro / 1000),
-          blockTimestamp: new Date(event.blockTimeUnixMicro / 1000),
+          blockTimeUnixMs: event.blockTimeUnixMicro / 1000n,
+          blockTimestamp: new Date(
+            (event.blockTimeUnixMicro / 1000n).toString()
+          ),
           // Convert base64 key to comma-separated list of bytes. See
           // explanation in `Event` model for more information.
           key: Buffer.from(event.key, 'base64').join(','),
@@ -255,7 +249,7 @@ const main = async () => {
           process.send('ready')
         }
 
-        let lastBlockHeightSeen = 0
+        let lastBlockHeightSeen = 0n
         for await (const line of rl) {
           if (shuttingDown) {
             printStatisticsAndExit()
@@ -268,7 +262,7 @@ const main = async () => {
             continue
           }
 
-          const event = JSON.parse(line)
+          const event: IndexerEvent = JSON.parse(line)
           // If event not of expected structure, skip.
           if (
             !objectMatchesStructure(event, {
@@ -283,6 +277,10 @@ const main = async () => {
           ) {
             continue
           }
+
+          // Convert bigints.
+          event.blockHeight = BigInt(event.blockHeight)
+          event.blockTimeUnixMicro = BigInt(event.blockTimeUnixMicro)
 
           // If event is from a block before the initial block, skip.
           if (event.blockHeight < initialBlock) {
@@ -414,7 +412,7 @@ const exporter = async (
   computationsDestroyed: number
   transformations: number
   webhooksQueued: number
-  lastBlockHeightExported: number
+  lastBlockHeightExported: bigint
 }> => {
   const state = await State.getSingleton()
   if (!state) {

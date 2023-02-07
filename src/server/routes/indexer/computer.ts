@@ -9,6 +9,7 @@ import {
   computeRange,
   loadConfig,
   typeIsFormulaType,
+  validateBlockString,
 } from '@/core'
 import { getTypedFormula } from '@/data'
 import {
@@ -21,7 +22,6 @@ import {
 } from '@/db'
 
 import { captureSentryException } from '../../sentry'
-import { validateBlockString } from '../../validate'
 
 export const computer: Router.Middleware = async (ctx) => {
   const config = loadConfig()
@@ -115,7 +115,7 @@ export const computer: Router.Middleware = async (ctx) => {
 
   // If blocks passed, validate that it's a range of two blocks.
   let blocks: [Block, Block] | undefined
-  let blockStep: number | undefined
+  let blockStep: bigint | undefined
   if (_blocks && typeof _blocks === 'string') {
     const [startBlock, endBlock] = _blocks.split('..')
     if (!startBlock || !endBlock) {
@@ -146,27 +146,26 @@ export const computer: Router.Middleware = async (ctx) => {
 
     // If block step passed, validate.
     if (_blockStep && typeof _blockStep === 'string') {
-      const parsedStep = parseInt(_blockStep, 10)
-      if (isNaN(parsedStep) || parsedStep < 1) {
+      try {
+        const parsedStep = BigInt(_blockStep)
+        if (parsedStep < 1) {
+          throw new Error()
+        }
+
+        blockStep = parsedStep
+      } catch (err) {
         ctx.status = 400
-        ctx.body = 'step must be a positive integer'
+        ctx.body = 'block step must be a positive integer'
         return
       }
-      blockStep = parsedStep
     }
-
-    // if (blocks[1].height - blocks[0].height > 446400) {
-    //   ctx.status = 400
-    //   ctx.body = 'the range cannot be larger than 446400 blocks'
-    //   return
-    // }
   }
 
   // If time passed, validate.
-  let time: number | undefined
+  let time: bigint | undefined
   if (_time && typeof _time === 'string') {
     try {
-      time = parseInt(_time, 10)
+      time = BigInt(_time)
     } catch (err) {
       ctx.status = 400
       ctx.body = err instanceof Error ? err.message : err
@@ -176,8 +175,8 @@ export const computer: Router.Middleware = async (ctx) => {
 
   // If times passed, validate that it's a range with either a start or a
   // start/end pair.
-  let times: [number, number | undefined] | undefined
-  let timeStep: number | undefined
+  let times: [bigint, bigint | undefined] | undefined
+  let timeStep: bigint | undefined
   if (_times && typeof _times === 'string') {
     const [startTime, endTime] = _times.split('..')
     if (!startTime) {
@@ -187,10 +186,7 @@ export const computer: Router.Middleware = async (ctx) => {
     }
 
     try {
-      times = [
-        parseInt(startTime, 10),
-        endTime ? parseInt(endTime, 10) : undefined,
-      ]
+      times = [BigInt(startTime), endTime ? BigInt(endTime) : undefined]
     } catch (err) {
       ctx.status = 400
       ctx.body = err instanceof Error ? err.message : err
@@ -198,7 +194,7 @@ export const computer: Router.Middleware = async (ctx) => {
     }
 
     if (
-      times[0] >= (times[1] || Number.MAX_SAFE_INTEGER) ||
+      (times[1] !== undefined && times[0] >= times[1]) ||
       (times[1] && times[1] < 0)
     ) {
       ctx.status = 400
@@ -208,13 +204,18 @@ export const computer: Router.Middleware = async (ctx) => {
 
     // If time step passed, validate.
     if (_timeStep && typeof _timeStep === 'string') {
-      const parsedStep = parseInt(_timeStep, 10)
-      if (isNaN(parsedStep) || parsedStep < 1) {
+      try {
+        const parsedStep = BigInt(_timeStep)
+        if (parsedStep < 1) {
+          throw new Error()
+        }
+
+        timeStep = parsedStep
+      } catch (err) {
         ctx.status = 400
-        ctx.body = 'step must be a positive integer'
+        ctx.body = 'time step must be a positive integer'
         return
       }
-      timeStep = parsedStep
     }
   }
 
@@ -353,8 +354,9 @@ export const computer: Router.Middleware = async (ctx) => {
       // Use account credit, failing if unavailable.
       if (
         !(await accountKey.useCredit(
-          AccountKeyCredit.creditsForBlockRange(
-            blocks[1].height - blocks[0].height
+          AccountKeyCredit.creditsForBlockInterval(
+            // Add 1n because both blocks are inclusive.
+            blocks[1].height - blocks[0].height + 1n
           )
         ))
       ) {
@@ -365,8 +367,8 @@ export const computer: Router.Middleware = async (ctx) => {
 
       let outputs: {
         value: any
-        blockHeight: number
-        blockTimeUnixMs: number
+        blockHeight: bigint
+        blockTimeUnixMs: bigint
       }[] = []
 
       // Find existing start and end computations, and verify all are valid
@@ -406,7 +408,7 @@ export const computer: Router.Middleware = async (ctx) => {
           (computation, i) =>
             i === existingComputations.length - 1 ||
             computation.latestBlockHeightValid ===
-              existingComputations[i + 1].blockHeight - 1
+              existingComputations[i + 1].blockHeight - 1n
         )
 
         // If range is covered, ensure that the end computation is valid at the
@@ -461,8 +463,8 @@ export const computer: Router.Middleware = async (ctx) => {
         if (entireRangeValid) {
           outputs = existingComputations.map(({ block, output }) => ({
             value: output && JSON.parse(output),
-            blockHeight: block.height ?? -1,
-            blockTimeUnixMs: block.timeUnixMs ?? -1,
+            blockHeight: block.height ?? -1n,
+            blockTimeUnixMs: block.timeUnixMs ?? -1n,
           }))
           existingUsed = true
         }
@@ -483,8 +485,8 @@ export const computer: Router.Middleware = async (ctx) => {
           // If no block, the computation must not have accessed any keys. It
           // may be a constant formula, in which case it doesn't have any block
           // context.
-          blockHeight: block?.height ?? -1,
-          blockTimeUnixMs: block?.timeUnixMs ?? -1,
+          blockHeight: block?.height ?? -1n,
+          blockTimeUnixMs: block?.timeUnixMs ?? -1n,
           // Remove dependencies and latest block height valid from output.
           dependencies: undefined,
           latestBlockHeightValid: undefined,
@@ -499,14 +501,23 @@ export const computer: Router.Middleware = async (ctx) => {
         )
       }
 
+      let response: {
+        at?: string
+        value: any
+        blockHeight: string
+        blockTimeUnixMs: string
+      }[] = []
       // Skip to match step.
       if (
-        (blockStep === undefined || blockStep === 1) &&
-        (timeStep === undefined || timeStep === 1)
+        (blockStep === undefined || blockStep === 1n) &&
+        (timeStep === undefined || timeStep === 1n)
       ) {
-        computation = outputs
+        response = outputs.map(({ value, blockHeight, blockTimeUnixMs }) => ({
+          value,
+          blockHeight: blockHeight.toString(),
+          blockTimeUnixMs: blockTimeUnixMs.toString(),
+        }))
       } else if (blockStep) {
-        computation = []
         for (
           let blockHeight = blocks[0].height;
           blockHeight <= blocks[1].height;
@@ -517,9 +528,12 @@ export const computer: Router.Middleware = async (ctx) => {
           // get the latest value at the target block height.
           const index = outputs.findIndex((c) => c.blockHeight > blockHeight)
           if (index > 0) {
-            computation.push({
-              at: blockHeight,
-              ...outputs[index - 1],
+            const output = outputs[index - 1]
+            response.push({
+              at: blockHeight.toString(),
+              value: output.value,
+              blockHeight: output.blockHeight.toString(),
+              blockTimeUnixMs: output.blockTimeUnixMs.toString(),
             })
             // Remove all computations before the one we just added, keeping the
             // current one in case nothing has changed in the next step.
@@ -527,7 +541,6 @@ export const computer: Router.Middleware = async (ctx) => {
           }
         }
       } else if (times && timeStep) {
-        computation = []
         for (
           let blockTime = blocks[0].timeUnixMs;
           blockTime <= blocks[1].timeUnixMs;
@@ -538,9 +551,12 @@ export const computer: Router.Middleware = async (ctx) => {
           // the latest value at the target block time.
           const index = outputs.findIndex((c) => c.blockTimeUnixMs > blockTime)
           if (index > 0) {
-            computation.push({
-              at: blockTime,
-              ...outputs[index - 1],
+            const output = outputs[index - 1]
+            response.push({
+              at: blockTime.toString(),
+              value: output.value,
+              blockHeight: output.blockHeight.toString(),
+              blockTimeUnixMs: output.blockTimeUnixMs.toString(),
             })
             // Remove all computations before the one we just added, keeping the
             // current one in case nothing has changed in the next step.
@@ -548,6 +564,8 @@ export const computer: Router.Middleware = async (ctx) => {
           }
         }
       }
+
+      computation = response
     } else {
       // Otherwise compute for single block.
 

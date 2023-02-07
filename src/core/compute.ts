@@ -39,7 +39,7 @@ export const compute = async ({
     const latestItem: Event | Transformation = [
       ...events,
       ...transformations,
-    ].sort((a, b) => b.blockHeight - a.blockHeight)[0]
+    ].sort((a, b) => Number(b.blockHeight - a.blockHeight))[0]
 
     // If latest is unset, or if we found a later block height, update.
     if (
@@ -146,7 +146,7 @@ export const computeRange = async ({
       const latestItem: Event | Transformation = [
         ...events,
         ...transformations,
-      ].sort((a, b) => b.blockHeight - a.blockHeight)[0]
+      ].sort((a, b) => Number(b.blockHeight - a.blockHeight))[0]
 
       // If latest is unset, or if we found a later block height, update.
       if (
@@ -237,7 +237,7 @@ export const computeRange = async ({
       // there's now a new value. If the formula is dynamic, then the previous
       // result's latest valid block height is already correct.
       if (previousResult && result.latestBlock && !options.formula.dynamic) {
-        previousResult.latestBlockHeightValid = result.latestBlock.height - 1
+        previousResult.latestBlockHeightValid = result.latestBlock.height - 1n
       }
 
       results.push({
@@ -283,7 +283,7 @@ export const computeRange = async ({
             event,
           ]
             // Sort ascending.
-            .sort((a, b) => a.blockHeight - b.blockHeight)
+            .sort((a, b) => Number(a.blockHeight - b.blockHeight))
         }
       })
       newDependentEvents.forEach((key) => allDependencies.events.add(key))
@@ -326,7 +326,7 @@ export const computeRange = async ({
             transformation,
           ]
             // Sort ascending.
-            .sort((a, b) => a.blockHeight - b.blockHeight)
+            .sort((a, b) => Number(a.blockHeight - b.blockHeight))
         }
       })
       // Add to all dependencies so we don't fetch these again.
@@ -514,8 +514,8 @@ export const getNextPotentialBlock = <T extends Event | Transformation>(
       )
       .filter((item): item is T => item !== undefined)
 
-    const nextItem = matchingItems.sort(
-      (a, b) => a.blockHeight - b.blockHeight
+    const nextItem = matchingItems.sort((a, b) =>
+      Number(a.blockHeight - b.blockHeight)
     )[0]
     if (
       nextItem &&

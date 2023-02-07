@@ -112,7 +112,8 @@ export class AccountKey extends Model {
             ],
           },
         },
-        order: [['createdAt', 'ASC']],
+        // Use lowest amount first.
+        order: [['amount', 'ASC']],
         limit: 1,
       })) ?? ([] as AccountKeyCredit[])
 

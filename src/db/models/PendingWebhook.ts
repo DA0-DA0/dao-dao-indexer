@@ -42,6 +42,27 @@ export class PendingWebhook extends Model {
   @Column(DataType.INTEGER)
   failures!: number
 
+  async fire() {
+    try {
+      await axios(this.endpoint.url, {
+        method: this.endpoint.method,
+        // https://stackoverflow.com/a/74735197
+        headers: {
+          'Accept-Encoding': 'gzip,deflate,compress',
+          ...this.endpoint.headers,
+        },
+        data: this.value,
+      })
+
+      // Delete the pending webhook if request was successful.
+      await this.destroy()
+    } catch (err) {
+      this.failures++
+      await this.save()
+      throw err
+    }
+  }
+
   // Events must be loaded with `Contract` included.
   static async queueWebhooks(state: State, events: Event[]): Promise<number> {
     const webhooks = getProcessedWebhooks(loadConfig(), state)
@@ -159,26 +180,5 @@ export class PendingWebhook extends Model {
     }
 
     return (await PendingWebhook.bulkCreate(pendingWebhooksToCreate)).length
-  }
-
-  async fire() {
-    try {
-      await axios(this.endpoint.url, {
-        method: this.endpoint.method,
-        // https://stackoverflow.com/a/74735197
-        headers: {
-          'Accept-Encoding': 'gzip,deflate,compress',
-          ...this.endpoint.headers,
-        },
-        data: this.value,
-      })
-
-      // Delete the pending webhook if request was successful.
-      await this.destroy()
-    } catch (err) {
-      this.failures++
-      await this.save()
-      throw err
-    }
   }
 }

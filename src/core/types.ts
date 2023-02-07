@@ -277,7 +277,7 @@ export interface ComputationOutput {
   value: any
   dependencies: Dependencies
   // Used when computing ranges.
-  latestBlockHeightValid?: number
+  latestBlockHeightValid?: bigint
 }
 
 export interface Dependencies {
@@ -309,13 +309,18 @@ export type NestedFormulaMap<F> = {
 }
 
 export type Block = {
-  height: number
-  timeUnixMs: number
+  height: bigint
+  timeUnixMs: bigint
+}
+
+export type SerializedBlock = {
+  height: string
+  timeUnixMs: string
 }
 
 export type IndexerEvent = {
-  blockHeight: number
-  blockTimeUnixMicro: number
+  blockHeight: bigint
+  blockTimeUnixMicro: bigint
   contractAddress: string
   codeId: number
   key: string
@@ -326,8 +331,8 @@ export type IndexerEvent = {
 export type ParsedEvent = {
   codeId: number
   contractAddress: string
-  blockHeight: number
-  blockTimeUnixMs: number
+  blockHeight: bigint
+  blockTimeUnixMs: bigint
   blockTimestamp: Date
   key: string
   value: string

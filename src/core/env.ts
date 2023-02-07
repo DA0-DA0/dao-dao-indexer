@@ -747,7 +747,7 @@ export const getEnv = ({
 
   return {
     block,
-    date: useBlockDate ? new Date(block.timeUnixMs) : new Date(),
+    date: useBlockDate ? new Date(block.timeUnixMs.toString()) : new Date(),
     args,
 
     get,

@@ -4,6 +4,7 @@ import { Op } from 'sequelize'
 import {
   Block,
   FormulaType,
+  bigIntMin,
   computeRange,
   loadConfig,
   validateBlockString,
@@ -146,9 +147,9 @@ export const main = async () => {
     let block = blockStart
     let i = 1
     while (block.height <= blockEnd.height) {
-      const endBlockHeight = Math.min(
-        block.height + options.batch,
-        blockEnd.height + 1
+      const endBlockHeight = bigIntMin(
+        block.height + BigInt(options.batch),
+        blockEnd.height + 1n
       )
       const endBlockEvent = await Event.findOne({
         where: {
