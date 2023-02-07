@@ -249,18 +249,28 @@ export class Computation extends Model {
 
   // Recomputes the formula and checks if the initial block, output, or
   // dependencies change. If one of them changes, it is replaced with the new
-  // computation. Otherwise, its output and validity are updated. Returns true
-  // if it stayed the same, and false if it got replaced.
+  // computation. Otherwise, its output and validity are updated. If the
+  // computation throws an error, such as if a formula no longer exists, it is
+  // deleted. Returns true if it stayed the same, and false if it got replaced
+  // or deleted.
   async revalidate(): Promise<boolean> {
-    const typedFormula = getTypedFormula(this.type, this.formula)
-
-    const args = JSON.parse(this.args)
-    const computation = await compute({
-      ...typedFormula,
-      targetAddress: this.targetAddress,
-      args,
-      block: this.block,
-    })
+    let typedFormula
+    let args
+    let computation
+    try {
+      typedFormula = getTypedFormula(this.type, this.formula)
+      args = JSON.parse(this.args)
+      computation = await compute({
+        ...typedFormula,
+        targetAddress: this.targetAddress,
+        args,
+        block: this.block,
+      })
+    } catch (err) {
+      // If the computation fails, delete it.
+      await this.destroy()
+      return false
+    }
 
     // If the output, initial block, or dependencies changed, delete the
     // computation.
