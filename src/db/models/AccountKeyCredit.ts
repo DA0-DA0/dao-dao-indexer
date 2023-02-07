@@ -61,26 +61,29 @@ export class AccountKeyCredit extends Model {
   @Column(DataType.DATE)
   paidAt!: Date | null
 
+  // Postgres integer type is 32-bit, which has a max of 2147483648, so use
+  // bigint which is 64-bit instead.
+
   // Total number of credits allowed.
   @AllowNull(false)
-  @Default(0)
+  @Default(0n)
   @Column
   amount!: bigint
 
   // Total number of credits used.
   @AllowNull(false)
-  @Default(0)
+  @Default(0n)
   @Column
   used!: bigint
 
   // Total number of times this credit has been used.
   @AllowNull(false)
-  @Default(0)
+  @Default(0n)
   @Column
   hits!: bigint
 
   get paidFor(): boolean {
-    return this.paidAt !== null || this.amount !== BigInt(0)
+    return this.paidAt !== null
   }
 
   async registerCreditsPaidFor(

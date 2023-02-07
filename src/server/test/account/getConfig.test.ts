@@ -2,7 +2,7 @@ import request from 'supertest'
 
 import { app } from './app'
 
-describe('config', () => {
+describe('GET /config', () => {
   it('returns the config', async () => {
     await request(app.callback())
       .get('/config')
@@ -12,7 +12,7 @@ describe('config', () => {
         config: {
           cwReceiptPaymentAddress: 'cwReceiptAddress',
           nativeDenomAccepted: 'nativeDenomAccepted',
-          creditScaleFactor: 1,
+          creditScaleFactor: 50,
         },
       })
   })

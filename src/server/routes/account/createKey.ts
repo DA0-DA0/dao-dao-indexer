@@ -1,15 +1,8 @@
-import { randomUUID } from 'crypto'
-
 import Router from '@koa/router'
 import { DefaultContext } from 'koa'
 
 import { objectMatchesStructure } from '@/core'
-import {
-  AccountKey,
-  AccountKeyApiJson,
-  AccountKeyCredit,
-  AccountKeyCreditPaymentSource,
-} from '@/db'
+import { AccountKey, AccountKeyApiJson } from '@/db'
 
 import { AccountState } from './types'
 
@@ -76,18 +69,9 @@ export const createKey: Router.Middleware<
   }
   ctx.state.data.description = ctx.state.data.description?.trim() || null
 
-  // Generate key with hash, and create AccountKey.
-  const { key: apiKey, hash: hashedKey } = AccountKey.generateKeyAndHash()
-
-  const accountKey = await ctx.state.account.$create<AccountKey>('key', {
+  const { apiKey, accountKey } = await ctx.state.account.generateKey({
     name: ctx.state.data.name,
     description: ctx.state.data.description,
-    hashedKey,
-  })
-
-  await accountKey.$create<AccountKeyCredit>('credit', {
-    paymentSource: AccountKeyCreditPaymentSource.CwReceipt,
-    paymentId: randomUUID(),
   })
 
   ctx.status = 201

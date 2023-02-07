@@ -19,6 +19,6 @@
     "cwReceiptAddress": "cwReceiptAddress",
     "cwReceiptWebhookSecret": "cwReceiptWebhookSecret",
     "nativeDenomAccepted": "nativeDenomAccepted",
-    "creditScaleFactor": 1
+    "creditScaleFactor": 50
   }
 }

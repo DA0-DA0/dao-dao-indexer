@@ -55,7 +55,7 @@ export const authMiddleware: Middleware<AccountState> = async (ctx, next) => {
   if (body.data.auth.nonce !== account.nonce) {
     ctx.status = 401
     ctx.body = {
-      error: `Unauthorized. Expected nonce: ${account.nonce}`,
+      error: `Expected nonce: ${account.nonce}`,
     }
     return
   }
@@ -64,7 +64,7 @@ export const authMiddleware: Middleware<AccountState> = async (ctx, next) => {
   if (!(await verifySignature(body))) {
     ctx.status = 401
     ctx.body = {
-      error: 'Unauthorized. Invalid signature.',
+      error: 'Invalid signature.',
     }
     return
   }

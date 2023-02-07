@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto'
+
 import {
   AllowNull,
   Column,
@@ -10,6 +12,10 @@ import {
 } from 'sequelize-typescript'
 
 import { AccountKey } from './AccountKey'
+import {
+  AccountKeyCredit,
+  AccountKeyCreditPaymentSource,
+} from './AccountKeyCredit'
 
 // Stores the nonce for each public key, which is used to prevent replay
 // attacks of past authenticated messages.
@@ -28,4 +34,30 @@ export class Account extends Model {
 
   @HasMany(() => AccountKey, 'accountPublicKey')
   keys!: AccountKey[]
+
+  // Generates a random API key and creates a key on this account with it. Also
+  // setup one credit for the key to accept payment.
+  public async generateKey({
+    name,
+    description,
+  }: Pick<AccountKey, 'name' | 'description'>) {
+    // Generate key with hash, and create AccountKey.
+    const { key: apiKey, hash: hashedKey } = AccountKey.generateKeyAndHash()
+
+    const accountKey = await this.$create<AccountKey>('key', {
+      name,
+      description,
+      hashedKey,
+    })
+
+    await accountKey.$create<AccountKeyCredit>('credit', {
+      paymentSource: AccountKeyCreditPaymentSource.CwReceipt,
+      paymentId: randomUUID(),
+    })
+
+    return {
+      apiKey,
+      accountKey,
+    }
+  }
 }

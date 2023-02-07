@@ -17,13 +17,6 @@ export const getNonce: Router.Middleware<
   GetNonceResponse
 > = async (ctx) => {
   const { publicKey } = ctx.params
-  if (!publicKey) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'Missing public key.',
-    }
-    return
-  }
 
   const [account] = await Account.findOrCreate({
     where: {

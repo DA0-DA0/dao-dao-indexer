@@ -32,13 +32,6 @@ export const webhook: Router.Middleware<
   }
 
   const { paymentSource } = ctx.params
-  if (!paymentSource) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'Missing paymentSource.',
-    }
-    return
-  }
 
   if (
     !Object.values(AccountKeyCreditPaymentSource).includes(paymentSource as any)
@@ -59,7 +52,7 @@ export const webhook: Router.Middleware<
       if (ctx.request.header['x-api-key'] !== payment.cwReceiptWebhookSecret) {
         ctx.status = 401
         ctx.body = {
-          error: 'Unauthorized. Invalid secret.',
+          error: 'Invalid secret.',
         }
         return
       }
@@ -110,7 +103,7 @@ export const webhook: Router.Middleware<
   if (typeof paymentId !== 'string' || !paymentId) {
     ctx.status = 400
     ctx.body = {
-      error: 'Invalid paymentId.',
+      error: 'Invalid payment ID.',
     }
     return
   }
@@ -119,7 +112,8 @@ export const webhook: Router.Middleware<
     typeof paid !== 'number' ||
     !paid ||
     isNaN(paid) ||
-    !Number.isInteger(paid)
+    !Number.isInteger(paid) ||
+    paid < 0
   ) {
     ctx.status = 202
     ctx.body = {
@@ -146,7 +140,7 @@ export const webhook: Router.Middleware<
   if (!credit) {
     ctx.status = 202
     ctx.body = {
-      error: 'Invalid paymentId.',
+      error: 'Invalid payment ID.',
     }
     return
   }

@@ -1,29 +1,19 @@
-import { Secp256k1HdWallet, makeSignDoc } from '@cosmjs/amino'
-import { toHex } from '@cosmjs/encoding'
 import { createMockContext } from '@shopify/jest-koa-mocks'
 
 import { Account } from '@/db'
+import { GetSignedBody, getAccountWithSigner } from '@/test/utils'
 
 import { authMiddleware } from '../../routes/account/auth'
 
-const AUTH = {
-  type: 'auth',
-  chainId: 'test',
-  chainFeeDenom: 'test',
-  chainBech32Prefix: 'test',
-}
-
 describe('authMiddleware', () => {
-  let wallet: Secp256k1HdWallet
-  let address: string
-  let publicKey: string
+  let account: Account
+  let getSignedBody: GetSignedBody
   beforeEach(async () => {
-    wallet = await Secp256k1HdWallet.generate(undefined, {
-      prefix: AUTH.chainBech32Prefix,
-    })
-    const [account] = await wallet.getAccounts()
-    address = account.address
-    publicKey = toHex(account.pubkey)
+    const { account: _account, getSignedBody: _getSignedBody } =
+      await getAccountWithSigner()
+
+    account = _account
+    getSignedBody = _getSignedBody
   })
 
   it('validates the body', async () => {
@@ -35,88 +25,40 @@ describe('authMiddleware', () => {
     expect(ctx.body).toEqual({ error: 'Invalid body.' })
   })
 
-  it('expects the nonce to be 0 for new accounts', async () => {
+  it('expects the nonce to match the DB', async () => {
     const ctx = createMockContext({
-      requestBody: {
-        data: {
-          auth: {
-            ...AUTH,
-            nonce: 99,
-            publicKey,
-          },
-        },
-        signature: 'test',
-      },
+      requestBody: await getSignedBody({}),
     })
+
+    // Update the account to have a nonce of 100.
+    await account.update({ nonce: 100 })
 
     await authMiddleware(ctx, async () => {})
 
     expect(ctx.status).toBe(401)
-    expect(ctx.body).toEqual({ error: 'Unauthorized. Expected nonce: 0' })
+    expect(ctx.body).toEqual({ error: 'Expected nonce: 100' })
   })
 
   it('fails with incorrect signature', async () => {
     const ctx = createMockContext({
       requestBody: {
-        data: {
-          auth: {
-            ...AUTH,
-            nonce: 0,
-            publicKey,
-          },
-        },
-        signature: 'test',
+        ...(await getSignedBody({})),
+        signature: (await getSignedBody({ something_else: true })).signature,
       },
     })
 
     await authMiddleware(ctx, async () => {})
 
     expect(ctx.status).toBe(401)
-    expect(ctx.body).toEqual({ error: 'Unauthorized. Invalid signature.' })
+    expect(ctx.body).toEqual({ error: 'Invalid signature.' })
   })
 
   it('succeeds with correct signature and increments nonce', async () => {
-    const data = {
-      auth: {
-        ...AUTH,
-        nonce: 0,
-        publicKey,
-      },
-    }
-    const signature = (
-      await wallet.signAmino(
-        address,
-        makeSignDoc(
-          [
-            {
-              type: AUTH.type,
-              value: {
-                signer: address,
-                data: JSON.stringify(data, undefined, 2),
-              },
-            },
-          ],
-          {
-            gas: '0',
-            amount: [
-              {
-                denom: data.auth.chainFeeDenom,
-                amount: '0',
-              },
-            ],
-          },
-          AUTH.chainId,
-          '',
-          0,
-          0
-        )
-      )
-    ).signature.signature
+    // Ensure Account starts at nonce 0.
+    const initialNonce = account.nonce
+
     const ctx = createMockContext({
-      requestBody: {
-        data,
-        signature,
-      },
+      requestBody: await getSignedBody({}),
     })
 
     const next = jest.fn()
@@ -126,6 +68,7 @@ describe('authMiddleware', () => {
     expect(next).toHaveBeenCalled()
 
     // Nonce is incremented.
-    expect((await Account.findByPk(publicKey))?.nonce).toBe(1)
+    await account.reload()
+    expect(account.nonce).toBe(initialNonce + 1)
   })
 })

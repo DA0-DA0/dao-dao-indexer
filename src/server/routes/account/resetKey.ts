@@ -48,7 +48,7 @@ export const resetKey: Router.Middleware<
     return
   }
 
-  // Should be impossible as there's a unique index on [account, name]...
+  // Should be impossible as there's a unique index on [account, name].
   if (existingKeys.length > 1) {
     ctx.status = 500
     ctx.body = {
@@ -59,7 +59,7 @@ export const resetKey: Router.Middleware<
 
   const existingKey = existingKeys[0]
 
-  // Generate key with has, and update existing key.
+  // Generate key with hash, and update existing key.
   const { key, hash } = AccountKey.generateKeyAndHash()
   await existingKey.update({
     hashedKey: hash,
