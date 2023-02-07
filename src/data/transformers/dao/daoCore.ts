@@ -5,7 +5,7 @@ import { makeTransformer, makeTransformerForMap } from '../utils'
 
 const CODE_IDS_KEYS = ['dao-core']
 
-const config = makeTransformer(CODE_IDS_KEYS, 'config', ['config', 'config_v2'])
+const config = makeTransformer(CODE_IDS_KEYS, 'config', ['config_v2', 'config'])
 const paused = makeTransformer(CODE_IDS_KEYS, 'paused')
 const admin = makeTransformer(CODE_IDS_KEYS, 'admin')
 const nominatedAdmin = makeTransformer(
@@ -32,7 +32,7 @@ const totalProposalModuleCount = makeTransformer(
 const proposalModules = makeTransformerForMap<ProposalModule>(
   CODE_IDS_KEYS,
   'proposalModule',
-  ['governance_modules', 'proposal_modules', 'proposal_modules_v2'],
+  ['governance_modules', 'proposal_modules_v2', 'proposal_modules'],
   {
     getValue: (event) => {
       // "governance_modules"|"proposal_modules"|"proposal_modules_v2", address
