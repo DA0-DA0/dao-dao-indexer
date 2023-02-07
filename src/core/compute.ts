@@ -229,13 +229,19 @@ export const computeRange = async ({
     const result = await computeForBlockInRange(currentBlock)
 
     const previousResult = results[results.length - 1]
-    // Only store result if it's the first result or different from the most
+    // Only store result if it's the first result or newer than the most
     // recently stored result.
-    if (!previousResult || result.value !== previousResult.value) {
-      // If there is a previous result and the formula is not dynamic height,
-      // update its latest valid block height to just before this one, since
-      // there's now a new value. If the formula is dynamic, then the previous
-      // result's latest valid block height is already correct.
+    if (
+      !previousResult ||
+      (!previousResult.block && result.latestBlock) ||
+      (previousResult.block &&
+        result.latestBlock &&
+        result.latestBlock.height > previousResult.block.height)
+    ) {
+      // If there is a previous result and the formula is not dynamic, update
+      // its latest valid block height to just before this one, since there's
+      // now a new value. If the formula is dynamic, then the previous result's
+      // latest valid block height is already correct.
       if (previousResult && result.latestBlock && !options.formula.dynamic) {
         previousResult.latestBlockHeightValid = result.latestBlock.height - 1n
       }
