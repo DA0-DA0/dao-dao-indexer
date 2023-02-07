@@ -18,7 +18,7 @@ export const getStatus: Router.Middleware<
   DefaultContext,
   GetStatusResponse
 > = async (ctx) => {
-  const state = await State.findOne()
+  const state = await State.getSingleton()
   if (!state) {
     ctx.status = 500
     ctx.body = {

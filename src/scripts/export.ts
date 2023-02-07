@@ -94,7 +94,7 @@ const main = async () => {
   await setupMeilisearch()
 
   // Initialize state.
-  if (!(await State.findOne({ where: { singleton: true } }))) {
+  if (!(await State.getSingleton())) {
     await State.create({
       singleton: true,
       chainId: '',
