@@ -68,19 +68,19 @@ export class AccountKeyCredit extends Model {
   @AllowNull(false)
   @Default(0n)
   @Column(DataType.BIGINT)
-  amount!: bigint
+  amount!: string
 
   // Total number of credits used.
   @AllowNull(false)
   @Default(0n)
   @Column(DataType.BIGINT)
-  used!: bigint
+  used!: string
 
   // Total number of times this credit has been used.
   @AllowNull(false)
   @Default(0n)
   @Column(DataType.BIGINT)
-  hits!: bigint
+  hits!: string
 
   get paidFor(): boolean {
     return this.paidAt !== null

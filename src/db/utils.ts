@@ -73,12 +73,12 @@ export const updateComputationValidityDependentOnChanges = async (
     (acc, { blockHeight }) => ({
       earliestBlockHeight:
         acc.earliestBlockHeight === -1n
-          ? blockHeight
-          : bigIntMin(acc.earliestBlockHeight, blockHeight),
+          ? BigInt(blockHeight)
+          : bigIntMin(acc.earliestBlockHeight, BigInt(blockHeight)),
       latestBlockHeight:
         acc.latestBlockHeight === -1n
-          ? blockHeight
-          : bigIntMin(acc.latestBlockHeight, blockHeight),
+          ? BigInt(blockHeight)
+          : bigIntMin(acc.latestBlockHeight, BigInt(blockHeight)),
     }),
     { earliestBlockHeight: -1n, latestBlockHeight: -1n }
   )
@@ -123,7 +123,10 @@ export const updateComputationValidityDependentOnChanges = async (
       computation.updateValidityUpToBlockHeight(
         // Update the validity at least to the latest block height affected, to
         // prevent future validity checks.
-        bigIntMax(computation.latestBlockHeightValid, latestBlockHeight),
+        bigIntMax(
+          BigInt(computation.latestBlockHeightValid),
+          latestBlockHeight
+        ),
         // Restart validity check at the earliest block instead of the default
         // behavior of using the `latestBlockHeightValid` value.
         earliestBlockHeight

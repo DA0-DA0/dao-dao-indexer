@@ -195,7 +195,7 @@ export const computer: Router.Middleware = async (ctx) => {
 
     if (
       (times[1] !== undefined && times[0] >= times[1]) ||
-      (times[1] && times[1] < 0)
+      (times[1] && times[1] < 0n)
     ) {
       ctx.status = 400
       ctx.body = 'the start time must be less than the end time'
@@ -286,7 +286,7 @@ export const computer: Router.Middleware = async (ctx) => {
     if (time) {
       // If time is negative, subtract from latest block.
       if (time < 0) {
-        time += state.latestBlockTimeUnixMs
+        time += BigInt(state.latestBlockTimeUnixMs)
       }
 
       block = (
@@ -305,22 +305,29 @@ export const computer: Router.Middleware = async (ctx) => {
     if (times) {
       // If times are negative, subtract from latest block.
       if (times[0] < 0) {
-        times[0] += state.latestBlockTimeUnixMs
+        times[0] += BigInt(state.latestBlockTimeUnixMs)
       }
       if (times[1] && times[1] < 0) {
-        times[1] += state.latestBlockTimeUnixMs
+        times[1] += BigInt(state.latestBlockTimeUnixMs)
       }
 
-      const startBlock = (
-        await Event.findOne({
-          where: {
-            blockTimeUnixMs: {
-              [Op.lte]: times[0],
+      const startBlock =
+        (
+          await Event.findOne({
+            where: {
+              blockTimeUnixMs: {
+                [Op.lte]: times[0],
+              },
             },
-          },
-          order: [['blockTimeUnixMs', 'DESC']],
-        })
-      )?.block
+            order: [['blockTimeUnixMs', 'DESC']],
+          })
+        )?.block ??
+        // Use first block if no event exists before start time.
+        (
+          await Event.findOne({
+            order: [['blockTimeUnixMs', 'ASC']],
+          })
+        )?.block
       // Use latest block if no end time exists.
       const endBlock = times[1]
         ? (
@@ -347,7 +354,7 @@ export const computer: Router.Middleware = async (ctx) => {
     // what block it was first valid at, so the first one should too.
     if (blocks) {
       // Cap end block at latest block.
-      if (blocks[1].height > state.latestBlockHeight) {
+      if (blocks[1].height > BigInt(state.latestBlockHeight)) {
         blocks[1] = state.latestBlock
       }
 
@@ -407,8 +414,8 @@ export const computer: Router.Middleware = async (ctx) => {
         const isRangeCoveredBeforeEnd = existingComputations.every(
           (computation, i) =>
             i === existingComputations.length - 1 ||
-            computation.latestBlockHeightValid ===
-              existingComputations[i + 1].blockHeight - 1n
+            BigInt(computation.latestBlockHeightValid) ===
+              BigInt(existingComputations[i + 1].blockHeight) - 1n
         )
 
         // If range is covered, ensure that the end computation is valid at the

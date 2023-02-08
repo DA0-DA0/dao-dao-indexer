@@ -102,7 +102,7 @@ const main = async () => {
     (options.initial as bigint | undefined) ??
     // Start at the next block after the last exported block if no command line
     // argument passed for `block`.
-    (initialState.lastBlockHeightExported ?? 0n) + 1n
+    BigInt(initialState.lastBlockHeightExported ?? '0') + 1n
 
   // Return promise that never resolves. Listen for file changes.
   return new Promise((_, reject) => {
@@ -185,14 +185,15 @@ const main = async () => {
           }
         }
 
+        const blockTimeUnixMs = Math.round(event.blockTimeUnixMicro / 1000)
+        const blockTimestamp = new Date(blockTimeUnixMs)
+
         return {
           codeId: event.codeId,
           contractAddress: event.contractAddress,
-          blockHeight: event.blockHeight,
-          blockTimeUnixMs: event.blockTimeUnixMicro / 1000n,
-          blockTimestamp: new Date(
-            (event.blockTimeUnixMicro / 1000n).toString()
-          ),
+          blockHeight: event.blockHeight.toString(),
+          blockTimeUnixMs: blockTimeUnixMs.toString(),
+          blockTimestamp,
           // Convert base64 key to comma-separated list of bytes. See
           // explanation in `Event` model for more information.
           key: Buffer.from(event.key, 'base64').join(','),
@@ -249,7 +250,7 @@ const main = async () => {
           process.send('ready')
         }
 
-        let lastBlockHeightSeen = 0n
+        let lastBlockHeightSeen = 0
         for await (const line of rl) {
           if (shuttingDown) {
             printStatisticsAndExit()
@@ -277,10 +278,6 @@ const main = async () => {
           ) {
             continue
           }
-
-          // Convert bigints.
-          event.blockHeight = BigInt(event.blockHeight)
-          event.blockTimeUnixMicro = BigInt(event.blockTimeUnixMicro)
 
           // If event is from a block before the initial block, skip.
           if (event.blockHeight < initialBlock) {
@@ -524,7 +521,7 @@ const exporter = async (
     computationsUpdated: updated,
     computationsDestroyed: destroyed,
     transformations: transformations.length,
-    lastBlockHeightExported,
+    lastBlockHeightExported: BigInt(lastBlockHeightExported),
     webhooksQueued: webhooksQueued || 0,
   }
 }

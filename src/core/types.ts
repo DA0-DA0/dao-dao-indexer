@@ -319,8 +319,8 @@ export type SerializedBlock = {
 }
 
 export type IndexerEvent = {
-  blockHeight: bigint
-  blockTimeUnixMicro: bigint
+  blockHeight: number
+  blockTimeUnixMicro: number
   contractAddress: string
   codeId: number
   key: string
@@ -331,8 +331,8 @@ export type IndexerEvent = {
 export type ParsedEvent = {
   codeId: number
   contractAddress: string
-  blockHeight: bigint
-  blockTimeUnixMs: bigint
+  blockHeight: string
+  blockTimeUnixMs: string
   blockTimestamp: Date
   key: string
   value: string

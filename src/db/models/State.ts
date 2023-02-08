@@ -30,20 +30,20 @@ export class State extends Model {
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  latestBlockHeight!: bigint
+  latestBlockHeight!: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  latestBlockTimeUnixMs!: bigint
+  latestBlockTimeUnixMs!: string
 
   @AllowNull
   @Column(DataType.BIGINT)
-  lastBlockHeightExported!: bigint | null
+  lastBlockHeightExported!: string | null
 
   get latestBlock(): Block {
     return {
-      height: this.latestBlockHeight,
-      timeUnixMs: this.latestBlockTimeUnixMs,
+      height: BigInt(this.latestBlockHeight),
+      timeUnixMs: BigInt(this.latestBlockTimeUnixMs),
     }
   }
 

@@ -56,11 +56,11 @@ export class Event extends Model {
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: bigint
+  blockHeight!: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: bigint
+  blockTimeUnixMs!: string
 
   @AllowNull(false)
   @Column(DataType.DATE)
@@ -90,8 +90,8 @@ export class Event extends Model {
 
   get block(): Block {
     return {
-      height: this.blockHeight,
-      timeUnixMs: this.blockTimeUnixMs,
+      height: BigInt(this.blockHeight),
+      timeUnixMs: BigInt(this.blockTimeUnixMs),
     }
   }
 

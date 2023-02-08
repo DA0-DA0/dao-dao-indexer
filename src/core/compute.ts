@@ -39,12 +39,13 @@ export const compute = async ({
     const latestItem: Event | Transformation = [
       ...events,
       ...transformations,
-    ].sort((a, b) => Number(b.blockHeight - a.blockHeight))[0]
+    ].sort((a, b) => Number(BigInt(b.blockHeight) - BigInt(a.blockHeight)))[0]
 
     // If latest is unset, or if we found a later block height, update.
     if (
       latestItem &&
-      (latestBlock === undefined || latestItem.blockHeight > latestBlock.height)
+      (latestBlock === undefined ||
+        BigInt(latestItem.blockHeight) > latestBlock.height)
     ) {
       latestBlock = latestItem.block
     }
@@ -146,13 +147,13 @@ export const computeRange = async ({
       const latestItem: Event | Transformation = [
         ...events,
         ...transformations,
-      ].sort((a, b) => Number(b.blockHeight - a.blockHeight))[0]
+      ].sort((a, b) => Number(BigInt(b.blockHeight) - BigInt(a.blockHeight)))[0]
 
       // If latest is unset, or if we found a later block height, update.
       if (
         latestItem &&
         (latestBlock === undefined ||
-          latestItem.blockHeight > latestBlock.height)
+          BigInt(latestItem.blockHeight) > latestBlock.height)
       ) {
         latestBlock = latestItem.block
       }
@@ -289,7 +290,9 @@ export const computeRange = async ({
             event,
           ]
             // Sort ascending.
-            .sort((a, b) => Number(a.blockHeight - b.blockHeight))
+            .sort((a, b) =>
+              Number(BigInt(a.blockHeight) - BigInt(b.blockHeight))
+            )
         }
       })
       newDependentEvents.forEach((key) => allDependencies.events.add(key))
@@ -332,7 +335,9 @@ export const computeRange = async ({
             transformation,
           ]
             // Sort ascending.
-            .sort((a, b) => Number(a.blockHeight - b.blockHeight))
+            .sort((a, b) =>
+              Number(BigInt(a.blockHeight) - BigInt(b.blockHeight))
+            )
         }
       })
       // Add to all dependencies so we don't fetch these again.
@@ -401,7 +406,7 @@ const addToCache = <T extends Event | Transformation>(
     // index of the first item that is after the current block height and
     // subtracting 1.
     const nextIndex = allItemsForThisKey.findIndex(
-      (item) => item.blockHeight > block.height
+      (item) => BigInt(item.blockHeight) > block.height
     )
 
     const currentIndex =
@@ -445,7 +450,7 @@ const addToCache = <T extends Event | Transformation>(
       }
 
       const nextIndex = items.findIndex(
-        (item) => item.blockHeight > block.height
+        (item) => BigInt(item.blockHeight) > block.height
       )
 
       // If the next item index is undefined or is the first item, there is no
@@ -497,13 +502,13 @@ export const getNextPotentialBlock = <T extends Event | Transformation>(
     // given key that is after the current block height by selecting the first
     // one.
     const matchingItem = allItems[key]?.find(
-      (item) => item.blockHeight > currentBlock.height
+      (item) => BigInt(item.blockHeight) > currentBlock.height
     )
 
     if (
       matchingItem &&
       (nextPotentialBlock === undefined ||
-        matchingItem.blockHeight < nextPotentialBlock.height)
+        BigInt(matchingItem.blockHeight) < nextPotentialBlock.height)
     ) {
       nextPotentialBlock = matchingItem.block
     }
@@ -516,17 +521,17 @@ export const getNextPotentialBlock = <T extends Event | Transformation>(
     const matchingItems = Object.entries(allItems)
       .filter(([key]) => key.startsWith(prefixKey))
       .map(([, items]) =>
-        items?.find((item) => item.blockHeight > currentBlock.height)
+        items?.find((item) => BigInt(item.blockHeight) > currentBlock.height)
       )
       .filter((item): item is T => item !== undefined)
 
     const nextItem = matchingItems.sort((a, b) =>
-      Number(a.blockHeight - b.blockHeight)
+      Number(BigInt(a.blockHeight) - BigInt(b.blockHeight))
     )[0]
     if (
       nextItem &&
       (nextPotentialBlock === undefined ||
-        nextItem.blockHeight < nextPotentialBlock.height)
+        BigInt(nextItem.blockHeight) < nextPotentialBlock.height)
     ) {
       nextPotentialBlock = nextItem.block
     }

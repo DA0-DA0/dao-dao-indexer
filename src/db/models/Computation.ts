@@ -50,15 +50,15 @@ export class Computation extends Model {
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: bigint
+  blockHeight!: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: bigint
+  blockTimeUnixMs!: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  latestBlockHeightValid!: bigint
+  latestBlockHeightValid!: string
 
   // If false, the computation's output is valid up to the latest block and
   // cannot be extended. This may be false if the formula depends on the block
@@ -102,8 +102,8 @@ export class Computation extends Model {
 
   get block(): Block {
     return {
-      height: this.blockHeight,
-      timeUnixMs: this.blockTimeUnixMs,
+      height: BigInt(this.blockHeight),
+      timeUnixMs: BigInt(this.blockTimeUnixMs),
     }
   }
 
@@ -116,7 +116,7 @@ export class Computation extends Model {
   ): Promise<boolean> {
     // If the requested block is before the computation's first valid block,
     // it's not valid for the requested block.
-    if (upToBlockHeight < this.blockHeight) {
+    if (upToBlockHeight < BigInt(this.blockHeight)) {
       return false
     }
 
@@ -124,7 +124,7 @@ export class Computation extends Model {
     // not starting from an earlier block, it's valid.
     if (
       startFromBlockHeight === undefined &&
-      this.latestBlockHeightValid >= upToBlockHeight
+      BigInt(this.latestBlockHeightValid) >= upToBlockHeight
     ) {
       return true
     }
@@ -139,9 +139,9 @@ export class Computation extends Model {
     // after the computation's start block because we know there is an event or
     // transformation at that block. We want to find the _next_ dependency
     // starting at least after the first block.
-    const afterLatest = this.latestBlockHeightValid + 1n
+    const afterLatest = BigInt(this.latestBlockHeightValid) + 1n
     const minBlockHeight = bigIntMax(
-      this.blockHeight + 1n,
+      BigInt(this.blockHeight) + 1n,
       startFromBlockHeight === undefined
         ? afterLatest
         : bigIntMin(startFromBlockHeight, afterLatest)
@@ -202,7 +202,7 @@ export class Computation extends Model {
     // afterwards. This may happen if a query caches a computation for a block
     // before the exporter has caught up to that block.
     await this.update({
-      latestBlockHeightValid: firstNewerItem.blockHeight - 1n,
+      latestBlockHeightValid: BigInt(firstNewerItem.blockHeight) - 1n,
     })
     return false
   }
@@ -236,7 +236,7 @@ export class Computation extends Model {
     // computation.
     if (
       Computation.getOutputForValue(computation.value) !== this.output ||
-      (computation.block?.height ?? -1) !== this.blockHeight ||
+      (computation.block?.height ?? -1n) !== BigInt(this.blockHeight) ||
       !isEqual(computation.dependencies, {
         events: this.dependentEvents,
         transformations: this.dependentTransformations,
@@ -256,7 +256,9 @@ export class Computation extends Model {
     }
 
     // If everything is the same but latest valid block is different, update.
-    if (computation.latestBlockHeightValid !== this.latestBlockHeightValid) {
+    if (
+      computation.latestBlockHeightValid !== BigInt(this.latestBlockHeightValid)
+    ) {
       await this.update({
         latestBlockHeightValid: computation.latestBlockHeightValid,
       })

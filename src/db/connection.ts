@@ -1,4 +1,3 @@
-import { setTypeParser } from 'pg-types'
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
 import { loadConfig } from '@/core/config'
@@ -43,9 +42,6 @@ export const loadDb = async ({
   if (sequelizeInstances[type]) {
     return sequelizeInstances[type]!
   }
-
-  // Tell DB to parse int8 as BigInt instead of string.
-  setTypeParser(20, (value) => BigInt(value))
 
   const { db } = loadConfig()
 
