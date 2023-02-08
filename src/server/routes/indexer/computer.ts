@@ -511,8 +511,9 @@ export const computer: Router.Middleware = async (ctx) => {
       let response: {
         at?: string
         value: any
-        blockHeight: string
-        blockTimeUnixMs: string
+        // TODO: Turn into strings?
+        blockHeight: number
+        blockTimeUnixMs: number
       }[] = []
       // Skip to match step.
       if (
@@ -521,8 +522,8 @@ export const computer: Router.Middleware = async (ctx) => {
       ) {
         response = outputs.map(({ value, blockHeight, blockTimeUnixMs }) => ({
           value,
-          blockHeight: blockHeight.toString(),
-          blockTimeUnixMs: blockTimeUnixMs.toString(),
+          blockHeight: Number(blockHeight),
+          blockTimeUnixMs: Number(blockTimeUnixMs),
         }))
       } else if (blockStep) {
         for (
@@ -539,8 +540,8 @@ export const computer: Router.Middleware = async (ctx) => {
             response.push({
               at: blockHeight.toString(),
               value: output.value,
-              blockHeight: output.blockHeight.toString(),
-              blockTimeUnixMs: output.blockTimeUnixMs.toString(),
+              blockHeight: Number(output.blockHeight),
+              blockTimeUnixMs: Number(output.blockTimeUnixMs),
             })
             // Remove all computations before the one we just added, keeping the
             // current one in case nothing has changed in the next step.
@@ -562,8 +563,8 @@ export const computer: Router.Middleware = async (ctx) => {
             response.push({
               at: blockTime.toString(),
               value: output.value,
-              blockHeight: output.blockHeight.toString(),
-              blockTimeUnixMs: output.blockTimeUnixMs.toString(),
+              blockHeight: Number(output.blockHeight),
+              blockTimeUnixMs: Number(output.blockTimeUnixMs),
             })
             // Remove all computations before the one we just added, keeping the
             // current one in case nothing has changed in the next step.
