@@ -1,7 +1,6 @@
 import {
   AllowNull,
   Column,
-  DataType,
   Model,
   PrimaryKey,
   Table,
@@ -16,6 +15,6 @@ export class Contract extends Model {
   address!: string
 
   @AllowNull(false)
-  @Column(DataType.BIGINT)
+  @Column
   codeId!: number
 }
