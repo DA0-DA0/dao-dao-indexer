@@ -120,7 +120,7 @@ export const computer: Router.Middleware = async (ctx) => {
     const [startBlock, endBlock] = _blocks.split('..')
     if (!startBlock || !endBlock) {
       ctx.status = 400
-      ctx.body = 'blocks must be a range of two numbers'
+      ctx.body = 'blocks must be a range of two blocks'
       return
     }
 
@@ -140,19 +140,17 @@ export const computer: Router.Middleware = async (ctx) => {
       blocks[0].timeUnixMs >= blocks[1].timeUnixMs
     ) {
       ctx.status = 400
-      ctx.body = 'the start block must be less than the end block'
+      ctx.body = 'the start block must be before the end block'
       return
     }
 
     // If block step passed, validate.
     if (_blockStep && typeof _blockStep === 'string') {
       try {
-        const parsedStep = BigInt(_blockStep)
-        if (parsedStep < 1) {
+        blockStep = BigInt(_blockStep)
+        if (blockStep < 1) {
           throw new Error()
         }
-
-        blockStep = parsedStep
       } catch (err) {
         ctx.status = 400
         ctx.body = 'block step must be a positive integer'
@@ -166,9 +164,12 @@ export const computer: Router.Middleware = async (ctx) => {
   if (_time && typeof _time === 'string') {
     try {
       time = BigInt(_time)
+      if (time < 0) {
+        throw new Error()
+      }
     } catch (err) {
       ctx.status = 400
-      ctx.body = err instanceof Error ? err.message : err
+      ctx.body = 'time must be an integer greater than or equal to zero'
       return
     }
   }
