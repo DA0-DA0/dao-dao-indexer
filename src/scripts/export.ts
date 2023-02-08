@@ -106,10 +106,10 @@ const main = async () => {
 
   // Return promise that never resolves. Listen for file changes.
   return new Promise((_, reject) => {
-    let latestBlockHeight = initialState.latestBlockHeight
+    let latestBlockHeight = BigInt(initialState.latestBlockHeight)
     // Update db state every 3 seconds.
     const stateInterval = setInterval(async () => {
-      latestBlockHeight = (await updateState()).latestBlockHeight
+      latestBlockHeight = BigInt((await updateState()).latestBlockHeight)
     }, 3000)
     // Allow process to exit even though this interval is alive.
     stateInterval.unref()
@@ -331,7 +331,7 @@ const main = async () => {
           },
           extra: {
             bytesRead,
-            latestBlockHeight,
+            latestBlockHeight: latestBlockHeight.toString(),
           },
         })
         reject(err)
