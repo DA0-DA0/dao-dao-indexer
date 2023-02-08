@@ -481,11 +481,6 @@ const exporter = async (
     parsedEvents
   )
 
-  // Queue webhooks as needed.
-  const webhooksQueued = dontSendWebhooks
-    ? 0
-    : await PendingWebhook.queueWebhooks(state, exportedEvents)
-
   let updated = 0
   let destroyed = 0
   if (!dontUpdateComputations) {
@@ -498,15 +493,34 @@ const exporter = async (
     destroyed = computationUpdates.destroyed
   }
 
-  // Store last block height exported.
+  // Queue webhooks as needed.
+  const webhooksQueued = dontSendWebhooks
+    ? 0
+    : await PendingWebhook.queueWebhooks(state, exportedEvents)
+
+  // Store last block height exported, and update latest block height/time if
+  // the last export is newer.
   const lastBlockHeightExported =
     parsedEvents[parsedEvents.length - 1].blockHeight
+  const lastBlockTimeUnixMsExported =
+    parsedEvents[parsedEvents.length - 1].blockTimeUnixMs
   await State.update(
     {
       lastBlockHeightExported: Sequelize.fn(
         'GREATEST',
         Sequelize.col('lastBlockHeightExported'),
         lastBlockHeightExported
+      ),
+
+      latestBlockHeight: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('latestBlockHeight'),
+        lastBlockHeightExported
+      ),
+      latestBlockTimeUnixMs: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('latestBlockTimeUnixMs'),
+        lastBlockTimeUnixMsExported
       ),
     },
     {
