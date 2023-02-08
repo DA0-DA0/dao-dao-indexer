@@ -8,7 +8,7 @@ import {
 import { dao } from '../formulas/contract/proposal/daoProposalSingle'
 import { Status } from '../formulas/contract/proposal/types'
 
-const CODE_IDS_KEYS = ['dao-proposal-single']
+const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
 
 const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
 const KEY_PREFIX_PROPOSALS_V2 = dbKeyForKeys('proposals_v2', '')

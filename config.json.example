@@ -52,5 +52,8 @@
     ],
     "cw4-group": [78, 872, 3472]
   },
-  "daoDaoBase": "https://testnet.daodao.zone"
+  "daoDaoBase": "https://testnet.daodao.zone",
+  "discordNotifierApiKey": "key",
+  "followingDaosSecret": "secret",
+  "websocketsSecret": "secret"
 }

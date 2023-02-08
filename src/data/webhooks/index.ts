@@ -4,6 +4,7 @@ import { State } from '@/db'
 import { makeProposalCreated } from './discordNotifier'
 import { makeAddPendingFollow } from './following'
 import { makeIndexerCwReceiptPaid } from './indexerCwReceipt'
+import { makeBroadcastVoteCast } from './websockets'
 
 let processedWebhooks: ProcessedWebhook[] | undefined
 export const getProcessedWebhooks = (
@@ -16,6 +17,7 @@ export const getProcessedWebhooks = (
       makeProposalCreated,
       makeAddPendingFollow,
       makeIndexerCwReceiptPaid,
+      makeBroadcastVoteCast,
     ]
 
     const _webhooks: Webhook[] = [
