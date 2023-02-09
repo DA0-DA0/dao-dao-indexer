@@ -5,8 +5,8 @@ import {
   activeProposalModules,
   config as daoCoreConfig,
 } from '../formulas/contract/dao/daoCore'
-import { dao } from '../formulas/contract/proposal/daoProposalSingle'
 import { Status } from '../formulas/contract/proposal/types'
+import { getDaoAddressForProposalModule } from './utils'
 
 const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
 
@@ -24,7 +24,7 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
       event.valueJson.status === Status.Open,
   },
   endpoint: async (_, env) => {
-    const daoAddress = await dao.compute(env)
+    const daoAddress = await getDaoAddressForProposalModule(env)
     if (!daoAddress) {
       return
     }
@@ -42,7 +42,7 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
 
     // Get DAO config and proposal modules for this DAO so we can retrieve the
     // DAO's name and the prefix for this proposal module.
-    const daoAddress = await dao.compute(env)
+    const daoAddress = await getDaoAddressForProposalModule(env)
     if (!daoAddress) {
       return
     }
