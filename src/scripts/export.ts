@@ -205,16 +205,12 @@ const main = async () => {
 
       // Export events.
       const {
-        contracts: updatedContracts,
         computationsUpdated: _computationsUpdated,
         computationsDestroyed: _computationsDestroyed,
         transformations: _transformations,
         webhooksQueued: _webhooksFired,
         lastBlockHeightExported,
       } = await exporter(parsedEvents, !options.update, !options.webhooks)
-
-      // Update meilisearch indexes.
-      await updateIndexesForContracts(updatedContracts)
 
       // Update statistics.
       processed += pendingIndexerEvents.length
@@ -404,7 +400,6 @@ const exporter = async (
   dontUpdateComputations = false,
   dontSendWebhooks = false
 ): Promise<{
-  contracts: Contract[]
   computationsUpdated: number
   computationsDestroyed: number
   transformations: number
@@ -498,6 +493,9 @@ const exporter = async (
     ? 0
     : await PendingWebhook.queueWebhooks(state, exportedEvents)
 
+  // Update meilisearch indexes.
+  await updateIndexesForContracts(contracts)
+
   // Store last block height exported, and update latest block height/time if
   // the last export is newer.
   const lastBlockHeightExported =
@@ -531,7 +529,6 @@ const exporter = async (
   )
 
   return {
-    contracts,
     computationsUpdated: updated,
     computationsDestroyed: destroyed,
     transformations: transformations.length,
