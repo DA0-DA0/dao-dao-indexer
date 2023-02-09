@@ -259,10 +259,10 @@ export const computer: Router.Middleware = async (ctx) => {
 
   // If formula is dynamic, we can't compute it over a range since we need
   // specific blocks to compute it for.
-  if (typedFormula.formula.dynamic && blocks) {
+  if (typedFormula.formula.dynamic && (blocks || times)) {
     ctx.status = 400
     ctx.body =
-      'cannot compute dynamic formula over a range of blocks (compute it for specific blocks instead)'
+      'cannot compute dynamic formula over a range (compute it for a specific block/time instead)'
     return
   }
 

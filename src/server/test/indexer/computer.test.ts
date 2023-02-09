@@ -1,6 +1,7 @@
 import request from 'supertest'
 
-import { FormulaType, TypedFormula } from '@/core/types'
+import { loadConfig } from '@/core/config'
+import { ContractFormula, FormulaType, TypedFormula } from '@/core/types'
 import { FormulaTypeValues } from '@/core/utils'
 import { Contract } from '@/db'
 import { getTypedFormula } from '@/test/mocks'
@@ -8,7 +9,7 @@ import { getAccountWithSigner } from '@/test/utils'
 
 import { app } from './app'
 
-const mockAllFormulasAsValidOnce = () =>
+const mockAllFormulasAsValidOnce = (formula?: Partial<ContractFormula>) =>
   getTypedFormula.mockImplementationOnce(
     (type: FormulaType, name: string) =>
       ({
@@ -16,6 +17,7 @@ const mockAllFormulasAsValidOnce = () =>
         type,
         formula: {
           compute: async () => '',
+          ...formula,
         },
       } as TypedFormula)
   )
@@ -25,6 +27,8 @@ describe('computer: GET /(.*)', () => {
   beforeEach(async () => {
     const { paidApiKey } = await getAccountWithSigner()
     apiKey = paidApiKey
+
+    await Contract.create({ address: 'valid_contract', codeId: 1 })
   })
 
   it('requires at least 3 parameters', async () => {
@@ -366,12 +370,74 @@ describe('computer: GET /(.*)', () => {
       .expect(404)
       .expect('contract not found')
 
-    await Contract.create({ address: 'address', codeId: 1 })
-
     mockAllFormulasAsValidOnce()
     const response = await request(app.callback())
-      .get('/contract/address/formula')
+      .get('/contract/valid_contract/formula')
       .set('x-api-key', apiKey)
     expect(response.text).not.toBe('contract not found')
+  })
+
+  it('filters contract by code IDs specified in formula', async () => {
+    loadConfig().codeIds = {
+      'dao-core': [1, 2],
+    }
+    mockAllFormulasAsValidOnce({
+      filter: {
+        codeIdsKeys: ['not-dao-core'],
+      },
+    })
+    await request(app.callback())
+      .get('/contract/valid_contract/some_formula')
+      .set('x-api-key', apiKey)
+      .expect(405)
+      .expect(
+        'the some_formula formula does not apply to contract valid_contract'
+      )
+
+    mockAllFormulasAsValidOnce({
+      filter: {
+        codeIdsKeys: ['dao-core'],
+      },
+    })
+    const response = await request(app.callback())
+      .get('/contract/valid_contract/some_formula')
+      .set('x-api-key', apiKey)
+    expect(response.text).not.toBe(
+      'the some_formula formula does not apply to contract valid_contract'
+    )
+  })
+
+  it('prevents dynamic formula from being computed over range', async () => {
+    mockAllFormulasAsValidOnce({
+      dynamic: true,
+    })
+    await request(app.callback())
+      .get('/contract/valid_contract/formula?blocks=1:1..2:2')
+      .set('x-api-key', apiKey)
+      .expect(400)
+      .expect(
+        'cannot compute dynamic formula over a range (compute it for a specific block/time instead)'
+      )
+
+    mockAllFormulasAsValidOnce({
+      dynamic: true,
+    })
+    await request(app.callback())
+      .get('/contract/valid_contract/formula?times=1..2')
+      .set('x-api-key', apiKey)
+      .expect(400)
+      .expect(
+        'cannot compute dynamic formula over a range (compute it for a specific block/time instead)'
+      )
+
+    mockAllFormulasAsValidOnce({
+      dynamic: false,
+    })
+    const response = await request(app.callback())
+      .get('/contract/valid_contract/formula?blocks=1:1..2:2')
+      .set('x-api-key', apiKey)
+    expect(response.text).not.toBe(
+      'cannot compute dynamic formula over a range (compute it for a specific block/time instead)'
+    )
   })
 })
