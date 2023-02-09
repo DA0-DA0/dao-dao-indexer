@@ -142,7 +142,7 @@ describe('POST /webhook/:paymentSource', () => {
     it('gives credits scaled by configured scale factor on success', async () => {
       const credit = unpaidAccountKey.credits[0]
       expect(credit.paidFor).toBe(false)
-      expect(credit.amount).toBe(0n)
+      expect(credit.amount).toBe('0')
 
       await request(app.callback())
         .post(url)
@@ -161,7 +161,7 @@ describe('POST /webhook/:paymentSource', () => {
       await credit.reload()
       expect(credit.paidFor).toBe(true)
       expect(credit.amount).toBe(
-        BigInt(Math.round(100 * payment!.creditScaleFactor))
+        Math.round(100 * payment!.creditScaleFactor).toString()
       )
     })
 
@@ -169,7 +169,7 @@ describe('POST /webhook/:paymentSource', () => {
       const credit = unpaidAccountKey.credits[0]
       await credit.registerCreditsPaidFor(100, false)
       expect(credit.paidFor).toBe(true)
-      expect(credit.amount).toBe(100n)
+      expect(credit.amount).toBe('100')
 
       await request(app.callback())
         .post(url)
@@ -188,7 +188,7 @@ describe('POST /webhook/:paymentSource', () => {
       await credit.reload()
       expect(credit.paidFor).toBe(true)
       expect(credit.amount).toBe(
-        BigInt(Math.round(200 * payment!.creditScaleFactor))
+        Math.round(200 * payment!.creditScaleFactor).toString()
       )
     })
   })

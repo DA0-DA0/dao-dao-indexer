@@ -10,9 +10,9 @@ describe('registerCreditsPaidFor', () => {
   })
 
   it('sets amount', async () => {
-    expect(credit.amount).toBe(0n)
+    expect(credit.amount).toBe('0')
     await credit.registerCreditsPaidFor(10, false)
-    expect(credit.amount).toBe(10n)
+    expect(credit.amount).toBe('10')
   })
 
   it('sets paidAt', async () => {
@@ -39,7 +39,7 @@ describe('registerCreditsPaidFor', () => {
     expect(() =>
       credit.registerCreditsPaidFor(20, false)
     ).rejects.toThrowError()
-    expect(credit.amount).toBe(10n)
+    expect(credit.amount).toBe('10')
   })
 
   it('does not throw if already paid for when updating', async () => {
@@ -50,7 +50,7 @@ describe('registerCreditsPaidFor', () => {
   it('updates amount if already paid for when updating', async () => {
     await credit.registerCreditsPaidFor(10, true)
     await credit.registerCreditsPaidFor(20, true)
-    expect(credit.amount).toBe(20n)
+    expect(credit.amount).toBe('20')
   })
 })
 

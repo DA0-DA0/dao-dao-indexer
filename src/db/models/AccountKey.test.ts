@@ -25,14 +25,14 @@ describe('useCredit', () => {
   it('updates used and hits accordingly', async () => {
     const credit = paidAccountKey.credits.find((credit) => credit.paidFor)!
 
-    expect(credit.used).toBe(0n)
-    expect(credit.hits).toBe(0n)
+    expect(credit.used).toBe('0')
+    expect(credit.hits).toBe('0')
 
     await paidAccountKey.useCredit(5)
 
     await credit.reload()
-    expect(credit.used).toBe(5n)
-    expect(credit.hits).toBe(1n)
+    expect(credit.used).toBe('5')
+    expect(credit.hits).toBe('1')
   })
 
   it('returns false if credit is used up', async () => {

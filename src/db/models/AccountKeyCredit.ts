@@ -107,7 +107,7 @@ export class AccountKeyCredit extends Model {
     }
 
     await this.update({
-      amount: BigInt(amount),
+      amount: amount.toString(),
       // Keep original paidAt if already exists (i.e. we're updating).
       paidAt: this.paidAt || new Date(),
     })
