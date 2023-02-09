@@ -393,7 +393,7 @@ export type Webhook<V = any> = {
   // If returns undefined, the webhook will not be called.
   getValue: (
     event: Event,
-    getLastEvent: () => Promise<Event | null>,
+    getLastValue: () => Promise<any | null>,
     env: ContractEnv
   ) => V | undefined | Promise<V | undefined>
 }

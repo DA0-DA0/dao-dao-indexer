@@ -71,9 +71,9 @@ export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
       },
     }
   },
-  getValue: async (_, getLastEvent) => {
+  getValue: async (_, getLastValue) => {
     // Only send if the first time this is set.
-    if ((await getLastEvent()) !== null) {
+    if ((await getLastValue()) !== null) {
       return
     }
 

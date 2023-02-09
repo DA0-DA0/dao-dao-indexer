@@ -105,24 +105,24 @@ export class PendingWebhook extends Model {
                     .slice(-1)[0]
 
                   if (previousEvent) {
-                    return previousEvent.valueJson
+                    return previousEvent.delete ? null : previousEvent.valueJson
                   }
 
                   // Fallback to database.
-                  return (
-                    (
-                      await Event.findOne({
-                        where: {
-                          contractAddress: event.contractAddress,
-                          key: event.key,
-                          blockHeight: {
-                            [Op.lt]: event.blockHeight,
-                          },
-                        },
-                        order: [['blockHeight', 'DESC']],
-                      })
-                    )?.valueJson ?? null
-                  )
+                  const lastEvent = await Event.findOne({
+                    where: {
+                      contractAddress: event.contractAddress,
+                      key: event.key,
+                      blockHeight: {
+                        [Op.lt]: event.blockHeight,
+                      },
+                    },
+                    order: [['blockHeight', 'DESC']],
+                  })
+
+                  return !lastEvent || lastEvent.delete
+                    ? null
+                    : lastEvent.valueJson
                 },
                 env
               )

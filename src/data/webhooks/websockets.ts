@@ -60,13 +60,10 @@ export const makeProposalStatusChanged: WebhookMaker = (config, state) => ({
       event.key.startsWith(KEY_PREFIX_PROPOSALS_V2),
   },
   endpoint: makeWebSocketEndpoint(config, state),
-  getValue: async (event, getLastEvent, env) => {
+  getValue: async (event, getLastValue, env) => {
     // Only fire the webhook when the status changes.
-    const lastEvent = await getLastEvent()
-    if (
-      lastEvent !== null &&
-      lastEvent.valueJson.status === event.valueJson.status
-    ) {
+    const lastEvent = await getLastValue()
+    if (lastEvent !== null && lastEvent.status === event.valueJson.status) {
       return
     }
 

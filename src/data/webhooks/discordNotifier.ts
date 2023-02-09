@@ -34,9 +34,9 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
       method: 'POST',
     }
   },
-  getValue: async (event, getLastEvent, env) => {
+  getValue: async (event, getLastValue, env) => {
     // Only fire the webhook the first time this exists.
-    if ((await getLastEvent()) !== null) {
+    if ((await getLastValue()) !== null) {
       return
     }
 
