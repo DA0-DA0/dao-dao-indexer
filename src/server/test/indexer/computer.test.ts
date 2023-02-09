@@ -1,9 +1,24 @@
 import request from 'supertest'
 
+import { FormulaType, TypedFormula } from '@/core/types'
 import { FormulaTypeValues } from '@/core/utils'
+import { Contract } from '@/db'
+import { getTypedFormula } from '@/test/mocks'
 import { getAccountWithSigner } from '@/test/utils'
 
 import { app } from './app'
+
+const mockAllFormulasAsValidOnce = () =>
+  getTypedFormula.mockImplementationOnce(
+    (type: FormulaType, name: string) =>
+      ({
+        name,
+        type,
+        formula: {
+          compute: async () => '',
+        },
+      } as TypedFormula)
+  )
 
 describe('computer: GET /(.*)', () => {
   let apiKey: string
@@ -268,5 +283,95 @@ describe('computer: GET /(.*)', () => {
     expect(response.text).not.toBe(
       'time must be an integer greater than or equal to zero'
     )
+  })
+
+  it('validates times', async () => {
+    await Promise.all(
+      ['invalid', 'invalid..1', '1..invalid', '1.5', '1..1.5', '1.5..1'].map(
+        async (times) => {
+          await request(app.callback())
+            .get(`/contract/address/formula?times=${times}`)
+            .set('x-api-key', apiKey)
+            .expect(400)
+            .expect('times must be integers')
+        }
+      )
+    )
+
+    await Promise.all(
+      ['-1..-2', '-1..-1', '1..1', '2..1'].map(async (times) => {
+        await request(app.callback())
+          .get(`/contract/address/formula?times=${times}`)
+          .set('x-api-key', apiKey)
+          .expect(400)
+          .expect('the start time must be less than the end time')
+      })
+    )
+
+    await Promise.all(
+      ['-2..-1', '1..2'].map(async (times) => {
+        const response = await request(app.callback())
+          .get(`/contract/address/formula?times=${times}`)
+          .set('x-api-key', apiKey)
+        expect(response.text).not.toBe(
+          'the start time must be less than the end time'
+        )
+      })
+    )
+  })
+
+  it('validates time step', async () => {
+    await Promise.all(
+      ['invalid', '0', '-1', '-1.5', '1.5'].map(async (times) => {
+        await request(app.callback())
+          .get(`/contract/address/formula?times=1..2&timeStep=${times}`)
+          .set('x-api-key', apiKey)
+          .expect(400)
+          .expect('time step must be a positive integer')
+      })
+    )
+
+    const response = await request(app.callback())
+      .get('/contract/address/formula?times=1..2&timeStep=1')
+      .set('x-api-key', apiKey)
+    expect(response.text).not.toBe('time step must be a positive integer')
+  })
+
+  it('validates formula exists', async () => {
+    await request(app.callback())
+      .get('/contract/address/invalid')
+      .set('x-api-key', apiKey)
+      .expect(404)
+      .expect('formula not found')
+
+    await Promise.all(
+      [FormulaType.Contract, FormulaType.Wallet, FormulaType.Generic].map(
+        async (type) => {
+          mockAllFormulasAsValidOnce()
+
+          const response = await request(app.callback())
+            .get(`/${type}/address/formula`)
+            .set('x-api-key', apiKey)
+          expect(response.text).not.toBe('formula not found')
+        }
+      )
+    )
+  })
+
+  it('validates contract exists for contract formula', async () => {
+    mockAllFormulasAsValidOnce()
+    await request(app.callback())
+      .get('/contract/address/formula')
+      .set('x-api-key', apiKey)
+      .expect(404)
+      .expect('contract not found')
+
+    await Contract.create({ address: 'address', codeId: 1 })
+
+    mockAllFormulasAsValidOnce()
+    const response = await request(app.callback())
+      .get('/contract/address/formula')
+      .set('x-api-key', apiKey)
+    expect(response.text).not.toBe('contract not found')
   })
 })

@@ -190,14 +190,11 @@ export const computer: Router.Middleware = async (ctx) => {
       times = [BigInt(startTime), endTime ? BigInt(endTime) : undefined]
     } catch (err) {
       ctx.status = 400
-      ctx.body = err instanceof Error ? err.message : err
+      ctx.body = 'times must be integers'
       return
     }
 
-    if (
-      (times[1] !== undefined && times[0] >= times[1]) ||
-      (times[1] && times[1] < 0n)
-    ) {
+    if (times[1] !== undefined && times[0] >= times[1]) {
       ctx.status = 400
       ctx.body = 'the start time must be less than the end time'
       return

@@ -1,3 +1,6 @@
+// Import before anything else so the mocks take precedence.
+import './mocks'
+
 import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
 import { closeDb, loadDb, setup } from '@/db'
