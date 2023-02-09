@@ -37,9 +37,29 @@ export const makeBroadcastVoteCast: WebhookMaker = (config, state) => ({
     matches: (event) => event.key.startsWith(KEY_PREFIX_BALLOTS),
   },
   endpoint: makeWebSocketEndpoint(config, state),
-  getValue: async (event) => {
-    // "ballots", proposalId, voter
-    const [, proposalId, voter] = dbKeyToKeys(event.key, [false, true, false])
+  getValue: async (event, _, env) => {
+    // "ballots", proposalNum, voter
+    const [, proposalNum, voter] = dbKeyToKeys(event.key, [false, true, false])
+
+    // Get DAO address.
+    const daoAddress = await getDaoAddressForProposalModule(env)
+    if (!daoAddress) {
+      return
+    }
+
+    // Get proposal module prefix from DAO's list.
+    const proposalModules = await activeProposalModules.compute({
+      ...env,
+      contractAddress: daoAddress,
+    })
+    const proposalModule = proposalModules?.find(
+      (proposalModule) => proposalModule.address === event.contractAddress
+    )
+    if (!proposalModule) {
+      return
+    }
+
+    const proposalId = `${proposalModule.prefix}${proposalNum}`
 
     return {
       type: 'vote',
