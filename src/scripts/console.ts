@@ -2,7 +2,7 @@ import repl from 'repl'
 import { Context } from 'vm'
 
 import { Command } from 'commander'
-import { Op } from 'sequelize'
+import { Op, Sequelize, fn } from 'sequelize'
 
 import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
@@ -12,6 +12,8 @@ import * as Models from '@/db/models'
 // Global context available to repl.
 const context: Context = {
   Op,
+  Sequelize,
+  fn,
 }
 
 const setupImport = (imported: Record<string, unknown>) =>
