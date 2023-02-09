@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { FormulaType, compute, loadConfig } from '@/core'
+import { FormulaType, compute, loadConfig, serializeBlock } from '@/core'
 import { getContractFormula } from '@/data'
 import { Contract, State } from '@/db'
 
@@ -92,7 +92,7 @@ export const updateIndexesForContracts = async (
           return {
             contractAddress: contract.address,
             codeId: contract.codeId,
-            block,
+            block: block && serializeBlock(block),
             value,
           }
         })
