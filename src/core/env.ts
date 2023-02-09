@@ -74,13 +74,18 @@ export const getEnv = ({
       cache.events[dependentKey] = event ? [event] : null
     }
 
-    // If no event found or key was deleted, return undefined.
-    if (!event || event.delete) {
-      return undefined
+    // If no event found, return undefined.
+    if (!event) {
+      return
     }
 
-    // Call hook.
+    // Call hook, even if event deleted.
     await onFetch?.([event], [])
+
+    // If key was deleted, return undefined.
+    if (event.delete) {
+      return
+    }
 
     const value = JSON.parse(event.value ?? 'null')
 

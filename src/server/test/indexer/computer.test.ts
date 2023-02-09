@@ -2,33 +2,44 @@ import request from 'supertest'
 
 import { loadConfig } from '@/core/config'
 import { ContractFormula, FormulaType, TypedFormula } from '@/core/types'
-import { FormulaTypeValues } from '@/core/utils'
-import { Contract } from '@/db'
+import { FormulaTypeValues, dbKeyForKeys } from '@/core/utils'
+import { AccountKeyCredit, Computation, Contract, Event, State } from '@/db'
 import { getTypedFormula } from '@/test/mocks'
 import { getAccountWithSigner } from '@/test/utils'
 
 import { app } from './app'
 
-const mockAllFormulasAsValidOnce = (formula?: Partial<ContractFormula>) =>
-  getTypedFormula.mockImplementationOnce(
-    (type: FormulaType, name: string) =>
-      ({
-        name,
-        type,
-        formula: {
-          compute: async () => '',
-          ...formula,
-        },
-      } as TypedFormula)
-  )
+const mockFormula = (formula?: Partial<ContractFormula>) =>
+  getTypedFormula.mockImplementation((type: FormulaType, name: string) => {
+    if (name === 'invalid') {
+      throw new Error(`Formula not found: ${name}`)
+    }
+
+    return {
+      name,
+      type,
+      formula: {
+        compute: async () => '',
+        ...formula,
+      },
+    } as TypedFormula
+  })
 
 describe('computer: GET /(.*)', () => {
   let apiKey: string
+  let credit: AccountKeyCredit
   beforeEach(async () => {
-    const { paidApiKey } = await getAccountWithSigner()
+    const { paidApiKey, paidCredit } = await getAccountWithSigner()
     apiKey = paidApiKey
+    credit = paidCredit
 
     await Contract.create({ address: 'valid_contract', codeId: 1 })
+
+    mockFormula()
+  })
+
+  afterEach(async () => {
+    getTypedFormula.mockReset()
   })
 
   it('requires at least 3 parameters', async () => {
@@ -342,6 +353,7 @@ describe('computer: GET /(.*)', () => {
   })
 
   it('validates formula exists', async () => {
+    // Invalid formula throws error, defined in mock.
     await request(app.callback())
       .get('/contract/address/invalid')
       .set('x-api-key', apiKey)
@@ -351,8 +363,6 @@ describe('computer: GET /(.*)', () => {
     await Promise.all(
       [FormulaType.Contract, FormulaType.Wallet, FormulaType.Generic].map(
         async (type) => {
-          mockAllFormulasAsValidOnce()
-
           const response = await request(app.callback())
             .get(`/${type}/address/formula`)
             .set('x-api-key', apiKey)
@@ -363,14 +373,12 @@ describe('computer: GET /(.*)', () => {
   })
 
   it('validates contract exists for contract formula', async () => {
-    mockAllFormulasAsValidOnce()
     await request(app.callback())
       .get('/contract/address/formula')
       .set('x-api-key', apiKey)
       .expect(404)
       .expect('contract not found')
 
-    mockAllFormulasAsValidOnce()
     const response = await request(app.callback())
       .get('/contract/valid_contract/formula')
       .set('x-api-key', apiKey)
@@ -381,7 +389,7 @@ describe('computer: GET /(.*)', () => {
     loadConfig().codeIds = {
       'dao-core': [1, 2],
     }
-    mockAllFormulasAsValidOnce({
+    mockFormula({
       filter: {
         codeIdsKeys: ['not-dao-core'],
       },
@@ -394,7 +402,7 @@ describe('computer: GET /(.*)', () => {
         'the some_formula formula does not apply to contract valid_contract'
       )
 
-    mockAllFormulasAsValidOnce({
+    mockFormula({
       filter: {
         codeIdsKeys: ['dao-core'],
       },
@@ -408,7 +416,7 @@ describe('computer: GET /(.*)', () => {
   })
 
   it('prevents dynamic formula from being computed over range', async () => {
-    mockAllFormulasAsValidOnce({
+    mockFormula({
       dynamic: true,
     })
     await request(app.callback())
@@ -419,7 +427,7 @@ describe('computer: GET /(.*)', () => {
         'cannot compute dynamic formula over a range (compute it for a specific block/time instead)'
       )
 
-    mockAllFormulasAsValidOnce({
+    mockFormula({
       dynamic: true,
     })
     await request(app.callback())
@@ -430,7 +438,7 @@ describe('computer: GET /(.*)', () => {
         'cannot compute dynamic formula over a range (compute it for a specific block/time instead)'
       )
 
-    mockAllFormulasAsValidOnce({
+    mockFormula({
       dynamic: false,
     })
     const response = await request(app.callback())
@@ -439,5 +447,305 @@ describe('computer: GET /(.*)', () => {
     expect(response.text).not.toBe(
       'cannot compute dynamic formula over a range (compute it for a specific block/time instead)'
     )
+  })
+
+  describe('event data available', () => {
+    beforeEach(async () => {
+      const date = new Date()
+      await Event.bulkCreate([
+        {
+          contractAddress: 'valid_contract',
+          blockHeight: 1,
+          blockTimeUnixMs: 1,
+          blockTimestamp: date,
+          key: dbKeyForKeys('some_state'),
+          value: '{"key1":"value1", "key2": "value2"}',
+          valueJson: { key1: 'value1', key2: 'value2' },
+          delete: false,
+        },
+        {
+          contractAddress: 'valid_contract',
+          blockHeight: 2,
+          blockTimeUnixMs: 2,
+          blockTimestamp: new Date(date.getTime() + 1000),
+          key: dbKeyForKeys('some_state'),
+          value: '',
+          valueJson: null,
+          delete: true,
+        },
+        {
+          contractAddress: 'valid_contract',
+          blockHeight: 3,
+          blockTimeUnixMs: 3,
+          blockTimestamp: new Date(date.getTime() + 2000),
+          key: dbKeyForKeys('some_state'),
+          value: '{"key3":"value3"}',
+          valueJson: { key3: 'value3' },
+          delete: false,
+        },
+      ])
+
+      await (await State.getSingleton())!.update({
+        latestBlockHeight: 3,
+        latestBlockTimeUnixMs: 3,
+        lastBlockHeightExported: 3,
+      })
+
+      mockFormula({
+        compute: (env) => env.get(env.contractAddress, 'some_state'),
+      })
+    })
+
+    it('uses 1 credit to query a single block', async () => {
+      expect(credit.used).toBe('0')
+      expect(credit.hits).toBe('0')
+
+      // Returns latest if no block.
+      await request(app.callback())
+        .get('/contract/valid_contract/formula')
+        .set('x-api-key', apiKey)
+        .expect(200)
+
+      await credit.reload()
+      expect(credit.used).toBe('1')
+      expect(credit.hits).toBe('1')
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?block=1:1')
+        .set('x-api-key', apiKey)
+        .expect(200)
+
+      await credit.reload()
+      expect(credit.used).toBe('2')
+      expect(credit.hits).toBe('2')
+    })
+
+    it('uses 1 credit to query a single time', async () => {
+      expect(credit.used).toBe('0')
+      expect(credit.hits).toBe('0')
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?time=1')
+        .set('x-api-key', apiKey)
+        .expect(200)
+
+      await credit.reload()
+      expect(credit.used).toBe('1')
+      expect(credit.hits).toBe('1')
+    })
+
+    it('errors when insufficient credits for a single block', async () => {
+      expect(credit.used).toBe('0')
+      expect(credit.hits).toBe('0')
+
+      await Promise.all(
+        [...Array(Number(credit.amount))].map(async () => {
+          await request(app.callback())
+            .get('/contract/valid_contract/formula')
+            .set('x-api-key', apiKey)
+            .expect(200)
+        })
+      )
+
+      await credit.reload()
+      expect(credit.used).toBe(credit.amount)
+      expect(credit.hits).toBe(credit.amount)
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula')
+        .set('x-api-key', apiKey)
+        .expect(402)
+        .expect('insufficient credits')
+
+      // Ensure no credits were used.
+      await credit.reload()
+      expect(credit.used).toBe(credit.amount)
+      expect(credit.hits).toBe(credit.amount)
+    })
+
+    it('returns correct formula response for a single block', async () => {
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?block=1:1')
+        .set('x-api-key', apiKey)
+        .expect(200)
+        .expect({ key1: 'value1', key2: 'value2' })
+
+      // 204 with no body since the value was deleted in this block.
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?block=2:2')
+        .set('x-api-key', apiKey)
+        .expect(204)
+        .expect('')
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?block=3:3')
+        .set('x-api-key', apiKey)
+        .expect(200)
+        .expect({ key3: 'value3' })
+
+      // Returns latest if no block.
+      await request(app.callback())
+        .get('/contract/valid_contract/formula')
+        .set('x-api-key', apiKey)
+        .expect(200)
+        .expect({ key3: 'value3' })
+    })
+
+    it('caches computation and uses it in the future', async () => {
+      const initialComputations = await Computation.count()
+
+      const response = await request(app.callback())
+        .get('/contract/valid_contract/formula')
+        .set('x-api-key', apiKey)
+        .expect(200)
+
+      expect(await Computation.count()).toBe(initialComputations + 1)
+
+      // Computation should cache the returned result.
+      const computation = (await Computation.getLast())!
+      expect(computation.targetAddress).toBe('valid_contract')
+      expect(computation.blockHeight).toBe('3')
+      expect(computation.blockTimeUnixMs).toBe('3')
+      expect(computation.latestBlockHeightValid).toBe('3')
+      expect(computation.validityExtendable).toBe(true)
+      expect(computation.type).toBe(FormulaType.Contract)
+      expect(computation.formula).toBe('formula')
+      expect(computation.args).toBe('{}')
+      expect(computation.dependentEvents).toEqual([
+        `valid_contract:${dbKeyForKeys('some_state')}`,
+      ])
+      expect(computation.dependentTransformations).toEqual([])
+      expect(computation.output).toEqual(JSON.stringify(response.body))
+
+      // Repeating the same query should not create a new computation.
+      await request(app.callback())
+        .get('/contract/valid_contract/formula')
+        .set('x-api-key', apiKey)
+        .expect(200)
+
+      expect(await Computation.count()).toBe(initialComputations + 1)
+    })
+
+    it('uses 2 credits to query 3 blocks', async () => {
+      expect(credit.used).toBe('0')
+      expect(credit.hits).toBe('0')
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?blocks=1:1..3:3')
+        .set('x-api-key', apiKey)
+        .expect(200)
+
+      await credit.reload()
+      expect(credit.used).toBe('2')
+      expect(credit.hits).toBe('1')
+    })
+
+    it('uses 2 credits to query 3 blocks via times', async () => {
+      expect(credit.used).toBe('0')
+      expect(credit.hits).toBe('0')
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?times=1..3')
+        .set('x-api-key', apiKey)
+        .expect(200)
+
+      await credit.reload()
+      expect(credit.used).toBe('2')
+      expect(credit.hits).toBe('1')
+    })
+
+    it('errors when insufficient credits for a blocks/times range', async () => {
+      expect(credit.used).toBe('0')
+      expect(credit.hits).toBe('0')
+
+      await Promise.all(
+        [...Array(Number(credit.amount))].map(async () => {
+          await request(app.callback())
+            .get('/contract/valid_contract/formula')
+            .set('x-api-key', apiKey)
+            .expect(200)
+        })
+      )
+
+      await credit.reload()
+      expect(credit.used).toBe(credit.amount)
+      expect(credit.hits).toBe(credit.amount)
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?blocks=1:1..3:3')
+        .set('x-api-key', apiKey)
+        .expect(402)
+        .expect('insufficient credits')
+
+      // Ensure no credits were used.
+      await credit.reload()
+      expect(credit.used).toBe(credit.amount)
+      expect(credit.hits).toBe(credit.amount)
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?times=1')
+        .set('x-api-key', apiKey)
+        .expect(402)
+        .expect('insufficient credits')
+
+      // Ensure no credits were used.
+      await credit.reload()
+      expect(credit.used).toBe(credit.amount)
+      expect(credit.hits).toBe(credit.amount)
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?times=1..3')
+        .set('x-api-key', apiKey)
+        .expect(402)
+        .expect('insufficient credits')
+
+      // Ensure no credits were used.
+      await credit.reload()
+      expect(credit.used).toBe(credit.amount)
+      expect(credit.hits).toBe(credit.amount)
+    })
+
+    it('returns correct formula response for 3 blocks', async () => {
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?blocks=1:1..3:3')
+        .set('x-api-key', apiKey)
+        .expect(200)
+        .expect([
+          {
+            value: { key1: 'value1', key2: 'value2' },
+            blockHeight: 1,
+            blockTimeUnixMs: 1,
+          },
+          {
+            value: null,
+            blockHeight: 2,
+            blockTimeUnixMs: 2,
+          },
+          {
+            value: { key3: 'value3' },
+            blockHeight: 3,
+            blockTimeUnixMs: 3,
+          },
+        ])
+    })
+
+    it('caches computations over range and uses them in the future', async () => {
+      const initialComputations = await Computation.count()
+
+      await request(app.callback())
+        .get('/contract/valid_contract/formula?blocks=1:1..3:3')
+        .set('x-api-key', apiKey)
+        .expect(200)
+
+      expect(await Computation.count()).toBe(initialComputations + 3)
+
+      // Repeating the same query should not create new computations.
+      await request(app.callback())
+        .get('/contract/valid_contract/formula')
+        .set('x-api-key', apiKey)
+        .expect(200)
+
+      expect(await Computation.count()).toBe(initialComputations + 3)
+    })
   })
 })

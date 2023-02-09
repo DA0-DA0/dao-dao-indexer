@@ -308,4 +308,10 @@ export class Computation extends Model {
       }
     )
   }
+
+  static async getLast(): Promise<Computation | null> {
+    return await Computation.findOne({
+      order: [['id', 'DESC']],
+    })
+  }
 }

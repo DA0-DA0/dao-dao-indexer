@@ -249,7 +249,7 @@ export const computeRange = async ({
 
       results.push({
         block: result.latestBlock,
-        value: result.value,
+        value: result.value === undefined ? null : result.value,
         dependencies: result.dependencies,
         // At least valid until the requested block, which may be equal to or
         // after the latestBlock returned in the result.

@@ -41,7 +41,7 @@ export const getAccountWithSigner = async () => {
     })
 
   // Add another credit for the key, but paid-for.
-  await paidAccountKey.$create<AccountKeyCredit>('credit', {
+  const paidCredit = await paidAccountKey.$create<AccountKeyCredit>('credit', {
     paymentSource: AccountKeyCreditPaymentSource.CwReceipt,
     paymentId: 'receipt',
     paidAt: new Date(),
@@ -133,6 +133,7 @@ export const getAccountWithSigner = async () => {
     // Keys.
     paidApiKey,
     paidAccountKey,
+    paidCredit,
     unpaidApiKey,
     unpaidAccountKey,
   }
