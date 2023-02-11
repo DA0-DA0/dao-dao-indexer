@@ -30,8 +30,20 @@ const main = async () => {
     '-f, --formulas <formulas>',
     'comma separated list of formula names to revalidate'
   )
+  program.option(
+    '-i, --initial <id>',
+    'initial computation ID to start from',
+    (value) => parseInt(value, 10),
+    0
+  )
   program.parse()
-  const { config: _config, batch, codeIdsKeys, formulas } = program.opts()
+  const {
+    config: _config,
+    batch,
+    codeIdsKeys,
+    formulas,
+    initial,
+  } = program.opts()
 
   console.log(`\n[${new Date().toISOString()}] Revalidating computations...`)
   const start = Date.now()
@@ -42,7 +54,7 @@ const main = async () => {
   // Load DB on start.
   const sequelize = await loadDb()
 
-  let latestId = 0
+  let latestId = initial - 1
   let updated = 0
   let replaced = 0
   const formulasReplaced = new Set<string>()
@@ -75,6 +87,9 @@ const main = async () => {
 
   const total = await Computation.count({
     where: {
+      id: {
+        [Op.gt]: latestId,
+      },
       ...contractWhere,
       ...formulaWhere,
     },
@@ -92,7 +107,7 @@ const main = async () => {
       ).toLocaleString()}/${total.toLocaleString()}. Elapsed: ${(
         (Date.now() - start) /
         1000
-      ).toFixed(0)} seconds.`
+      ).toFixed(0)} seconds. Latest ID: ${latestId.toLocaleString()}`
     )
   }
   const logInterval = setInterval(printStatistics, 100)
