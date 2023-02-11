@@ -35,13 +35,28 @@ interface AccountBalance {
 }
 
 export const balance: ContractFormula<string, { address: string }> = {
-  compute: async ({ contractAddress, get, args: { address } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    get,
+    args: { address },
+  }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    // If no balance is found, return 0.
-    return (await get<string>(contractAddress, 'balance', address)) ?? '0'
+    return (
+      (
+        await getTransformationMatch<string>(
+          contractAddress,
+          `balance:${address}`
+        )
+      )?.value ??
+      // Fallback to events.
+      (await get<string>(contractAddress, 'balance', address)) ??
+      // If no balance is found, return 0.
+      '0'
+    )
   },
 }
 
