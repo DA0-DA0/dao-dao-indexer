@@ -493,9 +493,6 @@ const exporter = async (
     ? 0
     : await PendingWebhook.queueWebhooks(state, exportedEvents)
 
-  // Update meilisearch indexes.
-  await updateIndexesForContracts(contracts)
-
   // Store last block height exported, and update latest block height/time if
   // the last export is newer.
   const lastBlockHeightExported =
@@ -527,6 +524,10 @@ const exporter = async (
       },
     }
   )
+
+  // Update meilisearch indexes. This must happen after the state is updated
+  // since it uses the latest block.
+  await updateIndexesForContracts(contracts)
 
   return {
     computationsUpdated: updated,
