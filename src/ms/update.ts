@@ -78,30 +78,33 @@ export const updateIndexesForContracts = async (
     }
 
     try {
-      const documents = await Promise.all(
-        matchingContracts.map(async (contract) => {
-          const { block, value } = await compute({
-            name: formulaName,
-            type: FormulaType.Contract,
-            targetAddress: contract.address,
-            formula,
-            args,
-            block: state.latestBlock,
-          })
+      let documents = []
+      // Compute formulas in batches of 100.
+      for (let i = 0; i < matchingContracts.length; i += 100) {
+        documents.push(
+          ...(await Promise.all(
+            matchingContracts.slice(i, i + 100).map(async (contract) => {
+              const { block, value } = await compute({
+                name: formulaName,
+                type: FormulaType.Contract,
+                targetAddress: contract.address,
+                formula,
+                args,
+                block: state.latestBlock,
+              })
 
-          return {
-            contractAddress: contract.address,
-            codeId: contract.codeId,
-            block: block && serializeBlock(block),
-            value,
-          }
-        })
-      )
-
-      // Add documents in batches of 100.
-      for (let i = 0; i < documents.length; i += 100) {
-        await clientIndex.addDocuments(documents.slice(i, i + 100))
+              return {
+                contractAddress: contract.address,
+                codeId: contract.codeId,
+                block: block && serializeBlock(block),
+                value,
+              }
+            })
+          ))
+        )
       }
+
+      await clientIndex.addDocuments(documents)
 
       exported += documents.length
     } catch (err) {
