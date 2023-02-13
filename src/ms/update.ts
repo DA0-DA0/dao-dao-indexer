@@ -98,14 +98,15 @@ export const updateIndexesForContracts = async (
         })
       )
 
-      await clientIndex.addDocuments(documents)
+      // Add documents in batches of 100.
+      for (let i = 0; i < documents.length; i += 100) {
+        await clientIndex.addDocuments(documents.slice(i, i + 100))
+      }
 
       exported += documents.length
     } catch (err) {
       console.error(
-        `Error computing formula ${formulaName} for contracts ${matchingContracts.map(
-          (c) => c.address
-        )} and adding to index ${index}:`,
+        `Error computing formula ${formulaName} and adding to index ${index}:`,
         err
       )
     }
