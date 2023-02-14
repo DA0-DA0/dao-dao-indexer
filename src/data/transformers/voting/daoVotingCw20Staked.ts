@@ -8,5 +8,6 @@ const stakingContract = makeTransformer(
   'staking_contract'
 )
 const dao = makeTransformer(CODE_IDS_KEYS, 'dao')
+const token = makeTransformer(CODE_IDS_KEYS, 'token')
 
-export default [stakingContract, dao]
+export default [stakingContract, dao, token]

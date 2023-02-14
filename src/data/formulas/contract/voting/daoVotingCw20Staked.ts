@@ -3,13 +3,18 @@ import { ContractFormula } from '@/core'
 import { stakedBalance, totalStaked } from '../staking/cw20Stake'
 
 export const tokenContract: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'token'),
+  compute: async ({ contractAddress, get, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'token'))?.value ??
+    // Fallback to events.
+    (await get<string>(contractAddress, 'token')),
 }
 
 export const stakingContract: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'staking_contract'),
+  compute: async ({ contractAddress, get, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'stakingContract'))
+      ?.value ??
+    // Fallback to events.
+    (await get<string>(contractAddress, 'staking_contract')),
 }
 
 export const votingPower: ContractFormula<
@@ -68,8 +73,10 @@ export const totalPower: ContractFormula<string> = {
 }
 
 export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'dao'),
+  compute: async ({ contractAddress, get, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'dao'))?.value ??
+    // Fallback to events.
+    (await get<string>(contractAddress, 'dao')),
 }
 
 // TODO: isActive

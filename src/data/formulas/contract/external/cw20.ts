@@ -1,6 +1,9 @@
+import { Op } from 'sequelize'
+
 import { ContractFormula } from '@/core'
 
 import { Expiration } from '../../../types'
+import { dao } from '../voting/daoVotingCw20Staked'
 
 interface TokenInfo {
   name: string
@@ -247,5 +250,34 @@ export const logoUrl: ContractFormula<string | undefined> = {
   compute: async ({ contractAddress, get }) => {
     const logo = await get<{ url: string | never }>(contractAddress, 'logo')
     return logo && 'url' in logo ? logo.url : undefined
+  },
+}
+
+// Get DAOs that use this cw20 as their governance token.
+export const daos: ContractFormula<string[]> = {
+  compute: async (env) => {
+    const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
+
+    // Get dao-voting-cw20-staked contracts that use this token contract.
+    const daoVotingCw20StakedContracts =
+      (
+        await getTransformationMatches(undefined, 'token', contractAddress, {
+          [Op.in]: getCodeIdsForKeys('dao-voting-cw20-staked'),
+        })
+      )?.map(({ contractAddress }) => contractAddress) ?? []
+
+    // Get the DAO for each voting contract.
+    const daos = (
+      await Promise.all(
+        daoVotingCw20StakedContracts.map((contractAddress) =>
+          dao.compute({
+            ...env,
+            contractAddress,
+          })
+        )
+      )
+    ).filter(Boolean) as string[]
+
+    return daos
   },
 }
