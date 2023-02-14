@@ -34,7 +34,7 @@ import { Contract } from './Contract'
     {
       // Speeds up queries. Use trigram index for string name to speed up
       // partial matches (LIKE).
-      fields: [Sequelize.literal('name gin_trgm_ops'), 'blockHeight'],
+      fields: [Sequelize.literal('name gin_trgm_ops')],
       concurrently: true,
       using: 'gin',
     },
@@ -43,6 +43,10 @@ import { Contract } from './Contract'
       fields: ['value'],
       concurrently: true,
       using: 'gin',
+    },
+    {
+      // Speeds up queries.
+      fields: ['blockHeight'],
     },
   ],
 })
