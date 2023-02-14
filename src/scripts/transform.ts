@@ -68,29 +68,29 @@ const main = async () => {
   let computationsDestroyed = 0
   let transformed = 0
 
+  const addressFilter = addresses?.length
+    ? {
+        contractAddress: addresses,
+      }
+    : {}
+
   const codeIds = (
     codeIdsKeys && typeof codeIdsKeys === 'string' ? codeIdsKeys.split(',') : []
   ).flatMap((key) => config.codeIds?.[key] ?? [])
-  const contracts =
-    codeIds.length > 0
-      ? await Contract.findAll({
-          where: {
-            codeId: {
-              [Op.in]: codeIds,
-            },
-          },
-        })
-      : undefined
-
-  const addressFilter =
-    addresses?.length || contracts?.length
-      ? {
-          contractAddress: [
-            ...(addresses || []),
-            ...(contracts?.map((contract) => contract.address) || []),
-          ],
-        }
-      : {}
+  const includeContract = {
+    include: {
+      model: Contract,
+      required: true,
+      where:
+        codeIds.length > 0
+          ? {
+              codeId: {
+                [Op.in]: codeIds,
+              },
+            }
+          : undefined,
+    },
+  }
 
   let latestBlockHeight = initial
   const total = await Event.count({
@@ -100,6 +100,7 @@ const main = async () => {
         [Op.gte]: latestBlockHeight,
       },
     },
+    ...includeContract,
   })
 
   // Print latest statistics every 100ms.
@@ -136,21 +137,8 @@ const main = async () => {
       },
       limit: batch,
       order: [['blockHeight', 'ASC']],
+      ...includeContract,
     })
-
-    // Load contracts for events. Do this after to prevent an expensive query.
-    await Promise.all(
-      events.map((event) =>
-        event.reload({
-          include: [
-            {
-              model: Contract,
-              required: true,
-            },
-          ],
-        })
-      )
-    )
 
     // If there are no more events, we're done.
     if (events.length === 0) {
