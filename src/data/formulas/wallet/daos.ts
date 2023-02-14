@@ -59,3 +59,23 @@ export const memberOf: WalletFormula<string[]> = {
     )
   },
 }
+
+export const adminOf: WalletFormula<string[]> = {
+  compute: async ({
+    walletAddress,
+    getTransformationMatches,
+    getCodeIdsForKeys,
+  }) => {
+    // DAO core contracts where the address is the admin.
+    const daoCoreContracts = await getTransformationMatches(
+      undefined,
+      'admin',
+      walletAddress,
+      {
+        [Op.in]: getCodeIdsForKeys('dao-core'),
+      }
+    )
+
+    return daoCoreContracts?.map(({ contractAddress }) => contractAddress) ?? []
+  },
+}
