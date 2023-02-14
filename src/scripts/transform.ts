@@ -81,14 +81,6 @@ const main = async () => {
           },
         })
       : undefined
-  const includeContract = {
-    include: [
-      {
-        model: Contract,
-        required: true,
-      },
-    ],
-  }
 
   const addressFilter =
     addresses?.length || contracts?.length
@@ -108,7 +100,6 @@ const main = async () => {
         [Op.gte]: latestBlockHeight,
       },
     },
-    ...includeContract,
   })
 
   // Print latest statistics every 100ms.
@@ -143,10 +134,23 @@ const main = async () => {
           },
         }),
       },
-      ...includeContract,
       limit: batch,
       order: [['blockHeight', 'ASC']],
     })
+
+    // Load contracts for events. Do this after to prevent an expensive query.
+    await Promise.all(
+      events.map((event) =>
+        event.reload({
+          include: [
+            {
+              model: Contract,
+              required: true,
+            },
+          ],
+        })
+      )
+    )
 
     // If there are no more events, we're done.
     if (events.length === 0) {
