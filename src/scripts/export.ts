@@ -447,6 +447,11 @@ const exporter = async (
         },
       })
       contractCreationAttempts--
+
+      // If we've tried all times, throw the error so we halt.
+      if (contractCreationAttempts === 0) {
+        throw err
+      }
     }
   }
 
