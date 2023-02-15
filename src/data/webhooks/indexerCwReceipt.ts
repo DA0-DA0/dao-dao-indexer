@@ -1,4 +1,4 @@
-import { WebhookMaker } from '@/core'
+import { WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
 const KEY_PREFIX_RECEIPT_TOTALS = dbKeyForKeys('receipt_totals', '')
@@ -17,6 +17,7 @@ export const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
           !config.payment
             ? undefined
             : {
+                type: WebhookType.Url,
                 url: 'https://indexer-mainnet.daodao.zone/account/webhook/cw-receipt',
                 method: 'POST',
                 headers: {

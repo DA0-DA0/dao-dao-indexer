@@ -1,4 +1,4 @@
-import { WebhookMaker } from '@/core'
+import { WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
 const CW20_STAKE_CODE_IDS_KEY = 'cw20-stake'
@@ -64,6 +64,7 @@ export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
     }
 
     return {
+      type: WebhookType.Url,
       url: `https://following-daos.dao-dao.workers.dev/webhook/${state.chainId}/${walletAddress}/${daoAddress}`,
       method: 'POST',
       headers: {

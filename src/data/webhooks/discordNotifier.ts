@@ -1,4 +1,4 @@
-import { WebhookMaker } from '@/core'
+import { WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
 import {
@@ -30,6 +30,7 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
     }
 
     return {
+      type: WebhookType.Url,
       url: `https://discord-notifier.dao-dao.workers.dev/${state.chainId}/${daoAddress}/notify`,
       method: 'POST',
     }

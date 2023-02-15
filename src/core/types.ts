@@ -1,3 +1,4 @@
+import { Options as PusherOptions } from 'pusher'
 import { SequelizeOptions } from 'sequelize-typescript'
 
 import { Contract, Event, State, Transformation } from '@/db'
@@ -59,6 +60,8 @@ export type Config = {
     // = 1e4.
     creditScaleFactor: number
   }
+  // WebSockets Soketi server.
+  soketi?: PusherOptions
 
   // Other config options.
   [key: string]: any
@@ -372,11 +375,23 @@ export type ProcessedTransformer<V = any> = Omit<Transformer<V>, 'filter'> & {
   filter: (event: ParsedEvent) => boolean
 }
 
-export type WebhookEndpoint = {
-  url: string
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-  headers?: Record<string, string>
+export enum WebhookType {
+  Url = 'url',
+  Soketi = 'soketi',
 }
+
+export type WebhookEndpoint =
+  | {
+      type: WebhookType.Url
+      url: string
+      method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+      headers?: Record<string, string>
+    }
+  | {
+      type: WebhookType.Soketi
+      channel: string | string[]
+      event: string
+    }
 
 export type Webhook<V = any> = {
   filter: RequireAtLeastOne<{

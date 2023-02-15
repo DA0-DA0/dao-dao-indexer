@@ -1,6 +1,7 @@
 import { Worker } from 'worker_threads'
 
 import axios from 'axios'
+import Pusher from 'pusher'
 import { Op } from 'sequelize'
 import {
   AllowNull,
@@ -12,7 +13,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { WebhookEndpoint, getEnv, loadConfig } from '@/core'
+import { WebhookEndpoint, WebhookType, getEnv, loadConfig } from '@/core'
 import { getProcessedWebhooks } from '@/data/webhooks'
 
 import { Event } from './Event'
@@ -43,23 +44,49 @@ export class PendingWebhook extends Model {
   failures!: number
 
   async fire() {
-    try {
-      await axios(this.endpoint.url, {
-        method: this.endpoint.method,
-        // https://stackoverflow.com/a/74735197
-        headers: {
-          'Accept-Encoding': 'gzip,deflate,compress',
-          ...this.endpoint.headers,
-        },
-        data: this.value,
-      })
+    switch (this.endpoint.type) {
+      case WebhookType.Url:
+        try {
+          await axios(this.endpoint.url, {
+            method: this.endpoint.method,
+            // https://stackoverflow.com/a/74735197
+            headers: {
+              'Accept-Encoding': 'gzip,deflate,compress',
+              ...this.endpoint.headers,
+            },
+            data: this.value,
+          })
 
-      // Delete the pending webhook if request was successful.
-      await this.destroy()
-    } catch (err) {
-      this.failures++
-      await this.save()
-      throw err
+          // Delete the pending webhook if request was successful.
+          await this.destroy()
+        } catch (err) {
+          this.failures++
+          await this.save()
+          throw err
+        }
+        break
+
+      case WebhookType.Soketi:
+        const { soketi } = loadConfig()
+        if (!soketi) {
+          throw new Error('Soketi config not found')
+        }
+
+        const pusher = new Pusher(soketi)
+        await pusher.trigger(
+          this.endpoint.channel,
+          this.endpoint.event,
+          this.value
+        )
+
+        break
+
+      default:
+        throw new Error(
+          `Unknown webhook type for pending webhook ${
+            this.id
+          }, endpoint: ${JSON.stringify(this.endpoint)}`
+        )
     }
   }
 
