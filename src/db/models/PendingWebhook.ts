@@ -86,7 +86,7 @@ export class PendingWebhook extends Model {
       await this.destroy()
     } catch (err) {
       console.error(
-        `[PendingWebhook ${this.id}] failure #${this.failures++}`,
+        `[PendingWebhook ${this.id}] failure #${++this.failures}`,
         err
       )
 
