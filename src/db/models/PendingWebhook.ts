@@ -85,7 +85,11 @@ export class PendingWebhook extends Model {
       // Delete the pending webhook if request was successful.
       await this.destroy()
     } catch (err) {
-      this.failures++
+      console.error(
+        `[PendingWebhook ${this.id}] failure #${this.failures++}`,
+        err
+      )
+
       await this.save()
       throw err
     }
