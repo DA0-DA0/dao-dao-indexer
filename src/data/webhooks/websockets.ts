@@ -23,7 +23,7 @@ const makeWebSocketEndpoint =
 
     return {
       type: WebhookType.Soketi,
-      channel: `${chainId}/${daoAddress}`,
+      channel: `${chainId}_${daoAddress}`,
       event: 'broadcast',
     }
   }
