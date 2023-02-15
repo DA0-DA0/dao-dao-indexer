@@ -44,9 +44,9 @@ export class PendingWebhook extends Model {
   failures!: number
 
   async fire() {
-    switch (this.endpoint.type) {
-      case WebhookType.Url:
-        try {
+    try {
+      switch (this.endpoint.type) {
+        case WebhookType.Url:
           await axios(this.endpoint.url, {
             method: this.endpoint.method,
             // https://stackoverflow.com/a/74735197
@@ -57,36 +57,37 @@ export class PendingWebhook extends Model {
             data: this.value,
           })
 
-          // Delete the pending webhook if request was successful.
-          await this.destroy()
-        } catch (err) {
-          this.failures++
-          await this.save()
-          throw err
-        }
-        break
+          break
 
-      case WebhookType.Soketi:
-        const { soketi } = loadConfig()
-        if (!soketi) {
-          throw new Error('Soketi config not found')
-        }
+        case WebhookType.Soketi:
+          const { soketi } = loadConfig()
+          if (!soketi) {
+            throw new Error('Soketi config not found')
+          }
 
-        const pusher = new Pusher(soketi)
-        await pusher.trigger(
-          this.endpoint.channel,
-          this.endpoint.event,
-          this.value
-        )
+          const pusher = new Pusher(soketi)
+          await pusher.trigger(
+            this.endpoint.channel,
+            this.endpoint.event,
+            this.value
+          )
 
-        break
+          break
 
-      default:
-        throw new Error(
-          `Unknown webhook type for pending webhook ${
-            this.id
-          }, endpoint: ${JSON.stringify(this.endpoint)}`
-        )
+        default:
+          throw new Error(
+            `Unknown webhook type for pending webhook ${
+              this.id
+            }, endpoint: ${JSON.stringify(this.endpoint)}`
+          )
+      }
+
+      // Delete the pending webhook if request was successful.
+      await this.destroy()
+    } catch (err) {
+      this.failures++
+      await this.save()
+      throw err
     }
   }
 
