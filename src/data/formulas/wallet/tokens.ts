@@ -13,8 +13,11 @@ export const list: WalletFormula<ContractWithBalance[]> = {
 
     // Potential cw20 contracts where the wallet address has tokens.
     const matchingContracts =
-      (await getTransformationMatches(undefined, `balance:${walletAddress}`)) ??
-      []
+      (await getTransformationMatches(
+        undefined,
+        `hasBalance:${walletAddress}`,
+        true
+      )) ?? []
 
     const contractInfos = await Promise.all(
       matchingContracts.map(({ contractAddress }) =>

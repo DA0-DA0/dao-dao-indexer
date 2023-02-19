@@ -230,7 +230,7 @@ export class Transformation extends Model {
         pendingTransformation.value =
           event.delete && !transformer.manuallyTransformDeletes
             ? null
-            : (await transformer.getValue(event, async () => {
+            : await transformer.getValue(event, async () => {
                 // Find most recent transformation for this contract and name before
                 // this block.
 
@@ -264,13 +264,19 @@ export class Transformation extends Model {
                     })
                   )?.value ?? null
                 )
-              })) ?? null
+              })
 
-        // Update the latest transformation for the same contract, name, and block
-        // height if it exists. We want this newer transformation to be able to
-        // access the previous value during its evaluation, in case the
-        // transformation is iterating on values, such as a counter, but only one
-        // transformation can exist for a contract, name, and block height set.
+        if (pendingTransformation.value === undefined) {
+          // Skip saving this transformation if the value is undefined.
+          continue
+        }
+
+        // Update the latest transformation for the same contract, name, and
+        // block height if it exists. We want this newer transformation to be
+        // able to access the previous value during its evaluation, in case the
+        // transformation is iterating on values, such as a counter, but only
+        // one transformation can exist for a contract, name, and block height
+        // set.
         const latestTransformation = evaluatedTransformations
           .filter(
             (transformation) =>

@@ -358,10 +358,12 @@ export type Transformer<V = any> = {
     matches: (event: ParsedEvent) => boolean
   }>
   name: string | ((event: ParsedEvent) => string)
+  // If `getValue` returns `undefined`, the transformation will not be saved.
+  // All other values, including `null`, will be saved.
   getValue: (
     event: ParsedEvent,
     getLastValue: () => Promise<V | null>
-  ) => V | null | Promise<V | null>
+  ) => V | null | undefined | Promise<V | null | undefined>
   // By default, a transformation gets created with a value of `null` if the
   // event is a delete event, skipping evaluation of `getValue`. If
   // `manuallyTransformDelete` is set to true, `getValue` will be called and the
