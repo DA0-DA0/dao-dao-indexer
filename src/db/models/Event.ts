@@ -138,7 +138,11 @@ export class Event extends Model {
       (acc, dependentKey) => {
         // Dependent keys for any contract start with "%:".
         const [contractAddress, key] = dependentKey.startsWith('%:')
-          ? ['', dependentKey]
+          ? [
+              '',
+              // Remove contract address wildcard.
+              dependentKey.split(':').slice(1).join(':'),
+            ]
           : dependentKey.split(':')
         return {
           ...acc,

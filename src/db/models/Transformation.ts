@@ -106,10 +106,14 @@ export class Transformation extends Model {
       (acc, dependentKey) => {
         // Dependent keys for any contract start with "%:".
         const [contractAddress, name] = dependentKey.startsWith('%:')
-          ? ['', dependentKey]
+          ? [
+              '',
+              // Remove contract address wildcard.
+              dependentKey.split(':').slice(1).join(':'),
+            ]
           : [
               dependentKey.split(':')[0],
-              // name can have colons in it, so rejoin rest of string.
+              // Name can have colons in it, so rejoin rest of string.
               dependentKey.split(':').slice(1).join(':'),
             ]
         return {
