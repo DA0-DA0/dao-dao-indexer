@@ -255,16 +255,15 @@ export class Computation extends Model {
       return false
     }
 
-    // If everything is the same but latest valid block is different, update.
-    if (
-      computation.latestBlockHeightValid !== BigInt(this.latestBlockHeightValid)
-    ) {
-      await this.update({
-        latestBlockHeightValid: computation.latestBlockHeightValid,
-      })
-    }
-
-    return true
+    // If all seems the same, update the computation's output and validity from
+    // the beginning. If it returns true, nothing changed.
+    return this.validityExtendable
+      ? await this.updateValidityUpToBlockHeight(
+          BigInt(this.latestBlockHeightValid),
+          BigInt(this.blockHeight)
+        )
+      : // If validity not extendable and we made it here, the computation is the same and nothing changed.
+        true
   }
 
   static getOutputForValue(value: any): string | null {
