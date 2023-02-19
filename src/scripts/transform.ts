@@ -152,7 +152,7 @@ const main = async () => {
     // the list instead of replacing it. This will only happen if the batch size
     // is smaller than the maximum number of events in any one block. Otherwise,
     // we're in a new block and should reset the list.
-    if (newLatestBlockHeight === latestBlockHeight) {
+    if (Number(newLatestBlockHeight) === latestBlockHeight) {
       latestBlockEventIdsSeen = latestBlockEventIdsSeen.concat(
         events.map((event) => event.id)
       )
@@ -163,7 +163,7 @@ const main = async () => {
     }
 
     processed += events.length
-    latestBlockHeight = newLatestBlockHeight
+    latestBlockHeight = Number(newLatestBlockHeight)
 
     const transformations = await Transformation.transformParsedEvents(
       events.map((event) => event.asParsedEvent)
