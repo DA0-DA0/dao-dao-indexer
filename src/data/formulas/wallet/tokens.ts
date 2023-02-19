@@ -1,6 +1,7 @@
 import { WalletFormula } from '@/core'
 
 import { info } from '../contract/common'
+import { balance } from '../contract/external/cw20'
 
 type ContractWithBalance = {
   contractAddress: string
@@ -28,13 +29,25 @@ export const list: WalletFormula<ContractWithBalance[]> = {
       )
     )
 
+    const balances = await Promise.all(
+      matchingContracts.map(({ contractAddress }) =>
+        balance.compute({
+          ...env,
+          contractAddress,
+          args: {
+            address: env.walletAddress,
+          },
+        })
+      )
+    )
+
     const contractsWithBalance = matchingContracts
       // Filter by those with cw20 in the contract name.
       .filter((_, index) => contractInfos[index]?.contract?.includes('cw20'))
       .map(
-        ({ contractAddress, value }): ContractWithBalance => ({
+        ({ contractAddress }, index): ContractWithBalance => ({
           contractAddress,
-          balance: typeof value === 'string' ? value : undefined,
+          balance: balances[index],
         })
       )
 
