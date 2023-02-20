@@ -6,6 +6,7 @@ import { makeTransformer } from '../utils'
 const CODE_IDS_KEYS = ['dao-voting-cw721-staked']
 
 const KEY_PREFIX_SNPW = dbKeyForKeys('snpw', '')
+const KEY_PREFIX_NB = dbKeyForKeys('nb', '')
 
 const config = makeTransformer(CODE_IDS_KEYS, 'config')
 const dao = makeTransformer(CODE_IDS_KEYS, 'dao')
@@ -45,19 +46,14 @@ const stakedNftOwner: Transformer = {
 const stakedCount: Transformer = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
-    matches: (event) => event.key.startsWith(KEY_PREFIX_SNPW),
+    matches: (event) => event.key.startsWith(KEY_PREFIX_NB),
   },
   name: (event) => {
-    // "snpw", address, tokenId
+    // "nb", address
     const [, address] = dbKeyToKeys(event.key, [false, false, false])
     return `stakedCount:${address}`
   },
-  getValue: async (event, getLastValue) => {
-    const lastValue = (await getLastValue()) || 0
-    // If deleted stake assignment, subtract 1, otherwise add 1.
-    return event.delete ? lastValue - 1 : lastValue + 1
-  },
-  manuallyTransformDeletes: true,
+  getValue: (event) => event.valueJson,
 }
 
 export default [

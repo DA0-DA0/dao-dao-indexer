@@ -35,12 +35,23 @@ export const nftClaims: ContractFormula<any[], { address: string }> = {
 }
 
 export const votingPower: ContractFormula<string, { address: string }> = {
-  compute: async ({ contractAddress, get, args: { address } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { address },
+  }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return (await get<string>(contractAddress, 'nb', address)) || '0'
+    return (
+      (
+        await getTransformationMatch<string>(
+          contractAddress,
+          `stakedCount:${address}`
+        )
+      )?.value || '0'
+    )
   },
 }
 
@@ -137,13 +148,13 @@ export const topStakers: ContractFormula<
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     const stakedCountMap =
-      (await getTransformationMap<string, number>(
+      (await getTransformationMap<string, string>(
         contractAddress,
         'stakedCount'
       )) ?? {}
     const stakedCounts = Object.entries(stakedCountMap)
       // Remove zero counts.
-      .filter(([, stakedCount]) => stakedCount > 0)
+      .filter(([, stakedCount]) => Number(stakedCount) > 0)
       // Descending by count.
       .sort(([, a], [, b]) => Number(b) - Number(a))
       .slice(0, limitNum)
@@ -155,9 +166,9 @@ export const topStakers: ContractFormula<
     const stakers = stakedCounts.map(
       ([address, count]): Staker => ({
         address,
-        count,
+        count: Number(count),
         votingPowerPercent:
-          totalVotingPower === 0 ? 0 : (count / totalVotingPower) * 100,
+          totalVotingPower === 0 ? 0 : (Number(count) / totalVotingPower) * 100,
       })
     )
 
