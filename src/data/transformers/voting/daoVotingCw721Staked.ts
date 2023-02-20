@@ -50,7 +50,7 @@ const stakedCount: Transformer = {
   },
   name: (event) => {
     // "nb", address
-    const [, address] = dbKeyToKeys(event.key, [false, false, false])
+    const [, address] = dbKeyToKeys(event.key, [false, false])
     return `stakedCount:${address}`
   },
   getValue: (event) => event.valueJson,
