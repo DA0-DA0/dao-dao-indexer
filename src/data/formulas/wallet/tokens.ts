@@ -5,7 +5,7 @@ import { balance } from '../contract/external/cw20'
 
 type ContractWithBalance = {
   contractAddress: string
-  balance: string | undefined
+  balance: string
 }
 
 export const list: WalletFormula<ContractWithBalance[]> = {
