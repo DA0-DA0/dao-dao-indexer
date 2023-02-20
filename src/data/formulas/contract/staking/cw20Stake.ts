@@ -116,6 +116,8 @@ export const topStakers: ContractFormula<
     const stakers =
       (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
     const stakes = Object.entries(stakers)
+      // Remove zero balances.
+      .filter(([, balance]) => Number(balance) > 0)
       // Descending by balance.
       .sort(([, a], [, b]) => Number(b) - Number(a))
       .slice(0, limitNum)
