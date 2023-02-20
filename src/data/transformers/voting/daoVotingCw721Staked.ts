@@ -41,4 +41,30 @@ const stakedNftOwner: Transformer = {
   },
 }
 
-export default [config, dao, totalStakedNfts, stakedNftPerOwner, stakedNftOwner]
+// Maintain running count of staked NFTs per owner.
+const stakedCount: Transformer = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+    matches: (event) => event.key.startsWith(KEY_PREFIX_SNPW),
+  },
+  name: (event) => {
+    // "snpw", address, tokenId
+    const [, address] = dbKeyToKeys(event.key, [false, false, false])
+    return `stakedCount:${address}`
+  },
+  getValue: async (event, getLastValue) => {
+    const lastValue = (await getLastValue()) || 0
+    // If deleted stake assignment, subtract 1, otherwise add 1.
+    return event.delete ? lastValue - 1 : lastValue + 1
+  },
+  manuallyTransformDeletes: true,
+}
+
+export default [
+  config,
+  dao,
+  totalStakedNfts,
+  stakedNftPerOwner,
+  stakedNftOwner,
+  stakedCount,
+]

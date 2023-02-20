@@ -111,25 +111,14 @@ export const topStakers: ContractFormula<Staker[] | undefined> = {
     // Get total power.
     const totalVotingPower = Number(await totalPower.compute(env))
 
-    // Get voting power for each staker.
-    const stakers = await Promise.all(
-      topStakers.map(async (staker) => {
-        const stakerVotingPower = Number(
-          await votingPower.compute({
-            ...env,
-            args: { address: staker.address },
-          })
-        )
-
-        return {
-          ...staker,
-          votingPowerPercent:
-            totalVotingPower === 0
-              ? 0
-              : (stakerVotingPower / totalVotingPower) * 100,
-        }
-      })
-    )
+    // Compute voting power for each staker.
+    const stakers = topStakers.map((staker) => ({
+      ...staker,
+      votingPowerPercent:
+        totalVotingPower === 0
+          ? 0
+          : (Number(staker.balance) / totalVotingPower) * 100,
+    }))
 
     return stakers
   },

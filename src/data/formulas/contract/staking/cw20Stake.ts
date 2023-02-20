@@ -110,11 +110,18 @@ export const topStakers: ContractFormula<
     limit?: string
   }
 > = {
-  compute: async ({ contractAddress, getMap, args: { limit } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMap,
+    args: { limit },
+  }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     const stakers =
-      (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
+      (await getTransformationMap<string, string>(
+        contractAddress,
+        'stakedBalance'
+      )) ?? {}
     const stakes = Object.entries(stakers)
       // Remove zero balances.
       .filter(([, balance]) => Number(balance) > 0)

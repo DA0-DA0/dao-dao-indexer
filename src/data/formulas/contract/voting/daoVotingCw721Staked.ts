@@ -114,3 +114,53 @@ export const staker: ContractFormula<string | undefined, { tokenId: string }> =
       return owner
     },
   }
+
+type Staker = {
+  address: string
+  count: number
+  votingPowerPercent: number
+}
+
+export const topStakers: ContractFormula<
+  Staker[],
+  {
+    limit?: string
+  }
+> = {
+  compute: async (env) => {
+    const {
+      contractAddress,
+      getTransformationMap,
+      args: { limit },
+    } = env
+
+    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+
+    const stakedCountMap =
+      (await getTransformationMap<string, number>(
+        contractAddress,
+        'stakedCount'
+      )) ?? {}
+    const stakedCounts = Object.entries(stakedCountMap)
+      // Remove zero counts.
+      .filter(([, stakedCount]) => stakedCount > 0)
+      // Descending by count.
+      .sort(([, a], [, b]) => Number(b) - Number(a))
+      .slice(0, limitNum)
+
+    // Get total power.
+    const totalVotingPower = Number(await totalPower.compute(env))
+
+    // Compute voting power for each staker.
+    const stakers = stakedCounts.map(
+      ([address, count]): Staker => ({
+        address,
+        count,
+        votingPowerPercent:
+          totalVotingPower === 0 ? 0 : (count / totalVotingPower) * 100,
+      })
+    )
+
+    return stakers
+  },
+}
