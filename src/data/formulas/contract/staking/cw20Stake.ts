@@ -1,6 +1,6 @@
 import { ContractFormula } from '@/core'
 
-interface StakerBalance {
+export type StakerBalance = {
   address: string
   balance: string
 }

@@ -1,6 +1,11 @@
 import { ContractFormula } from '@/core'
 
-import { stakedBalance, totalStaked } from '../staking/cw20Stake'
+import {
+  StakerBalance,
+  topStakers as cw20StakeTopStakers,
+  stakedBalance,
+  totalStaked,
+} from '../staking/cw20Stake'
 
 export const tokenContract: ContractFormula<string | undefined> = {
   compute: async ({ contractAddress, get, getTransformationMatch }) =>
@@ -84,4 +89,48 @@ export const dao: ContractFormula<string | undefined> = {
 export const activeThreshold: ContractFormula = {
   compute: async ({ contractAddress, get }) =>
     await get(contractAddress, 'active_threshold'),
+}
+
+type Staker = StakerBalance & {
+  votingPowerPercent: number
+}
+
+export const topStakers: ContractFormula<Staker[] | undefined> = {
+  compute: async (env) => {
+    const stakingContractAddress = await stakingContract.compute(env)
+    if (!stakingContractAddress) {
+      return
+    }
+
+    // Get top stakers.
+    const topStakers = await cw20StakeTopStakers.compute({
+      ...env,
+      contractAddress: stakingContractAddress,
+    })
+
+    // Get total power.
+    const totalVotingPower = Number(await totalPower.compute(env))
+
+    // Get voting power for each staker.
+    const stakers = await Promise.all(
+      topStakers.map(async (staker) => {
+        const stakerVotingPower = Number(
+          await votingPower.compute({
+            ...env,
+            args: { address: staker.address },
+          })
+        )
+
+        return {
+          ...staker,
+          votingPowerPercent:
+            totalVotingPower === 0
+              ? 0
+              : (stakerVotingPower / totalVotingPower) * 100,
+        }
+      })
+    )
+
+    return stakers
+  },
 }
