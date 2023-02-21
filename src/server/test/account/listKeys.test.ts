@@ -1,39 +1,36 @@
 import request from 'supertest'
 
 import { Account } from '@/db'
-import { GetSignedBody, getAccountWithSigner } from '@/test/utils'
+import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
 describe('POST /keys/list', () => {
   let account: Account
-  let getSignedBody: GetSignedBody
+  let token: string
   beforeEach(async () => {
-    const { account: _account, getSignedBody: _getSignedBody } =
-      await getAccountWithSigner()
+    const { account: _account, token: _token } = await getAccountWithAuth()
 
     account = _account
-    getSignedBody = _getSignedBody
+    token = _token
   })
 
-  it('returns error if invalid signature', async () => {
+  it('returns error if no auth token', async () => {
     await request(app.callback())
       .post('/keys/list')
-      .send({
-        ...(await getSignedBody({})),
-        signature: 'invalid',
-      })
+      .send({})
       .expect(401)
       .expect('Content-Type', /json/)
       .expect({
-        error: 'Invalid signature.',
+        error: 'No token.',
       })
   })
 
   it('lists keys', async () => {
     await request(app.callback())
       .post('/keys/list')
-      .send(await getSignedBody({}))
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
       .expect(200)
       .expect('Content-Type', /json/)
       .expect({

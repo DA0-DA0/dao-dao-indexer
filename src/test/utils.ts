@@ -7,11 +7,9 @@ import {
   AccountKeyCredit,
   AccountKeyCreditPaymentSource,
 } from '@/db'
-import { RequestBody } from '@/server/routes/account/types'
+import { AuthRequestBody } from '@/server/routes/account/types'
 
-export type GetSignedBody = <Data extends Record<string, unknown>>(
-  data: Data
-) => Promise<RequestBody<Data>>
+export type GetAuth = () => Promise<AuthRequestBody>
 
 const AUTH = {
   type: 'auth',
@@ -22,7 +20,7 @@ const AUTH = {
 
 // This generates a wallet and matching account, returning functions to interact
 // with them.
-export const getAccountWithSigner = async () => {
+export const getAccountWithAuth = async () => {
   const wallet = await Secp256k1HdWallet.generate(undefined, {
     prefix: AUTH.chainBech32Prefix,
   })
@@ -57,17 +55,14 @@ export const getAccountWithSigner = async () => {
       description: null,
     })
 
-  const getSignedBody: GetSignedBody = async (data) => {
+  const getAuth: GetAuth = async () => {
     // Reload account to get the latest nonce.
     await account.reload()
 
-    const dataWithAuth = {
-      ...data,
-      auth: {
-        ...AUTH,
-        nonce: account.nonce,
-        publicKey,
-      },
+    const auth = {
+      ...AUTH,
+      nonce: account.nonce,
+      publicKey,
     }
 
     const signature = (
@@ -76,10 +71,10 @@ export const getAccountWithSigner = async () => {
         makeSignDoc(
           [
             {
-              type: dataWithAuth.auth.type,
+              type: auth.type,
               value: {
                 signer: address,
-                data: JSON.stringify(dataWithAuth, undefined, 2),
+                data: JSON.stringify(auth, undefined, 2),
               },
             },
           ],
@@ -87,12 +82,12 @@ export const getAccountWithSigner = async () => {
             gas: '0',
             amount: [
               {
-                denom: dataWithAuth.auth.chainFeeDenom,
+                denom: auth.chainFeeDenom,
                 amount: '0',
               },
             ],
           },
-          dataWithAuth.auth.chainId,
+          auth.chainId,
           '',
           0,
           0
@@ -101,7 +96,7 @@ export const getAccountWithSigner = async () => {
     ).signature.signature
 
     return {
-      data: dataWithAuth,
+      auth,
       signature,
     }
   }
@@ -126,9 +121,12 @@ export const getAccountWithSigner = async () => {
     include: AccountKeyCredit,
   })
 
+  const token = account.getAuthToken()
+
   return {
     account,
-    getSignedBody,
+    token,
+    getAuth,
 
     // Keys.
     paidApiKey,

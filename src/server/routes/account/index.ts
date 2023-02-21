@@ -6,6 +6,7 @@ import { createKey } from './createKey'
 import { getConfig } from './getConfig'
 import { getNonce } from './getNonce'
 import { listKeys } from './listKeys'
+import { login } from './login'
 import { resetKey } from './resetKey'
 import { webhook } from './webhook'
 
@@ -23,6 +24,9 @@ accountRouter.get('/config', getConfig)
 
 // Get nonce.
 accountRouter.get('/nonce/:publicKey', getNonce)
+
+// Login.
+accountRouter.post('/login', login)
 
 //! Authenticated routes.
 

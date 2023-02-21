@@ -1,35 +1,36 @@
 import request from 'supertest'
 
 import { Account, AccountKey } from '@/db'
-import { GetSignedBody, getAccountWithSigner } from '@/test/utils'
+import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
 describe('POST /keys', () => {
   let account: Account
-  let getSignedBody: GetSignedBody
+  let token: string
   beforeEach(async () => {
-    const { account: _account, getSignedBody: _getSignedBody } =
-      await getAccountWithSigner()
+    const { account: _account, token: _token } = await getAccountWithAuth()
 
     account = _account
-    getSignedBody = _getSignedBody
+    token = _token
   })
 
-  it('returns error if invalid signature', async () => {
+  it('returns error if no auth token', async () => {
     await request(app.callback())
       .post('/keys')
-      .send({
-        ...(await getSignedBody({})),
-        signature: 'invalid',
-      })
+      .send({})
       .expect(401)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'No token.',
+      })
   })
 
   it('returns error if no name', async () => {
     await request(app.callback())
       .post('/keys')
-      .send(await getSignedBody({}))
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -40,11 +41,10 @@ describe('POST /keys', () => {
   it('returns error if empty name', async () => {
     await request(app.callback())
       .post('/keys')
-      .send(
-        await getSignedBody({
-          name: ' ',
-        })
-      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: '',
+      })
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -55,11 +55,10 @@ describe('POST /keys', () => {
   it('returns error if name too long', async () => {
     await request(app.callback())
       .post('/keys')
-      .send(
-        await getSignedBody({
-          name: 'n'.repeat(256),
-        })
-      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'n'.repeat(256),
+      })
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -70,11 +69,10 @@ describe('POST /keys', () => {
   it('returns error if duplicate name', async () => {
     await request(app.callback())
       .post('/keys')
-      .send(
-        await getSignedBody({
-          name: account.keys[0].name,
-        })
-      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: account.keys[0].name,
+      })
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -85,12 +83,11 @@ describe('POST /keys', () => {
   it('returns error if description too long', async () => {
     await request(app.callback())
       .post('/keys')
-      .send(
-        await getSignedBody({
-          name: 'new key',
-          description: 'd'.repeat(256),
-        })
-      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'new key',
+        description: 'd'.repeat(256),
+      })
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -103,31 +100,27 @@ describe('POST /keys', () => {
     for (const description of [undefined, null, '', ' ']) {
       await request(app.callback())
         .post('/keys')
-        .send(
-          await getSignedBody({
-            name: `new key ${index++}`,
-            ...(description !== undefined
-              ? {
-                  description,
-                }
-              : {}),
-          })
-        )
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          name: `new key ${index++}`,
+          ...(description !== undefined
+            ? {
+                description,
+              }
+            : {}),
+        })
         .expect(201)
         .expect('Content-Type', /json/)
     }
   })
 
-  it('does not create key if invalid signature', async () => {
+  it('does not create key if no auth token', async () => {
     const initialKeys = await AccountKey.count()
 
     await request(app.callback())
       .post('/keys')
       .send({
-        ...(await getSignedBody({
-          name: 'new key',
-        })),
-        signature: 'invalid',
+        name: 'new key',
       })
       .expect(401)
 
@@ -140,11 +133,10 @@ describe('POST /keys', () => {
 
     const response = await request(app.callback())
       .post('/keys')
-      .send(
-        await getSignedBody({
-          name: 'new key',
-        })
-      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'new key',
+      })
       .expect(201)
       .expect('Content-Type', /json/)
 

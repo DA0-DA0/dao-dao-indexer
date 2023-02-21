@@ -24,7 +24,7 @@ export const getConfig: Router.Middleware<
   if (!payment) {
     ctx.status = 400
     ctx.body = {
-      error: 'Not configured',
+      error: 'Not configured.',
     }
     return
   }

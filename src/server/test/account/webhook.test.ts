@@ -2,7 +2,7 @@ import request from 'supertest'
 
 import { loadConfig } from '@/core'
 import { AccountKey, AccountKeyCreditPaymentSource } from '@/db'
-import { getAccountWithSigner } from '@/test/utils'
+import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
@@ -11,7 +11,7 @@ describe('POST /webhook/:paymentSource', () => {
 
   let unpaidAccountKey: AccountKey
   beforeEach(async () => {
-    const { unpaidAccountKey: _unpaidAccountKey } = await getAccountWithSigner()
+    const { unpaidAccountKey: _unpaidAccountKey } = await getAccountWithAuth()
     unpaidAccountKey = _unpaidAccountKey
   })
 

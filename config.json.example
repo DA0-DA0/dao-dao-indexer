@@ -46,5 +46,6 @@
   "daoDaoBase": "https://testnet.daodao.zone",
   "discordNotifierApiKey": "key",
   "followingDaosSecret": "secret",
-  "websocketsSecret": "secret"
+  "websocketsSecret": "secret",
+  "accountsJwtSecret": "secret"
 }

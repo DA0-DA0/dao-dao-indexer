@@ -2,75 +2,71 @@ import { makeSignDoc, serializeSignDoc } from '@cosmjs/amino'
 import { Secp256k1, Secp256k1Signature } from '@cosmjs/crypto'
 import { fromBase64, fromHex, toBech32 } from '@cosmjs/encoding'
 import CryptoJS from 'crypto-js'
+import jwt from 'jsonwebtoken'
 import { Middleware } from 'koa'
 
-import { objectMatchesStructure } from '@/core/utils'
+import { loadConfig } from '@/core/config'
 import { Account } from '@/db'
 
-import { AccountState, RequestBody } from './types'
+import { AccountState, AuthRequestBody } from './types'
 
 // Middleware to protect routes with the above function. If it does not return,
 // the request is authorized. If successful, the `parsedBody` field will be set
 // on the request object, accessible by successive middleware and route
 // handlers.
 export const authMiddleware: Middleware<AccountState> = async (ctx, next) => {
-  // Parsed by koa-body.
-  const body: RequestBody = ctx.request.body
-
-  if (
-    // Validate body has at least the auth fields we need.
-    !objectMatchesStructure(body, {
-      data: {
-        auth: {
-          type: {},
-          nonce: {},
-          chainId: {},
-          chainFeeDenom: {},
-          chainBech32Prefix: {},
-          publicKey: {},
-        },
-      },
-      signature: {},
-    })
-  ) {
-    ctx.status = 400
+  const { accountsJwtSecret } = loadConfig()
+  if (!accountsJwtSecret) {
+    ctx.status = 500
     ctx.body = {
-      error: 'Invalid body.',
+      error: 'JWT not configured.',
     }
     return
   }
 
-  ctx.state.data = body.data
-
-  // Find or create account.
-  const [account] = await Account.findOrCreate({
-    where: {
-      publicKey: body.data.auth.publicKey,
-    },
-  })
-
-  ctx.state.account = account
-
-  // Validate nonce.
-  if (body.data.auth.nonce !== account.nonce) {
+  const authorization = ctx.header['authorization']
+  if (!authorization) {
     ctx.status = 401
     ctx.body = {
-      error: `Expected nonce: ${account.nonce}`,
+      error: 'No token.',
     }
     return
   }
 
-  // Validate signature.
-  if (!(await verifySignature(body))) {
+  const [type, token] = authorization.split(' ')
+  if (type !== 'Bearer') {
     ctx.status = 401
     ctx.body = {
-      error: 'Invalid signature.',
+      error: 'Invalid token type.',
     }
     return
   }
 
-  // If all is valid, increment nonce to prevent replay attacks.
-  await account.increment('nonce')
+  // Verify token.
+  try {
+    const decodedToken = jwt.verify(token, accountsJwtSecret)
+    if (
+      typeof decodedToken !== 'object' ||
+      !decodedToken ||
+      !('publicKey' in decodedToken)
+    ) {
+      throw new Error()
+    }
+
+    const account = await Account.findByPk(decodedToken.publicKey)
+    if (!account) {
+      throw new Error()
+    }
+
+    // Set account.
+    ctx.state.account = account
+  } catch (err) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'Invalid token.',
+    }
+    return
+  }
 
   // Continue.
   await next()
@@ -127,23 +123,23 @@ const verifySecp256k1Signature = async (
 }
 
 // Verify signature.
-const verifySignature = async ({
-  data,
+export const verifySignature = async ({
+  auth,
   signature,
-}: RequestBody): Promise<boolean> => {
+}: AuthRequestBody): Promise<boolean> => {
   try {
     const signer = secp256k1PublicKeyToBech32Address(
-      data.auth.publicKey,
-      data.auth.chainBech32Prefix
+      auth.publicKey,
+      auth.chainBech32Prefix
     )
     const message = serializeSignDoc(
       makeSignDoc(
         [
           {
-            type: data.auth.type,
+            type: auth.type,
             value: {
               signer,
-              data: JSON.stringify(data, undefined, 2),
+              data: JSON.stringify(auth, undefined, 2),
             },
           },
         ],
@@ -151,23 +147,19 @@ const verifySignature = async ({
           gas: '0',
           amount: [
             {
-              denom: data.auth.chainFeeDenom,
+              denom: auth.chainFeeDenom,
               amount: '0',
             },
           ],
         },
-        data.auth.chainId,
+        auth.chainId,
         '',
         0,
         0
       )
     )
 
-    return await verifySecp256k1Signature(
-      data.auth.publicKey,
-      message,
-      signature
-    )
+    return await verifySecp256k1Signature(auth.publicKey, message, signature)
   } catch (err) {
     console.error('Signature verification', err)
     return false

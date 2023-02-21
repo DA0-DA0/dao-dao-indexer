@@ -5,7 +5,7 @@ import { ContractFormula, FormulaType, TypedFormula } from '@/core/types'
 import { FormulaTypeValues, dbKeyForKeys } from '@/core/utils'
 import { AccountKeyCredit, Computation, Contract, Event, State } from '@/db'
 import { getTypedFormula } from '@/test/mocks'
-import { getAccountWithSigner } from '@/test/utils'
+import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
@@ -29,7 +29,7 @@ describe('computer: GET /(.*)', () => {
   let apiKey: string
   let credit: AccountKeyCredit
   beforeEach(async () => {
-    const { paidApiKey, paidCredit } = await getAccountWithSigner()
+    const { paidApiKey, paidCredit } = await getAccountWithAuth()
     apiKey = paidApiKey
     credit = paidCredit
 

@@ -9,18 +9,11 @@ export type Auth = {
   publicKey: string
 }
 
-export type RequestBody<
-  Data extends Record<string, unknown> = Record<string, never>
-> = {
-  data: {
-    auth: Auth
-  } & Data
+export type AuthRequestBody = {
+  auth: Auth
   signature: string
 }
 
-export type AccountState<
-  Data extends Record<string, unknown> = Record<string, never>
-> = {
+export type AccountState = {
   account: Account
-  data: RequestBody<Data>['data']
 }

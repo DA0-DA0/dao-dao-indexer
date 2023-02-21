@@ -1,39 +1,36 @@
 import request from 'supertest'
 
 import { Account, AccountKey } from '@/db'
-import { GetSignedBody, getAccountWithSigner } from '@/test/utils'
+import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
 describe('POST /keys/reset', () => {
   let account: Account
-  let getSignedBody: GetSignedBody
+  let token: string
   beforeEach(async () => {
-    const { account: _account, getSignedBody: _getSignedBody } =
-      await getAccountWithSigner()
+    const { account: _account, token: _token } = await getAccountWithAuth()
 
     account = _account
-    getSignedBody = _getSignedBody
+    token = _token
   })
 
-  it('returns error if invalid signature', async () => {
+  it('returns error if no auth token', async () => {
     await request(app.callback())
       .post('/keys/reset')
-      .send({
-        ...(await getSignedBody({})),
-        signature: 'invalid',
-      })
+      .send({})
       .expect(401)
       .expect('Content-Type', /json/)
       .expect({
-        error: 'Invalid signature.',
+        error: 'No token.',
       })
   })
 
   it('returns error if no name', async () => {
     await request(app.callback())
       .post('/keys/reset')
-      .send(await getSignedBody({}))
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -44,11 +41,10 @@ describe('POST /keys/reset', () => {
   it('returns error if empty name', async () => {
     await request(app.callback())
       .post('/keys/reset')
-      .send(
-        await getSignedBody({
-          name: ' ',
-        })
-      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: '',
+      })
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -59,11 +55,10 @@ describe('POST /keys/reset', () => {
   it('returns error if no matching key for the name', async () => {
     await request(app.callback())
       .post('/keys/reset')
-      .send(
-        await getSignedBody({
-          name: 'invalid',
-        })
-      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'invalid',
+      })
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -71,17 +66,14 @@ describe('POST /keys/reset', () => {
       })
   })
 
-  it('does not reset key if invalid signature', async () => {
+  it('does not reset key if no auth token', async () => {
     const key = account.keys[0]
     const initialHash = key.hashedKey
 
     await request(app.callback())
       .post('/keys/reset')
       .send({
-        ...(await getSignedBody({
-          name: key.name,
-        })),
-        signature: 'invalid',
+        name: key.name,
       })
       .expect(401)
 
@@ -96,11 +88,10 @@ describe('POST /keys/reset', () => {
 
     const response = await request(app.callback())
       .post('/keys/reset')
-      .send(
-        await getSignedBody({
-          name: key.name,
-        })
-      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: key.name,
+      })
       .expect(200)
       .expect('Content-Type', /json/)
 

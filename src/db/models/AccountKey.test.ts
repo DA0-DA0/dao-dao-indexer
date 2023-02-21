@@ -1,4 +1,4 @@
-import { getAccountWithSigner } from '@/test/utils'
+import { getAccountWithAuth } from '@/test/utils'
 
 import { AccountKey } from './AccountKey'
 
@@ -9,7 +9,7 @@ describe('useCredit', () => {
     const {
       unpaidAccountKey: _unpaidAccountKey,
       paidAccountKey: _paidAccountKey,
-    } = await getAccountWithSigner()
+    } = await getAccountWithAuth()
     unpaidAccountKey = _unpaidAccountKey
     paidAccountKey = _paidAccountKey
   })

@@ -20,5 +20,6 @@
     "cwReceiptWebhookSecret": "cwReceiptWebhookSecret",
     "nativeDenomAccepted": "nativeDenomAccepted",
     "creditScaleFactor": 50
-  }
+  },
+  "accountsJwtSecret": "accountsJwtSecret"
 }

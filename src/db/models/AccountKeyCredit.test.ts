@@ -1,11 +1,11 @@
-import { getAccountWithSigner } from '@/test/utils'
+import { getAccountWithAuth } from '@/test/utils'
 
 import { AccountKeyCredit } from './AccountKeyCredit'
 
 describe('registerCreditsPaidFor', () => {
   let credit: AccountKeyCredit
   beforeEach(async () => {
-    const { unpaidAccountKey } = await getAccountWithSigner()
+    const { unpaidAccountKey } = await getAccountWithAuth()
     credit = unpaidAccountKey.credits[0]
   })
 

@@ -18,15 +18,17 @@ type CreateKeyResponse =
     }
 
 export const createKey: Router.Middleware<
-  AccountState<CreateKeyRequest>,
+  AccountState,
   DefaultContext,
   CreateKeyResponse
 > = async (ctx) => {
+  const body: CreateKeyRequest = ctx.request.body
+
   if (
-    !objectMatchesStructure(ctx.state.data, {
+    !objectMatchesStructure(body, {
       name: {},
     }) ||
-    !ctx.state.data.name?.trim()
+    !body.name?.trim()
   ) {
     ctx.status = 400
     ctx.body = {
@@ -35,8 +37,8 @@ export const createKey: Router.Middleware<
     return
   }
 
-  ctx.state.data.name = ctx.state.data.name.trim()
-  if (ctx.state.data.name.length > 255) {
+  body.name = body.name.trim()
+  if (body.name.length > 255) {
     ctx.status = 400
     ctx.body = {
       error: 'Name too long.',
@@ -47,7 +49,7 @@ export const createKey: Router.Middleware<
   // Verify name uniqueness.
   if (
     await ctx.state.account.$count('keys', {
-      where: { name: ctx.state.data.name },
+      where: { name: body.name },
     })
   ) {
     ctx.status = 400
@@ -58,8 +60,8 @@ export const createKey: Router.Middleware<
   }
 
   if (
-    typeof ctx.state.data.description === 'string' &&
-    ctx.state.data.description.trim().length > 255
+    typeof body.description === 'string' &&
+    body.description.trim().length > 255
   ) {
     ctx.status = 400
     ctx.body = {
@@ -67,11 +69,11 @@ export const createKey: Router.Middleware<
     }
     return
   }
-  ctx.state.data.description = ctx.state.data.description?.trim() || null
+  body.description = body.description?.trim() || null
 
   const { apiKey, accountKey } = await ctx.state.account.generateKey({
-    name: ctx.state.data.name,
-    description: ctx.state.data.description,
+    name: body.name,
+    description: body.description,
   })
 
   ctx.status = 201

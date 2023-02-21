@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 
+import jwt from 'jsonwebtoken'
 import {
   AllowNull,
   Column,
@@ -10,6 +11,8 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript'
+
+import { loadConfig } from '@/core/config'
 
 import { AccountKey } from './AccountKey'
 import {
@@ -59,5 +62,23 @@ export class Account extends Model {
       apiKey,
       accountKey,
     }
+  }
+
+  // Get JWT token for login. Expires in 30 days.
+  public getAuthToken() {
+    const { accountsJwtSecret } = loadConfig()
+    if (!accountsJwtSecret) {
+      throw new Error('JWT not configured.')
+    }
+
+    return jwt.sign(
+      {
+        publicKey: this.publicKey,
+      },
+      accountsJwtSecret,
+      {
+        expiresIn: '30d',
+      }
+    )
   }
 }

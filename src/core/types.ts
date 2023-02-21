@@ -62,6 +62,8 @@ export type Config = {
   }
   // WebSockets Soketi server.
   soketi?: PusherOptions
+  // Accounts server JWT secret.
+  accountsJwtSecret?: string
 
   // Other config options.
   [key: string]: any

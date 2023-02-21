@@ -17,15 +17,17 @@ type ResetKeyResponse =
     }
 
 export const resetKey: Router.Middleware<
-  AccountState<ResetKeyRequest>,
+  AccountState,
   DefaultContext,
   ResetKeyResponse
 > = async (ctx) => {
+  const body: ResetKeyRequest = ctx.request.body
+
   if (
-    !objectMatchesStructure(ctx.state.data, {
+    !objectMatchesStructure(body, {
       name: {},
     }) ||
-    !ctx.state.data.name?.trim()
+    !body.name?.trim()
   ) {
     ctx.status = 400
     ctx.body = {
@@ -36,7 +38,7 @@ export const resetKey: Router.Middleware<
 
   const existingKeys = await ctx.state.account.$get('keys', {
     where: {
-      name: ctx.state.data.name,
+      name: body.name,
     },
   })
 
