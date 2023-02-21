@@ -5,7 +5,7 @@ import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
-describe('POST /keys/list', () => {
+describe('GET /keys', () => {
   let account: Account
   let token: string
   beforeEach(async () => {
@@ -17,8 +17,7 @@ describe('POST /keys/list', () => {
 
   it('returns error if no auth token', async () => {
     await request(app.callback())
-      .post('/keys/list')
-      .send({})
+      .get('/keys')
       .expect(401)
       .expect('Content-Type', /json/)
       .expect({
@@ -28,9 +27,8 @@ describe('POST /keys/list', () => {
 
   it('lists keys', async () => {
     await request(app.callback())
-      .post('/keys/list')
+      .get('/keys')
       .set('Authorization', `Bearer ${token}`)
-      .send({})
       .expect(200)
       .expect('Content-Type', /json/)
       .expect({

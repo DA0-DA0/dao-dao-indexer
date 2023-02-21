@@ -32,11 +32,11 @@ accountRouter.post('/login', login)
 
 accountRouter.use(authMiddleware)
 
+// List keys.
+accountRouter.get('/keys', listKeys)
+
 // Create new key.
 accountRouter.post('/keys', createKey)
 
 // Reset key. Generates new API key and responds with it.
 accountRouter.post('/keys/reset', resetKey)
-
-// List keys.
-accountRouter.post('/keys/list', listKeys)
