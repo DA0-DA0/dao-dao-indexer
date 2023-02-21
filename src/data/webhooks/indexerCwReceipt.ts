@@ -18,7 +18,7 @@ export const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
             ? undefined
             : {
                 type: WebhookType.Url,
-                url: 'https://indexer-mainnet.daodao.zone/account/webhook/cw-receipt',
+                url: 'https://accounts.indexer.zone/webhook/cw-receipt',
                 method: 'POST',
                 headers: {
                   'X-API-Key': config.payment.cwReceiptWebhookSecret,
