@@ -45,8 +45,10 @@ export const webhook: Router.Middleware<
 
   let paymentId: string | undefined
   let paid: number | undefined
-  let update: boolean | undefined
   switch (paymentSource) {
+    // This webhook fires whenever the total for a receipt changes (i.e.
+    // increases, since it can only increase), so we should update the credit
+    // each time a new webhook is received.
     case AccountKeyCreditPaymentSource.CwReceipt:
       // Validate webhook secret.
       if (ctx.request.header['x-api-key'] !== payment.cwReceiptWebhookSecret) {
@@ -61,6 +63,7 @@ export const webhook: Router.Middleware<
         !objectMatchesStructure(ctx.request.body, {
           receiptId: {},
           amount: {},
+          previousAmount: {},
           serializedDenom: {},
         })
       ) {
@@ -85,11 +88,10 @@ export const webhook: Router.Middleware<
       }
 
       paymentId = ctx.request.body.receiptId
-      paid = Number(ctx.request.body.amount)
-      // This webhook fires whenever the total for a receipt changes (i.e.
-      // increases, since it can only increase), so we should update the credit
-      // each time a new webhook is received.
-      update = true
+      // Get increase in amount paid.
+      paid =
+        Number(ctx.request.body.amount) -
+        Number(ctx.request.body.previousAmount)
 
       break
     default:
@@ -147,10 +149,7 @@ export const webhook: Router.Middleware<
 
   // Register payment. Scale by configured scale factor to convert to credits.
   try {
-    await credit.registerCreditsPaidFor(
-      Math.round(paid * payment.creditScaleFactor),
-      update
-    )
+    await credit.addCredits(Math.round(paid * payment.creditScaleFactor))
   } catch (err) {
     if (err instanceof Error) {
       ctx.status = 400

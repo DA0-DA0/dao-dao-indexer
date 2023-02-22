@@ -41,7 +41,12 @@ describe('POST /webhook/:paymentSource', () => {
     })
 
     it('returns error if missing any required field', async () => {
-      const requiredFields = ['receiptId', 'amount', 'serializedDenom']
+      const requiredFields = [
+        'receiptId',
+        'amount',
+        'previousAmount',
+        'serializedDenom',
+      ]
 
       await Promise.all(
         requiredFields.map(
@@ -77,6 +82,7 @@ describe('POST /webhook/:paymentSource', () => {
         .send({
           receiptId: 'test',
           amount: '100',
+          previousAmount: '0',
           serializedDenom: 'test',
         })
         .expect(202)
@@ -93,6 +99,7 @@ describe('POST /webhook/:paymentSource', () => {
         .send({
           receiptId: '',
           amount: '100',
+          previousAmount: '0',
           serializedDenom,
         })
         .expect(400)
@@ -112,6 +119,7 @@ describe('POST /webhook/:paymentSource', () => {
               .send({
                 receiptId: 'test',
                 amount,
+                previousAmount: '0',
                 serializedDenom,
               })
               .expect(202)
@@ -130,6 +138,7 @@ describe('POST /webhook/:paymentSource', () => {
         .send({
           receiptId: 'invalid',
           amount: '100',
+          previousAmount: '0',
           serializedDenom,
         })
         .expect(202)
@@ -150,6 +159,7 @@ describe('POST /webhook/:paymentSource', () => {
         .send({
           receiptId: credit.paymentId,
           amount: '100',
+          previousAmount: '0',
           serializedDenom,
         })
         .expect(200)
@@ -165,18 +175,18 @@ describe('POST /webhook/:paymentSource', () => {
       )
     })
 
-    it('updates credits if already paid for', async () => {
+    it('adds credits if already paid for', async () => {
       const credit = unpaidAccountKey.credits[0]
-      await credit.registerCreditsPaidFor(100, false)
-      expect(credit.paidFor).toBe(true)
-      expect(credit.amount).toBe('100')
+      expect(credit.paidFor).toBe(false)
+      expect(credit.amount).toBe('0')
 
       await request(app.callback())
         .post(url)
         .set('X-API-Key', payment!.cwReceiptWebhookSecret)
         .send({
           receiptId: credit.paymentId,
-          amount: '200',
+          amount: '10',
+          previousAmount: '0',
           serializedDenom,
         })
         .expect(200)
@@ -188,7 +198,28 @@ describe('POST /webhook/:paymentSource', () => {
       await credit.reload()
       expect(credit.paidFor).toBe(true)
       expect(credit.amount).toBe(
-        Math.round(200 * payment!.creditScaleFactor).toString()
+        Math.round(10 * payment!.creditScaleFactor).toString()
+      )
+
+      await request(app.callback())
+        .post(url)
+        .set('X-API-Key', payment!.cwReceiptWebhookSecret)
+        .send({
+          receiptId: credit.paymentId,
+          amount: '20',
+          previousAmount: '10',
+          serializedDenom,
+        })
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .expect({
+          success: true,
+        })
+
+      await credit.reload()
+      expect(credit.paidFor).toBe(true)
+      expect(credit.amount).toBe(
+        Math.round(20 * payment!.creditScaleFactor).toString()
       )
     })
   })

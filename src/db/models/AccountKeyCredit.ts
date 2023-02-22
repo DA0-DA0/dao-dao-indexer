@@ -97,18 +97,10 @@ export class AccountKeyCredit extends Model {
     }
   }
 
-  async registerCreditsPaidFor(
-    amount: number,
-    // If true, will update even if already paid for.
-    update: boolean
-  ): Promise<void> {
-    if (this.paidFor && !update) {
-      throw new Error('Credit already paid for.')
-    }
-
+  async addCredits(amount: number): Promise<void> {
+    await this.increment('amount', { by: amount })
     await this.update({
-      amount: amount.toString(),
-      // Keep original paidAt if already exists (i.e. we're updating).
+      // Keep original paidAt if already exists.
       paidAt: this.paidAt || new Date(),
     })
   }

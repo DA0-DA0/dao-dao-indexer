@@ -2,7 +2,7 @@ import { getAccountWithAuth } from '@/test/utils'
 
 import { AccountKeyCredit } from './AccountKeyCredit'
 
-describe('registerCreditsPaidFor', () => {
+describe('addCredits', () => {
   let credit: AccountKeyCredit
   beforeEach(async () => {
     const { unpaidAccountKey } = await getAccountWithAuth()
@@ -11,46 +11,26 @@ describe('registerCreditsPaidFor', () => {
 
   it('sets amount', async () => {
     expect(credit.amount).toBe('0')
-    await credit.registerCreditsPaidFor(10, false)
+    await credit.addCredits(10)
     expect(credit.amount).toBe('10')
   })
 
   it('sets paidAt', async () => {
     expect(credit.paidAt).toBe(null)
-    await credit.registerCreditsPaidFor(10, false)
+    await credit.addCredits(10)
     expect(credit.paidAt).not.toBe(null)
   })
 
   it('flips paidFor', async () => {
     expect(credit.paidFor).toBe(false)
-    await credit.registerCreditsPaidFor(10, false)
+    await credit.addCredits(10)
     expect(credit.paidFor).toBe(true)
   })
 
-  it('throws if already paid for when not updating', async () => {
-    await credit.registerCreditsPaidFor(10, false)
-    expect(() => credit.registerCreditsPaidFor(20, false)).rejects.toThrowError(
-      'Credit already paid for.'
-    )
-  })
-
-  it('does not update amount if already paid for when not updating', async () => {
-    await credit.registerCreditsPaidFor(10, false)
-    expect(() =>
-      credit.registerCreditsPaidFor(20, false)
-    ).rejects.toThrowError()
-    expect(credit.amount).toBe('10')
-  })
-
-  it('does not throw if already paid for when updating', async () => {
-    await credit.registerCreditsPaidFor(10, true)
-    expect(() => credit.registerCreditsPaidFor(20, true)).resolves
-  })
-
-  it('updates amount if already paid for when updating', async () => {
-    await credit.registerCreditsPaidFor(10, true)
-    await credit.registerCreditsPaidFor(20, true)
-    expect(credit.amount).toBe('20')
+  it('updates amount', async () => {
+    await credit.addCredits(10)
+    await credit.addCredits(20)
+    expect(credit.amount).toBe('30')
   })
 })
 

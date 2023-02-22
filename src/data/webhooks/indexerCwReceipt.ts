@@ -24,7 +24,7 @@ export const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
                   'X-API-Key': config.payment.cwReceiptWebhookSecret,
                 },
               },
-        getValue: async (event) => {
+        getValue: async (event, getLastValue) => {
           // "receipt_totals" | receiptId | serializedDenom
           const [, receiptId, serializedDenom] = dbKeyToKeys(event.key, [
             false,
@@ -32,10 +32,12 @@ export const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
             false,
           ])
           const amount = event.valueJson
+          const previousAmount = (await getLastValue()) || '0'
 
           return {
             receiptId,
             amount,
+            previousAmount,
             serializedDenom,
           }
         },
