@@ -68,3 +68,36 @@ export const listStakers: ContractFormula<
     }))
   },
 }
+
+type Staker = StakerBalance & {
+  votingPowerPercent: number
+}
+
+export const topStakers: ContractFormula<Staker[] | undefined> = {
+  compute: async (env) => {
+    const { contractAddress, getMap } = env
+    // Get stakers.
+    const stakerBalances =
+      (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
+
+    // Get total power.
+    const totalVotingPower = Number(await totalPower.compute(env))
+
+    // Compute voting power for each staker.
+    const stakers = Object.entries(stakerBalances)
+      .map(
+        ([address, balance]): Staker => ({
+          address,
+          balance,
+          votingPowerPercent:
+            totalVotingPower === 0
+              ? 0
+              : (Number(balance) / totalVotingPower) * 100,
+        })
+      )
+      // Descending by voting power.
+      .sort((a, b) => b.votingPowerPercent - a.votingPowerPercent)
+
+    return stakers
+  },
+}
