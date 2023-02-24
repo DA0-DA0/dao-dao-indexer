@@ -201,6 +201,11 @@ export class Transformation extends Model {
               return undefined
             }
 
+            // If name is empty string or undefined, can't transform.
+            if (!name) {
+              return undefined
+            }
+
             return {
               event,
               transformer,

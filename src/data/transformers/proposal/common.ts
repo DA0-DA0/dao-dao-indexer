@@ -37,6 +37,11 @@ const proposed: Transformer = {
       event.valueJson.status === Status.Open,
   },
   name: (event) => {
+    // Ignore deletes. Can't transform if we can't access the proposer.
+    if (event.delete || !event.valueJson?.proposer) {
+      return
+    }
+
     // "proposals"|"proposals_v2", proposalId
     const [, proposalId] = dbKeyToKeys(event.key, [false, true])
     return `proposed:${event.valueJson.proposer}:${proposalId}`

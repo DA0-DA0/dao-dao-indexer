@@ -359,7 +359,8 @@ export type Transformer<V = any> = {
     contractAddresses: string[]
     matches: (event: ParsedEvent) => boolean
   }>
-  name: string | ((event: ParsedEvent) => string)
+  // If `name` returns `undefined`, the transformation will not be saved.
+  name: string | ((event: ParsedEvent) => string | undefined)
   // If `getValue` returns `undefined`, the transformation will not be saved.
   // All other values, including `null`, will be saved.
   getValue: (
