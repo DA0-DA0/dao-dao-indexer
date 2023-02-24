@@ -33,8 +33,8 @@ const proposed: Transformer = {
       // Starts with proposals or proposals_v2.
       (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
-      !!event.valueJson.proposer &&
-      event.valueJson.status === Status.Open,
+      !!event.valueJson?.proposer &&
+      event.valueJson?.status === Status.Open,
   },
   name: (event) => {
     // Ignore deletes. Can't transform if we can't access the proposer.
