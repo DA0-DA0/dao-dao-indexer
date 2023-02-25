@@ -7,6 +7,8 @@ import {
   totalStaked,
 } from '../staking/cw20Stake'
 
+const CODE_IDS_KEYS = ['dao-voting-cw20-staked']
+
 export const tokenContract: ContractFormula<string | undefined> = {
   compute: async ({ contractAddress, get, getTransformationMatch }) =>
     (await getTransformationMatch<string>(contractAddress, 'token'))?.value ??
@@ -26,9 +28,8 @@ export const votingPower: ContractFormula<
   string | undefined,
   { address: string }
 > = {
-  // Filter by code ID since someone may modify the contract.
   filter: {
-    codeIdsKeys: ['dao-voting-cw20-staked'],
+    codeIdsKeys: CODE_IDS_KEYS,
   },
 
   compute: async (env) => {
@@ -61,9 +62,8 @@ export const votingPower: ContractFormula<
 }
 
 export const totalPower: ContractFormula<string> = {
-  // Filter by code ID since someone may modify the contract.
   filter: {
-    codeIdsKeys: ['dao-voting-cw20-staked'],
+    codeIdsKeys: CODE_IDS_KEYS,
   },
 
   compute: async (env) => {
@@ -96,10 +96,26 @@ type Staker = StakerBalance & {
 }
 
 export const topStakers: ContractFormula<Staker[] | undefined> = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
   compute: async (env) => {
     const stakingContractAddress = await stakingContract.compute(env)
     if (!stakingContractAddress) {
       return
+    }
+
+    // Validate staking contract code ID matches filter.
+    if (
+      cw20StakeTopStakers.filter?.codeIdsKeys &&
+      !(await env.contractMatchesCodeIdKeys(
+        stakingContractAddress,
+        ...cw20StakeTopStakers.filter.codeIdsKeys
+      ))
+    ) {
+      throw new Error(
+        `staking contract ${stakingContractAddress} had unexpected code ID for dao-voting-cw20-staked contract ${env.contractAddress}`
+      )
     }
 
     // Get top stakers.

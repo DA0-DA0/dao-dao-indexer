@@ -1,9 +1,11 @@
 import { ContractFormula } from '@/core'
 
+const CODE_IDS_KEYS = ['dao-voting-cw4']
+
 export const votingPower: ContractFormula<string, { address: string }> = {
   // Filter by code ID since someone may modify the contract.
   filter: {
-    codeIdsKeys: ['dao-voting-cw4'],
+    codeIdsKeys: CODE_IDS_KEYS,
   },
 
   compute: async ({
@@ -29,7 +31,7 @@ export const votingPower: ContractFormula<string, { address: string }> = {
 export const totalPower: ContractFormula<string> = {
   // Filter by code ID since someone may modify the contract.
   filter: {
-    codeIdsKeys: ['dao-voting-cw4'],
+    codeIdsKeys: CODE_IDS_KEYS,
   },
 
   compute: async ({ contractAddress, getTransformationMatch, get }) =>

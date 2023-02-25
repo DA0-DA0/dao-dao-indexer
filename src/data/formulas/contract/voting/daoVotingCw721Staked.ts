@@ -138,6 +138,9 @@ export const topStakers: ContractFormula<
     limit?: string
   }
 > = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
   compute: async (env) => {
     const {
       contractAddress,

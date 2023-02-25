@@ -110,6 +110,9 @@ export const topStakers: ContractFormula<
     limit?: string
   }
 > = {
+  filter: {
+    codeIdsKeys: ['cw20-stake'],
+  },
   compute: async ({
     contractAddress,
     getTransformationMap,
