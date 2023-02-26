@@ -14,6 +14,7 @@ import {
 
 import { loadConfig } from '@/core/config'
 
+import { AccountCodeIdSet } from './AccountCodeIdSet'
 import { AccountKey } from './AccountKey'
 import {
   AccountKeyCredit,
@@ -41,6 +42,9 @@ export class Account extends Model {
 
   @HasMany(() => AccountWebhook, 'accountPublicKey')
   webhooks!: AccountWebhook[]
+
+  @HasMany(() => AccountCodeIdSet, 'accountPublicKey')
+  codeIdSets!: AccountCodeIdSet[]
 
   // Generates a random API key and creates a key on this account with it. Also
   // setup one credit for the key to accept payment.

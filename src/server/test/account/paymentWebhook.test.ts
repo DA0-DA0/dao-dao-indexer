@@ -6,7 +6,7 @@ import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
-describe('POST /webhook/:paymentSource', () => {
+describe('POST /payment-webhook/:paymentSource', () => {
   const { payment } = loadConfig()
 
   let unpaidAccountKey: AccountKey
@@ -17,7 +17,7 @@ describe('POST /webhook/:paymentSource', () => {
 
   it('returns error if invalid payment source', async () => {
     await request(app.callback())
-      .post('/webhook/invalid')
+      .post('/payment-webhook/invalid')
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -26,7 +26,7 @@ describe('POST /webhook/:paymentSource', () => {
   })
 
   describe(AccountKeyCreditPaymentSource.CwReceipt, () => {
-    const url = `/webhook/${AccountKeyCreditPaymentSource.CwReceipt}`
+    const url = `/payment-webhook/${AccountKeyCreditPaymentSource.CwReceipt}`
     const serializedDenom = 'n' + payment!.nativeDenomAccepted
 
     it('returns error if invalid API key', async () => {
