@@ -2,6 +2,7 @@ import {
   AllowNull,
   BelongsTo,
   Column,
+  CreatedAt,
   DataType,
   ForeignKey,
   Model,
@@ -9,25 +10,26 @@ import {
 } from 'sequelize-typescript'
 
 import { AccountWebhook } from './AccountWebhook'
+import { AccountWebhookEvent } from './AccountWebhookEvent'
 
-export type AccountWebhookAttemptApiJson = {
+export type AccountWebhookEventAttemptApiJson = {
+  sentAt: string
   url: string
   requestBody: string
   requestHeaders: string
-  responseBody: string
-  responseHeaders: string
+  responseBody: string | null
+  responseHeaders: string | null
   statusCode: number
-  statusMessage: string
 }
 
 @Table({
   timestamps: true,
 })
-export class AccountWebhookAttempt extends Model {
+export class AccountWebhookEventAttempt extends Model {
   @AllowNull(false)
-  @ForeignKey(() => AccountWebhook)
+  @ForeignKey(() => AccountWebhookEvent)
   @Column
-  webhookId!: number
+  webhookEventId!: number
 
   @BelongsTo(() => AccountWebhook)
   webhook!: AccountWebhook
@@ -44,31 +46,30 @@ export class AccountWebhookAttempt extends Model {
   @Column(DataType.TEXT)
   requestHeaders!: string
 
-  @AllowNull(false)
+  @AllowNull
   @Column(DataType.TEXT)
-  responseBody!: string
+  responseBody!: string | null
 
-  @AllowNull(false)
+  @AllowNull
   @Column(DataType.TEXT)
-  responseHeaders!: string
+  responseHeaders!: string | null
 
   @AllowNull(false)
   @Column(DataType.INTEGER)
   statusCode!: number
 
-  @AllowNull(false)
-  @Column(DataType.TEXT)
-  statusMessage!: string
+  @CreatedAt
+  createdAt!: Date
 
-  public async getApiJson(): Promise<AccountWebhookAttemptApiJson> {
+  get apiJson(): AccountWebhookEventAttemptApiJson {
     return {
+      sentAt: this.createdAt.toISOString(),
       url: this.url,
       requestBody: this.requestBody,
       requestHeaders: this.requestHeaders,
       responseBody: this.responseBody,
       responseHeaders: this.responseHeaders,
       statusCode: this.statusCode,
-      statusMessage: this.statusMessage,
     }
   }
 }

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 import { Op } from 'sequelize'
 
@@ -10,24 +11,31 @@ const LOADER_MAP = ['—', '\\', '|', '/']
 let shuttingDown = false
 let logInterval: NodeJS.Timeout
 
+// Parse arguments.
+const program = new Command()
+program.option(
+  '-c, --config <path>',
+  'path to config file, falling back to config.json'
+)
+program.option(
+  '-b, --batch <size>',
+  'webhook batch size',
+  (value) => parseInt(value, 10),
+  50
+)
+program.parse()
+const { config: _config, batch } = program.opts()
+
+const config = loadConfig(_config)
+
+// Add Sentry error reporting.
+if (config.sentryDsn) {
+  Sentry.init({
+    dsn: config.sentryDsn,
+  })
+}
+
 const main = async () => {
-  // Parse arguments.
-  const program = new Command()
-  program.option(
-    '-c, --config <path>',
-    'path to config file, falling back to config.json'
-  )
-  program.option(
-    '-b, --batch <size>',
-    'webhook batch size',
-    (value) => parseInt(value, 10),
-    50
-  )
-  program.parse()
-  const { config, batch } = program.opts()
-
-  await loadConfig(config)
-
   // Connect to both DBs.
   await loadDb({
     type: DbType.Data,

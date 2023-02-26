@@ -9,8 +9,8 @@ import {
   AccountKey,
   AccountKeyCredit,
   AccountWebhook,
-  AccountWebhookAttempt,
   AccountWebhookCodeIdSet,
+  AccountWebhookEventAttempt,
   Computation,
   Contract,
   Event,
@@ -18,6 +18,7 @@ import {
   State,
   Transformation,
 } from './models'
+import { AccountWebhookEvent } from './models/AccountWebhookEvent'
 
 // List of models included in the database per type.
 const MODELS_FOR_TYPE: Record<DbType, SequelizeOptions['models']> = {
@@ -35,8 +36,9 @@ const MODELS_FOR_TYPE: Record<DbType, SequelizeOptions['models']> = {
     AccountKey,
     AccountKeyCredit,
     AccountWebhook,
-    AccountWebhookAttempt,
     AccountWebhookCodeIdSet,
+    AccountWebhookEvent,
+    AccountWebhookEventAttempt,
   ],
 }
 

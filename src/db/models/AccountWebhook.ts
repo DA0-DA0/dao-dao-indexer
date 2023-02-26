@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto'
+
 import {
   AllowNull,
   BelongsTo,
@@ -13,8 +15,9 @@ import {
 
 import { Account } from './Account'
 import { AccountCodeIdSet } from './AccountCodeIdSet'
-import { AccountWebhookAttempt } from './AccountWebhookAttempt'
 import { AccountWebhookCodeIdSet } from './AccountWebhookCodeIdSet'
+import { AccountWebhookEvent } from './AccountWebhookEvent'
+import { Event } from './Event'
 
 export type AccountWebhookApiJson = {
   description: string | null
@@ -73,10 +76,10 @@ export class AccountWebhook extends Model {
   @Column(DataType.BOOLEAN)
   stateKeyIsPrefix!: boolean | null
 
-  @HasMany(() => AccountWebhookAttempt, 'webhookId')
-  attempts!: AccountWebhookAttempt[]
+  @HasMany(() => AccountWebhookEvent, 'webhookId')
+  events!: AccountWebhookEvent[]
 
-  public async getApiJson(): Promise<AccountWebhookApiJson> {
+  async getApiJson(): Promise<AccountWebhookApiJson> {
     this.codeIdSets = (await this.$get('codeIdSets')) || []
 
     return {
@@ -89,5 +92,17 @@ export class AccountWebhook extends Model {
       stateKey: this.stateKey,
       stateKeyIsPrefix: this.stateKeyIsPrefix,
     }
+  }
+
+  // Queue webhook for an event.
+  async queue(event: Event) {
+    // Load event contract (asParsedEvent will throw err if load fails).
+    event.contract ||= (await event.$get('contract'))!
+
+    await this.$create('events', {
+      uuid: randomUUID(),
+      url: this.url,
+      parsedEvent: event.asParsedEvent,
+    })
   }
 }
