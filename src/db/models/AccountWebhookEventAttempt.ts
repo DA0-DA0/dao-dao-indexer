@@ -9,7 +9,6 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { AccountWebhook } from './AccountWebhook'
 import { AccountWebhookEvent } from './AccountWebhookEvent'
 
 export type AccountWebhookEventAttemptApiJson = {
@@ -31,8 +30,8 @@ export class AccountWebhookEventAttempt extends Model {
   @Column
   webhookEventId!: number
 
-  @BelongsTo(() => AccountWebhook)
-  webhook!: AccountWebhook
+  @BelongsTo(() => AccountWebhookEvent)
+  webhookEvent!: AccountWebhookEvent
 
   @AllowNull(false)
   @Column(DataType.STRING)

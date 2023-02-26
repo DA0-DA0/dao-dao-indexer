@@ -13,6 +13,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { dbKeyForKeys } from '@/core/utils'
+
 import { Account } from './Account'
 import { AccountCodeIdSet } from './AccountCodeIdSet'
 import { AccountWebhookCodeIdSet } from './AccountWebhookCodeIdSet'
@@ -94,15 +96,68 @@ export class AccountWebhook extends Model {
     }
   }
 
+  // Check if a webhook matches an event.
+  async matches(event: Event): Promise<boolean> {
+    // Load event contract if necessary.
+    event.contract ||= (await event.$get('contract'))!
+    if (!event.contract) {
+      throw new Error('Event contract not loaded')
+    }
+
+    // Load code ID sets if necessary.
+    this.codeIdSets ||= (await this.$get('codeIdSets')) || []
+
+    // Check if the event matches the webhook.
+    return (
+      (this.contractAddresses === null ||
+        this.contractAddresses.includes(event.contractAddress)) &&
+      (this.codeIdSets.length === 0 ||
+        this.codeIdSets.some(({ codeIds }) =>
+          codeIds.includes(event.contract.codeId)
+        )) &&
+      (this.stateKey === null ||
+        (this.stateKeyIsPrefix &&
+          event.key.startsWith(dbKeyForKeys(this.stateKey, ''))) ||
+        (!this.stateKeyIsPrefix &&
+          event.key === dbKeyForKeys(this.stateKey))) &&
+      (!this.onlyFirstSet || !(await event.getPreviousEvent()))
+    )
+  }
+
   // Queue webhook for an event.
   async queue(event: Event) {
     // Load event contract (asParsedEvent will throw err if load fails).
     event.contract ||= (await event.$get('contract'))!
 
-    await this.$create('events', {
+    return await this.$create<AccountWebhookEvent>('event', {
       uuid: randomUUID(),
       url: this.url,
       parsedEvent: event.asParsedEvent,
     })
+  }
+
+  // Queue webhooks for events. Events must be loaded with `Contract` included.
+  static async queueWebhooks(events: Event[]): Promise<number> {
+    const webhooks = await AccountWebhook.findAll({
+      include: AccountCodeIdSet,
+    })
+
+    const matches = await Promise.all(
+      webhooks.flatMap((webhook) =>
+        events.map(async (event) => ({
+          webhook,
+          event,
+          matches: await webhook.matches(event),
+        }))
+      )
+    )
+
+    return (
+      await Promise.all(
+        matches
+          .filter(({ matches }) => matches)
+          .map(({ webhook, event }) => webhook.queue(event))
+      )
+    ).length
   }
 }

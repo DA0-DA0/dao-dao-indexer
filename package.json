@@ -18,6 +18,7 @@
     "export": "node dist/scripts/export.js",
     "export:prod": "npm run build && pm2 reload ecosystem.config.js --only exporter,webhooks",
     "webhooks": "node dist/scripts/webhooks.js",
+    "accountWebhooks": "node dist/scripts/accountWebhooks.js",
     "transform": "node dist/scripts/transform.js",
     "pre-compute": "node dist/scripts/preCompute.js",
     "revalidate": "node dist/scripts/revalidate.js",

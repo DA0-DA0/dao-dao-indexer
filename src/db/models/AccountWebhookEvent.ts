@@ -16,6 +16,7 @@ import {
 } from 'sequelize-typescript'
 
 import { ParsedEvent, SerializedBlock } from '@/core/types'
+import { eventKeyToBase64 } from '@/core/utils'
 
 import { AccountWebhook } from './AccountWebhook'
 import {
@@ -30,7 +31,10 @@ export type AccountWebhookEventApiJson = {
 }
 
 type RequestBody = {
-  uuid: string
+  webhook: {
+    uuid: string
+    attempt: number
+  }
   block: SerializedBlock & { timestamp: string }
   contractAddress: string
   codeId: number
@@ -64,14 +68,22 @@ export class AccountWebhookEvent extends Model {
   attempts!: AccountWebhookEventAttempt[]
 
   @AllowNull(false)
-  @Column(DataType.STRING)
   @Unique
+  @Column(DataType.STRING)
   uuid!: string
 
   @AllowNull(false)
-  @Column(DataType.ENUM(...Object.values(AccountWebhookEventStatus)))
   @Default(AccountWebhookEventStatus.Pending)
+  @Column(DataType.ENUM(...Object.values(AccountWebhookEventStatus)))
   status!: AccountWebhookEventStatus
+
+  @AllowNull
+  @Column(DataType.DATE)
+  succeededAt!: Date | null
+
+  @AllowNull
+  @Column(DataType.DATE)
+  failedAt!: Date | null
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -114,12 +126,16 @@ export class AccountWebhookEvent extends Model {
     return signature
   }
 
-  async fire() {
+  // Returns whether or not the webhook was successful.
+  async fire(): Promise<boolean> {
     // Load attempts.
     this.attempts ||= (await this.$get('attempts')) ?? []
 
     const requestBody: RequestBody = {
-      uuid: this.uuid,
+      webhook: {
+        uuid: this.uuid,
+        attempt: this.attempts.length + 1,
+      },
       block: {
         height: this.parsedEvent.blockHeight,
         timeUnixMs: this.parsedEvent.blockTimeUnixMs,
@@ -129,23 +145,23 @@ export class AccountWebhookEvent extends Model {
       },
       contractAddress: this.parsedEvent.contractAddress,
       codeId: this.parsedEvent.codeId,
-      key: this.parsedEvent.key,
+      key: eventKeyToBase64(this.parsedEvent.key),
       value: this.parsedEvent.valueJson,
       delete: this.parsedEvent.delete,
     }
+
+    // Sign request information for webhook verification header.
+    const signature = await this.getRequestSignature(this.url, requestBody)
     const requestHeaders = {
       // Sending JSON.
       'Content-Type': 'application/json',
       // axios bug fix: https://stackoverflow.com/a/74735197
       'Accept-Encoding': 'gzip,deflate,compress',
-      // Sign request information for webhook verification header.
-      'X-Webhook-Signature': await this.getRequestSignature(
-        this.url,
-        requestBody
-      ),
+      // Signature for webhook verification.
+      'X-Webhook-Signature': signature,
     }
 
-    let responseBody
+    let responseBody = null
     let responseHeaders = null
     let statusCode: number
     try {
@@ -175,7 +191,7 @@ export class AccountWebhookEvent extends Model {
       // Capture unexpected error.
       Sentry.captureException(err, {
         tags: {
-          type: 'webhook',
+          type: 'webhook_caught',
           accountWebhookEventId: this.id,
           uuid: this.uuid,
           url: this.url,
@@ -183,8 +199,8 @@ export class AccountWebhookEvent extends Model {
       })
     }
 
-    // Create attempt.
-    await this.$create('attempts', {
+    // Store attempt.
+    const attempt = await this.$create<AccountWebhookEventAttempt>('attempt', {
       url: this.url,
       requestBody: JSON.stringify(requestBody),
       requestHeaders: JSON.stringify(requestHeaders),
@@ -193,21 +209,28 @@ export class AccountWebhookEvent extends Model {
       statusCode,
     })
 
+    const succeeded = statusCode >= 200 && statusCode < 300
+
     // Update status if has not yet succeeded or failed.
     if (
       this.status === AccountWebhookEventStatus.Pending ||
       this.status === AccountWebhookEventStatus.Retrying
     ) {
-      if (statusCode >= 200 && statusCode < 300) {
-        this.status = AccountWebhookEventStatus.Success
-      } else {
-        this.status =
-          this.attempts.length < MAX_ATTEMPTS
-            ? AccountWebhookEventStatus.Retrying
-            : AccountWebhookEventStatus.Failure
+      this.status = succeeded
+        ? AccountWebhookEventStatus.Success
+        : this.attempts.length < MAX_ATTEMPTS
+        ? AccountWebhookEventStatus.Retrying
+        : AccountWebhookEventStatus.Failure
+
+      if (this.status === AccountWebhookEventStatus.Success) {
+        this.succeededAt = attempt.createdAt
+      } else if (this.status === AccountWebhookEventStatus.Failure) {
+        this.failedAt = attempt.createdAt
       }
 
       await this.save()
     }
+
+    return succeeded
   }
 }

@@ -19,6 +19,7 @@ import {
   AccountKeyCredit,
   AccountKeyCreditPaymentSource,
 } from './AccountKeyCredit'
+import { AccountWebhook } from './AccountWebhook'
 
 // Stores the nonce for each public key, which is used to prevent replay
 // attacks of past authenticated messages.
@@ -37,6 +38,9 @@ export class Account extends Model {
 
   @HasMany(() => AccountKey, 'accountPublicKey')
   keys!: AccountKey[]
+
+  @HasMany(() => AccountWebhook, 'accountPublicKey')
+  webhooks!: AccountWebhook[]
 
   // Generates a random API key and creates a key on this account with it. Also
   // setup one credit for the key to accept payment.

@@ -12,7 +12,7 @@ import { Account } from './Account'
 
 export type AccountCodeIdSetApiJson = {
   name: string
-  codeIds: string[]
+  codeIds: number[]
 }
 
 @Table({
@@ -32,8 +32,8 @@ export class AccountCodeIdSet extends Model {
   name!: string
 
   @AllowNull(false)
-  @Column(DataType.ARRAY(DataType.BIGINT))
-  codeIds!: string[]
+  @Column(DataType.ARRAY(DataType.INTEGER))
+  codeIds!: number[]
 
   public async getApiJson(): Promise<AccountCodeIdSetApiJson> {
     return {

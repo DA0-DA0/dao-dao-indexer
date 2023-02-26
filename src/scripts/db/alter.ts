@@ -4,41 +4,54 @@ import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
 import { loadDb } from '@/db'
 
+// Parse arguments.
+const program = new Command()
+program.option(
+  '-c, --config <path>',
+  'path to config file, falling back to config.json'
+)
+program.option('-t, --type <data|accounts|both>', 'database type', 'both')
+program.parse()
+const { config, type } = program.opts()
+
+// Verify type.
+if (type !== 'data' && type !== 'accounts' && type !== 'both') {
+  console.error(`Invalid type ${type}. Expected: data, accounts, or both.`)
+  process.exit(1)
+}
+
+// Load config with config option.
+loadConfig(config)
+
 export const main = async () => {
-  // Parse arguments.
-  const program = new Command()
-  program.option(
-    '-c, --config <path>',
-    'path to config file, falling back to config.json'
-  )
-  program.parse()
-  const options = program.opts()
-
-  // Load config with config option.
-  loadConfig(options.config)
-
   // Log when altering.
-  const dataSequelize = await loadDb({
-    type: DbType.Data,
-    logging: true,
-  })
-  const accountsSequelize = await loadDb({
-    type: DbType.Accounts,
-    logging: true,
-  })
+  const dataSequelize =
+    type === 'both' || type === 'data'
+      ? await loadDb({
+          type: DbType.Data,
+          logging: true,
+        })
+      : undefined
+  const accountsSequelize =
+    type === 'both' || type === 'accounts'
+      ? await loadDb({
+          type: DbType.Accounts,
+          logging: true,
+        })
+      : undefined
 
   try {
     // Alter the database to match any changes.
-    await dataSequelize.sync({ alter: true })
-    await accountsSequelize.sync({ alter: true })
+    await dataSequelize?.sync({ alter: true })
+    await accountsSequelize?.sync({ alter: true })
 
     console.log('\nAltered.')
   } catch (err) {
     console.error(err)
   }
 
-  await dataSequelize.close()
-  await accountsSequelize.close()
+  await dataSequelize?.close()
+  await accountsSequelize?.close()
 }
 
 main()

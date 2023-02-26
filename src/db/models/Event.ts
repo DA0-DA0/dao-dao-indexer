@@ -118,6 +118,27 @@ export class Event extends Model {
     }
   }
 
+  // Get the previous event for this key. If this is the first event for this
+  // key, return null. Cache the result so it can be reused since this shouldn't
+  // change.
+  previousEvent?: Event | null
+  async getPreviousEvent(cache = true): Promise<Event | null> {
+    if (this.previousEvent === undefined || !cache) {
+      this.previousEvent = await Event.findOne({
+        where: {
+          contractAddress: this.contractAddress,
+          key: this.key,
+          blockHeight: {
+            [Op.lt]: this.blockHeight,
+          },
+        },
+        order: [['blockHeight', 'DESC']],
+      })
+    }
+
+    return this.previousEvent
+  }
+
   // Split dependent keys into two groups: non map keys and map prefixes. Map
   // prefixes end with a comma because they are missing the final key segment,
   // which is the key of each map entry.

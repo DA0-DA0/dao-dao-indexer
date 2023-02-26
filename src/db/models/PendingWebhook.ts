@@ -2,7 +2,6 @@ import { Worker } from 'worker_threads'
 
 import axios from 'axios'
 import Pusher from 'pusher'
-import { Op } from 'sequelize'
 import {
   AllowNull,
   BelongsTo,
@@ -13,7 +12,13 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { WebhookEndpoint, WebhookType, getEnv, loadConfig } from '@/core'
+import {
+  ContractEnv,
+  WebhookEndpoint,
+  WebhookType,
+  getEnv,
+  loadConfig,
+} from '@/core'
 import { getProcessedWebhooks } from '@/data/webhooks'
 
 import { Event } from './Event'
@@ -113,7 +118,7 @@ export class PendingWebhook extends Model {
           )
 
           return webhooksForEvent.map(async (webhook) => {
-            const env = {
+            const env: ContractEnv = {
               ...getEnv({ block: event.block }),
               contractAddress: event.contractAddress,
             }
@@ -144,17 +149,7 @@ export class PendingWebhook extends Model {
                   }
 
                   // Fallback to database.
-                  const lastEvent = await Event.findOne({
-                    where: {
-                      contractAddress: event.contractAddress,
-                      key: event.key,
-                      blockHeight: {
-                        [Op.lt]: event.blockHeight,
-                      },
-                    },
-                    order: [['blockHeight', 'DESC']],
-                  })
-
+                  const lastEvent = await event.getPreviousEvent()
                   return !lastEvent || lastEvent.delete
                     ? null
                     : lastEvent.valueJson
