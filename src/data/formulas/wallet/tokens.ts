@@ -42,8 +42,12 @@ export const list: WalletFormula<ContractWithBalance[]> = {
     )
 
     const contractsWithBalance = matchingContracts
-      // Filter by those with cw20 in the contract name.
-      .filter((_, index) => contractInfos[index]?.contract?.includes('cw20'))
+      // Filter by those with cw20 in the contract name and with a >0 balance.
+      .filter(
+        (_, index) =>
+          contractInfos[index]?.contract?.includes('cw20') &&
+          balances[index] !== '0'
+      )
       .map(
         ({ contractAddress }, index): ContractWithBalance => ({
           contractAddress,
