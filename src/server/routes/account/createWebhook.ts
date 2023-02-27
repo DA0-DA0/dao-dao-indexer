@@ -91,17 +91,15 @@ export const createWebhook: Router.Middleware<
     }
   }
 
-  // Validate contract addresses if present.
-  if (
-    body.contractAddresses &&
-    (!Array.isArray(body.contractAddresses) ||
-      body.contractAddresses.some((address) => typeof address !== 'string'))
-  ) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'Invalid contract addresses.',
-    }
-    return
+  // Clean contract addresses if present.
+  body.contractAddresses =
+    body.contractAddresses && Array.isArray(body.contractAddresses)
+      ? body.contractAddresses
+          .map((address) => (typeof address === 'string' ? address.trim() : ''))
+          .filter(Boolean)
+      : null
+  if (body.contractAddresses?.length === 0) {
+    body.contractAddresses = null
   }
 
   // Validate state key if present.
@@ -112,14 +110,14 @@ export const createWebhook: Router.Middleware<
     }
     return
   }
-  body.stateKey = body.stateKey?.trim() || null
+  body.stateKey ||= null
 
   // Validate at least one filter is present.
   if (
     (!body.contractAddresses ||
       !Array.isArray(body.contractAddresses) ||
       body.contractAddresses.length === 0) &&
-    !body.stateKey?.trim() &&
+    !body.stateKey &&
     (!body.codeIdSetIds ||
       !Array.isArray(body.codeIdSetIds) ||
       body.codeIdSetIds.length === 0)

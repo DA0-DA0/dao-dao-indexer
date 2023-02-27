@@ -12,6 +12,7 @@ import { listWebhooks } from './listWebhooks'
 import { login } from './login'
 import { paymentWebhook } from './paymentWebhook'
 import { resetKey } from './resetKey'
+import { updateWebhook } from './updateWebhook'
 
 export const accountRouter = new Router()
 accountRouter.use(koaBody())
@@ -48,6 +49,9 @@ accountRouter.get('/webhooks', listWebhooks)
 
 // Create new webhook.
 accountRouter.post('/webhooks', createWebhook)
+
+// Update webhook.
+accountRouter.patch('/webhooks/:id', updateWebhook)
 
 // Delete webhook.
 accountRouter.delete('/webhooks/:id', deleteWebhook)
