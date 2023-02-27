@@ -1,19 +1,26 @@
 import request from 'supertest'
 
-import { Account, AccountCodeIdSet, AccountWebhook } from '@/db'
+import { Account, AccountCodeIdSet, AccountKey, AccountWebhook } from '@/db'
 import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
 describe('PATCH /webhooks/:id', () => {
   let account: Account
+  let accountKey: AccountKey
   let token: string
   let codeIdSet: AccountCodeIdSet
   let webhook: AccountWebhook
   beforeEach(async () => {
-    const { account: _account, token: _token } = await getAccountWithAuth()
+    const {
+      account: _account,
+      paidAccountKey,
+      unpaidAccountKey,
+      token: _token,
+    } = await getAccountWithAuth()
 
     account = _account
+    accountKey = unpaidAccountKey
     token = _token
 
     codeIdSet = await account.$create('codeIdSet', {
@@ -25,6 +32,7 @@ describe('PATCH /webhooks/:id', () => {
       .post('/webhooks')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        accountKeyId: paidAccountKey.id,
         description: 'test',
         url: 'https://example.com',
         codeIdSetIds: [codeIdSet.id],
@@ -46,6 +54,47 @@ describe('PATCH /webhooks/:id', () => {
       .expect({
         error: 'No token.',
       })
+  })
+
+  it('returns error if invalid key', async () => {
+    await request(app.callback())
+      .patch(`/webhooks/${webhook.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        accountKeyId: -1,
+      })
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Invalid key.',
+      })
+  })
+
+  it("returns error if another account's key", async () => {
+    // Make new account and use key.
+    const { paidAccountKey } = await getAccountWithAuth()
+
+    await request(app.callback())
+      .patch(`/webhooks/${webhook.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        accountKeyId: paidAccountKey.id,
+      })
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Invalid key.',
+      })
+  })
+
+  it('does not error if valid account key', async () => {
+    await request(app.callback())
+      .patch(`/webhooks/${webhook.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        accountKeyId: accountKey.id,
+      })
+      .expect(204)
   })
 
   it('returns error if description too long', async () => {

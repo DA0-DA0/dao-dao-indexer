@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto'
 import Router from '@koa/router'
 import { DefaultContext } from 'koa'
 
-import { AccountCodeIdSet, AccountWebhook } from '@/db'
+import { AccountCodeIdSet, AccountKey, AccountWebhook } from '@/db'
 
 import { AccountState } from './types'
 
@@ -17,6 +17,7 @@ type UpdateWebhookRequest = Partial<
     | 'stateKey'
     | 'stateKeyIsPrefix'
   > & {
+    accountKeyId: number
     codeIdSetIds: number[]
     resetSecret: boolean
   }
@@ -48,6 +49,31 @@ export const updateWebhook: Router.Middleware<
   }
 
   const body: UpdateWebhookRequest = ctx.request.body
+
+  // Validate key ID.
+  if ('accountKeyId' in body) {
+    if (typeof body.accountKeyId !== 'number') {
+      ctx.status = 400
+      ctx.body = {
+        error: 'Invalid key ID.',
+      }
+      return
+    }
+    const accountKey = await AccountKey.findByPk(body.accountKeyId)
+    // Verify key exists and belongs to the account.
+    if (
+      !accountKey ||
+      accountKey.accountPublicKey !== ctx.state.account.publicKey
+    ) {
+      ctx.status = 400
+      ctx.body = {
+        error: 'Invalid key.',
+      }
+      return
+    }
+
+    webhook.accountKeyId = body.accountKeyId
+  }
 
   if ('description' in body) {
     if (

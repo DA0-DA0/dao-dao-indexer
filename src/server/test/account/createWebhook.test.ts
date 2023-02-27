@@ -1,18 +1,24 @@
 import request from 'supertest'
 
-import { Account, AccountCodeIdSet, AccountWebhook } from '@/db'
+import { Account, AccountCodeIdSet, AccountKey, AccountWebhook } from '@/db'
 import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
 describe('POST /webhooks', () => {
   let account: Account
+  let accountKey: AccountKey
   let token: string
   let codeIdSet: AccountCodeIdSet
   beforeEach(async () => {
-    const { account: _account, token: _token } = await getAccountWithAuth()
+    const {
+      account: _account,
+      paidAccountKey,
+      token: _token,
+    } = await getAccountWithAuth()
 
     account = _account
+    accountKey = paidAccountKey
     token = _token
 
     codeIdSet = await account.$create('codeIdSet', {
@@ -32,11 +38,67 @@ describe('POST /webhooks', () => {
       })
   })
 
+  it('returns error if no account key', async () => {
+    await request(app.callback())
+      .post('/webhooks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Invalid key.',
+      })
+  })
+
+  it('returns error if invalid key', async () => {
+    await request(app.callback())
+      .post('/webhooks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        accountKeyId: -1,
+      })
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Invalid key.',
+      })
+  })
+
+  it("returns error if another account's key", async () => {
+    // Make new account and use key.
+    const { paidAccountKey } = await getAccountWithAuth()
+
+    await request(app.callback())
+      .post('/webhooks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        accountKeyId: paidAccountKey.id,
+      })
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Invalid key.',
+      })
+  })
+
+  it('does not error if valid account key', async () => {
+    const response = await request(app.callback())
+      .post('/webhooks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        accountKeyId: accountKey.id,
+      })
+      .expect('Content-Type', /json/)
+
+    expect(response.body.error).not.toBe('Invalid key.')
+  })
+
   it('returns error if description too long', async () => {
     await request(app.callback())
       .post('/webhooks')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        accountKeyId: accountKey.id,
         description: 'd'.repeat(256),
       })
       .expect(400)
@@ -52,6 +114,7 @@ describe('POST /webhooks', () => {
         .post('/webhooks')
         .set('Authorization', `Bearer ${token}`)
         .send({
+          accountKeyId: accountKey.id,
           ...(description !== undefined
             ? {
                 description,
@@ -68,7 +131,9 @@ describe('POST /webhooks', () => {
     await request(app.callback())
       .post('/webhooks')
       .set('Authorization', `Bearer ${token}`)
-      .send({})
+      .send({
+        accountKeyId: accountKey.id,
+      })
       .expect(400)
       .expect('Content-Type', /json/)
       .expect({
@@ -81,6 +146,7 @@ describe('POST /webhooks', () => {
       .post('/webhooks')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        accountKeyId: accountKey.id,
         url: '',
       })
       .expect(400)
@@ -96,6 +162,7 @@ describe('POST /webhooks', () => {
         .post('/webhooks')
         .set('Authorization', `Bearer ${token}`)
         .send({
+          accountKeyId: accountKey.id,
           url,
         })
         .expect(400)
@@ -111,6 +178,7 @@ describe('POST /webhooks', () => {
       .post('/webhooks')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        accountKeyId: accountKey.id,
         description: 'test',
         url: 'https://example.com',
       })
@@ -128,6 +196,7 @@ describe('POST /webhooks', () => {
           .post('/webhooks')
           .set('Authorization', `Bearer ${token}`)
           .send({
+            accountKeyId: accountKey.id,
             description: 'test',
             url: 'https://example.com',
             codeIdSetIds,
@@ -144,6 +213,7 @@ describe('POST /webhooks', () => {
       .post('/webhooks')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        accountKeyId: accountKey.id,
         description: 'test',
         url: 'https://example.com',
         codeIdSetIds: [codeIdSet.id],
@@ -156,6 +226,7 @@ describe('POST /webhooks', () => {
       .post('/webhooks')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        accountKeyId: accountKey.id,
         description: 'test',
         url: 'https://example.com',
         stateKey: 1,
@@ -173,6 +244,7 @@ describe('POST /webhooks', () => {
           .post('/webhooks')
           .set('Authorization', `Bearer ${token}`)
           .send({
+            accountKeyId: accountKey.id,
             description: 'test',
             url: 'https://example.com',
             stateKey,
@@ -188,6 +260,7 @@ describe('POST /webhooks', () => {
     await request(app.callback())
       .post('/webhooks')
       .send({
+        accountKeyId: accountKey.id,
         description: 'test',
         url: 'https://example.com',
         stateKey: 'stateKey',
@@ -205,6 +278,7 @@ describe('POST /webhooks', () => {
       .post('/webhooks')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        accountKeyId: accountKey.id,
         description: 'test',
         url: 'https://example.com',
         codeIdSetIds: [codeIdSet.id],
@@ -222,6 +296,7 @@ describe('POST /webhooks', () => {
     })
     expect(webhook).not.toBeNull()
     expect(webhook!.accountPublicKey).toBe(account.publicKey)
+    expect(webhook!.accountKeyId).toBe(accountKey.id)
     expect(webhook!.description).toBe('test')
     expect(webhook!.url).toBe('https://example.com')
     expect(webhook!.codeIdSets.length).toBe(1)

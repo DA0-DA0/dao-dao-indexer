@@ -110,7 +110,7 @@ export class AccountKeyCredit extends Model {
   // Use 1 credit for the query, and 1 credit for every 10,000 blocks. Querying
   // 1 block uses 1 credit, 2-10,000 blocks uses 2 credits, 10,001-20,000 uses
   // 3, etc. Round up to the nearest credit.
-  public static creditsForBlockInterval(blockInterval: bigint): number {
+  static creditsForBlockInterval(blockInterval: bigint): number {
     if (blockInterval <= 0n) {
       return 0
     } else if (blockInterval === 1n) {
@@ -121,4 +121,6 @@ export class AccountKeyCredit extends Model {
       1n + blockInterval / 10000n + (blockInterval % 10000n === 0n ? 0n : 1n)
     )
   }
+
+  static creditsForWebhook = 20
 }

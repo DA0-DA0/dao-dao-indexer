@@ -41,7 +41,7 @@ export const getAccountWithAuth = async () => {
   // Add another credit for the key, but paid-for.
   const paidCredit = await paidAccountKey.$create<AccountKeyCredit>('credit', {
     paymentSource: AccountKeyCreditPaymentSource.CwReceipt,
-    paymentId: 'receipt',
+    paymentId: 'receipt ' + publicKey,
     paidAt: new Date(),
     amount: 10,
     used: 0,

@@ -17,11 +17,14 @@ import { dbKeyForKeys } from '@/core/utils'
 
 import { Account } from './Account'
 import { AccountCodeIdSet } from './AccountCodeIdSet'
+import { AccountKey } from './AccountKey'
+import { AccountKeyCredit } from './AccountKeyCredit'
 import { AccountWebhookCodeIdSet } from './AccountWebhookCodeIdSet'
 import { AccountWebhookEvent } from './AccountWebhookEvent'
 import { Event } from './Event'
 
 export type AccountWebhookApiJson = {
+  keyId: number | null
   description: string | null
   url: string
   secret: string
@@ -43,6 +46,14 @@ export class AccountWebhook extends Model {
 
   @BelongsTo(() => Account)
   account!: Account
+
+  @AllowNull
+  @ForeignKey(() => AccountKey)
+  @Column
+  accountKeyId!: number
+
+  @BelongsTo(() => AccountKey)
+  accountKey!: AccountKey | null
 
   @AllowNull
   @Column(DataType.STRING)
@@ -85,6 +96,7 @@ export class AccountWebhook extends Model {
     this.codeIdSets = (await this.$get('codeIdSets')) || []
 
     return {
+      keyId: this.accountKeyId,
       description: this.description,
       url: this.url,
       secret: this.secret,
@@ -126,8 +138,21 @@ export class AccountWebhook extends Model {
 
   // Queue webhook for an event.
   async queue(event: Event) {
+    // Load account key if necessary.
+    this.accountKey ||= await this.$get('accountKey')
+    if (!this.accountKey) {
+      throw new Error('Account key not loaded')
+    }
+
     // Load event contract (asParsedEvent will throw err if load fails).
     event.contract ||= (await event.$get('contract'))!
+
+    // Use account key to pay for webhook. If no credit, do not queue.
+    if (
+      !(await this.accountKey.useCredit(AccountKeyCredit.creditsForWebhook))
+    ) {
+      return
+    }
 
     return await this.$create<AccountWebhookEvent>('event', {
       uuid: randomUUID(),
@@ -139,7 +164,16 @@ export class AccountWebhook extends Model {
   // Queue webhooks for events. Events must be loaded with `Contract` included.
   static async queueWebhooks(events: Event[]): Promise<number> {
     const webhooks = await AccountWebhook.findAll({
-      include: AccountCodeIdSet,
+      include: [
+        {
+          model: AccountKey,
+          // If no key is set, cannot pay for webhook.
+          required: true,
+        },
+        {
+          model: AccountCodeIdSet,
+        },
+      ],
     })
 
     const matches = await Promise.all(

@@ -4,7 +4,7 @@ import Router from '@koa/router'
 import { DefaultContext } from 'koa'
 
 import { objectMatchesStructure } from '@/core'
-import { AccountWebhook } from '@/db'
+import { AccountKey, AccountWebhook } from '@/db'
 
 import { AccountState } from './types'
 
@@ -17,6 +17,7 @@ type CreateWebhookRequest = Pick<
   | 'stateKey'
   | 'stateKeyIsPrefix'
 > & {
+  accountKeyId: number
   codeIdSetIds: number[]
 }
 
@@ -32,6 +33,28 @@ export const createWebhook: Router.Middleware<
   CreateWebhookResponse
 > = async (ctx) => {
   const body: CreateWebhookRequest = ctx.request.body
+
+  // Validate key ID.
+  const accountKeyId = body.accountKeyId
+  if (typeof accountKeyId !== 'number') {
+    ctx.status = 400
+    ctx.body = {
+      error: 'Invalid key.',
+    }
+    return
+  }
+  const accountKey = await AccountKey.findByPk(accountKeyId)
+  // Verify key exists and belongs to the account.
+  if (
+    !accountKey ||
+    accountKey.accountPublicKey !== ctx.state.account.publicKey
+  ) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'Invalid key.',
+    }
+    return
+  }
 
   // Validate description length.
   if (
@@ -130,6 +153,7 @@ export const createWebhook: Router.Middleware<
   }
 
   const webhook = await ctx.state.account.$create<AccountWebhook>('webhook', {
+    accountKeyId,
     description: body.description,
     url: body.url,
     secret: randomUUID(),
