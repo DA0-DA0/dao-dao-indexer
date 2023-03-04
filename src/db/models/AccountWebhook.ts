@@ -140,8 +140,9 @@ export class AccountWebhook extends Model {
   async queue(event: Event) {
     // Load account key if necessary.
     this.accountKey ||= await this.$get('accountKey')
+    // If no key is set, cannot pay for webhook.
     if (!this.accountKey) {
-      throw new Error('Account key not loaded')
+      return
     }
 
     // Load event contract (asParsedEvent will throw err if load fails).
