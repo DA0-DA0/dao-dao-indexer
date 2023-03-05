@@ -24,6 +24,7 @@ import { AccountWebhookEvent } from './AccountWebhookEvent'
 import { Event } from './Event'
 
 export type AccountWebhookApiJson = {
+  id: number
   keyId: number | null
   description: string | null
   url: string
@@ -96,6 +97,7 @@ export class AccountWebhook extends Model {
     this.codeIdSets = (await this.$get('codeIdSets')) || []
 
     return {
+      id: this.id,
       keyId: this.accountKeyId,
       description: this.description,
       url: this.url,
