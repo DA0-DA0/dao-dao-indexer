@@ -10,7 +10,7 @@ import {
 
 import { AccountState } from './types'
 
-type GetWebhookEventsResponse =
+type FireWebhookEventResponse =
   | {
       attempt: AccountWebhookEventAttemptApiJson
     }
@@ -21,7 +21,7 @@ type GetWebhookEventsResponse =
 export const fireWebhookEvent: Router.Middleware<
   AccountState,
   DefaultContext,
-  GetWebhookEventsResponse
+  FireWebhookEventResponse
 > = async (ctx) => {
   // Get webhook to make sure it belongs to the account.
   const webhook = await AccountWebhook.findOne({
