@@ -71,4 +71,8 @@ export class AccountWebhookEventAttempt extends Model {
       statusCode: this.statusCode,
     }
   }
+
+  get success(): boolean {
+    return this.statusCode >= 200 && this.statusCode < 300
+  }
 }

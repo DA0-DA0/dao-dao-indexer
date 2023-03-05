@@ -5,8 +5,10 @@ import { authMiddleware } from './auth'
 import { createKey } from './createKey'
 import { createWebhook } from './createWebhook'
 import { deleteWebhook } from './deleteWebhook'
+import { fireWebhookEvent } from './fireWebhookEvent'
 import { getConfig } from './getConfig'
 import { getNonce } from './getNonce'
+import { getWebhookEvents } from './getWebhookEvents'
 import { listKeys } from './listKeys'
 import { listWebhooks } from './listWebhooks'
 import { login } from './login'
@@ -42,10 +44,16 @@ accountRouter.get('/keys', listKeys)
 accountRouter.post('/keys', createKey)
 
 // Reset key. Generates new API key and responds with it.
-accountRouter.post('/keys/reset', resetKey)
+accountRouter.post('/keys/:id/reset', resetKey)
 
 // List webhooks.
 accountRouter.get('/webhooks', listWebhooks)
+
+// Get webhook events.
+accountRouter.get('/webhooks/:id/events', getWebhookEvents)
+
+// Fire webhook event.
+accountRouter.post('/webhooks/:id/events/:uuid/fire', fireWebhookEvent)
 
 // Create new webhook.
 accountRouter.post('/webhooks', createWebhook)

@@ -127,7 +127,7 @@ export class AccountWebhookEvent extends Model {
   }
 
   // Returns whether or not the webhook was successful.
-  async fire(): Promise<boolean> {
+  async fire(): Promise<AccountWebhookEventAttempt> {
     // Load attempts.
     this.attempts ||= (await this.$get('attempts')) ?? []
 
@@ -209,14 +209,12 @@ export class AccountWebhookEvent extends Model {
       statusCode,
     })
 
-    const succeeded = statusCode >= 200 && statusCode < 300
-
     // Update status if has not yet succeeded or failed.
     if (
       this.status === AccountWebhookEventStatus.Pending ||
       this.status === AccountWebhookEventStatus.Retrying
     ) {
-      this.status = succeeded
+      this.status = attempt.success
         ? AccountWebhookEventStatus.Success
         : this.attempts.length < MAX_ATTEMPTS
         ? AccountWebhookEventStatus.Retrying
@@ -231,6 +229,6 @@ export class AccountWebhookEvent extends Model {
       await this.save()
     }
 
-    return succeeded
+    return attempt
   }
 }

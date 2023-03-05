@@ -1,12 +1,9 @@
 import Router from '@koa/router'
 import { DefaultContext } from 'koa'
 
-import { objectMatchesStructure } from '@/core'
 import { AccountKey } from '@/db'
 
 import { AccountState } from './types'
-
-type ResetKeyRequest = Pick<AccountKey, 'name'>
 
 type ResetKeyResponse =
   | {
@@ -21,45 +18,20 @@ export const resetKey: Router.Middleware<
   DefaultContext,
   ResetKeyResponse
 > = async (ctx) => {
-  const body: ResetKeyRequest = ctx.request.body
-
-  if (
-    !objectMatchesStructure(body, {
-      name: {},
-    }) ||
-    !body.name?.trim()
-  ) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'Missing name.',
-    }
-    return
-  }
-
-  const existingKeys = await ctx.state.account.$get('keys', {
+  const existingKey = await AccountKey.findOne({
     where: {
-      name: body.name,
+      accountPublicKey: ctx.state.account.publicKey,
+      id: ctx.params.id,
     },
   })
 
-  if (existingKeys.length === 0) {
-    ctx.status = 400
+  if (!existingKey) {
+    ctx.status = 404
     ctx.body = {
       error: 'Key not found.',
     }
     return
   }
-
-  // Should be impossible as there's a unique index on [account, name].
-  if (existingKeys.length > 1) {
-    ctx.status = 500
-    ctx.body = {
-      error: 'Multiple keys with same name.',
-    }
-    return
-  }
-
-  const existingKey = existingKeys[0]
 
   // Generate key with hash, and update existing key.
   const { key, hash } = AccountKey.generateKeyAndHash()

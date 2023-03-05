@@ -1,11 +1,16 @@
 import { Secp256k1HdWallet, makeSignDoc } from '@cosmjs/amino'
 import { toHex } from '@cosmjs/encoding'
 
+import { dbKeyForKeys } from '@/core/utils'
 import {
   Account,
   AccountKey,
   AccountKeyCredit,
   AccountKeyCreditPaymentSource,
+  AccountWebhook,
+  AccountWebhookEvent,
+  Contract,
+  Event,
 } from '@/db'
 import { AuthRequestBody } from '@/server/routes/account/types'
 
@@ -43,7 +48,7 @@ export const getAccountWithAuth = async () => {
     paymentSource: AccountKeyCreditPaymentSource.CwReceipt,
     paymentId: 'receipt ' + publicKey,
     paidAt: new Date(),
-    amount: 10,
+    amount: 100,
     used: 0,
     hits: 0,
   })
@@ -135,4 +140,79 @@ export const getAccountWithAuth = async () => {
     unpaidApiKey,
     unpaidAccountKey,
   }
+}
+
+export const createContractAndEvent = async (
+  blockHeight = 1,
+  address = 'contract'
+) => {
+  const [contract] = await Contract.findOrCreate({
+    where: {
+      address,
+    },
+    defaults: {
+      codeId: 1,
+    },
+  })
+
+  const blockTimestamp = new Date()
+  const valueJson = { key: 'value' }
+  const event = await Event.create({
+    contractAddress: contract.address,
+    blockHeight: blockHeight.toString(),
+    blockTimeUnixMs: blockTimestamp.getTime().toString(),
+    blockTimestamp,
+    // Unique key for the event to prevent collisions while testing.
+    key: dbKeyForKeys('key_set_at', blockTimestamp.toISOString()),
+    value: JSON.stringify(valueJson),
+    valueJson,
+    delete: false,
+  })
+
+  return {
+    contract,
+    event,
+  }
+}
+
+export const createWebhookWithEvents = async (
+  account: Account,
+  key: AccountKey,
+  eventCount = 1
+) => {
+  const codeIdSet = await account.$create('codeIdSet', {
+    name: 'contract',
+    codeIds: [1, 50, 200],
+  })
+
+  const webhook = await account.$create<AccountWebhook>('webhook', {
+    accountKeyId: key.id,
+    description: 'test',
+    url: 'https://moonphase.is',
+    secret: 'secret',
+  })
+  await webhook.$add('codeIdSet', codeIdSet)
+
+  // Create webhook events.
+  for (let i = 0; i < Math.max(eventCount, 1); i++) {
+    const event = await webhook.queue(
+      (
+        await createContractAndEvent(i + 1)
+      ).event
+    )
+    if (!event) {
+      throw new Error('Failed to create webhook event.')
+    }
+  }
+
+  await webhook.reload({
+    include: {
+      model: AccountWebhookEvent,
+      order: [['createdAt', 'DESC']],
+      // So that order works.
+      separate: true,
+    },
+  })
+
+  return webhook
 }

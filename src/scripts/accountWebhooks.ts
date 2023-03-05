@@ -80,7 +80,7 @@ const main = async () => {
     const firings = await Promise.all(
       pending.map(async (pendingWebhook) => {
         try {
-          return await pendingWebhook.fire()
+          return (await pendingWebhook.fire()).success
         } catch (err) {
           // Capture errored fire calls. This shouldn't happen unless the
           // database is having issues, since the actual webhook firing error is

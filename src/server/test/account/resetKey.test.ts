@@ -5,20 +5,25 @@ import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
-describe('POST /keys/reset', () => {
+describe('POST /keys/:id/reset', () => {
   let account: Account
+  let key: AccountKey
   let token: string
   beforeEach(async () => {
-    const { account: _account, token: _token } = await getAccountWithAuth()
+    const {
+      account: _account,
+      unpaidAccountKey,
+      token: _token,
+    } = await getAccountWithAuth()
 
     account = _account
+    key = unpaidAccountKey
     token = _token
   })
 
   it('returns error if no auth token', async () => {
     await request(app.callback())
-      .post('/keys/reset')
-      .send({})
+      .post(`/keys/${key.id}/reset`)
       .expect(401)
       .expect('Content-Type', /json/)
       .expect({
@@ -26,40 +31,24 @@ describe('POST /keys/reset', () => {
       })
   })
 
-  it('returns error if no name', async () => {
+  it('returns error if no key', async () => {
     await request(app.callback())
-      .post('/keys/reset')
+      .post('/keys/100/reset')
       .set('Authorization', `Bearer ${token}`)
-      .send({})
-      .expect(400)
+      .expect(404)
       .expect('Content-Type', /json/)
       .expect({
-        error: 'Missing name.',
+        error: 'Key not found.',
       })
   })
 
-  it('returns error if empty name', async () => {
-    await request(app.callback())
-      .post('/keys/reset')
-      .set('Authorization', `Bearer ${token}`)
-      .send({
-        name: '',
-      })
-      .expect(400)
-      .expect('Content-Type', /json/)
-      .expect({
-        error: 'Missing name.',
-      })
-  })
+  it('returns error if key not owned by this account', async () => {
+    const { unpaidAccountKey: anotherKey } = await getAccountWithAuth()
 
-  it('returns error if no matching key for the name', async () => {
     await request(app.callback())
-      .post('/keys/reset')
+      .post(`/keys/${anotherKey.id}/reset`)
       .set('Authorization', `Bearer ${token}`)
-      .send({
-        name: 'invalid',
-      })
-      .expect(400)
+      .expect(404)
       .expect('Content-Type', /json/)
       .expect({
         error: 'Key not found.',
@@ -70,12 +59,7 @@ describe('POST /keys/reset', () => {
     const key = account.keys[0]
     const initialHash = key.hashedKey
 
-    await request(app.callback())
-      .post('/keys/reset')
-      .send({
-        name: key.name,
-      })
-      .expect(401)
+    await request(app.callback()).post(`/keys/${key.id}/reset`).expect(401)
 
     // Verify hash not changed in DB.
     await key.reload()
@@ -87,11 +71,8 @@ describe('POST /keys/reset', () => {
     const initialHash = key.hashedKey
 
     const response = await request(app.callback())
-      .post('/keys/reset')
+      .post(`/keys/${key.id}/reset`)
       .set('Authorization', `Bearer ${token}`)
-      .send({
-        name: key.name,
-      })
       .expect(200)
       .expect('Content-Type', /json/)
 
