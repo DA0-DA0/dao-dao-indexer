@@ -9,7 +9,7 @@ import {
   AccountKeyCreditPaymentSource,
 } from '@/db'
 
-type WebhookResponse =
+type PaymentWebhookResponse =
   | {
       success: true
     }
@@ -17,10 +17,10 @@ type WebhookResponse =
       error: string
     }
 
-export const webhook: Router.Middleware<
+export const paymentWebhook: Router.Middleware<
   DefaultState,
   DefaultContext,
-  WebhookResponse
+  PaymentWebhookResponse
 > = async (ctx) => {
   const { payment } = loadConfig()
   if (!payment) {

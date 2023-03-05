@@ -2,6 +2,7 @@ import Router from '@koa/router'
 import { DefaultContext, DefaultState } from 'koa'
 
 import { loadConfig } from '@/core/config'
+import { AccountKeyCredit } from '@/db'
 
 type GetConfigResponse =
   | {
@@ -9,6 +10,7 @@ type GetConfigResponse =
         cwReceiptPaymentAddress: string
         nativeDenomAccepted: string
         creditScaleFactor: number
+        webhookCreditCost: number
       }
     }
   | {
@@ -35,6 +37,7 @@ export const getConfig: Router.Middleware<
       cwReceiptPaymentAddress: payment.cwReceiptAddress,
       nativeDenomAccepted: payment.nativeDenomAccepted,
       creditScaleFactor: payment.creditScaleFactor,
+      webhookCreditCost: AccountKeyCredit.creditsForWebhook,
     },
   }
 }

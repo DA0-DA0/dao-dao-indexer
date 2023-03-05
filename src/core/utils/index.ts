@@ -1,10 +1,20 @@
 // https://github.com/CosmWasm/cw-storage-plus/blob/179bcd0dc2b769c787f411a7cf9a614a80e4dee0/src/helpers.rs#L57
 // Recreate cw-storage-plus key nesting format. Output is a comma-separated list
 // of uint8 values that represents a byte array. See `Event` model for more
+// information.
 
 import { Block, FormulaType, SerializedBlock } from '../types'
 
-// information.
+// Convert base64 string to comma-separated list of bytes. See explanation in
+// `Event` model for the key attribute for more information.
+export const base64KeyToEventKey = (key: string): string =>
+  Buffer.from(key, 'base64').join(',')
+
+// Convert comma-separated list of bytes to base64 string. See explanation in
+// `Event` model for the key attribute for more information.
+export const eventKeyToBase64 = (key: string): string =>
+  Buffer.from(key.split(',').map((c) => parseInt(c, 10))).toString('base64')
+
 export const dbKeyForKeys = (...keys: (string | number)[]): string => {
   const bufferKeys = keys.map(keyToBuffer)
   const namespaces = bufferKeys.slice(0, -1)

@@ -1,10 +1,14 @@
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
-import { Op } from 'sequelize'
 
 import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
-import { PendingWebhook, loadDb } from '@/db'
+import {
+  AccountWebhookEvent,
+  AccountWebhookEventAttempt,
+  AccountWebhookEventStatus,
+  loadDb,
+} from '@/db'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 
@@ -36,10 +40,7 @@ if (config.sentryDsn) {
 }
 
 const main = async () => {
-  // Connect to both DBs.
-  await loadDb({
-    type: DbType.Data,
-  })
+  // Connect to accounts DB.
   await loadDb({
     type: DbType.Accounts,
   })
@@ -65,27 +66,45 @@ const main = async () => {
   logInterval.unref()
 
   while (!shuttingDown) {
-    const pending = await PendingWebhook.findAll({
+    const pending = await AccountWebhookEvent.findAll({
       where: {
-        failures: {
-          // Retry up to 3 times.
-          [Op.lt]: 3,
-        },
+        status: [
+          AccountWebhookEventStatus.Pending,
+          AccountWebhookEventStatus.Retrying,
+        ],
       },
       limit: batch,
+      include: AccountWebhookEventAttempt,
     })
 
-    const requests = await Promise.allSettled(
-      pending.map((pendingWebhook) => pendingWebhook.fire())
+    const firings = await Promise.all(
+      pending.map(async (pendingWebhook) => {
+        try {
+          return (await pendingWebhook.fire()).success
+        } catch (err) {
+          // Capture errored fire calls. This shouldn't happen unless the
+          // database is having issues, since the actual webhook firing error is
+          // caught and stored.
+          Sentry.captureException(err, {
+            tags: {
+              type: 'webhook_uncaught',
+              accountWebhookEventId: pendingWebhook.id,
+              uuid: pendingWebhook.uuid,
+              url: pendingWebhook.url,
+            },
+          })
+          return false
+        }
+      })
     )
 
-    succeeded += requests.filter(
-      (request) => request.status === 'fulfilled'
-    ).length
-    failed += requests.filter((request) => request.status === 'rejected').length
+    succeeded += firings.filter((request) => request).length
+    failed += firings.filter((request) => !request).length
 
-    // Wait one second between webhook checks so we're not spamming the DB.
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // If no webhooks or all failed, wait between loops to prevent spamming.
+    if (succeeded === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
   }
 
   printStatistics()

@@ -9,10 +9,12 @@ import { Sequelize } from 'sequelize'
 import {
   IndexerEvent,
   ParsedEvent,
+  base64KeyToEventKey,
   loadConfig,
   objectMatchesStructure,
 } from '@/core'
 import {
+  AccountWebhook,
   Contract,
   Event,
   PendingWebhook,
@@ -196,7 +198,7 @@ const main = async () => {
           blockTimestamp,
           // Convert base64 key to comma-separated list of bytes. See
           // explanation in `Event` model for more information.
-          key: Buffer.from(event.key, 'base64').join(','),
+          key: base64KeyToEventKey(event.key),
           value,
           valueJson,
           delete: event.delete,
@@ -496,7 +498,8 @@ const exporter = async (
   // Queue webhooks as needed.
   const webhooksQueued = dontSendWebhooks
     ? 0
-    : await PendingWebhook.queueWebhooks(state, exportedEvents)
+    : (await PendingWebhook.queueWebhooks(state, exportedEvents)) +
+      (await AccountWebhook.queueWebhooks(exportedEvents))
 
   // Store last block height exported, and update latest block height/time if
   // the last export is newer.

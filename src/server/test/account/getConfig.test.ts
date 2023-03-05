@@ -1,5 +1,7 @@
 import request from 'supertest'
 
+import { AccountKeyCredit } from '@/db'
+
 import { app } from './app'
 
 describe('GET /config', () => {
@@ -13,6 +15,7 @@ describe('GET /config', () => {
           cwReceiptPaymentAddress: 'cwReceiptAddress',
           nativeDenomAccepted: 'nativeDenomAccepted',
           creditScaleFactor: 50,
+          webhookCreditCost: AccountKeyCredit.creditsForWebhook,
         },
       })
   })

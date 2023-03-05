@@ -16,6 +16,7 @@ import { Account } from './Account'
 import { AccountKeyCredit, AccountKeyCreditApiJson } from './AccountKeyCredit'
 
 export type AccountKeyApiJson = {
+  id: number
   name: string
   description: string | null
   credits: AccountKeyCreditApiJson[]
@@ -87,6 +88,7 @@ export class AccountKey extends Model {
     this.credits ||= (await this.$get('credits')) ?? ([] as AccountKeyCredit[])
 
     return {
+      id: this.id,
       name: this.name,
       description: this.description,
       credits: this.credits.map((credit) => credit.apiJson),
@@ -94,6 +96,7 @@ export class AccountKey extends Model {
   }
 
   // Check if this account has compute credit, and increase used if found.
+  // Returns whether credit was found and used.
   public async useCredit(amount = 1): Promise<boolean> {
     // Find credit that has enough remaining.
     const credits =

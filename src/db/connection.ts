@@ -5,8 +5,12 @@ import { DbType } from '@/core/types'
 
 import {
   Account,
+  AccountCodeIdSet,
   AccountKey,
   AccountKeyCredit,
+  AccountWebhook,
+  AccountWebhookCodeIdSet,
+  AccountWebhookEventAttempt,
   Computation,
   Contract,
   Event,
@@ -14,6 +18,7 @@ import {
   State,
   Transformation,
 } from './models'
+import { AccountWebhookEvent } from './models/AccountWebhookEvent'
 
 // List of models included in the database per type.
 const MODELS_FOR_TYPE: Record<DbType, SequelizeOptions['models']> = {
@@ -25,7 +30,16 @@ const MODELS_FOR_TYPE: Record<DbType, SequelizeOptions['models']> = {
     State,
     Transformation,
   ],
-  [DbType.Accounts]: [Account, AccountKey, AccountKeyCredit],
+  [DbType.Accounts]: [
+    Account,
+    AccountCodeIdSet,
+    AccountKey,
+    AccountKeyCredit,
+    AccountWebhook,
+    AccountWebhookCodeIdSet,
+    AccountWebhookEvent,
+    AccountWebhookEventAttempt,
+  ],
 }
 
 const sequelizeInstances: Partial<Record<DbType, Sequelize>> = {}
