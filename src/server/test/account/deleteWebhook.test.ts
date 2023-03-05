@@ -1,18 +1,16 @@
 import request from 'supertest'
 
-import { Account, AccountWebhook } from '@/db'
+import { AccountWebhook } from '@/db'
 import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
 describe('DELETE /webhooks/:id', () => {
-  let account: Account
   let token: string
   let webhook: AccountWebhook
   beforeEach(async () => {
-    const { account: _account, token: _token } = await getAccountWithAuth()
+    const { account, token: _token } = await getAccountWithAuth()
 
-    account = _account
     token = _token
 
     webhook = await account.$create('webhook', {
@@ -37,7 +35,26 @@ describe('DELETE /webhooks/:id', () => {
     await request(app.callback())
       .delete(`/webhooks/${webhook.id + 1}`)
       .set('Authorization', `Bearer ${token}`)
-      .expect(400)
+      .expect(404)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Webhook not found.',
+      })
+  })
+
+  it('returns error if webhook owned by another account', async () => {
+    const { account: anotherAccount } = await getAccountWithAuth()
+    const anotherWebhook = await anotherAccount.$create('webhook', {
+      description: 'test',
+      url: 'https://example.com',
+      secret: 'secret',
+      stateKey: 'stateKey',
+    })
+
+    await request(app.callback())
+      .delete(`/webhooks/${anotherWebhook.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(404)
       .expect('Content-Type', /json/)
       .expect({
         error: 'Webhook not found.',

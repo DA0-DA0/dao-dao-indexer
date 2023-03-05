@@ -48,11 +48,40 @@ describe('PATCH /webhooks/:id', () => {
   it('returns error if no auth token', async () => {
     await request(app.callback())
       .patch(`/webhooks/${webhook.id}`)
-      .send({})
       .expect(401)
       .expect('Content-Type', /json/)
       .expect({
         error: 'No token.',
+      })
+  })
+
+  it('returns error if no webhook', async () => {
+    await request(app.callback())
+      .patch(`/webhooks/${webhook.id + 1}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(404)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Webhook not found.',
+      })
+  })
+
+  it('returns error if webhook owned by another account', async () => {
+    const { account: anotherAccount } = await getAccountWithAuth()
+    const anotherWebhook = await anotherAccount.$create('webhook', {
+      description: 'test',
+      url: 'https://example.com',
+      secret: 'secret',
+      stateKey: 'stateKey',
+    })
+
+    await request(app.callback())
+      .patch(`/webhooks/${anotherWebhook.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(404)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Webhook not found.',
       })
   })
 
@@ -228,18 +257,19 @@ describe('PATCH /webhooks/:id', () => {
     )
   })
 
-  it('does not create webhook if no auth token', async () => {
-    const initialWebhooks = await AccountWebhook.count()
+  it('does not update webhook if no auth token', async () => {
+    const initialStateKey = webhook.stateKey
 
     await request(app.callback())
       .patch(`/webhooks/${webhook.id}`)
       .send({
-        stateKey: 'new_stateKey',
+        stateKey: 'new_' + initialStateKey,
       })
       .expect(401)
 
-    // Verify webhook not created.
-    expect(await AccountWebhook.count()).toBe(initialWebhooks)
+    // Verify webhook not changed.
+    await webhook.reload()
+    expect(webhook.stateKey).toBe(initialStateKey)
   })
 
   it('resets secret', async () => {

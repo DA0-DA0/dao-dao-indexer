@@ -41,7 +41,7 @@ export const updateWebhook: Router.Middleware<
   })
   // Verify webhook exists and belongs to the account.
   if (!webhook || webhook.accountPublicKey !== ctx.state.account.publicKey) {
-    ctx.status = 400
+    ctx.status = 404
     ctx.body = {
       error: 'Webhook not found.',
     }

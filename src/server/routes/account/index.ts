@@ -2,18 +2,22 @@ import Router from '@koa/router'
 import { koaBody } from 'koa-body'
 
 import { authMiddleware } from './auth'
+import { createCodeIdSet } from './createCodeIdSet'
 import { createKey } from './createKey'
 import { createWebhook } from './createWebhook'
+import { deleteCodeIdSet } from './deleteCodeIdSet'
 import { deleteWebhook } from './deleteWebhook'
 import { fireWebhookEvent } from './fireWebhookEvent'
 import { getConfig } from './getConfig'
 import { getNonce } from './getNonce'
 import { getWebhookEvents } from './getWebhookEvents'
+import { listCodeIdSets } from './listCodeIdSets'
 import { listKeys } from './listKeys'
 import { listWebhooks } from './listWebhooks'
 import { login } from './login'
 import { paymentWebhook } from './paymentWebhook'
 import { resetKey } from './resetKey'
+import { updateCodeIdSet } from './updateCodeIdSet'
 import { updateWebhook } from './updateWebhook'
 
 export const accountRouter = new Router()
@@ -45,6 +49,18 @@ accountRouter.post('/keys', createKey)
 
 // Reset key. Generates new API key and responds with it.
 accountRouter.post('/keys/:id/reset', resetKey)
+
+// List code ID sets.
+accountRouter.get('/code-id-sets', listCodeIdSets)
+
+// Create new code ID set.
+accountRouter.post('/code-id-sets', createCodeIdSet)
+
+// Update code ID set.
+accountRouter.patch('/code-id-sets/:id', updateCodeIdSet)
+
+// Delete code ID set.
+accountRouter.delete('/code-id-sets/:id', deleteCodeIdSet)
 
 // List webhooks.
 accountRouter.get('/webhooks', listWebhooks)

@@ -21,7 +21,7 @@ export const deleteWebhook: Router.Middleware<
   const webhook = await AccountWebhook.findByPk(id)
   // Verify webhook exists and belongs to the account.
   if (!webhook || webhook.accountPublicKey !== ctx.state.account.publicKey) {
-    ctx.status = 400
+    ctx.status = 404
     ctx.body = {
       error: 'Webhook not found.',
     }
