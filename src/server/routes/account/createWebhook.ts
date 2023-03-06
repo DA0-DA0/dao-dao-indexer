@@ -133,7 +133,7 @@ export const createWebhook: Router.Middleware<
     }
     return
   }
-  body.stateKey ||= null
+  body.stateKey = body.stateKey?.trim() || null
 
   // Validate at least one filter is present.
   if (
