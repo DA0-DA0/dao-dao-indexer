@@ -7,6 +7,7 @@ import { Command } from 'commander'
 import { Sequelize } from 'sequelize'
 
 import {
+  DbType,
   IndexerEvent,
   ParsedEvent,
   base64KeyToEventKey,
@@ -91,7 +92,12 @@ const main = async () => {
   }
 
   // Load DB on start.
-  await loadDb()
+  await loadDb({
+    type: DbType.Data,
+  })
+  await loadDb({
+    type: DbType.Accounts,
+  })
   // Setup meilisearch.
   await setupMeilisearch()
 
