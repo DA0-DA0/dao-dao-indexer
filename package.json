@@ -16,7 +16,7 @@
     "db:alter": "node dist/scripts/db/alter.js",
     "clear-cache": "node dist/scripts/clearCache.js",
     "export": "node dist/scripts/export.js",
-    "export:prod": "npm run build && pm2 reload ecosystem.config.js --only exporter,webhooks",
+    "export:prod": "npm run build && pm2 reload ecosystem.config.js --only exporter,webhooks,account-webhooks",
     "webhooks": "node dist/scripts/webhooks.js",
     "accountWebhooks": "node dist/scripts/accountWebhooks.js",
     "transform": "node dist/scripts/transform.js",

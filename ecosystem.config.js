@@ -13,6 +13,11 @@ module.exports = {
       kill_timeout: 30000,
     },
     {
+      name: 'account-webhooks',
+      script: 'dist/scripts/accountWebhooks.js',
+      kill_timeout: 30000,
+    },
+    {
       name: 'server_accounts',
       script: 'dist/server/serve.js',
       args: ['-p', '3420', '-c', 'config.accounts.json', '-a'],
