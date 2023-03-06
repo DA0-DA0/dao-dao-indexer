@@ -4,7 +4,7 @@ import Router from '@koa/router'
 import { DefaultContext } from 'koa'
 
 import { objectMatchesStructure } from '@/core'
-import { AccountKey, AccountWebhook } from '@/db'
+import { AccountKey, AccountWebhook, AccountWebhookStateKeyType } from '@/db'
 
 import { AccountState } from './types'
 
@@ -15,7 +15,7 @@ type CreateWebhookRequest = Pick<
   | 'onlyFirstSet'
   | 'contractAddresses'
   | 'stateKey'
-  | 'stateKeyIsPrefix'
+  | 'stateKeyType'
 > & {
   accountKeyId: number
   codeIdSetIds: number[]
@@ -135,6 +135,22 @@ export const createWebhook: Router.Middleware<
   }
   body.stateKey = body.stateKey?.trim() || null
 
+  // Validate state key type if state key is used.
+  if (
+    body.stateKey &&
+    (!body.stateKeyType ||
+      typeof body.stateKeyType !== 'string' ||
+      !Object.values(AccountWebhookStateKeyType).includes(
+        body.stateKeyType as any
+      ))
+  ) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'Invalid state key type.',
+    }
+    return
+  }
+
   // Validate at least one filter is present.
   if (
     (!body.contractAddresses ||
@@ -160,7 +176,8 @@ export const createWebhook: Router.Middleware<
     onlyFirstSet: !!body.onlyFirstSet,
     contractAddresses: body.contractAddresses,
     stateKey: body.stateKey,
-    stateKeyIsPrefix: !!body.stateKeyIsPrefix,
+    // Only set state key type if state key is used.
+    stateKeyType: body.stateKey ? body.stateKeyType : null,
   })
   // If code ID sets are present, add them to the webhook.
   if (

@@ -1,6 +1,12 @@
 import request from 'supertest'
 
-import { Account, AccountCodeIdSet, AccountKey, AccountWebhook } from '@/db'
+import {
+  Account,
+  AccountCodeIdSet,
+  AccountKey,
+  AccountWebhook,
+  AccountWebhookStateKeyType,
+} from '@/db'
 import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
@@ -254,6 +260,41 @@ describe('POST /webhooks', () => {
     )
   })
 
+  it('validates state key type', async () => {
+    await request(app.callback())
+      .post('/webhooks')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        accountKeyId: accountKey.id,
+        description: 'test',
+        url: 'https://example.com',
+        stateKey: 'stateKey',
+        stateKeyType: 'invalid',
+      })
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Invalid state key type.',
+      })
+
+    // Valid state key types.
+    await Promise.all(
+      Object.values(AccountWebhookStateKeyType).map(async (stateKeyType) => {
+        const response = await request(app.callback())
+          .post('/webhooks')
+          .set('Authorization', `Bearer ${token}`)
+          .send({
+            accountKeyId: accountKey.id,
+            description: 'test',
+            url: 'https://example.com',
+            stateKey: 'stateKey',
+            stateKeyType,
+          })
+        expect(response.body.error).not.toBe('Invalid state key type.')
+      })
+    )
+  })
+
   it('does not create webhook if no auth token', async () => {
     const initialWebhooks = await AccountWebhook.count()
 
@@ -284,7 +325,7 @@ describe('POST /webhooks', () => {
         codeIdSetIds: [codeIdSet.id],
         contractAddresses: ['junoContract1', 'junoContract2'],
         stateKey: 'stateKey',
-        stateKeyIsPrefix: false,
+        stateKeyType: AccountWebhookStateKeyType.Item,
       })
       .expect(201)
 

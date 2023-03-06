@@ -3,7 +3,12 @@ import { randomUUID } from 'crypto'
 import Router from '@koa/router'
 import { DefaultContext } from 'koa'
 
-import { AccountCodeIdSet, AccountKey, AccountWebhook } from '@/db'
+import {
+  AccountCodeIdSet,
+  AccountKey,
+  AccountWebhook,
+  AccountWebhookStateKeyType,
+} from '@/db'
 
 import { AccountState } from './types'
 
@@ -15,7 +20,7 @@ type UpdateWebhookRequest = Partial<
     | 'onlyFirstSet'
     | 'contractAddresses'
     | 'stateKey'
-    | 'stateKeyIsPrefix'
+    | 'stateKeyType'
   > & {
     accountKeyId: number
     codeIdSetIds: number[]
@@ -156,8 +161,33 @@ export const updateWebhook: Router.Middleware<
     webhook.stateKey = body.stateKey?.trim() || null
   }
 
-  if ('stateKeyIsPrefix' in body) {
-    webhook.stateKeyIsPrefix = !!body.stateKeyIsPrefix
+  // Validate state key type if state key is used.
+  if (webhook.stateKey) {
+    if ('stateKeyType' in body) {
+      if (
+        !body.stateKeyType ||
+        typeof body.stateKeyType !== 'string' ||
+        !Object.values(AccountWebhookStateKeyType).includes(
+          body.stateKeyType as any
+        )
+      ) {
+        ctx.status = 400
+        ctx.body = {
+          error: 'Invalid state key type.',
+        }
+        return
+      }
+
+      webhook.stateKeyType = body.stateKeyType
+    }
+
+    if (!webhook.stateKeyType) {
+      ctx.status = 400
+      ctx.body = {
+        error: 'Invalid state key type.',
+      }
+      return
+    }
   }
 
   // Reset secret if requested.

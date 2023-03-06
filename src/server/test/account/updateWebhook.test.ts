@@ -1,6 +1,12 @@
 import request from 'supertest'
 
-import { Account, AccountCodeIdSet, AccountKey, AccountWebhook } from '@/db'
+import {
+  Account,
+  AccountCodeIdSet,
+  AccountKey,
+  AccountWebhook,
+  AccountWebhookStateKeyType,
+} from '@/db'
 import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
@@ -38,7 +44,7 @@ describe('PATCH /webhooks/:id', () => {
         codeIdSetIds: [codeIdSet.id],
         contractAddresses: ['junoContract1', 'junoContract2'],
         stateKey: 'stateKey',
-        stateKeyIsPrefix: false,
+        stateKeyType: AccountWebhookStateKeyType.Item,
       })
       .expect(201)
 
@@ -257,6 +263,61 @@ describe('PATCH /webhooks/:id', () => {
     )
   })
 
+  it('validates state key type', async () => {
+    await request(app.callback())
+      .patch(`/webhooks/${webhook.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        stateKeyType: 'invalid',
+      })
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Invalid state key type.',
+      })
+
+    // Valid state key types.
+    await Promise.all(
+      Object.values(AccountWebhookStateKeyType).map(async (stateKeyType) => {
+        const response = await request(app.callback())
+          .patch(`/webhooks/${webhook.id}`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({
+            stateKeyType,
+          })
+        expect(response.body.error).not.toBe('Invalid state key type.')
+      })
+    )
+  })
+
+  it('validates state key type set when updating state key', async () => {
+    await webhook.update({
+      stateKey: null,
+      stateKeyType: null,
+    })
+
+    await request(app.callback())
+      .patch(`/webhooks/${webhook.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        stateKey: 'stateKey',
+      })
+      .expect(400)
+      .expect('Content-Type', /json/)
+      .expect({
+        error: 'Invalid state key type.',
+      })
+
+    const response = await request(app.callback())
+      .patch(`/webhooks/${webhook.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        stateKey: 'stateKey',
+        stateKeyType: AccountWebhookStateKeyType.Item,
+      })
+    expect(response.body.error).not.toBe('Invalid state key type.')
+  })
+
   it('does not update webhook if no auth token', async () => {
     const initialStateKey = webhook.stateKey
 
@@ -297,7 +358,7 @@ describe('PATCH /webhooks/:id', () => {
         codeIdSetIds: [],
         contractAddresses: ['junoContract1'],
         stateKey: 'aNewStateKey',
-        stateKeyIsPrefix: true,
+        stateKeyType: AccountWebhookStateKeyType.Map,
         onlyFirstSet: true,
       })
       .expect(204)
@@ -311,7 +372,7 @@ describe('PATCH /webhooks/:id', () => {
     expect(webhook.codeIdSets.length).toBe(0)
     expect(webhook.contractAddresses).toEqual(['junoContract1'])
     expect(webhook.stateKey).toBe('aNewStateKey')
-    expect(webhook.stateKeyIsPrefix).toBe(true)
+    expect(webhook.stateKeyType).toBe(AccountWebhookStateKeyType.Map)
     expect(webhook.onlyFirstSet).toBe(true)
   })
 })

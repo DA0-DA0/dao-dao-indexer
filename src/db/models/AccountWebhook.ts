@@ -33,7 +33,12 @@ export type AccountWebhookApiJson = {
   contractAddresses: string[]
   codeIdSetIds: number[]
   stateKey: string | null
-  stateKeyIsPrefix: boolean | null
+  stateKeyType: string | null
+}
+
+export enum AccountWebhookStateKeyType {
+  Item = 'item',
+  Map = 'map',
 }
 
 @Table({
@@ -85,10 +90,9 @@ export class AccountWebhook extends Model {
   @Column(DataType.STRING)
   stateKey!: string | null
 
-  // If true, the state key is a prefix. If false, the state key is exact.
   @AllowNull
-  @Column(DataType.BOOLEAN)
-  stateKeyIsPrefix!: boolean | null
+  @Column(DataType.STRING)
+  stateKeyType!: string | null
 
   @HasMany(() => AccountWebhookEvent, 'webhookId')
   events!: AccountWebhookEvent[]
@@ -106,7 +110,24 @@ export class AccountWebhook extends Model {
       contractAddresses: this.contractAddresses || [],
       codeIdSetIds: this.codeIdSets.map((codeIdSet) => codeIdSet.id),
       stateKey: this.stateKey,
-      stateKeyIsPrefix: this.stateKeyIsPrefix,
+      stateKeyType: this.stateKeyType,
+    }
+  }
+
+  stateKeyMatches(eventKey: string): boolean {
+    if (!this.stateKey) {
+      return true
+    }
+
+    switch (this.stateKeyType) {
+      case AccountWebhookStateKeyType.Item:
+        return eventKey === dbKeyForKeys(this.stateKey)
+
+      case AccountWebhookStateKeyType.Map:
+        return eventKey.startsWith(dbKeyForKeys(this.stateKey, ''))
+
+      default:
+        return false
     }
   }
 
@@ -129,11 +150,7 @@ export class AccountWebhook extends Model {
         this.codeIdSets.some(({ codeIds }) =>
           codeIds.includes(event.contract.codeId)
         )) &&
-      (this.stateKey === null ||
-        (this.stateKeyIsPrefix &&
-          event.key.startsWith(dbKeyForKeys(this.stateKey, ''))) ||
-        (!this.stateKeyIsPrefix &&
-          event.key === dbKeyForKeys(this.stateKey))) &&
+      this.stateKeyMatches(event.key) &&
       (!this.onlyFirstSet || !(await event.getPreviousEvent()))
     )
   }
