@@ -9,7 +9,9 @@ import { AccountState } from './types'
 type CreateCodeIdSetRequest = Pick<AccountCodeIdSet, 'name' | 'codeIds'>
 
 type CreateCodeIdSetResponse =
-  | undefined
+  | {
+      id: number
+    }
   | {
       error: string
     }
@@ -63,10 +65,16 @@ export const createCodeIdSet: Router.Middleware<
     return
   }
 
-  await ctx.state.account.$create<AccountCodeIdSet>('codeIdSet', {
-    name: body.name,
-    codeIds: body.codeIds,
-  })
+  const codeIdSet = await ctx.state.account.$create<AccountCodeIdSet>(
+    'codeIdSet',
+    {
+      name: body.name,
+      codeIds: body.codeIds,
+    }
+  )
 
-  ctx.status = 201
+  ctx.status = 200
+  ctx.body = {
+    id: codeIdSet.id,
+  }
 }

@@ -9,12 +9,12 @@ describe('POST /code-id-sets', () => {
   let token: string
   beforeEach(async () => {
     const { token: _token } = await getAccountWithAuth()
+    token = _token
   })
 
   it('returns error if no auth token', async () => {
     await request(app.callback())
       .post('/code-id-sets')
-      .send({})
       .expect(401)
       .expect('Content-Type', /json/)
       .expect({
@@ -66,6 +66,8 @@ describe('POST /code-id-sets', () => {
         [1, 'invalid'],
         [1, undefined],
         [1, null],
+        [1.5],
+        [1, 1.5],
       ].map((codeIds) =>
         request(app.callback())
           .post('/code-id-sets')
@@ -101,19 +103,19 @@ describe('POST /code-id-sets', () => {
   it('creates a new code ID set', async () => {
     const initialCount = await AccountCodeIdSet.count()
 
-    await request(app.callback())
+    const response = await request(app.callback())
       .post('/code-id-sets')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'name',
         codeIds: [1, 2, 3],
       })
-      .expect(201)
+      .expect(200)
 
     // Verify created correctly.
     expect(await AccountCodeIdSet.count()).toBe(initialCount + 1)
 
-    const codeIdSet = await AccountCodeIdSet.findOne()
+    const codeIdSet = await AccountCodeIdSet.findByPk(response.body.id)
     expect(codeIdSet).not.toBeNull()
     expect(codeIdSet!.name).toBe('name')
     expect(codeIdSet!.codeIds).toEqual([1, 2, 3])
