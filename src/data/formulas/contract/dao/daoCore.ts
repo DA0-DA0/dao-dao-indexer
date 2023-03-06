@@ -86,7 +86,7 @@ interface SubDao {
 
 interface InboxItem {
   proposalModuleAddress: string
-  proposals: ProposalResponse<any>[]
+  proposals: (ProposalResponse<any> & { voted?: boolean })[]
 }
 
 const CONTRACT_NAMES = ['cw-core', 'cwd-core', 'dao-core']
@@ -534,8 +534,8 @@ const TOTAL_POWER_FORMULAS: ContractFormula<string>[] = [
   daoVotingCw721StakedTotalPower,
 ]
 
-// Return open proposals without votes from the given address. If no address
-// provided, just return open proposals.
+// Return open proposals and whether or not the given address voted. If no
+// address provided, just return open proposals.
 export const openProposals: ContractFormula<
   InboxItem[] | undefined,
   { address?: string }
@@ -580,7 +580,11 @@ export const openProposals: ContractFormula<
 // Map contract name to open proposal formula.
 const OPEN_PROPOSALS_MAP: Record<
   string,
-  ContractFormula<ProposalResponse<any>[], { address?: string }> | undefined
+  | ContractFormula<
+      (ProposalResponse<any> & { voted?: boolean })[],
+      { address?: string }
+    >
+  | undefined
 > = {
   // Single choice
   // V1
