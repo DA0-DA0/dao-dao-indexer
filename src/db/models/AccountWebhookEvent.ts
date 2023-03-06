@@ -118,7 +118,10 @@ export class AccountWebhookEvent extends Model {
       url +
       Object.keys(requestBody)
         .sort()
-        .map((key) => `${key}=${requestBody[key as keyof RequestBody]}`)
+        .map(
+          (key) =>
+            `${key}=${JSON.stringify(requestBody[key as keyof RequestBody])}`
+        )
 
     const signature = createHmac('sha256', webhook.secret)
       .update(data)
