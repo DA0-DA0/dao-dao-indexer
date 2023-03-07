@@ -214,11 +214,9 @@ export class AccountWebhookEvent extends Model {
       statusCode,
     })
 
-    // Update status if has not yet succeeded or failed.
-    if (
-      this.status === AccountWebhookEventStatus.Pending ||
-      this.status === AccountWebhookEventStatus.Retrying
-    ) {
+    // Update status if has not yet succeeded. If it fails and they manually
+    // fire, it should update the status if it succeeds.
+    if (this.status !== AccountWebhookEventStatus.Success) {
       this.status = attempt.success
         ? AccountWebhookEventStatus.Success
         : this.attempts.length < MAX_ATTEMPTS
