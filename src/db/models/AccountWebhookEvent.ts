@@ -27,6 +27,7 @@ import {
 export type AccountWebhookEventApiJson = {
   uuid: string
   status: AccountWebhookEventStatus
+  data: ParsedEvent
   url: string
   attempts: AccountWebhookEventAttemptApiJson[]
 }
@@ -98,9 +99,10 @@ export class AccountWebhookEvent extends Model {
     this.attempts ||= (await this.$get('attempts')) ?? []
 
     return {
-      url: this.url,
-      status: this.status,
       uuid: this.uuid,
+      status: this.status,
+      data: this.parsedEvent,
+      url: this.url,
       attempts: this.attempts.map((attempt) => attempt.apiJson),
     }
   }
