@@ -21,12 +21,7 @@ import {
   FormulaTransformationMatchGetter,
   FormulaTransformationMatchesGetter,
 } from './types'
-import {
-  dbKeyForKeys,
-  dbKeyToNumber,
-  dbKeyToString,
-  getDependentKey,
-} from './utils'
+import { dbKeyForKeys, dbKeyToKeys, getDependentKey } from './utils'
 
 // Generate environment for computation.
 export const getEnv = ({
@@ -95,7 +90,7 @@ export const getEnv = ({
   const getMap: FormulaMapGetter = async (
     contractAddress,
     name,
-    { numericKeys = false } = {}
+    { keyType = 'string' } = {}
   ) => {
     const keyPrefix =
       (Array.isArray(name)
@@ -160,10 +155,14 @@ export const getEnv = ({
     // If events found, create map.
     const map: Record<string | number, any> = {}
     for (const event of undeletedEvents) {
-      // Remove prefix from key and convert to expected format.
-      const mapKey = numericKeys
-        ? dbKeyToNumber(event.key.slice(keyPrefix.length))
-        : dbKeyToString(event.key.slice(keyPrefix.length))
+      // Remove prefix from key and decode into expected format.
+      const mapKey =
+        keyType === 'string'
+          ? dbKeyToKeys(event.key.slice(keyPrefix.length), [false])[0]
+          : keyType === 'number'
+          ? dbKeyToKeys(event.key.slice(keyPrefix.length), [true])[0]
+          : // keyType === 'raw'
+            event.key.slice(keyPrefix.length)
 
       map[mapKey] = JSON.parse(event.value ?? 'null')
     }

@@ -93,7 +93,12 @@ export type FormulaMapGetter = <
   contractAddress: string,
   name: string | (string | number)[],
   options?: {
-    numericKeys?: boolean
+    // Default: 'string'. If 'string', the map key will be decoded assuming it's
+    // a utf-8 string. If 'number', the map key will be decoded assuming it's a
+    // big-endian integer. If 'raw', the map key will not be decoded and left in
+    // the string format of comma-separated integers that represent uint8s. The
+    // 'string' and 'number' decodings use `dbKeyToKeys` assuming only one key.
+    keyType?: 'string' | 'number' | 'raw'
   }
 ) => Promise<Record<K, V> | undefined>
 

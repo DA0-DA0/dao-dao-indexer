@@ -50,21 +50,6 @@ const keyToBuffer = (key: string | number): Buffer => {
   return buffer
 }
 
-// Convert comma-separated list of uint8 values to a string.
-export const dbKeyToString = (key: string): string => {
-  return Buffer.from(key.split(',').map((c) => parseInt(c, 10))).toString(
-    'utf-8'
-  )
-}
-
-// Convert comma-separated list of uint8 values in big endian format to a
-// number.
-export const dbKeyToNumber = (key: string): number =>
-  parseInt(
-    Buffer.from(key.split(',').map((c) => parseInt(c, 10))).toString('hex'),
-    16
-  )
-
 // Convert comma-separated list of uint8 values in big endian format to an array
 // of strings and numbers. `withNumericKeys` must be an array of booleans
 // indicating whether the corresponding key should be converted to a number. If

@@ -105,7 +105,7 @@ export const listProposals: ContractFormula<
       const proposalsV2 = await getMap<number, SingleChoiceProposal>(
         contractAddress,
         'proposals_v2',
-        { numericKeys: true }
+        { keyType: 'number' }
       )
       if (proposalsV2) {
         proposals = proposalsV2
@@ -115,7 +115,7 @@ export const listProposals: ContractFormula<
         proposals = await getMap<number, SingleChoiceProposal>(
           contractAddress,
           'proposals',
-          { numericKeys: true }
+          { keyType: 'number' }
         )
       }
     }
@@ -173,7 +173,7 @@ export const reverseProposals: ContractFormula<
       const proposalsV2 = await getMap<number, SingleChoiceProposal>(
         contractAddress,
         'proposals_v2',
-        { numericKeys: true }
+        { keyType: 'number' }
       )
       if (proposalsV2) {
         proposals = proposalsV2
@@ -183,7 +183,7 @@ export const reverseProposals: ContractFormula<
         proposals = await getMap<number, SingleChoiceProposal>(
           contractAddress,
           'proposals',
-          { numericKeys: true }
+          { keyType: 'number' }
         )
       }
     }

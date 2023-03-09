@@ -54,7 +54,7 @@ export const map: ContractFormula<
   }) => {
     if (key) {
       return await getMap(contractAddress, key, {
-        numericKeys: !!numeric,
+        keyType: numeric ? 'number' : 'string',
       })
     }
 
@@ -91,7 +91,7 @@ export const map: ContractFormula<
       }
 
       return await getMap(contractAddress, parsedKeys, {
-        numericKeys: !!numeric,
+        keyType: numeric ? 'number' : 'string',
       })
     }
 

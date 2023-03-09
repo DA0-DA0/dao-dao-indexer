@@ -82,7 +82,7 @@ export const listProposals: ContractFormula<
       (await getMap<number, MultipleChoiceProposal>(
         contractAddress,
         'proposals',
-        { numericKeys: true }
+        { keyType: 'number' }
       )) ??
       {}
 
@@ -132,7 +132,7 @@ export const reverseProposals: ContractFormula<
       (await getMap<number, MultipleChoiceProposal>(
         contractAddress,
         'proposals',
-        { numericKeys: true }
+        { keyType: 'number' }
       )) ??
       {}
 

@@ -24,7 +24,7 @@ export const pendingProposals: ContractFormula<any[] | undefined> = {
       contractAddress,
       'pending_proposals',
       {
-        numericKeys: true,
+        keyType: 'number',
       }
     )
     if (!pendingProposals) {
@@ -46,7 +46,7 @@ export const reversePendingProposals: ContractFormula<any[] | undefined> = {
       contractAddress,
       'pending_proposals',
       {
-        numericKeys: true,
+        keyType: 'number',
       }
     )
     if (!pendingProposals) {
