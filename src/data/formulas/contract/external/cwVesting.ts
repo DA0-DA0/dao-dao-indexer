@@ -8,7 +8,7 @@ type Validator = {
 
 export const info: ContractFormula = {
   compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'vesting_payment'),
+    await get(contractAddress, 'vesting'),
 }
 
 export const validators: ContractFormula<Validator[]> = {
