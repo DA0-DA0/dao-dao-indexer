@@ -55,7 +55,7 @@ const main = async () => {
     process.stdout.write(
       `\r${
         LOADER_MAP[printLoaderCount]
-      }  Succeeded: ${succeeded.toLocaleString()}. Failed: ${failed.toLocaleString()}.`
+      } [webhooks] Succeeded: ${succeeded.toLocaleString()}. Failed: ${failed.toLocaleString()}.`
     )
   }
 

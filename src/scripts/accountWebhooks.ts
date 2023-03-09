@@ -45,7 +45,7 @@ const main = async () => {
     type: DbType.Accounts,
   })
 
-  console.log(`\n\n[${new Date().toISOString()}] Firing webhooks...`)
+  console.log(`\n\n[${new Date().toISOString()}] Firing account webhooks...`)
 
   // Statistics.
   let printLoaderCount = 0
@@ -56,7 +56,7 @@ const main = async () => {
     process.stdout.write(
       `\r${
         LOADER_MAP[printLoaderCount]
-      }  Succeeded: ${succeeded.toLocaleString()}. Failed: ${failed.toLocaleString()}.`
+      } [accountWebhooks] Succeeded: ${succeeded.toLocaleString()}. Failed: ${failed.toLocaleString()}.`
     )
   }
 
