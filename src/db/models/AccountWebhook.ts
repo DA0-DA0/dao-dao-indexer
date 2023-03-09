@@ -25,7 +25,7 @@ import { Event } from './Event'
 
 export type AccountWebhookApiJson = {
   id: number
-  keyId: number | null
+  accountKeyId: number | null
   description: string | null
   url: string
   secret: string
@@ -102,7 +102,7 @@ export class AccountWebhook extends Model {
 
     return {
       id: this.id,
-      keyId: this.accountKeyId,
+      accountKeyId: this.accountKeyId,
       description: this.description,
       url: this.url,
       secret: this.secret,
