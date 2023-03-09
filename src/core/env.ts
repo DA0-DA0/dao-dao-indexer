@@ -4,11 +4,12 @@ import { Contract, Event, Transformation } from '@/db'
 
 import { loadConfig } from './config'
 import {
+  Cache,
   Env,
   EnvOptions,
   FormulaCodeIdKeyForContractGetter,
   FormulaCodeIdsForKeysGetter,
-  FormulaContractCodeIdGetter,
+  FormulaContractGetter,
   FormulaContractMatchesCodeIdKeysGetter,
   FormulaDateGetter,
   FormulaDateWithValueMatchGetter,
@@ -30,12 +31,15 @@ export const getEnv = ({
   args = {},
   dependencies,
   onFetch,
-  cache = {
+  cache: _cache,
+}: EnvOptions): Env<{}> => {
+  const cache: Cache = {
     events: {},
     transformations: {},
     contracts: {},
-  },
-}: EnvOptions): Env<{}> => {
+    ..._cache,
+  }
+
   // Most recent event at or below this block.
   const blockHeightFilter = {
     blockHeight: {
@@ -694,15 +698,13 @@ export const getEnv = ({
     return date
   }
 
-  const getContractCodeId: FormulaContractCodeIdGetter = async (
-    contractAddress
-  ) => {
+  const getContract: FormulaContractGetter = async (contractAddress) => {
     // Get contract from cache.
     const cachedContract = cache.contracts[contractAddress]
 
-    // If found contract, return code ID.
+    // If found contract, return contract.
     if (cachedContract) {
-      return cachedContract.codeId
+      return cachedContract.json
     }
     // If contract was previously found to not exist, return undefined.
     else if (cachedContract === null) {
@@ -719,7 +721,7 @@ export const getEnv = ({
     // Cache contract.
     cache.contracts[contractAddress] = contract
 
-    return contract?.codeId
+    return contract?.json
   }
 
   // Get code ID key map from config.
@@ -729,7 +731,7 @@ export const getEnv = ({
 
   const contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter =
     async (contractAddress, ...keys) => {
-      const codeId = await getContractCodeId(contractAddress)
+      const codeId = (await getContract(contractAddress))?.codeId
       return codeId !== undefined && getCodeIdsForKeys(...keys).includes(codeId)
     }
 
@@ -738,7 +740,7 @@ export const getEnv = ({
   const getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter = async (
     contractAddress
   ) => {
-    const codeId = await getContractCodeId(contractAddress)
+    const codeId = (await getContract(contractAddress))?.codeId
     if (codeId === undefined) {
       return
     }
@@ -765,7 +767,8 @@ export const getEnv = ({
     getDateFirstTransformed,
     prefetch,
     prefetchTransformations,
-    getContractCodeId,
+
+    getContract,
     getCodeIdsForKeys,
     contractMatchesCodeIdKeys,
     getCodeIdKeyForContract,

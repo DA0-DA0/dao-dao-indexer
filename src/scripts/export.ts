@@ -430,12 +430,30 @@ const exporter = async (
     try {
       // Ensure contract exists before creating events. `address` is unique.
       await Contract.bulkCreate(
-        uniqueContracts.map((address) => ({
-          address,
-          codeId: parsedEvents.find(
+        uniqueContracts.map((address) => {
+          const event = parsedEvents.find(
             (event) => event.contractAddress === address
-          )!.codeId,
-        })),
+          )
+          // Should never happen since `uniqueContracts` is derived from
+          // `parsedEvents`.
+          if (!event) {
+            throw new Error('Event not found when creating contract.')
+          }
+
+          return {
+            address,
+            codeId: event.codeId,
+            // Set the contract instantiation block to the first event found in
+            // the list of parsed events. Events are sorted in ascending order
+            // by creation block. These won't get updated if the contract
+            // already exists, so it's safe to always attempt creation with the
+            // first event's block. Only `codeId` gets updated below when a
+            // duplicate is found.
+            instantiatedAtBlockHeight: event.blockHeight,
+            instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
+            instantiatedAtBlockTimestamp: event.blockTimestamp,
+          }
+        }),
         // When contract is migrated, codeId changes.
         {
           updateOnDuplicate: ['codeId'],

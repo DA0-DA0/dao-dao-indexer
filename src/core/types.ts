@@ -153,8 +153,12 @@ export type FormulaPrefetchTransformations = (
   )[]
 ) => Promise<void>
 
-export type FormulaContractCodeIdGetter = (
+export type FormulaContractGetter = (
   contractAddress: string
+) => Promise<ContractJson | undefined>
+
+export type FormulaContractCodeIdGetter = (
+  ...params: Parameters<FormulaContractGetter>
 ) => Promise<number | undefined>
 
 export type FormulaCodeIdsForKeysGetter = (...keys: string[]) => number[]
@@ -188,7 +192,7 @@ export type Env<Args extends Record<string, string> = {}> = {
   prefetch: FormulaPrefetch
   prefetchTransformations: FormulaPrefetchTransformations
 
-  getContractCodeId: FormulaContractCodeIdGetter
+  getContract: FormulaContractGetter
   getCodeIdsForKeys: FormulaCodeIdsForKeysGetter
   contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter
   getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
@@ -206,7 +210,7 @@ export interface EnvOptions {
     events: Event[],
     transformations: Transformation[]
   ) => void | Promise<void>
-  cache?: Cache
+  cache?: Partial<Cache>
 }
 
 export type ContractEnv<Args extends Record<string, string> = {}> =
@@ -316,6 +320,15 @@ export interface SplitDependentKeys {
 
 export type NestedFormulaMap<F> = {
   [key: string]: F | NestedFormulaMap<F> | undefined
+}
+
+export type ContractJson = {
+  address: string
+  codeId: number
+  instantiatedAt: {
+    block: Block
+    timestamp: Date
+  }
 }
 
 export type Block = {

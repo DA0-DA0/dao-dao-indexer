@@ -119,7 +119,14 @@ export class PendingWebhook extends Model {
 
           return webhooksForEvent.map(async (webhook) => {
             const env: ContractEnv = {
-              ...getEnv({ block: event.block }),
+              ...getEnv({
+                block: event.block,
+                cache: {
+                  contracts: {
+                    [event.contract.address]: event.contract,
+                  },
+                },
+              }),
               contractAddress: event.contractAddress,
             }
 

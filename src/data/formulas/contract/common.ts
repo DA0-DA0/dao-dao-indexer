@@ -9,8 +9,10 @@ export const info: ContractFormula<ContractInfo | undefined> = {
 }
 
 export const instantiatedAt: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getDateFirstTransformed }) =>
-    (await getDateFirstTransformed(contractAddress, 'info'))?.toISOString(),
+  compute: async ({ contractAddress, getContract }) =>
+    (
+      await getContract(contractAddress)
+    )?.instantiatedAt.timestamp.toISOString(),
 }
 
 // Access any state item. This is either a top-level item or an item
