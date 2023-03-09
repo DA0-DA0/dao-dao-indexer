@@ -15,6 +15,7 @@ module.exports = {
     {
       name: 'account-webhooks',
       script: 'dist/scripts/accountWebhooks.js',
+      args: ['-c', 'config.accounts.json'],
       kill_timeout: 30000,
     },
     {
