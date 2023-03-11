@@ -11,7 +11,7 @@ import {
 
 import {
   Block,
-  ParsedEvent,
+  ParsedWasmEvent,
   ProcessedTransformer,
   SplitDependentKeys,
   getDependentKey,
@@ -50,7 +50,7 @@ import { Contract } from './Contract'
     },
   ],
 })
-export class Transformation extends Model {
+export class WasmEventTransformation extends Model {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
@@ -127,7 +127,7 @@ export class Transformation extends Model {
     return {
       [Op.or]: Object.entries(dependentNamesByContract).map(
         ([contractAddress, dependentKeys]) => {
-          const { mapPrefixes } = Transformation.splitDependentKeys(
+          const { mapPrefixes } = WasmEventTransformation.splitDependentKeys(
             dependentKeys!
           )
 
@@ -166,8 +166,8 @@ export class Transformation extends Model {
   }
 
   static async transformParsedEvents(
-    events: ParsedEvent[]
-  ): Promise<Transformation[]> {
+    events: ParsedWasmEvent[]
+  ): Promise<WasmEventTransformation[]> {
     const transformers = getProcessedTransformers(loadConfig())
     if (transformers.length === 0) {
       return []
@@ -257,7 +257,7 @@ export class Transformation extends Model {
                 // Fallback to database.
                 return (
                   (
-                    await Transformation.findOne({
+                    await WasmEventTransformation.findOne({
                       where: {
                         contractAddress: event.contractAddress,
                         name: pendingTransformation.name,
@@ -310,7 +310,7 @@ export class Transformation extends Model {
     }
 
     // Save all pending transformations.
-    return await Transformation.bulkCreate(evaluatedTransformations, {
+    return await WasmEventTransformation.bulkCreate(evaluatedTransformations, {
       updateOnDuplicate: ['value'],
     })
   }
@@ -325,7 +325,7 @@ type PendingTransformation = {
 }
 
 type UnevaluatedEventTransformation = {
-  event: ParsedEvent
+  event: ParsedWasmEvent
   transformer: ProcessedTransformer
   pendingTransformation: PendingTransformation
 }

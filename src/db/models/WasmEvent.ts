@@ -1,5 +1,3 @@
-import { Worker } from 'worker_threads'
-
 import { Op, WhereOptions } from 'sequelize'
 import {
   AllowNull,
@@ -7,11 +5,16 @@ import {
   Column,
   DataType,
   ForeignKey,
-  Model,
   Table,
 } from 'sequelize-typescript'
 
-import { Block, ParsedEvent, SplitDependentKeys, getDependentKey } from '@/core'
+import {
+  Block,
+  DependendableEventModel,
+  ParsedWasmEvent,
+  SplitDependentKeys,
+  getDependentKey,
+} from '@/core'
 
 import { Contract } from './Contract'
 
@@ -45,7 +48,7 @@ import { Contract } from './Contract'
     },
   ],
 })
-export class Event extends Model {
+export class WasmEvent extends DependendableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
@@ -99,7 +102,7 @@ export class Event extends Model {
     return getDependentKey(this.contractAddress, this.key)
   }
 
-  get asParsedEvent(): ParsedEvent {
+  get asParsedEvent(): ParsedWasmEvent {
     // `Contract` must be included before using this getter.
     if (!this.contract) {
       throw new Error('Contract must be included when querying for this Event.')
@@ -121,10 +124,10 @@ export class Event extends Model {
   // Get the previous event for this key. If this is the first event for this
   // key, return null. Cache the result so it can be reused since this shouldn't
   // change.
-  previousEvent?: Event | null
-  async getPreviousEvent(cache = true): Promise<Event | null> {
+  previousEvent?: WasmEvent | null
+  async getPreviousEvent(cache = true): Promise<WasmEvent | null> {
     if (this.previousEvent === undefined || !cache) {
-      this.previousEvent = await Event.findOne({
+      this.previousEvent = await WasmEvent.findOne({
         where: {
           contractAddress: this.contractAddress,
           key: this.key,
@@ -138,6 +141,8 @@ export class Event extends Model {
 
     return this.previousEvent
   }
+
+  static dependentKeyNamespace = 'wasm'
 
   // Split dependent keys into two groups: non map keys and map prefixes. Map
   // prefixes end with a comma because they are missing the final key segment,
@@ -176,7 +181,9 @@ export class Event extends Model {
     return {
       [Op.or]: Object.entries(dependentKeysByContract).map(
         ([contractAddress, keys]) => {
-          const { nonMapKeys, mapPrefixes } = Event.splitDependentKeys(keys!)
+          const { nonMapKeys, mapPrefixes } = WasmEvent.splitDependentKeys(
+            keys!
+          )
 
           const exactKeys = nonMapKeys.filter((key) => !key.includes('%'))
           const wildcardKeys = nonMapKeys.filter((key) => key.includes('%'))

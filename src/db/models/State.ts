@@ -38,7 +38,11 @@ export class State extends Model {
 
   @AllowNull
   @Column(DataType.BIGINT)
-  lastBlockHeightExported!: string | null
+  lastStakingBlockHeightExported!: string | null
+
+  @AllowNull
+  @Column(DataType.BIGINT)
+  lastWasmBlockHeightExported!: string | null
 
   get latestBlock(): Block {
     return {
@@ -66,7 +70,8 @@ export class State extends Model {
         chainId: '',
         latestBlockHeight: 0n,
         latestBlockTimeUnixMs: 0n,
-        lastBlockHeightExported: 0n,
+        lastStakingBlockHeightExported: 0n,
+        lastWasmBlockHeightExported: 0n,
       })
     }
   }

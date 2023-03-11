@@ -17,8 +17,8 @@ import {
   AccountKeyCredit,
   Computation,
   Contract,
-  Event,
   State,
+  WasmEvent,
 } from '@/db'
 
 import { captureSentryException } from '../../sentry'
@@ -288,7 +288,7 @@ export const computer: Router.Middleware = async (ctx) => {
       }
 
       block = (
-        await Event.findOne({
+        await WasmEvent.findOne({
           where: {
             blockTimeUnixMs: {
               [Op.lte]: time,
@@ -311,7 +311,7 @@ export const computer: Router.Middleware = async (ctx) => {
 
       const startBlock =
         (
-          await Event.findOne({
+          await WasmEvent.findOne({
             where: {
               blockTimeUnixMs: {
                 [Op.lte]: times[0],
@@ -322,14 +322,14 @@ export const computer: Router.Middleware = async (ctx) => {
         )?.block ??
         // Use first block if no event exists before start time.
         (
-          await Event.findOne({
+          await WasmEvent.findOne({
             order: [['blockTimeUnixMs', 'ASC']],
           })
         )?.block
       // Use latest block if no end time exists.
       const endBlock = times[1]
         ? (
-            await Event.findOne({
+            await WasmEvent.findOne({
               where: {
                 blockTimeUnixMs: {
                   [Op.lte]: times[1],

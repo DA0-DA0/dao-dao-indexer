@@ -8,7 +8,8 @@ import { State } from '@/db'
 type GetStatusResponse =
   | {
       latestBlock: SerializedBlock
-      lastBlockHeightExported: string | null
+      lastStakingBlockHeightExported: string | null
+      lastWasmBlockHeightExported: string | null
     }
   | {
       error: string
@@ -31,6 +32,9 @@ export const getStatus: Router.Middleware<
   ctx.status = 200
   ctx.body = {
     latestBlock: serializeBlock(state.latestBlock),
-    lastBlockHeightExported: state.lastBlockHeightExported?.toString() || null,
+    lastStakingBlockHeightExported:
+      state.lastStakingBlockHeightExported?.toString() || null,
+    lastWasmBlockHeightExported:
+      state.lastWasmBlockHeightExported?.toString() || null,
   }
 }

@@ -3,7 +3,7 @@ import { Op, Sequelize } from 'sequelize'
 import { bigIntMax, bigIntMin } from '@/core/utils'
 
 import { loadDb } from './connection'
-import { Computation, Event, Transformation } from './models'
+import { Computation, WasmEvent, WasmEventTransformation } from './models'
 
 // TODO: Compute computation if the latest computation is no longer valid? Maybe we should have a separate task that constantly checks the validity of computations and updates them as needed?
 
@@ -38,8 +38,8 @@ import { Computation, Event, Transformation } from './models'
 // computation's validity by checking the range up to the latest changed block,
 // using the default behavior of starting from the `latestBlockHeightValid`.
 export const updateComputationValidityDependentOnChanges = async (
-  events: Event[],
-  transformations: Transformation[]
+  events: WasmEvent[],
+  transformations: WasmEventTransformation[]
 ): Promise<{
   updated: number
   destroyed: number

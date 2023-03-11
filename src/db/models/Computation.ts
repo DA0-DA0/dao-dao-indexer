@@ -13,8 +13,8 @@ import {
 } from '@/core'
 import { getTypedFormula } from '@/data'
 
-import { Event } from './Event'
-import { Transformation } from './Transformation'
+import { WasmEvent } from './WasmEvent'
+import { WasmEventTransformation } from './WasmEventTransformation'
 
 @Table({
   timestamps: true,
@@ -150,13 +150,13 @@ export class Computation extends Model {
     const firstNewerEvent =
       this.dependentEvents.length === 0
         ? null
-        : await Event.findOne({
+        : await WasmEvent.findOne({
             where: {
               blockHeight: {
                 [Op.gte]: minBlockHeight,
                 [Op.lte]: upToBlockHeight,
               },
-              ...Event.getWhereClauseForDependentKeys(this.dependentEvents),
+              ...WasmEvent.getWhereClauseForDependentKeys(this.dependentEvents),
             },
             order: [['blockHeight', 'ASC']],
           })
@@ -164,13 +164,13 @@ export class Computation extends Model {
     const firstNewerTransformation =
       this.dependentTransformations.length === 0
         ? null
-        : await Transformation.findOne({
+        : await WasmEventTransformation.findOne({
             where: {
               blockHeight: {
                 [Op.gte]: minBlockHeight,
                 [Op.lte]: upToBlockHeight,
               },
-              ...Transformation.getWhereClauseForDependentKeys(
+              ...WasmEventTransformation.getWhereClauseForDependentKeys(
                 this.dependentTransformations
               ),
             },

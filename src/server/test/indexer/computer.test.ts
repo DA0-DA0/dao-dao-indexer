@@ -3,7 +3,7 @@ import request from 'supertest'
 import { loadConfig } from '@/core/config'
 import { ContractFormula, FormulaType, TypedFormula } from '@/core/types'
 import { FormulaTypeValues, dbKeyForKeys } from '@/core/utils'
-import { AccountKeyCredit, Computation, Contract, Event, State } from '@/db'
+import { AccountKeyCredit, Computation, Contract, State, WasmEvent } from '@/db'
 import { getTypedFormula } from '@/test/mocks'
 import { getAccountWithAuth } from '@/test/utils'
 
@@ -452,7 +452,7 @@ describe('computer: GET /(.*)', () => {
   describe('event data available', () => {
     beforeEach(async () => {
       const date = new Date()
-      await Event.bulkCreate([
+      await WasmEvent.bulkCreate([
         {
           contractAddress: 'valid_contract',
           blockHeight: 1,

@@ -13,10 +13,12 @@ import {
   AccountWebhookEventAttempt,
   Computation,
   Contract,
-  Event,
   PendingWebhook,
+  SlashEvent,
   State,
-  Transformation,
+  Validator,
+  WasmEvent,
+  WasmEventTransformation,
 } from './models'
 import { AccountWebhookEvent } from './models/AccountWebhookEvent'
 
@@ -25,10 +27,12 @@ const MODELS_FOR_TYPE: Record<DbType, SequelizeOptions['models']> = {
   [DbType.Data]: [
     Computation,
     Contract,
-    Event,
     PendingWebhook,
+    SlashEvent,
     State,
-    Transformation,
+    Validator,
+    WasmEvent,
+    WasmEventTransformation,
   ],
   [DbType.Accounts]: [
     Account,

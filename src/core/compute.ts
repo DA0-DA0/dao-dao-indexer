@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { Contract, Event, Transformation } from '@/db'
+import { Contract, WasmEvent, WasmEventTransformation } from '@/db'
 
 import { getEnv } from './env'
 import {
@@ -33,10 +33,10 @@ export const compute = async ({
     : undefined
 
   const onFetch = async (
-    events: Event[],
-    transformations: Transformation[]
+    events: WasmEvent[],
+    transformations: WasmEventTransformation[]
   ) => {
-    const latestItem: Event | Transformation = [
+    const latestItem: WasmEvent | WasmEventTransformation = [
       ...events,
       ...transformations,
     ].sort((a, b) => Number(BigInt(b.blockHeight) - BigInt(a.blockHeight)))[0]
@@ -104,10 +104,13 @@ export const computeRange = async ({
   // constraints. Map contents may change based on many different keys, so maps
   // need to be reconstructed by individual key comparisons, meaning we need to
   // store keys separately here and not combined into their maps.
-  const allEvents: Record<string, Event[] | undefined> = {}
+  const allEvents: Record<string, WasmEvent[] | undefined> = {}
   // All transformations for contractAddress:name pairs, sorted ascending by
   // block height.
-  const allTransformations: Record<string, Transformation[] | undefined> = {}
+  const allTransformations: Record<
+    string,
+    WasmEventTransformation[] | undefined
+  > = {}
 
   // Cache contracts across all computations since they stay constant.
   const contractCache: CacheMapSingle<Contract> = {}
@@ -118,8 +121,8 @@ export const computeRange = async ({
     latestBlock: Block | undefined
     value: any
     dependencies: Dependencies
-    eventsUsed: Event[]
-    transformationsUsed: Transformation[]
+    eventsUsed: WasmEvent[]
+    transformationsUsed: WasmEventTransformation[]
   }> => {
     // Store the latest block that we've seen for all keys accessed. This is the
     // earliest this computation could have been made. If the formula is
@@ -130,12 +133,12 @@ export const computeRange = async ({
       : undefined
 
     // Store the events and transformations used for this computation.
-    let eventsUsed: Event[] = []
-    let transformationsUsed: Transformation[] = []
+    let eventsUsed: WasmEvent[] = []
+    let transformationsUsed: WasmEventTransformation[] = []
 
     const onFetch = async (
-      events: Event[],
-      transformations: Transformation[]
+      events: WasmEvent[],
+      transformations: WasmEventTransformation[]
     ) => {
       if (events.length) {
         eventsUsed = [...eventsUsed, ...events]
@@ -144,7 +147,7 @@ export const computeRange = async ({
         transformationsUsed = [...transformationsUsed, ...transformations]
       }
 
-      const latestItem: Event | Transformation = [
+      const latestItem: WasmEvent | WasmEventTransformation = [
         ...events,
         ...transformations,
       ].sort((a, b) => Number(BigInt(b.blockHeight) - BigInt(a.blockHeight)))[0]
@@ -168,7 +171,7 @@ export const computeRange = async ({
 
     if (allDependencies.events.size > 0) {
       addToCache(
-        Event.splitDependentKeys(Array.from(allDependencies.events)),
+        WasmEvent.splitDependentKeys(Array.from(allDependencies.events)),
         allEvents,
         initialCache.events,
         block
@@ -176,7 +179,7 @@ export const computeRange = async ({
     }
     if (allDependencies.transformations.size > 0) {
       addToCache(
-        Transformation.splitDependentKeys(
+        WasmEventTransformation.splitDependentKeys(
           Array.from(allDependencies.transformations)
         ),
         allTransformations,
@@ -262,14 +265,14 @@ export const computeRange = async ({
       (key) => !allDependencies.events.has(key)
     )
     if (newDependentEvents.length > 0) {
-      const futureEvents = await Event.findAll({
+      const futureEvents = await WasmEvent.findAll({
         where: {
           // After the current block up to the end block.
           blockHeight: {
             [Op.gt]: currentBlock.height,
             [Op.lte]: blockEnd.height,
           },
-          ...Event.getWhereClauseForDependentKeys(newDependentEvents),
+          ...WasmEvent.getWhereClauseForDependentKeys(newDependentEvents),
         },
         order: [['blockHeight', 'ASC']],
       })
@@ -304,14 +307,14 @@ export const computeRange = async ({
         (key) => !allDependencies.transformations.has(key)
       )
     if (newDependentTransformations.length > 0) {
-      const futureTransformations = await Transformation.findAll({
+      const futureTransformations = await WasmEventTransformation.findAll({
         where: {
           // After the current block up to the end block.
           blockHeight: {
             [Op.gt]: currentBlock.height,
             [Op.lte]: blockEnd.height,
           },
-          ...Transformation.getWhereClauseForDependentKeys(
+          ...WasmEventTransformation.getWhereClauseForDependentKeys(
             newDependentTransformations
           ),
         },
@@ -353,7 +356,7 @@ export const computeRange = async ({
 
     if (result.dependencies.events.length > 0) {
       const eventNextPotentialBlock = getNextPotentialBlock(
-        Event.splitDependentKeys(result.dependencies.events),
+        WasmEvent.splitDependentKeys(result.dependencies.events),
         allEvents,
         currentBlock
       )
@@ -368,7 +371,9 @@ export const computeRange = async ({
     }
     if (result.dependencies.transformations.length > 0) {
       const transformationNextPotentialBlock = getNextPotentialBlock(
-        Transformation.splitDependentKeys(result.dependencies.transformations),
+        WasmEventTransformation.splitDependentKeys(
+          result.dependencies.transformations
+        ),
         allTransformations,
         currentBlock
       )
@@ -386,7 +391,7 @@ export const computeRange = async ({
   return results
 }
 
-const addToCache = <T extends Event | Transformation>(
+const addToCache = <T extends WasmEvent | WasmEventTransformation>(
   { nonMapKeys, mapPrefixes }: SplitDependentKeys,
   allItems: Record<string, T[] | undefined>,
   initialCacheMap: CacheMap<T>,
@@ -490,7 +495,9 @@ const addToCache = <T extends Event | Transformation>(
 // Find the next item that has the potential to change the result for the given
 // keys. If it remains undefined, then we know that the result will not change
 // because no inputs changed.
-export const getNextPotentialBlock = <T extends Event | Transformation>(
+export const getNextPotentialBlock = <
+  T extends WasmEvent | WasmEventTransformation
+>(
   { nonMapKeys, mapPrefixes }: SplitDependentKeys,
   allItems: Record<string, T[] | undefined>,
   currentBlock: Block

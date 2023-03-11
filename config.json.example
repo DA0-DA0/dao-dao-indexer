@@ -1,5 +1,8 @@
 {
-  "eventsFile": "/Users/user/.juno/indexer/.events.txt",
+  "sources": {
+    "wasm": "/Users/user/.juno/indexer/.events.txt",
+    "staking": "/Users/user/.juno/indexer/staking.out",
+  },
   "statusEndpoint": "http://localhost:26657/status",
   "db": {
     "data": {

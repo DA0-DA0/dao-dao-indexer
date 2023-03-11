@@ -1,7 +1,8 @@
 import { Options as PusherOptions } from 'pusher'
-import { SequelizeOptions } from 'sequelize-typescript'
+import { WhereOptions } from 'sequelize'
+import { Model, SequelizeOptions } from 'sequelize-typescript'
 
-import { Contract, Event, State, Transformation } from '@/db'
+import { Contract, State, WasmEvent, WasmEventTransformation } from '@/db'
 
 type DB = { uri?: string } & Pick<
   SequelizeOptions,
@@ -22,7 +23,10 @@ type DB = { uri?: string } & Pick<
 >
 
 export type Config = {
-  eventsFile: string
+  sources: {
+    wasm: string
+    staking: string
+  }
   statusEndpoint: string
   db: {
     data: DB
@@ -207,8 +211,8 @@ export interface EnvOptions {
   args?: Record<string, any>
   dependencies?: SetDependencies
   onFetch?: (
-    events: Event[],
-    transformations: Transformation[]
+    events: WasmEvent[],
+    transformations: WasmEventTransformation[]
   ) => void | Promise<void>
   cache?: Partial<Cache>
 }
@@ -308,8 +312,8 @@ export type CacheMap<T> = Record<string, T[] | null | undefined>
 export type CacheMapSingle<T> = Record<string, T | null | undefined>
 
 export interface Cache {
-  events: CacheMap<Event>
-  transformations: CacheMap<Transformation>
+  events: CacheMap<WasmEvent>
+  transformations: CacheMap<WasmEventTransformation>
   contracts: CacheMapSingle<Contract>
 }
 
@@ -341,17 +345,7 @@ export type SerializedBlock = {
   timeUnixMs: string
 }
 
-export type IndexerEvent = {
-  blockHeight: number
-  blockTimeUnixMicro: number
-  contractAddress: string
-  codeId: number
-  key: string
-  value: string
-  delete: boolean
-}
-
-export type ParsedEvent = {
+export type ParsedWasmEvent = {
   codeId: number
   contractAddress: string
   blockHeight: string
@@ -375,14 +369,14 @@ export type Transformer<V = any> = {
   filter: RequireAtLeastOne<{
     codeIdsKeys: string[]
     contractAddresses: string[]
-    matches: (event: ParsedEvent) => boolean
+    matches: (event: ParsedWasmEvent) => boolean
   }>
   // If `name` returns `undefined`, the transformation will not be saved.
-  name: string | ((event: ParsedEvent) => string | undefined)
+  name: string | ((event: ParsedWasmEvent) => string | undefined)
   // If `getValue` returns `undefined`, the transformation will not be saved.
   // All other values, including `null`, will be saved.
   getValue: (
-    event: ParsedEvent,
+    event: ParsedWasmEvent,
     getLastValue: () => Promise<V | null>
   ) => V | null | undefined | Promise<V | null | undefined>
   // By default, a transformation gets created with a value of `null` if the
@@ -395,7 +389,7 @@ export type Transformer<V = any> = {
 export type TransformerMaker = (config: Config) => Transformer
 
 export type ProcessedTransformer<V = any> = Omit<Transformer<V>, 'filter'> & {
-  filter: (event: ParsedEvent) => boolean
+  filter: (event: ParsedWasmEvent) => boolean
 }
 
 export enum WebhookType {
@@ -420,17 +414,20 @@ export type Webhook<V = any> = {
   filter: RequireAtLeastOne<{
     codeIdsKeys: string[]
     contractAddresses: string[]
-    matches: (event: Event) => boolean
+    matches: (event: WasmEvent) => boolean
   }>
   // If returns undefined, the webhook will not be called.
   endpoint:
     | WebhookEndpoint
     | undefined
-    | ((event: Event, env: ContractEnv) => WebhookEndpoint | undefined)
-    | ((event: Event, env: ContractEnv) => Promise<WebhookEndpoint | undefined>)
+    | ((event: WasmEvent, env: ContractEnv) => WebhookEndpoint | undefined)
+    | ((
+        event: WasmEvent,
+        env: ContractEnv
+      ) => Promise<WebhookEndpoint | undefined>)
   // If returns undefined, the webhook will not be called.
   getValue: (
-    event: Event,
+    event: WasmEvent,
     getLastValue: () => Promise<any | null>,
     env: ContractEnv
   ) => V | undefined | Promise<V | undefined>
@@ -442,7 +439,7 @@ export type WebhookMaker = (
 ) => Webhook | null | undefined
 
 export type ProcessedWebhook<V = any> = Omit<Webhook<V>, 'filter'> & {
-  filter: (event: Event) => boolean
+  filter: (event: WasmEvent) => boolean
 }
 
 export type PendingWebhook = {

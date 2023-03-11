@@ -1,6 +1,6 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { Contract, Event, Transformation } from '@/db'
+import { Contract, WasmEvent, WasmEventTransformation } from '@/db'
 
 import { loadConfig } from './config'
 import {
@@ -59,7 +59,7 @@ export const getEnv = ({
       // either it exists or it doesn't (null).
       cachedEvent !== undefined
         ? cachedEvent?.[0]
-        : await Event.findOne({
+        : await WasmEvent.findOne({
             where: {
               contractAddress,
               key,
@@ -112,7 +112,7 @@ export const getEnv = ({
       // either they exist or they don't (null).
       cachedEvents !== undefined
         ? cachedEvents ?? []
-        : await Event.findAll({
+        : await WasmEvent.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -192,7 +192,7 @@ export const getEnv = ({
       // either it exists or it doesn't (null).
       cachedEvent !== undefined
         ? cachedEvent?.[0]
-        : await Event.findOne({
+        : await WasmEvent.findOne({
             where: {
               contractAddress,
               key,
@@ -231,7 +231,7 @@ export const getEnv = ({
     // fetches the first event, so we can't use the cache.
 
     // Get first set event for this key.
-    const event = await Event.findOne({
+    const event = await WasmEvent.findOne({
       where: {
         contractAddress,
         key,
@@ -264,7 +264,7 @@ export const getEnv = ({
       // fetches the first event, so we can't use the cache.
 
       // Get first set event for this key.
-      const event = await Event.findOne({
+      const event = await WasmEvent.findOne({
         where: {
           contractAddress,
           key,
@@ -326,7 +326,7 @@ export const getEnv = ({
           }
         : nonMapKeyFilter || mapKeyFilter || {}
 
-    const events = await Event.findAll({
+    const events = await WasmEvent.findAll({
       attributes: [
         // DISTINCT ON is not directly supported by Sequelize, so we need to
         // cast to unknown and back to string to insert this at the beginning of
@@ -398,7 +398,7 @@ export const getEnv = ({
       // either they exist or they don't (null).
       cachedTransformations !== undefined
         ? cachedTransformations ?? []
-        : await Transformation.findAll({
+        : await WasmEventTransformation.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -487,7 +487,7 @@ export const getEnv = ({
       // either they exist or they don't (null).
       cachedTransformations !== undefined
         ? cachedTransformations ?? []
-        : await Transformation.findAll({
+        : await WasmEventTransformation.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -588,7 +588,7 @@ export const getEnv = ({
           }
         : nonMapNameFilter || mapNameFilter || {}
 
-    const transformations = await Transformation.findAll({
+    const transformations = await WasmEventTransformation.findAll({
       attributes: [
         // DISTINCT ON is not directly supported by Sequelize, so we need to
         // cast to unknown and back to string to insert this at the beginning of
@@ -669,7 +669,7 @@ export const getEnv = ({
     // this fetches the first transformation, so we can't use the cache.
 
     // Get first transformation for this name.
-    const transformation = await Transformation.findOne({
+    const transformation = await WasmEventTransformation.findOne({
       where: {
         name: {
           [Op.like]: nameLike,
