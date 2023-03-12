@@ -1,7 +1,13 @@
 import { Options as PusherOptions } from 'pusher'
 import { SequelizeOptions } from 'sequelize-typescript'
 
-import { Contract, DependendableEventModel, State, WasmEvent } from '@/db'
+import {
+  Contract,
+  DependendableEventModel,
+  StakingSlashEvent,
+  State,
+  WasmEvent,
+} from '@/db'
 
 type DB = { uri?: string } & Pick<
   SequelizeOptions,
@@ -175,6 +181,22 @@ export type FormulaCodeIdKeyForContractGetter = (
   contractAddress: string
 ) => Promise<string | undefined>
 
+export type FormulaSlashEventsGetter = (
+  validatorOperatorAddress: string
+) => Promise<
+  | Pick<
+      StakingSlashEvent,
+      | 'validatorOperatorAddress'
+      | 'registeredBlockHeight'
+      | 'registeredBlockTimeUnixMs'
+      | 'registeredBlockTimestamp'
+      | 'infractionBlockHeight'
+      | 'slashFactor'
+      | 'amountSlashed'
+    >[]
+  | undefined
+>
+
 export type Env<Args extends Record<string, string> = {}> = {
   block: Block
   // If latest block is being used, this will be the current date. If fetching
@@ -199,6 +221,8 @@ export type Env<Args extends Record<string, string> = {}> = {
   getCodeIdsForKeys: FormulaCodeIdsForKeysGetter
   contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter
   getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
+
+  getSlashEvents: FormulaSlashEventsGetter
 }
 
 export interface EnvOptions {
@@ -221,6 +245,11 @@ export type ContractEnv<Args extends Record<string, string> = {}> =
 export type WalletEnv<Args extends Record<string, string> = {}> = Env<Args> & {
   walletAddress: string
 }
+
+export type ValidatorEnv<Args extends Record<string, string> = {}> =
+  Env<Args> & {
+    validatorOperatorAddress: string
+  }
 
 // Formulas compute a value for the state at one block height.
 export type Formula<R = any, E extends Env = Env> = {
@@ -251,10 +280,16 @@ export type GenericFormula<
   Args extends Record<string, string> = {}
 > = Formula<R, Env<Args>>
 
+export type ValidatorFormula<
+  R = any,
+  Args extends Record<string, string> = {}
+> = Formula<R, ValidatorEnv<Args>>
+
 export enum FormulaType {
   Contract = 'contract',
-  Wallet = 'wallet',
   Generic = 'generic',
+  Validator = 'validator',
+  Wallet = 'wallet',
 }
 
 export type TypedFormula = { name: string } & (
@@ -269,6 +304,10 @@ export type TypedFormula = { name: string } & (
   | {
       type: FormulaType.Generic
       formula: GenericFormula<any, any>
+    }
+  | {
+      type: FormulaType.Validator
+      formula: ValidatorFormula<any, any>
     }
 )
 

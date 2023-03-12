@@ -64,6 +64,11 @@ export const compute = async ({
           ...env,
           contractAddress: targetAddress,
         })
+      : options.type === FormulaType.Validator
+      ? await options.formula.compute({
+          ...env,
+          validatorOperatorAddress: targetAddress,
+        })
       : options.type === FormulaType.Wallet
       ? await options.formula.compute({
           ...env,
@@ -161,6 +166,11 @@ export const computeRange = async ({
         ? await options.formula.compute({
             ...env,
             contractAddress: targetAddress,
+          })
+        : options.type === FormulaType.Validator
+        ? await options.formula.compute({
+            ...env,
+            validatorOperatorAddress: targetAddress,
           })
         : options.type === FormulaType.Wallet
         ? await options.formula.compute({

@@ -18,6 +18,7 @@ import {
   Computation,
   Contract,
   State,
+  Validator,
   WasmEvent,
 } from '@/db'
 
@@ -254,6 +255,17 @@ export const computer: Router.Middleware = async (ctx) => {
         ctx.body = `the ${formulaName} formula does not apply to contract ${address}`
         return
       }
+    }
+  }
+  // ...if type is "validator"...
+  else if (typedFormula.type === FormulaType.Validator) {
+    const validator = await Validator.findByPk(address)
+
+    // ...validate that validator exists.
+    if (!validator) {
+      ctx.status = 404
+      ctx.body = 'validator not found'
+      return
     }
   }
 

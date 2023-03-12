@@ -1,6 +1,11 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { Contract, WasmEvent, WasmEventTransformation } from '@/db'
+import {
+  Contract,
+  StakingSlashEvent,
+  WasmEvent,
+  WasmEventTransformation,
+} from '@/db'
 
 import { loadConfig } from './config'
 import {
@@ -17,6 +22,7 @@ import {
   FormulaMapGetter,
   FormulaPrefetch,
   FormulaPrefetchTransformations,
+  FormulaSlashEventsGetter,
   FormulaTransformationDateGetter,
   FormulaTransformationMapGetter,
   FormulaTransformationMatchGetter,
@@ -41,9 +47,7 @@ export const getEnv = ({
 
   // Most recent event at or below this block.
   const blockHeightFilter = {
-    blockHeight: {
-      [Op.lte]: block.height,
-    },
+    [Op.lte]: block.height,
   }
 
   const get: FormulaGetter = async (contractAddress, ...keys) => {
@@ -69,7 +73,7 @@ export const getEnv = ({
             where: {
               contractAddress,
               key,
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [['blockHeight', 'DESC']],
           })
@@ -150,7 +154,7 @@ export const getEnv = ({
               key: {
                 [Op.like]: `${keyPrefix}%`,
               },
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [
               // Needs to be first so we can use DISTINCT ON.
@@ -228,7 +232,7 @@ export const getEnv = ({
             where: {
               contractAddress,
               key,
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [['blockHeight', 'DESC']],
           })
@@ -281,7 +285,7 @@ export const getEnv = ({
         contractAddress,
         key,
         delete: false,
-        ...blockHeightFilter,
+        blockHeight: blockHeightFilter,
       },
       order: [['blockHeight', 'ASC']],
     })
@@ -322,7 +326,7 @@ export const getEnv = ({
           key,
           delete: false,
           valueJson: where,
-          ...blockHeightFilter,
+          blockHeight: blockHeightFilter,
         },
         order: [['blockHeight', 'ASC']],
       })
@@ -401,7 +405,7 @@ export const getEnv = ({
       where: {
         contractAddress,
         key: keyFilter,
-        ...blockHeightFilter,
+        blockHeight: blockHeightFilter,
       },
       order: [
         // Needs to be first so we can use DISTINCT ON.
@@ -502,7 +506,7 @@ export const getEnv = ({
               ...(where && {
                 value: where,
               }),
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [
               // Needs to be first so we can use DISTINCT ON.
@@ -527,7 +531,7 @@ export const getEnv = ({
     // unique across different event types.
     if (
       transformations.some(
-        (transformation) => !(transformation instanceof WasmEvent)
+        (transformation) => !(transformation instanceof WasmEventTransformation)
       )
     ) {
       throw new Error('Incorrect event type.')
@@ -603,7 +607,7 @@ export const getEnv = ({
               name: {
                 [Op.like]: mapNamePrefix + '%',
               },
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [
               // Needs to be first so we can use DISTINCT ON.
@@ -617,7 +621,7 @@ export const getEnv = ({
     // unique across different event types.
     if (
       transformations.some(
-        (transformation) => !(transformation instanceof WasmEvent)
+        (transformation) => !(transformation instanceof WasmEventTransformation)
       )
     ) {
       throw new Error('Incorrect event type.')
@@ -717,7 +721,7 @@ export const getEnv = ({
       where: {
         contractAddress,
         name: nameFilter,
-        ...blockHeightFilter,
+        blockHeight: blockHeightFilter,
       },
       order: [
         // Needs to be first so we can use DISTINCT ON.
@@ -806,7 +810,7 @@ export const getEnv = ({
         ...(where && {
           value: where,
         }),
-        ...blockHeightFilter,
+        blockHeight: blockHeightFilter,
       },
       order: [['blockHeight', 'ASC']],
     })
@@ -877,6 +881,59 @@ export const getEnv = ({
     return codeIdKeys[0]
   }
 
+  const getSlashEvents: FormulaSlashEventsGetter = async (
+    validatorOperatorAddress
+  ) => {
+    const dependentKey = getDependentKey(
+      StakingSlashEvent.dependentKeyNamespace,
+      validatorOperatorAddress
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: true,
+    })
+
+    // Check cache.
+    const cached = cache.events[dependentKey]
+    const slashEvents =
+      // If undefined, we haven't tried to fetch them yet. If not undefined,
+      // either they exist or they don't (null).
+      cached !== undefined
+        ? ((cached ?? []) as StakingSlashEvent[])
+        : await StakingSlashEvent.findAll({
+            where: {
+              validatorOperatorAddress,
+              registeredBlockHeight: blockHeightFilter,
+            },
+            order: [['registeredBlockHeight', 'DESC']],
+          })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (
+      slashEvents.some(
+        (slashEvent) => !(slashEvent instanceof StakingSlashEvent)
+      )
+    ) {
+      throw new Error('Incorrect event type.')
+    }
+
+    // Cache transformations, null if nonexistent.
+    if (cached === undefined) {
+      cache.events[dependentKey] = slashEvents.length ? slashEvents : null
+    }
+
+    // If no transformations found, return undefined.
+    if (!slashEvents.length) {
+      return undefined
+    }
+
+    // Call hook.
+    await onFetch?.(slashEvents)
+
+    return slashEvents.map((slashEvent) => slashEvent.toJSON())
+  }
+
   return {
     block,
     date: useBlockDate ? new Date(Number(block.timeUnixMs)) : new Date(),
@@ -898,5 +955,7 @@ export const getEnv = ({
     getCodeIdsForKeys,
     contractMatchesCodeIdKeys,
     getCodeIdKeyForContract,
+
+    getSlashEvents,
   }
 }
