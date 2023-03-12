@@ -172,7 +172,7 @@ const main = async () => {
     transformed += transformations.length
 
     const { updated, destroyed } = update
-      ? await updateComputationValidityDependentOnChanges([], transformations)
+      ? await updateComputationValidityDependentOnChanges(transformations)
       : {
           updated: 0,
           destroyed: 0,

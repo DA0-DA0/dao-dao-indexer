@@ -83,9 +83,11 @@ export const dbKeyToKeys = (
 }
 
 export const getDependentKey = (
-  contractAddress: string | undefined,
-  keyOrName: string
-) => `${contractAddress || '%'}:${keyOrName}`
+  namespace: string,
+  // If undefined, wildcard used for all addresses.
+  address: string | undefined,
+  ...keys: string[]
+) => `${namespace}:${address || '*'}:${keys.join(':')}`
 
 export const validateBlockString = (block: string, subject: string): Block => {
   let parsedBlock

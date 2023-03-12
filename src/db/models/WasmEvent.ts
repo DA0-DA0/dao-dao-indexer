@@ -10,12 +10,12 @@ import {
 
 import {
   Block,
-  DependendableEventModel,
+  ComputationDependentKey,
   ParsedWasmEvent,
-  SplitDependentKeys,
   getDependentKey,
 } from '@/core'
 
+import { DependendableEventModel } from '../types'
 import { Contract } from './Contract'
 
 @Table({
@@ -99,7 +99,11 @@ export class WasmEvent extends DependendableEventModel {
   }
 
   get dependentKey(): string {
-    return getDependentKey(this.contractAddress, this.key)
+    return getDependentKey(
+      WasmEvent.dependentKeyNamespace,
+      this.contractAddress,
+      this.key
+    )
   }
 
   get asParsedEvent(): ParsedWasmEvent {
@@ -142,67 +146,72 @@ export class WasmEvent extends DependendableEventModel {
     return this.previousEvent
   }
 
-  static dependentKeyNamespace = 'wasm'
-
-  // Split dependent keys into two groups: non map keys and map prefixes. Map
-  // prefixes end with a comma because they are missing the final key segment,
-  // which is the key of each map entry.
-  static splitDependentKeys(dependentKeys: string[]): SplitDependentKeys {
-    return {
-      nonMapKeys: dependentKeys.filter((key) => key[key.length - 1] !== ','),
-      mapPrefixes: dependentKeys.filter((key) => key[key.length - 1] === ','),
-    }
-  }
+  static dependentKeyNamespace: string = 'wasm_e'
+  static blockHeightKey: string = 'blockHeight'
 
   // Returns a where clause that will match all events that are described by the
-  // dependent keys, which contain various contract addresses, non map keys
-  // (potentially containing wildcards), and map prefix keys.
-  static getWhereClauseForDependentKeys(dependentKeys: string[]): WhereOptions {
+  // dependent keys.
+  static getWhereClauseForDependentKeys(
+    dependentKeys: ComputationDependentKey[]
+  ): WhereOptions {
     // Some keys (most likely those with wildcards) may not have a contract
     // address. It is fine to group these together.
     const dependentKeysByContract = dependentKeys.reduce(
       (acc, dependentKey) => {
-        // Dependent keys for any contract start with "%:".
-        const [contractAddress, key] = dependentKey.startsWith('%:')
-          ? [
-              '',
-              // Remove contract address wildcard.
-              dependentKey.split(':').slice(1).join(':'),
-            ]
-          : dependentKey.split(':')
+        // 1. Remove namespace from key.
+        let key = dependentKey.key.replace(
+          new RegExp(`^${this.dependentKeyNamespace}:`),
+          ''
+        )
+
+        // 2. Extract contract address from key.
+        // Dependent keys for any contract start with "*:".
+        const contractAddress = key.startsWith('*:') ? '' : key.split(':')[0]
+
+        key = key
+          // 3. Remove contract address from key.
+          .replace(new RegExp(`^${contractAddress || '\\*'}:`), '')
+          // 4. Replace wildcard symbol with LIKE wildcard for database query.
+          .replace(/\*/g, '%')
+
         return {
           ...acc,
-          [contractAddress]: [...(acc[contractAddress] ?? []), key],
+          [contractAddress]: [
+            ...(acc[contractAddress] ?? []),
+            {
+              key,
+              prefix: dependentKey.prefix,
+            },
+          ],
         }
       },
-      {} as Record<string, string[] | undefined>
+      {} as Record<string, { key: string; prefix: boolean }[]>
     )
 
     return {
       [Op.or]: Object.entries(dependentKeysByContract).map(
         ([contractAddress, keys]) => {
-          const { nonMapKeys, mapPrefixes } = WasmEvent.splitDependentKeys(
-            keys!
+          const exactKeys = keys.filter(
+            ({ key, prefix }) => !prefix && !key.includes('%')
           )
-
-          const exactKeys = nonMapKeys.filter((key) => !key.includes('%'))
-          const wildcardKeys = nonMapKeys.filter((key) => key.includes('%'))
+          const wildcardKeys = keys.filter(
+            ({ key, prefix }) => prefix || key.includes('%')
+          )
 
           return {
             // Only include if contract address is defined.
             ...(contractAddress && { contractAddress }),
-            // Same logic as in `updateComputationValidityDependentOnChanges` in
+            // Related logic in `makeComputationDependencyWhere` in
             // `src/db/utils.ts`.
             key: {
               [Op.or]: [
-                // Where key is one of the non map keys.
-                ...(exactKeys.length > 0 ? [{ [Op.in]: exactKeys }] : []),
-                ...wildcardKeys.map((key) => ({
-                  [Op.like]: key,
-                })),
-                // Or where key is prefixed by one of the map prefixes.
-                ...mapPrefixes.map((prefix) => ({
-                  [Op.like]: prefix + '%',
+                // Exact matches.
+                ...(exactKeys.length > 0
+                  ? [{ [Op.in]: exactKeys.map(({ key }) => key) }]
+                  : []),
+                // Wildcards. May or may not be prefixes.
+                ...wildcardKeys.map(({ key, prefix }) => ({
+                  [Op.like]: key + (prefix ? '%' : ''),
                 })),
               ],
             },

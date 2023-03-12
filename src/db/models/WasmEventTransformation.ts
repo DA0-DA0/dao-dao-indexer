@@ -5,20 +5,20 @@ import {
   Column,
   DataType,
   ForeignKey,
-  Model,
   Table,
 } from 'sequelize-typescript'
 
 import {
   Block,
+  ComputationDependentKey,
   ParsedWasmEvent,
   ProcessedTransformer,
-  SplitDependentKeys,
   getDependentKey,
   loadConfig,
 } from '@/core'
 import { getProcessedTransformers } from '@/data/transformers'
 
+import { DependendableEventModel } from '../types'
 import { Contract } from './Contract'
 
 @Table({
@@ -50,7 +50,7 @@ import { Contract } from './Contract'
     },
   ],
 })
-export class WasmEventTransformation extends Model {
+export class WasmEventTransformation extends DependendableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
@@ -83,79 +83,79 @@ export class WasmEventTransformation extends Model {
   }
 
   get dependentKey(): string {
-    return getDependentKey(this.contractAddress, this.name)
+    return getDependentKey(
+      WasmEventTransformation.dependentKeyNamespace,
+      this.contractAddress,
+      this.name
+    )
   }
 
-  // Split dependent keys into two groups: non map keys and map prefixes. Map
-  // prefixes end with a colon because they are missing the final key segment,
-  // which is the key of each map entry.
-  static splitDependentKeys(dependentKeys: string[]): SplitDependentKeys {
-    return {
-      nonMapKeys: dependentKeys.filter((key) => key[key.length - 1] !== ':'),
-      mapPrefixes: dependentKeys.filter((key) => key[key.length - 1] === ':'),
-    }
-  }
+  static dependentKeyNamespace = 'wasm_t'
+  static blockHeightKey: string = 'blockHeight'
 
-  // Returns a where clause that will match all transformations that are
-  // described by the dependent keys, which contain various contract addresses
-  // and names.
-  static getWhereClauseForDependentKeys(dependentKeys: string[]): WhereOptions {
+  // Returns a where clause that will match all events that are described by the
+  // dependent keys.
+  static getWhereClauseForDependentKeys(
+    dependentKeys: ComputationDependentKey[]
+  ): WhereOptions {
     // Some keys (most likely those with wildcards) may not have a contract
     // address. It is fine to group these together.
-    const dependentNamesByContract = dependentKeys.reduce(
+    const dependentKeysByContract = dependentKeys.reduce(
       (acc, dependentKey) => {
-        // Dependent keys for any contract start with "%:".
-        const [contractAddress, name] = dependentKey.startsWith('%:')
-          ? [
-              '',
-              // Remove contract address wildcard.
-              dependentKey.split(':').slice(1).join(':'),
-            ]
-          : [
-              dependentKey.split(':')[0],
-              // Name can have colons in it, so rejoin rest of string.
-              dependentKey.split(':').slice(1).join(':'),
-            ]
+        // 1. Remove namespace from key.
+        let key = dependentKey.key.replace(
+          new RegExp(`^${this.dependentKeyNamespace}:`),
+          ''
+        )
+
+        // 2. Extract contract address from key.
+        // Dependent keys for any contract start with "*:".
+        const contractAddress = key.startsWith('*:') ? '' : key.split(':')[0]
+
+        key = key
+          // 3. Remove contract address from key.
+          .replace(new RegExp(`^${contractAddress || '\\*'}:`), '')
+          // 4. Replace wildcard symbol with LIKE wildcard for database query.
+          .replace(/\*/g, '%')
+
         return {
           ...acc,
-          [contractAddress]: [...(acc[contractAddress] ?? []), name],
+          [contractAddress]: [
+            ...(acc[contractAddress] ?? []),
+            {
+              key,
+              prefix: dependentKey.prefix,
+            },
+          ],
         }
       },
-      {} as Record<string, string[] | undefined>
+      {} as Record<string, { key: string; prefix: boolean }[]>
     )
 
     return {
-      [Op.or]: Object.entries(dependentNamesByContract).map(
-        ([contractAddress, dependentKeys]) => {
-          const { mapPrefixes } = WasmEventTransformation.splitDependentKeys(
-            dependentKeys!
+      [Op.or]: Object.entries(dependentKeysByContract).map(
+        ([contractAddress, keys]) => {
+          const exactKeys = keys.filter(
+            ({ key, prefix }) => !prefix && !key.includes('%')
           )
-
-          // It's also possible that a map prefix is a non-map name, since names
-          // can contain any character, including a colon (which is the map
-          // separator), so we need to check all names as non-map matches.
-          const exactNames = dependentKeys!.filter(
-            (name) => !name.includes('%')
-          )
-          const wildcardNames = dependentKeys!.filter((name) =>
-            name.includes('%')
+          const wildcardKeys = keys.filter(
+            ({ key, prefix }) => prefix || key.includes('%')
           )
 
           return {
             // Only include if contract address is defined.
             ...(contractAddress && { contractAddress }),
-            // Same logic as in `updateComputationValidityDependentOnChanges` in
+            // Related logic in `makeComputationDependencyWhere` in
             // `src/db/utils.ts`.
             name: {
               [Op.or]: [
-                // Where name is one of the names.
-                ...(exactNames.length > 0 ? [{ [Op.in]: exactNames }] : []),
-                ...wildcardNames.map((name) => ({
-                  [Op.like]: name,
-                })),
-                // Or where key is prefixed by one of the map prefixes.
-                ...mapPrefixes.map((prefix) => ({
-                  [Op.like]: prefix + '%',
+                // Exact matches.
+                ...(exactKeys.length > 0
+                  ? [{ [Op.in]: exactKeys.map(({ key }) => key) }]
+                  : []),
+                // Wildcards. May or may not be prefixes.
+                ...wildcardKeys.map(({ key, prefix }) => ({
+                  [Op.like]: key + (prefix ? '%' : ''),
                 })),
               ],
             },

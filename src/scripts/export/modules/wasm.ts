@@ -289,10 +289,10 @@ const exporter = async (
   let computationsDestroyed = 0
   if (!dontUpdateComputations) {
     const computationUpdates =
-      await updateComputationValidityDependentOnChanges(
-        exportedEvents,
-        transformations
-      )
+      await updateComputationValidityDependentOnChanges([
+        ...exportedEvents,
+        ...transformations,
+      ])
     computationsUpdated = computationUpdates.updated
     computationsDestroyed = computationUpdates.destroyed
   }

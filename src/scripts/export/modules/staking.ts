@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/node'
 import { Sequelize } from 'sequelize'
 
 import { objectMatchesStructure } from '@/core'
-import { SlashEvent, State, Validator } from '@/db'
+import { StakingSlashEvent, State, Validator } from '@/db'
 
 import { ModuleExporter, ModuleExporterMaker } from '../types'
 
@@ -190,7 +190,7 @@ const exporter = async (
   }
 
   // Unique index ensures that we don't insert duplicate events.
-  await SlashEvent.bulkCreate(parsedEvents)
+  await StakingSlashEvent.bulkCreate(parsedEvents)
 
   // Store last block height exported.
   const lastBlockHeightExported =

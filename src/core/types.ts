@@ -1,8 +1,7 @@
 import { Options as PusherOptions } from 'pusher'
-import { WhereOptions } from 'sequelize'
-import { Model, SequelizeOptions } from 'sequelize-typescript'
+import { SequelizeOptions } from 'sequelize-typescript'
 
-import { Contract, State, WasmEvent, WasmEventTransformation } from '@/db'
+import { Contract, DependendableEventModel, State, WasmEvent } from '@/db'
 
 type DB = { uri?: string } & Pick<
   SequelizeOptions,
@@ -209,11 +208,8 @@ export interface EnvOptions {
   useBlockDate?: boolean
 
   args?: Record<string, any>
-  dependencies?: SetDependencies
-  onFetch?: (
-    events: WasmEvent[],
-    transformations: WasmEventTransformation[]
-  ) => void | Promise<void>
+  dependentKeys?: ComputationDependentKey[]
+  onFetch?: (events: DependendableEventModel[]) => void | Promise<void>
   cache?: Partial<Cache>
 }
 
@@ -293,33 +289,24 @@ export interface ComputationOutput {
   // Undefined if formula did not use any keys.
   block: Block | undefined
   value: any
-  dependencies: Dependencies
+  dependentKeys: ComputationDependentKey[]
   // Used when computing ranges.
   latestBlockHeightValid?: bigint
-}
-
-export interface Dependencies {
-  events: string[]
-  transformations: string[]
-}
-
-export interface SetDependencies {
-  events: Set<string>
-  transformations: Set<string>
 }
 
 export type CacheMap<T> = Record<string, T[] | null | undefined>
 export type CacheMapSingle<T> = Record<string, T | null | undefined>
 
 export interface Cache {
-  events: CacheMap<WasmEvent>
-  transformations: CacheMap<WasmEventTransformation>
+  events: CacheMap<DependendableEventModel>
   contracts: CacheMapSingle<Contract>
 }
 
-export interface SplitDependentKeys {
-  nonMapKeys: string[]
-  mapPrefixes: string[]
+export type ComputationDependentKey = {
+  key: string
+  // This is used with maps for example, where a computation depends on all keys
+  // that start with the map prefix.
+  prefix: boolean
 }
 
 export type NestedFormulaMap<F> = {

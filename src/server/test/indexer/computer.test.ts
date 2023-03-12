@@ -538,14 +538,13 @@ describe('computer: GET /(.*)', () => {
       expect(credit.used).toBe('0')
       expect(credit.hits).toBe('0')
 
-      await Promise.all(
-        [...Array(Number(credit.amount))].map(async () => {
-          await request(app.callback())
-            .get('/contract/valid_contract/formula')
-            .set('x-api-key', apiKey)
-            .expect(200)
-        })
-      )
+      // Use all the credits.
+      for (const _ of Array(Number(credit.amount))) {
+        await request(app.callback())
+          .get('/contract/valid_contract/formula')
+          .set('x-api-key', apiKey)
+          .expect(200)
+      }
 
       await credit.reload()
       expect(credit.used).toBe(credit.amount)
@@ -611,10 +610,11 @@ describe('computer: GET /(.*)', () => {
       expect(computation.type).toBe(FormulaType.Contract)
       expect(computation.formula).toBe('formula')
       expect(computation.args).toBe('{}')
-      expect(computation.dependentEvents).toEqual([
-        `valid_contract:${dbKeyForKeys('some_state')}`,
-      ])
-      expect(computation.dependentTransformations).toEqual([])
+      expect(computation.dependencies.length).toBe(1)
+      expect(computation.dependencies[0].key).toEqual(
+        `wasm_e:valid_contract:${dbKeyForKeys('some_state')}`
+      )
+      expect(computation.dependencies[0].prefix).toBe(false)
       expect(computation.output).toEqual(JSON.stringify(response.body))
 
       // Repeating the same query should not create a new computation.
@@ -658,14 +658,13 @@ describe('computer: GET /(.*)', () => {
       expect(credit.used).toBe('0')
       expect(credit.hits).toBe('0')
 
-      await Promise.all(
-        [...Array(Number(credit.amount))].map(async () => {
-          await request(app.callback())
-            .get('/contract/valid_contract/formula')
-            .set('x-api-key', apiKey)
-            .expect(200)
-        })
-      )
+      // Use all the credits.
+      for (const _ of Array(Number(credit.amount))) {
+        await request(app.callback())
+          .get('/contract/valid_contract/formula')
+          .set('x-api-key', apiKey)
+          .expect(200)
+      }
 
       await credit.reload()
       expect(credit.used).toBe(credit.amount)

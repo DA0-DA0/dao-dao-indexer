@@ -1,5 +1,3 @@
-import { Worker } from 'worker_threads'
-
 import axios from 'axios'
 import Pusher from 'pusher'
 import {

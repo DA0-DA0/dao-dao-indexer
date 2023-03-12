@@ -1,6 +1,13 @@
 import isEqual from 'lodash.isequal'
-import { Op } from 'sequelize'
-import { AllowNull, Column, DataType, Model, Table } from 'sequelize-typescript'
+import { ModelStatic, Op } from 'sequelize'
+import {
+  AllowNull,
+  Column,
+  DataType,
+  HasMany,
+  Model,
+  Table,
+} from 'sequelize-typescript'
 
 import {
   Block,
@@ -13,8 +20,9 @@ import {
 } from '@/core'
 import { getTypedFormula } from '@/data'
 
-import { WasmEvent } from './WasmEvent'
-import { WasmEventTransformation } from './WasmEventTransformation'
+import { DependendableEventModel } from '../types'
+import { dependentKeyMatches, getDependableEventModels } from '../utils'
+import { ComputationDependency } from './ComputationDependency'
 
 @Table({
   timestamps: true,
@@ -23,7 +31,7 @@ import { WasmEventTransformation } from './WasmEventTransformation'
     // with args for a target address at a given block height.
     {
       unique: true,
-      fields: ['targetAddress', 'formula', 'args', 'blockHeight'],
+      fields: ['targetAddress', 'type', 'formula', 'args', 'blockHeight'],
     },
     {
       fields: ['targetAddress'],
@@ -33,13 +41,6 @@ import { WasmEventTransformation } from './WasmEventTransformation'
     },
     {
       fields: ['latestBlockHeightValid'],
-    },
-    // Speed up export invalidation queries.
-    {
-      fields: ['dependentEvents'],
-    },
-    {
-      fields: ['dependentTransformations'],
     },
   ],
 })
@@ -80,20 +81,11 @@ export class Computation extends Model {
   @Column(DataType.TEXT)
   args!: string
 
-  // If the key ends with a comma, it is a map prefix. Non-map-prefix keys may
-  // contain a wildcard in the form of a '%'. Keys may or may not contain a
-  // contract address. No contract address means it depends on all.
-  // Format: ("key" | "contractAddress:key")[]
-  @AllowNull(false)
-  @Column(DataType.ARRAY(DataType.TEXT))
-  dependentEvents!: string[]
-
-  // Name may contain a wildcard in the form of a '%', and may or may not
-  // contain a contract address. No contract address means it depends on all.
-  // Format: ("name" | "contractAddress:name")[]
-  @AllowNull(false)
-  @Column(DataType.ARRAY(DataType.TEXT))
-  dependentTransformations!: string[]
+  @HasMany(() => ComputationDependency, {
+    foreignKey: 'computationId',
+    onDelete: 'CASCADE',
+  })
+  dependencies!: ComputationDependency[]
 
   // JSON encoded value.
   @AllowNull
@@ -136,9 +128,9 @@ export class Computation extends Model {
 
     // If passed a block height to start from, start there as long as it's after
     // the computation's start block and before the latest valid block. We start
-    // after the computation's start block because we know there is an event or
-    // transformation at that block. We want to find the _next_ dependency
-    // starting at least after the first block.
+    // after the computation's start block because we know there is an event at
+    // that block. We want to find the _next_ dependency starting at least after
+    // the first block.
     const afterLatest = BigInt(this.latestBlockHeightValid) + 1n
     const minBlockHeight = bigIntMax(
       BigInt(this.blockHeight) + 1n,
@@ -147,62 +139,60 @@ export class Computation extends Model {
         : bigIntMin(startFromBlockHeight, afterLatest)
     )
 
-    const firstNewerEvent =
-      this.dependentEvents.length === 0
+    this.dependencies ||= (await this.$get('dependencies')) ?? []
+
+    const firstNewerEvents =
+      this.dependencies.length === 0
         ? null
-        : await WasmEvent.findOne({
-            where: {
-              blockHeight: {
-                [Op.gte]: minBlockHeight,
-                [Op.lte]: upToBlockHeight,
-              },
-              ...WasmEvent.getWhereClauseForDependentKeys(this.dependentEvents),
-            },
-            order: [['blockHeight', 'ASC']],
-          })
+        : (
+            await Promise.all(
+              getDependableEventModels().map((DependableEventModel) =>
+                (
+                  DependableEventModel as unknown as ModelStatic<DependendableEventModel>
+                ).findOne({
+                  where: {
+                    [DependableEventModel.blockHeightKey]: {
+                      [Op.gte]: minBlockHeight,
+                      [Op.lte]: upToBlockHeight,
+                    },
+                    ...DependableEventModel.getWhereClauseForDependentKeys(
+                      this.dependencies.filter(({ key }) =>
+                        key.startsWith(
+                          DependableEventModel.dependentKeyNamespace
+                        )
+                      )
+                    ),
+                  },
+                  order: [[DependableEventModel.blockHeightKey, 'ASC']],
+                })
+              )
+            )
+          ).filter((model): model is DependendableEventModel => model !== null)
 
-    const firstNewerTransformation =
-      this.dependentTransformations.length === 0
-        ? null
-        : await WasmEventTransformation.findOne({
-            where: {
-              blockHeight: {
-                [Op.gte]: minBlockHeight,
-                [Op.lte]: upToBlockHeight,
-              },
-              ...WasmEventTransformation.getWhereClauseForDependentKeys(
-                this.dependentTransformations
-              ),
-            },
-            order: [['blockHeight', 'ASC']],
-          })
+    const firstNewerEvent = firstNewerEvents
+      ? firstNewerEvents.reduce((newest, model) =>
+          newest.block.height < model.block.height ? newest : model
+        )
+      : null
 
-    const firstNewerItem =
-      firstNewerEvent && firstNewerTransformation
-        ? firstNewerEvent.blockHeight < firstNewerTransformation.blockHeight
-          ? firstNewerEvent
-          : firstNewerTransformation
-        : firstNewerEvent || firstNewerTransformation
-
-    // If no new events or transformations for any of the dependent keys found,
-    // this computation is still valid, so update validity.
-    if (!firstNewerItem) {
+    // If no new events for any of the dependent keys found, this computation is
+    // still valid, so update validity.
+    if (!firstNewerEvent) {
       await this.update({
         latestBlockHeightValid: upToBlockHeight,
       })
       return true
     }
 
-    // If new event or transformation found, computation is not valid at the
-    // requested block. Update latest valid block to just before the new item
-    // found. If `startFromBlockHeight` was passed, it's possible to set the
-    // latest valid block height earlier than previously set. This should only
-    // happen when a computation already exists and has been deemed valid at a
-    // block for which an event gets exported or a transformation gets created
-    // afterwards. This may happen if a query caches a computation for a block
-    // before the exporter has caught up to that block.
+    // If new event found, computation is not valid at the requested block.
+    // Update latest valid block to just before the new event found. If
+    // `startFromBlockHeight` was passed, it's possible to set the latest valid
+    // block height earlier than previously set. This should only happen when a
+    // computation already exists and has been deemed valid at a block for which
+    // an event gets exported afterwards. This may happen if a query caches a
+    // computation for a block before the exporter has caught up to that block.
     await this.update({
-      latestBlockHeightValid: BigInt(firstNewerItem.blockHeight) - 1n,
+      latestBlockHeightValid: firstNewerEvent.block.height - 1n,
     })
     return false
   }
@@ -232,15 +222,17 @@ export class Computation extends Model {
       return false
     }
 
+    this.dependencies ||= (await this.$get('dependencies')) ?? []
+
     // If the output, initial block, or dependencies changed, delete the
     // computation.
     if (
       Computation.getOutputForValue(computation.value) !== this.output ||
       (computation.block?.height ?? -1n) !== BigInt(this.blockHeight) ||
-      !isEqual(computation.dependencies, {
-        events: this.dependentEvents,
-        transformations: this.dependentTransformations,
-      })
+      !isEqual(
+        computation.dependentKeys,
+        this.dependencies.map((d) => d.dependentKey)
+      )
     ) {
       await this.destroy()
 
@@ -276,40 +268,67 @@ export class Computation extends Model {
     args: Record<string, any>,
     computationOutputs: ComputationOutput[]
   ): Promise<Computation[]> {
-    return await Computation.bulkCreate(
-      computationOutputs.map(
-        ({ block, value, dependencies, latestBlockHeightValid }) => ({
-          targetAddress,
-          type,
-          formula: formulaName,
-          args: JSON.stringify(args),
-          dependentEvents: dependencies.events,
-          dependentTransformations: dependencies.transformations,
-          // If no block, the computation must not have accessed any keys. It
-          // may be a constant formula, in which case it doesn't have any block
-          // context and should thus use an invalid block below the first
-          // possible block in case the formula is used in another computation
-          // that does access keys.
-          blockHeight: block?.height ?? -1,
-          blockTimeUnixMs: block?.timeUnixMs ?? -1,
-          latestBlockHeightValid: latestBlockHeightValid ?? block?.height ?? -1,
-          validityExtendable: !formula.dynamic,
-          output: Computation.getOutputForValue(value),
-        })
-      ),
-      {
-        updateOnDuplicate: [
-          'dependentEvents',
-          'dependentTransformations',
-          'output',
-          'latestBlockHeightValid',
-        ],
+    const computations: Computation[] = []
+    for await (const {
+      block,
+      value,
+      dependentKeys,
+      latestBlockHeightValid,
+    } of computationOutputs) {
+      const [computation, created] = await Computation.upsert({
+        targetAddress,
+        type,
+        formula: formulaName,
+        args: JSON.stringify(args),
+        // If no block, the computation must not have accessed any keys. It may
+        // be a constant formula, in which case it doesn't have any block
+        // context and should thus use an invalid block below the first possible
+        // block in case the formula is used in another computation that does
+        // access keys.
+        blockHeight: block?.height ?? -1,
+        blockTimeUnixMs: block?.timeUnixMs ?? -1,
+        latestBlockHeightValid: latestBlockHeightValid ?? block?.height ?? -1,
+        validityExtendable: !formula.dynamic,
+        output: Computation.getOutputForValue(value),
+      })
+
+      const dependencies = (await computation.$get('dependencies')) ?? []
+
+      let dependenciesToDelete: ComputationDependency[] = []
+      let dependentKeysToAdd = dependentKeys
+      // If the computation already exists, delete any dependencies that are no
+      // longer needed, and only any new dependencies.
+      if (!created) {
+        dependenciesToDelete = dependencies.filter(
+          (a) => !dependentKeys.some((b) => dependentKeyMatches(a, b))
+        )
+        dependentKeysToAdd = dependentKeysToAdd.filter(
+          (a) => !dependencies.some((b) => dependentKeyMatches(a, b))
+        )
       }
-    )
+
+      await Promise.all([
+        ...dependenciesToDelete.map((d) => d.destroy().catch(console.error)),
+        ...dependentKeysToAdd.map((dependentKey) =>
+          computation.$create('dependency', dependentKey, {
+            // No need to error if already exists. Either the computation used
+            // the same key multiple times, or we're racing against another
+            // process. If either of these happen, it's not a problem, as long
+            // as it exists.
+            ignoreDuplicates: true,
+          })
+        ),
+      ])
+
+      computations.push(computation)
+    }
+
+    return computations
   }
 
   static async getLast(): Promise<Computation | null> {
     return await Computation.findOne({
+      include: ComputationDependency,
       order: [['id', 'DESC']],
     })
   }
