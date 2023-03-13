@@ -142,7 +142,6 @@ const main = async () => {
           clearInterval(stateInterval)
         }
       }, 1000)
-      // Allow process to exit even though this interval is alive.
     }),
     // Module reads.
     ...modules.map((params) => makeModulePromise(...params)),
@@ -181,9 +180,9 @@ const updateState = async (): Promise<State> => {
 
   // If block height changed, log it.
   if (lastBlockHeight && lastBlockHeight !== latestBlockHeight) {
-    lastBlockHeight = latestBlockHeight
     console.log(`Updated block height: ${latestBlockHeight.toLocaleString()}`)
   }
+  lastBlockHeight = latestBlockHeight
 
   return state
 }
