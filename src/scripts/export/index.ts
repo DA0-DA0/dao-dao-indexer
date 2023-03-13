@@ -225,16 +225,16 @@ const makeModulePromise = (
         // Update bytes read so we can start at this point in the next read.
         bytesRead += fileStream.bytesRead
 
+        if (shuttingDown) {
+          exit()
+          return
+        }
+
         // Read again if pending.
         if (pendingRead) {
           pendingRead = false
           read()
         } else {
-          if (shuttingDown) {
-            exit()
-            return
-          }
-
           reading = false
         }
       } catch (err) {
