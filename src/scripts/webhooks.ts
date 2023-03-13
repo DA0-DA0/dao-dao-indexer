@@ -46,10 +46,6 @@ const main = async () => {
     `\n[webhooks] Firing account webhooks at ${new Date().toISOString()}...`
   )
 
-  // Statistics.
-  let succeeded = 0
-  let failed = 0
-
   while (!shuttingDown) {
     const pending = await PendingWebhook.findAll({
       where: {
