@@ -1,6 +1,6 @@
 {
   "sources": {
-    "wasm": "/Users/user/.juno/indexer/.events.txt",
+    "wasm": "/Users/user/.juno/indexer/wasm.out",
     "staking": "/Users/user/.juno/indexer/staking.out",
   },
   "statusEndpoint": "http://localhost:26657/status",
