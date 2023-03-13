@@ -146,8 +146,15 @@ export class Computation extends Model {
         ? null
         : (
             await Promise.all(
-              getDependableEventModels().map((DependableEventModel) =>
-                (
+              getDependableEventModels().map(async (DependableEventModel) => {
+                const namespacedKeys = this.dependencies.filter(({ key }) =>
+                  key.startsWith(DependableEventModel.dependentKeyNamespace)
+                )
+                if (namespacedKeys.length === 0) {
+                  return null
+                }
+
+                return await (
                   DependableEventModel as unknown as ModelStatic<DependendableEventModel>
                 ).findOne({
                   where: {
@@ -156,16 +163,12 @@ export class Computation extends Model {
                       [Op.lte]: upToBlockHeight,
                     },
                     ...DependableEventModel.getWhereClauseForDependentKeys(
-                      this.dependencies.filter(({ key }) =>
-                        key.startsWith(
-                          DependableEventModel.dependentKeyNamespace
-                        )
-                      )
+                      namespacedKeys
                     ),
                   },
                   order: [[DependableEventModel.blockHeightKey, 'ASC']],
                 })
-              )
+              })
             )
           ).filter((model): model is DependendableEventModel => model !== null)
 
