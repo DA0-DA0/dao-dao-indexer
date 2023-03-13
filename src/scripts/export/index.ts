@@ -64,8 +64,7 @@ if (config.sentryDsn) {
   })
 }
 
-// Read state.
-let reading = false
+let readingPerModule: Record<string, boolean> = {}
 // When true, shut down ASAP.
 let shuttingDown = false
 
@@ -193,8 +192,12 @@ const makeModulePromise = (
 
     // Main logic. Read through each module.
     const read = async () => {
+      if (shuttingDown) {
+        return
+      }
+
       try {
-        reading = true
+        readingPerModule[name] = true
 
         const fileStream = fs.createReadStream(sourceFile, {
           start: bytesRead,
@@ -225,8 +228,9 @@ const makeModulePromise = (
         // Update bytes read so we can start at this point in the next read.
         bytesRead += fileStream.bytesRead
 
+        // Stop reading if shutting down.
         if (shuttingDown) {
-          exit()
+          readingPerModule[name] = false
           return
         }
 
@@ -235,7 +239,7 @@ const makeModulePromise = (
           pendingRead = false
           read()
         } else {
-          reading = false
+          readingPerModule[name] = false
         }
       } catch (err) {
         Sentry.captureException(err, {
@@ -261,7 +265,7 @@ const makeModulePromise = (
       // If modified, read if not already reading, and store that there is
       // data to read otherwise.
       if (curr.mtime > prev.mtime) {
-        if (!reading) {
+        if (!readingPerModule[name]) {
           read()
         } else {
           pendingRead = true
@@ -278,7 +282,15 @@ main()
 
 process.on('SIGINT', () => {
   shuttingDown = true
-  if (!reading) {
+  // If no modules are reading, exit.
+  if (!Object.values(readingPerModule).some(Boolean)) {
     exit()
   }
+
+  console.log('Shutting down after modules finish their current tasks...')
+  setInterval(() => {
+    if (!Object.values(readingPerModule).some(Boolean)) {
+      exit()
+    }
+  }, 1000)
 })
