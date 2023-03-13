@@ -181,6 +181,7 @@ const updateState = async (): Promise<State> => {
 
   // If block height changed, log it.
   if (lastBlockHeight && lastBlockHeight !== latestBlockHeight) {
+    lastBlockHeight = latestBlockHeight
     console.log(`Updated block height: ${latestBlockHeight.toLocaleString()}`)
   }
 
