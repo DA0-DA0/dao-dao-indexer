@@ -279,26 +279,14 @@ export const computeRange = async ({
       newDependentKeys.forEach((key) => allDependentKeys.push(key))
     }
 
-    // Find the next event or transformation that has the potential to change
-    // the result for the given dependencies. If it remains undefined, then we
-    // know that the result will not change because no inputs changed.
-    nextPotentialBlock = undefined as Block | undefined
-
-    if (result.dependentKeys.length > 0) {
-      const eventNextPotentialBlock = getNextPotentialBlock(
-        result.dependentKeys,
-        allEvents,
-        currentBlock
-      )
-
-      if (
-        eventNextPotentialBlock &&
-        (nextPotentialBlock === undefined ||
-          eventNextPotentialBlock.height < nextPotentialBlock.height)
-      ) {
-        nextPotentialBlock = eventNextPotentialBlock
-      }
-    }
+    // Find the next event that has the potential to change the result for the
+    // given dependencies. If it remains undefined, then we know that the result
+    // will not change because no inputs changed.
+    nextPotentialBlock = getNextPotentialBlock(
+      result.dependentKeys,
+      allEvents,
+      currentBlock
+    )
   }
 
   return results
