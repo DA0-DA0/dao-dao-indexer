@@ -68,14 +68,7 @@ let readingPerModule: Record<string, boolean> = {}
 // When true, shut down ASAP.
 let shuttingDown = false
 
-let latestBlockHeightExported = 0n
-const exit = () => {
-  console.log(
-    `\n[${new Date().toISOString()}] Latest exported block with event: ${latestBlockHeightExported.toLocaleString()}. Exiting...`
-  )
-
-  process.exit(0)
-}
+const exit = () => process.exit(0)
 
 const main = async () => {
   // Load DB on start.
