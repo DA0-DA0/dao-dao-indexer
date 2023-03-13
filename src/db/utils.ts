@@ -74,7 +74,7 @@ export const updateComputationValidityDependentOnChanges = async (
       latestBlockHeight:
         acc.latestBlockHeight === -1n
           ? height
-          : bigIntMin(acc.latestBlockHeight, height),
+          : bigIntMax(acc.latestBlockHeight, height),
     }),
     { earliestBlockHeight: -1n, latestBlockHeight: -1n }
   )
@@ -221,19 +221,26 @@ const makeComputationDependencyWhere = (
         prefix: false,
       },
       ...dependentKeys.flatMap((dependentKey) => [
-        // Wildcards. May or may not be prefixes.
-        Sequelize.literal(
-          `${escape(
-            dependentKey
-          )} LIKE REPLACE("ComputationDependencies"."key", '*', '%')`
-        ),
-        // Prefixes.
+        // Wildcards. Not prefixes.
         {
           [Op.and]: [
             Sequelize.literal(
               `${escape(
                 dependentKey
-              )} LIKE REPLACE("ComputationDependencies"."key", '*', '%') || '%'`
+              )} LIKE REPLACE("dependencies"."key", '*', '%')`
+            ),
+            {
+              prefix: false,
+            },
+          ],
+        },
+        // Prefixes. May contain other wildcards.
+        {
+          [Op.and]: [
+            Sequelize.literal(
+              `${escape(
+                dependentKey
+              )} LIKE REPLACE("dependencies"."key", '*', '%') || '%'`
             ),
             {
               prefix: true,

@@ -243,7 +243,7 @@ export const listVotes: ContractFormula<
     let votesCast = (
       await getTransformationMatches<VoteCast<Ballot>>(
         contractAddress,
-        `voteCast:%:${proposalId}`
+        `voteCast:*:${proposalId}`
       )
     )?.map(({ value }) => value)
 

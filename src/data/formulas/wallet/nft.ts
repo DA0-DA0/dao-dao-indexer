@@ -21,7 +21,7 @@ export const collections: WalletFormula<CollectionWithTokens[]> = {
       (
         await getTransformationMatches(
           undefined,
-          `tokenOwner:${walletAddress}:%`
+          `tokenOwner:${walletAddress}:*`
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
@@ -73,7 +73,7 @@ export const stakedWithDaos: WalletFormula<CollectionWithTokens[]> = {
       (
         await getTransformationMatches(
           undefined,
-          `stakedNft:${walletAddress}:%`,
+          `stakedNft:${walletAddress}:*`,
           undefined,
           daoVotingCw721StakedCodeIds.length > 0
             ? {

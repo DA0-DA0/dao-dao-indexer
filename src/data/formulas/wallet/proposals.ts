@@ -13,7 +13,7 @@ export const created: WalletFormula<
     // Proposals for v1/v2 dao-proposal-single and v2 dao-proposal-multiple.
     const proposedTransformations = await getTransformationMatches<{
       proposalId: number
-    }>(undefined, `proposed:${walletAddress}:%`)
+    }>(undefined, `proposed:${walletAddress}:*`)
 
     return proposedTransformations?.map(
       ({ contractAddress, value: { proposalId } }) => ({
@@ -35,7 +35,7 @@ export const votesCast: WalletFormula<
     // Votes for dao-proposal-single and dao-proposal-multiple.
     const voteCastTransformations = await getTransformationMatches<VoteCast>(
       undefined,
-      `voteCast:${walletAddress}:%`
+      `voteCast:${walletAddress}:*`
     )
 
     return voteCastTransformations?.map(

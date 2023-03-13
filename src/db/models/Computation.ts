@@ -303,7 +303,7 @@ export class Computation extends Model {
       // longer needed, and only any new dependencies.
       if (!created) {
         dependenciesToDelete = dependencies.filter(
-          (a) => !dependentKeys.some((b) => dependentKeyMatches(a, b))
+          (a) => !dependentKeysToAdd.some((b) => dependentKeyMatches(a, b))
         )
         dependentKeysToAdd = dependentKeysToAdd.filter(
           (a) => !dependencies.some((b) => dependentKeyMatches(a, b))
@@ -329,6 +329,7 @@ export class Computation extends Model {
     return computations
   }
 
+  // For tests.
   static async getLast(): Promise<Computation | null> {
     return await Computation.findOne({
       include: ComputationDependency,

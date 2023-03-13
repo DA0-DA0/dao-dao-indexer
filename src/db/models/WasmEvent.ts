@@ -191,12 +191,12 @@ export class WasmEvent extends DependendableEventModel {
     return {
       [Op.or]: Object.entries(dependentKeysByContract).map(
         ([contractAddress, keys]) => {
-          const exactKeys = keys.filter(
-            ({ key, prefix }) => !prefix && !key.includes('%')
-          )
-          const wildcardKeys = keys.filter(
-            ({ key, prefix }) => prefix || key.includes('%')
-          )
+          const exactKeys = keys
+            .filter(({ key, prefix }) => !prefix && !key.includes('%'))
+            .map(({ key }) => key)
+          const wildcardKeys = keys
+            .filter(({ key, prefix }) => prefix || key.includes('%'))
+            .map(({ key, prefix }) => key + (prefix ? '%' : ''))
 
           return {
             // Only include if contract address is defined.
@@ -206,12 +206,10 @@ export class WasmEvent extends DependendableEventModel {
             key: {
               [Op.or]: [
                 // Exact matches.
-                ...(exactKeys.length > 0
-                  ? [{ [Op.in]: exactKeys.map(({ key }) => key) }]
-                  : []),
+                ...(exactKeys.length > 0 ? [{ [Op.in]: exactKeys }] : []),
                 // Wildcards. May or may not be prefixes.
-                ...wildcardKeys.map(({ key, prefix }) => ({
-                  [Op.like]: key + (prefix ? '%' : ''),
+                ...wildcardKeys.map((key) => ({
+                  [Op.like]: key,
                 })),
               ],
             },

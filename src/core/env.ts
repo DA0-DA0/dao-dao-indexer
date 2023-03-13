@@ -498,7 +498,8 @@ export const getEnv = ({
             ],
             where: {
               name: {
-                [Op.like]: nameLike,
+                // Replace * with % for LIKE query.
+                [Op.like]: nameLike.replace(/\*/g, '%'),
               },
               ...(contractAddress && {
                 contractAddress,

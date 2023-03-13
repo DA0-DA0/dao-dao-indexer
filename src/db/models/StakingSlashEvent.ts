@@ -121,8 +121,8 @@ export class StakingSlashEvent extends DependendableEventModel {
       {} as Record<
         string,
         {
-          registeredBlockHeight: string
-          infractionBlockHeight: string
+          registeredBlockHeight: string | undefined
+          infractionBlockHeight: string | undefined
         }[]
       >
     )
