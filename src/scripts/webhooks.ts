@@ -59,23 +59,25 @@ const main = async () => {
       limit: batch,
     })
 
-    const requests = await Promise.allSettled(
-      pending.map((pendingWebhook) => pendingWebhook.fire())
-    )
+    if (pending.length > 0) {
+      const requests = await Promise.allSettled(
+        pending.map((pendingWebhook) => pendingWebhook.fire())
+      )
 
-    const _succeeded = requests.filter(
-      (request) => request.status === 'fulfilled'
-    ).length
-    succeeded += _succeeded
+      const _succeeded = requests.filter(
+        (request) => request.status === 'fulfilled'
+      ).length
+      succeeded += _succeeded
 
-    const _failed = requests.filter(
-      (request) => request.status === 'rejected'
-    ).length
-    failed += _failed
+      const _failed = requests.filter(
+        (request) => request.status === 'rejected'
+      ).length
+      failed += _failed
 
-    console.log(
-      `[webhooks] S: ${_succeeded} F: ${_failed} (total: ${succeeded.toLocaleString()} succeeded, ${failed.toLocaleString()} failed).`
-    )
+      console.log(
+        `[webhooks] S: ${_succeeded} F: ${_failed} (total: ${succeeded.toLocaleString()} succeeded, ${failed.toLocaleString()} failed).`
+      )
+    }
 
     // Wait one second between webhook checks so we're not spamming the DB.
     await new Promise((resolve) => setTimeout(resolve, 1000))
