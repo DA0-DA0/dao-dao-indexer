@@ -175,6 +175,12 @@ export const computer: Router.Middleware = async (ctx) => {
     }
   }
 
+  // TODO: Calculate start and end block with times some other way. Or don't use
+  // start and end blocks at all and use block or time depending on which is
+  // passed? Right now, the block is retrieved by checking `WasmEvent`s, but
+  // there are many times of events now and any formula can use any event type.
+  // This needs a better solution.
+
   // If times passed, validate that it's a range with either a start or a
   // start/end pair.
   let times: [bigint, bigint | undefined] | undefined

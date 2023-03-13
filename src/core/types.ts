@@ -295,19 +295,19 @@ export enum FormulaType {
 export type TypedFormula = { name: string } & (
   | {
       type: FormulaType.Contract
-      formula: ContractFormula<any, any>
+      formula: ContractFormula
     }
   | {
       type: FormulaType.Wallet
-      formula: WalletFormula<any, any>
+      formula: WalletFormula
     }
   | {
       type: FormulaType.Generic
-      formula: GenericFormula<any, any>
+      formula: GenericFormula
     }
   | {
       type: FormulaType.Validator
-      formula: ValidatorFormula<any, any>
+      formula: ValidatorFormula
     }
 )
 
