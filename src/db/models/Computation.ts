@@ -313,15 +313,23 @@ export class Computation extends Model {
 
       await Promise.all([
         ...dependenciesToDelete.map((d) => d.destroy().catch(console.error)),
-        ...dependentKeysToAdd.map((dependentKey) =>
-          computation.$create('dependency', dependentKey, {
-            // No need to error if already exists. Either the computation used
-            // the same key multiple times, or we're racing against another
-            // process. If either of these happen, it's not a problem, as long
-            // as it exists.
-            ignoreDuplicates: true,
-          })
-        ),
+        ...(dependentKeysToAdd.length > 0
+          ? [
+              ComputationDependency.bulkCreate(
+                dependentKeysToAdd.map((dependentKey) => ({
+                  computationId: computation.id,
+                  ...dependentKey,
+                })),
+                {
+                  // No need to error if already exists. Either the computation
+                  // used the same key multiple times, or we're racing against
+                  // another process. If either of these happen, it's not a
+                  // problem, as long as it exists.
+                  ignoreDuplicates: true,
+                }
+              ),
+            ]
+          : []),
       ])
 
       computations.push(computation)
