@@ -15,7 +15,7 @@ import {
   Unique,
 } from 'sequelize-typescript'
 
-import { ParsedEvent, SerializedBlock } from '@/core/types'
+import { ParsedWasmEvent, SerializedBlock } from '@/core/types'
 import { eventKeyToBase64 } from '@/core/utils'
 
 import { AccountWebhook } from './AccountWebhook'
@@ -27,7 +27,7 @@ import {
 export type AccountWebhookEventApiJson = {
   uuid: string
   status: AccountWebhookEventStatus
-  data: ParsedEvent
+  data: ParsedWasmEvent
   url: string
   attempts: AccountWebhookEventAttemptApiJson[]
 }
@@ -93,7 +93,7 @@ export class AccountWebhookEvent extends Model {
 
   @AllowNull(false)
   @Column(DataType.JSONB)
-  parsedEvent!: ParsedEvent
+  parsedEvent!: ParsedWasmEvent
 
   async getApiJson(): Promise<AccountWebhookEventApiJson> {
     this.attempts ||= (await this.$get('attempts')) ?? []

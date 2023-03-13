@@ -1,7 +1,13 @@
 import { Options as PusherOptions } from 'pusher'
 import { SequelizeOptions } from 'sequelize-typescript'
 
-import { Contract, Event, State, Transformation } from '@/db'
+import {
+  Contract,
+  DependendableEventModel,
+  StakingSlashEvent,
+  State,
+  WasmEvent,
+} from '@/db'
 
 type DB = { uri?: string } & Pick<
   SequelizeOptions,
@@ -22,7 +28,10 @@ type DB = { uri?: string } & Pick<
 >
 
 export type Config = {
-  eventsFile: string
+  sources: {
+    wasm: string
+    staking: string
+  }
   statusEndpoint: string
   db: {
     data: DB
@@ -172,6 +181,22 @@ export type FormulaCodeIdKeyForContractGetter = (
   contractAddress: string
 ) => Promise<string | undefined>
 
+export type FormulaSlashEventsGetter = (
+  validatorOperatorAddress: string
+) => Promise<
+  | Pick<
+      StakingSlashEvent,
+      | 'validatorOperatorAddress'
+      | 'registeredBlockHeight'
+      | 'registeredBlockTimeUnixMs'
+      | 'registeredBlockTimestamp'
+      | 'infractionBlockHeight'
+      | 'slashFactor'
+      | 'amountSlashed'
+    >[]
+  | undefined
+>
+
 export type Env<Args extends Record<string, string> = {}> = {
   block: Block
   // If latest block is being used, this will be the current date. If fetching
@@ -196,6 +221,8 @@ export type Env<Args extends Record<string, string> = {}> = {
   getCodeIdsForKeys: FormulaCodeIdsForKeysGetter
   contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter
   getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
+
+  getSlashEvents: FormulaSlashEventsGetter
 }
 
 export interface EnvOptions {
@@ -205,11 +232,8 @@ export interface EnvOptions {
   useBlockDate?: boolean
 
   args?: Record<string, any>
-  dependencies?: SetDependencies
-  onFetch?: (
-    events: Event[],
-    transformations: Transformation[]
-  ) => void | Promise<void>
+  dependentKeys?: ComputationDependentKey[]
+  onFetch?: (events: DependendableEventModel[]) => void | Promise<void>
   cache?: Partial<Cache>
 }
 
@@ -221,6 +245,11 @@ export type ContractEnv<Args extends Record<string, string> = {}> =
 export type WalletEnv<Args extends Record<string, string> = {}> = Env<Args> & {
   walletAddress: string
 }
+
+export type ValidatorEnv<Args extends Record<string, string> = {}> =
+  Env<Args> & {
+    validatorOperatorAddress: string
+  }
 
 // Formulas compute a value for the state at one block height.
 export type Formula<R = any, E extends Env = Env> = {
@@ -251,10 +280,16 @@ export type GenericFormula<
   Args extends Record<string, string> = {}
 > = Formula<R, Env<Args>>
 
+export type ValidatorFormula<
+  R = any,
+  Args extends Record<string, string> = {}
+> = Formula<R, ValidatorEnv<Args>>
+
 export enum FormulaType {
   Contract = 'contract',
-  Wallet = 'wallet',
   Generic = 'generic',
+  Validator = 'validator',
+  Wallet = 'wallet',
 }
 
 export type TypedFormula = { name: string } & (
@@ -269,6 +304,10 @@ export type TypedFormula = { name: string } & (
   | {
       type: FormulaType.Generic
       formula: GenericFormula<any, any>
+    }
+  | {
+      type: FormulaType.Validator
+      formula: ValidatorFormula<any, any>
     }
 )
 
@@ -289,33 +328,24 @@ export interface ComputationOutput {
   // Undefined if formula did not use any keys.
   block: Block | undefined
   value: any
-  dependencies: Dependencies
+  dependentKeys: ComputationDependentKey[]
   // Used when computing ranges.
   latestBlockHeightValid?: bigint
-}
-
-export interface Dependencies {
-  events: string[]
-  transformations: string[]
-}
-
-export interface SetDependencies {
-  events: Set<string>
-  transformations: Set<string>
 }
 
 export type CacheMap<T> = Record<string, T[] | null | undefined>
 export type CacheMapSingle<T> = Record<string, T | null | undefined>
 
 export interface Cache {
-  events: CacheMap<Event>
-  transformations: CacheMap<Transformation>
+  events: CacheMap<DependendableEventModel>
   contracts: CacheMapSingle<Contract>
 }
 
-export interface SplitDependentKeys {
-  nonMapKeys: string[]
-  mapPrefixes: string[]
+export type ComputationDependentKey = {
+  key: string
+  // This is used with maps for example, where a computation depends on all keys
+  // that start with the map prefix.
+  prefix: boolean
 }
 
 export type NestedFormulaMap<F> = {
@@ -341,17 +371,7 @@ export type SerializedBlock = {
   timeUnixMs: string
 }
 
-export type IndexerEvent = {
-  blockHeight: number
-  blockTimeUnixMicro: number
-  contractAddress: string
-  codeId: number
-  key: string
-  value: string
-  delete: boolean
-}
-
-export type ParsedEvent = {
+export type ParsedWasmEvent = {
   codeId: number
   contractAddress: string
   blockHeight: string
@@ -375,14 +395,14 @@ export type Transformer<V = any> = {
   filter: RequireAtLeastOne<{
     codeIdsKeys: string[]
     contractAddresses: string[]
-    matches: (event: ParsedEvent) => boolean
+    matches: (event: ParsedWasmEvent) => boolean
   }>
   // If `name` returns `undefined`, the transformation will not be saved.
-  name: string | ((event: ParsedEvent) => string | undefined)
+  name: string | ((event: ParsedWasmEvent) => string | undefined)
   // If `getValue` returns `undefined`, the transformation will not be saved.
   // All other values, including `null`, will be saved.
   getValue: (
-    event: ParsedEvent,
+    event: ParsedWasmEvent,
     getLastValue: () => Promise<V | null>
   ) => V | null | undefined | Promise<V | null | undefined>
   // By default, a transformation gets created with a value of `null` if the
@@ -395,7 +415,7 @@ export type Transformer<V = any> = {
 export type TransformerMaker = (config: Config) => Transformer
 
 export type ProcessedTransformer<V = any> = Omit<Transformer<V>, 'filter'> & {
-  filter: (event: ParsedEvent) => boolean
+  filter: (event: ParsedWasmEvent) => boolean
 }
 
 export enum WebhookType {
@@ -420,17 +440,20 @@ export type Webhook<V = any> = {
   filter: RequireAtLeastOne<{
     codeIdsKeys: string[]
     contractAddresses: string[]
-    matches: (event: Event) => boolean
+    matches: (event: WasmEvent) => boolean
   }>
   // If returns undefined, the webhook will not be called.
   endpoint:
     | WebhookEndpoint
     | undefined
-    | ((event: Event, env: ContractEnv) => WebhookEndpoint | undefined)
-    | ((event: Event, env: ContractEnv) => Promise<WebhookEndpoint | undefined>)
+    | ((event: WasmEvent, env: ContractEnv) => WebhookEndpoint | undefined)
+    | ((
+        event: WasmEvent,
+        env: ContractEnv
+      ) => Promise<WebhookEndpoint | undefined>)
   // If returns undefined, the webhook will not be called.
   getValue: (
-    event: Event,
+    event: WasmEvent,
     getLastValue: () => Promise<any | null>,
     env: ContractEnv
   ) => V | undefined | Promise<V | undefined>
@@ -442,7 +465,7 @@ export type WebhookMaker = (
 ) => Webhook | null | undefined
 
 export type ProcessedWebhook<V = any> = Omit<Webhook<V>, 'filter'> & {
-  filter: (event: Event) => boolean
+  filter: (event: WasmEvent) => boolean
 }
 
 export type PendingWebhook = {

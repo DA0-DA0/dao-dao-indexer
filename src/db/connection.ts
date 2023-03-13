@@ -10,37 +10,18 @@ import {
   AccountKeyCredit,
   AccountWebhook,
   AccountWebhookCodeIdSet,
+  AccountWebhookEvent,
   AccountWebhookEventAttempt,
   Computation,
+  ComputationDependency,
   Contract,
-  Event,
   PendingWebhook,
+  StakingSlashEvent,
   State,
-  Transformation,
+  Validator,
+  WasmEvent,
+  WasmEventTransformation,
 } from './models'
-import { AccountWebhookEvent } from './models/AccountWebhookEvent'
-
-// List of models included in the database per type.
-const MODELS_FOR_TYPE: Record<DbType, SequelizeOptions['models']> = {
-  [DbType.Data]: [
-    Computation,
-    Contract,
-    Event,
-    PendingWebhook,
-    State,
-    Transformation,
-  ],
-  [DbType.Accounts]: [
-    Account,
-    AccountCodeIdSet,
-    AccountKey,
-    AccountKeyCredit,
-    AccountWebhook,
-    AccountWebhookCodeIdSet,
-    AccountWebhookEvent,
-    AccountWebhookEventAttempt,
-  ],
-}
 
 const sequelizeInstances: Partial<Record<DbType, Sequelize>> = {}
 
@@ -48,6 +29,34 @@ type LoadDbOptions = {
   type?: DbType
   logging?: boolean
 }
+
+// List of models included in the database per type. Load in function to avoid
+// circular dependencies making these undefined.
+const getModelsForType = (type: DbType): SequelizeOptions['models'] =>
+  type === DbType.Data
+    ? [
+        Computation,
+        ComputationDependency,
+        Contract,
+        PendingWebhook,
+        StakingSlashEvent,
+        State,
+        Validator,
+        WasmEvent,
+        WasmEventTransformation,
+      ]
+    : type === DbType.Accounts
+    ? [
+        Account,
+        AccountCodeIdSet,
+        AccountKey,
+        AccountKeyCredit,
+        AccountWebhook,
+        AccountWebhookCodeIdSet,
+        AccountWebhookEvent,
+        AccountWebhookEventAttempt,
+      ]
+    : []
 
 export const loadDb = async ({
   logging = false,
@@ -72,7 +81,7 @@ export const loadDb = async ({
     logging: dbConfig.logging ?? logging ? console.log : false,
 
     // Tell Sequelize what models we have.
-    models: MODELS_FOR_TYPE[type],
+    models: getModelsForType(type),
   }
 
   // If URI present, use it. Otherwise, use options directly.

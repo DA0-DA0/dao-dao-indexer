@@ -21,7 +21,7 @@ import { AccountKey } from './AccountKey'
 import { AccountKeyCredit } from './AccountKeyCredit'
 import { AccountWebhookCodeIdSet } from './AccountWebhookCodeIdSet'
 import { AccountWebhookEvent } from './AccountWebhookEvent'
-import { Event } from './Event'
+import { WasmEvent } from './WasmEvent'
 
 export type AccountWebhookApiJson = {
   id: number
@@ -132,7 +132,7 @@ export class AccountWebhook extends Model {
   }
 
   // Check if a webhook matches an event.
-  async matches(event: Event): Promise<boolean> {
+  async matches(event: WasmEvent): Promise<boolean> {
     // Load event contract if necessary.
     event.contract ||= (await event.$get('contract'))!
     if (!event.contract) {
@@ -156,7 +156,7 @@ export class AccountWebhook extends Model {
   }
 
   // Queue webhook for an event.
-  async queue(event: Event) {
+  async queue(event: WasmEvent) {
     // Load account key if necessary.
     this.accountKey ||= await this.$get('accountKey')
     // If no key is set, cannot pay for webhook.
@@ -182,7 +182,7 @@ export class AccountWebhook extends Model {
   }
 
   // Queue webhooks for events. Events must be loaded with `Contract` included.
-  static async queueWebhooks(events: Event[]): Promise<number> {
+  static async queueWebhooks(events: WasmEvent[]): Promise<number> {
     const webhooks = await AccountWebhook.findAll({
       include: [
         {

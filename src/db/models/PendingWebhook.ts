@@ -1,5 +1,3 @@
-import { Worker } from 'worker_threads'
-
 import axios from 'axios'
 import Pusher from 'pusher'
 import {
@@ -21,20 +19,20 @@ import {
 } from '@/core'
 import { getProcessedWebhooks } from '@/data/webhooks'
 
-import { Event } from './Event'
 import { State } from './State'
+import { WasmEvent } from './WasmEvent'
 
 @Table({
   timestamps: true,
 })
 export class PendingWebhook extends Model {
   @AllowNull(false)
-  @ForeignKey(() => Event)
+  @ForeignKey(() => WasmEvent)
   @Column
   eventId!: number
 
-  @BelongsTo(() => Event)
-  event!: Event
+  @BelongsTo(() => WasmEvent)
+  event!: WasmEvent
 
   @AllowNull(false)
   @Column(DataType.JSONB)
@@ -104,7 +102,10 @@ export class PendingWebhook extends Model {
   }
 
   // Events must be loaded with `Contract` included.
-  static async queueWebhooks(state: State, events: Event[]): Promise<number> {
+  static async queueWebhooks(
+    state: State,
+    events: WasmEvent[]
+  ): Promise<number> {
     const webhooks = getProcessedWebhooks(loadConfig(), state)
     if (webhooks.length === 0) {
       return 0

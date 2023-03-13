@@ -1,6 +1,11 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { Contract, Event, Transformation } from '@/db'
+import {
+  Contract,
+  StakingSlashEvent,
+  WasmEvent,
+  WasmEventTransformation,
+} from '@/db'
 
 import { loadConfig } from './config'
 import {
@@ -17,6 +22,7 @@ import {
   FormulaMapGetter,
   FormulaPrefetch,
   FormulaPrefetchTransformations,
+  FormulaSlashEventsGetter,
   FormulaTransformationDateGetter,
   FormulaTransformationMapGetter,
   FormulaTransformationMatchGetter,
@@ -29,28 +35,32 @@ export const getEnv = ({
   block,
   useBlockDate = false,
   args = {},
-  dependencies,
+  dependentKeys,
   onFetch,
   cache: _cache,
 }: EnvOptions): Env<{}> => {
   const cache: Cache = {
     events: {},
-    transformations: {},
     contracts: {},
     ..._cache,
   }
 
   // Most recent event at or below this block.
   const blockHeightFilter = {
-    blockHeight: {
-      [Op.lte]: block.height,
-    },
+    [Op.lte]: block.height,
   }
 
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
-    const dependentKey = getDependentKey(contractAddress, key)
-    dependencies?.events.add(dependentKey)
+    const dependentKey = getDependentKey(
+      WasmEvent.dependentKeyNamespace,
+      contractAddress,
+      key
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: false,
+    })
 
     // Check cache.
     const cachedEvent = cache.events[dependentKey]
@@ -59,14 +69,20 @@ export const getEnv = ({
       // either it exists or it doesn't (null).
       cachedEvent !== undefined
         ? cachedEvent?.[0]
-        : await Event.findOne({
+        : await WasmEvent.findOne({
             where: {
               contractAddress,
               key,
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [['blockHeight', 'DESC']],
           })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (event && !(event instanceof WasmEvent)) {
+      throw new Error('Incorrect event type.')
+    }
 
     // Cache event, null if nonexistent.
     if (cachedEvent === undefined) {
@@ -79,7 +95,7 @@ export const getEnv = ({
     }
 
     // Call hook, even if event deleted.
-    await onFetch?.([event], [])
+    await onFetch?.([event])
 
     // If key was deleted, return undefined.
     if (event.delete) {
@@ -101,8 +117,15 @@ export const getEnv = ({
         ? // Add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
           dbKeyForKeys(...name, '')
         : dbKeyForKeys(name, '')) + ','
-    const dependentKey = getDependentKey(contractAddress, keyPrefix)
-    dependencies?.events.add(dependentKey)
+    const dependentKey = getDependentKey(
+      WasmEvent.dependentKeyNamespace,
+      contractAddress,
+      keyPrefix
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: true,
+    })
 
     // Check cache.
     const cachedEvents = cache.events[dependentKey]
@@ -111,8 +134,8 @@ export const getEnv = ({
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
       cachedEvents !== undefined
-        ? cachedEvents ?? []
-        : await Event.findAll({
+        ? ((cachedEvents ?? []) as WasmEvent[])
+        : await WasmEvent.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -131,7 +154,7 @@ export const getEnv = ({
               key: {
                 [Op.like]: `${keyPrefix}%`,
               },
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [
               // Needs to be first so we can use DISTINCT ON.
@@ -139,6 +162,12 @@ export const getEnv = ({
               ['blockHeight', 'DESC'],
             ],
           })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (events.some((event) => !(event instanceof WasmEvent))) {
+      throw new Error('Incorrect event type.')
+    }
 
     // Cache events, null if nonexistent.
     if (cachedEvents === undefined) {
@@ -151,7 +180,7 @@ export const getEnv = ({
     }
 
     // Call hook.
-    await onFetch?.(events, [])
+    await onFetch?.(events)
 
     // Remove delete events.
     const undeletedEvents = events.filter((event) => !event.delete)
@@ -180,8 +209,15 @@ export const getEnv = ({
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
-    const dependentKey = getDependentKey(contractAddress, key)
-    dependencies?.events.add(dependentKey)
+    const dependentKey = getDependentKey(
+      WasmEvent.dependentKeyNamespace,
+      contractAddress,
+      key
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: false,
+    })
 
     // Check cache.
     const cachedEvent = cache.events[dependentKey]
@@ -192,14 +228,20 @@ export const getEnv = ({
       // either it exists or it doesn't (null).
       cachedEvent !== undefined
         ? cachedEvent?.[0]
-        : await Event.findOne({
+        : await WasmEvent.findOne({
             where: {
               contractAddress,
               key,
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [['blockHeight', 'DESC']],
           })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (event && !(event instanceof WasmEvent)) {
+      throw new Error('Incorrect event type.')
+    }
 
     // Cache event, null if nonexistent.
     if (cachedEvent === undefined) {
@@ -211,7 +253,7 @@ export const getEnv = ({
     }
 
     // Call hook.
-    await onFetch?.([event], [])
+    await onFetch?.([event])
 
     // Convert block time to date.
     const date = new Date(0)
@@ -225,18 +267,25 @@ export const getEnv = ({
     ...keys
   ) => {
     const key = dbKeyForKeys(...keys)
-    dependencies?.events.add(getDependentKey(contractAddress, key))
+    dependentKeys?.push({
+      key: getDependentKey(
+        WasmEvent.dependentKeyNamespace,
+        contractAddress,
+        key
+      ),
+      prefix: false,
+    })
 
     // The cache consists of the most recent events for each key, but this
     // fetches the first event, so we can't use the cache.
 
     // Get first set event for this key.
-    const event = await Event.findOne({
+    const event = await WasmEvent.findOne({
       where: {
         contractAddress,
         key,
         delete: false,
-        ...blockHeightFilter,
+        blockHeight: blockHeightFilter,
       },
       order: [['blockHeight', 'ASC']],
     })
@@ -246,7 +295,7 @@ export const getEnv = ({
     }
 
     // Call hook.
-    await onFetch?.([event], [])
+    await onFetch?.([event])
 
     // Convert block time to date.
     const date = new Date(0)
@@ -258,19 +307,26 @@ export const getEnv = ({
   const getDateKeyFirstSetWithValueMatch: FormulaDateWithValueMatchGetter =
     async (contractAddress, keys, where) => {
       const key = dbKeyForKeys(...keys)
-      dependencies?.events.add(getDependentKey(contractAddress, key))
+      dependentKeys?.push({
+        key: getDependentKey(
+          WasmEvent.dependentKeyNamespace,
+          contractAddress,
+          key
+        ),
+        prefix: false,
+      })
 
       // The cache consists of the most recent events for each key, but this
       // fetches the first event, so we can't use the cache.
 
       // Get first set event for this key.
-      const event = await Event.findOne({
+      const event = await WasmEvent.findOne({
         where: {
           contractAddress,
           key,
           delete: false,
           valueJson: where,
-          ...blockHeightFilter,
+          blockHeight: blockHeightFilter,
         },
         order: [['blockHeight', 'ASC']],
       })
@@ -280,7 +336,7 @@ export const getEnv = ({
       }
 
       // Call hook.
-      await onFetch?.([event], [])
+      await onFetch?.([event])
 
       // Convert block time to date.
       const date = new Date(0)
@@ -294,11 +350,18 @@ export const getEnv = ({
         ? dbKeyForKeys(key)
         : !key.map
         ? dbKeyForKeys(...key.keys)
-        : // If it's a map, we need to filter by the prefix, so add an empty key at the end so append a comma. Also add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
+        : // If it's a map, we need to filter by the prefix, so add an empty key at the end and append a comma. Also add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
           dbKeyForKeys(...key.keys, '') + ','
     )
     keys.forEach((key) =>
-      dependencies?.events.add(getDependentKey(contractAddress, key))
+      dependentKeys?.push({
+        key: getDependentKey(
+          WasmEvent.dependentKeyNamespace,
+          contractAddress,
+          key
+        ),
+        prefix: key.endsWith(','),
+      })
     )
 
     const nonMapKeys = keys.filter((_, index) => {
@@ -326,7 +389,7 @@ export const getEnv = ({
           }
         : nonMapKeyFilter || mapKeyFilter || {}
 
-    const events = await Event.findAll({
+    const events = await WasmEvent.findAll({
       attributes: [
         // DISTINCT ON is not directly supported by Sequelize, so we need to
         // cast to unknown and back to string to insert this at the beginning of
@@ -342,7 +405,7 @@ export const getEnv = ({
       where: {
         contractAddress,
         key: keyFilter,
-        ...blockHeightFilter,
+        blockHeight: blockHeightFilter,
       },
       order: [
         // Needs to be first so we can use DISTINCT ON.
@@ -352,12 +415,16 @@ export const getEnv = ({
     })
 
     // Call hook.
-    await onFetch?.(events, [])
+    await onFetch?.(events)
 
     nonMapKeys.forEach((key) => {
       // Find matching event for key.
       const event = events.find((event) => event.key === key)
-      const dependentKey = getDependentKey(contractAddress, key)
+      const dependentKey = getDependentKey(
+        WasmEvent.dependentKeyNamespace,
+        contractAddress,
+        key
+      )
       // If no event found or key deleted, cache null for nonexistent.
       cache.events[dependentKey] = !event || event.delete ? null : [event]
     })
@@ -367,7 +434,11 @@ export const getEnv = ({
       const eventsForPrefix = events.filter((event) =>
         event.key.startsWith(keyPrefix)
       )
-      const dependentKey = getDependentKey(contractAddress, keyPrefix)
+      const dependentKey = getDependentKey(
+        WasmEvent.dependentKeyNamespace,
+        contractAddress,
+        keyPrefix
+      )
       // If no events found, cache null for nonexistent.
       cache.events[dependentKey] = eventsForPrefix.length
         ? eventsForPrefix
@@ -375,7 +446,11 @@ export const getEnv = ({
 
       // Cache events separately.
       eventsForPrefix.forEach((event) => {
-        const dependentKey = getDependentKey(contractAddress, event.key)
+        const dependentKey = getDependentKey(
+          WasmEvent.dependentKeyNamespace,
+          contractAddress,
+          event.key
+        )
         // If key deleted, cache null for nonexistent.
         cache.events[dependentKey] = event.delete ? null : [event]
       })
@@ -388,17 +463,24 @@ export const getEnv = ({
     where,
     whereCodeId
   ) => {
-    const dependentKey = getDependentKey(contractAddress, nameLike)
-    dependencies?.transformations.add(dependentKey)
+    const dependentKey = getDependentKey(
+      WasmEventTransformation.dependentKeyNamespace,
+      contractAddress,
+      nameLike
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: false,
+    })
 
     // Check cache.
-    const cachedTransformations = cache.transformations[dependentKey]
+    const cachedTransformations = cache.events[dependentKey]
     const transformations =
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
       cachedTransformations !== undefined
-        ? cachedTransformations ?? []
-        : await Transformation.findAll({
+        ? ((cachedTransformations ?? []) as WasmEventTransformation[])
+        : await WasmEventTransformation.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -416,7 +498,8 @@ export const getEnv = ({
             ],
             where: {
               name: {
-                [Op.like]: nameLike,
+                // Replace * with % for LIKE query.
+                [Op.like]: nameLike.replace(/\*/g, '%'),
               },
               ...(contractAddress && {
                 contractAddress,
@@ -424,7 +507,7 @@ export const getEnv = ({
               ...(where && {
                 value: where,
               }),
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [
               // Needs to be first so we can use DISTINCT ON.
@@ -445,9 +528,19 @@ export const getEnv = ({
             ],
           })
 
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (
+      transformations.some(
+        (transformation) => !(transformation instanceof WasmEventTransformation)
+      )
+    ) {
+      throw new Error('Incorrect event type.')
+    }
+
     // Cache transformations, null if nonexistent.
     if (cachedTransformations === undefined) {
-      cache.transformations[dependentKey] = transformations.length
+      cache.events[dependentKey] = transformations.length
         ? transformations
         : null
     }
@@ -458,7 +551,7 @@ export const getEnv = ({
     }
 
     // Call hook.
-    await onFetch?.([], transformations)
+    await onFetch?.(transformations)
 
     return transformations.map((transformation) => ({
       contractAddress: transformation.contractAddress,
@@ -477,17 +570,24 @@ export const getEnv = ({
     namePrefix
   ) => {
     const mapNamePrefix = namePrefix + ':'
-    const dependentKey = getDependentKey(contractAddress, mapNamePrefix)
-    dependencies?.transformations.add(dependentKey)
+    const dependentKey = getDependentKey(
+      WasmEventTransformation.dependentKeyNamespace,
+      contractAddress,
+      mapNamePrefix
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: true,
+    })
 
     // Check cache.
-    const cachedTransformations = cache.transformations[dependentKey]
+    const cachedTransformations = cache.events[dependentKey]
     const transformations =
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
       cachedTransformations !== undefined
-        ? cachedTransformations ?? []
-        : await Transformation.findAll({
+        ? ((cachedTransformations ?? []) as WasmEventTransformation[])
+        : await WasmEventTransformation.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -508,7 +608,7 @@ export const getEnv = ({
               name: {
                 [Op.like]: mapNamePrefix + '%',
               },
-              ...blockHeightFilter,
+              blockHeight: blockHeightFilter,
             },
             order: [
               // Needs to be first so we can use DISTINCT ON.
@@ -518,9 +618,19 @@ export const getEnv = ({
             include: Contract,
           })
 
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (
+      transformations.some(
+        (transformation) => !(transformation instanceof WasmEventTransformation)
+      )
+    ) {
+      throw new Error('Incorrect event type.')
+    }
+
     // Cache transformations, null if nonexistent.
     if (cachedTransformations === undefined) {
-      cache.transformations[dependentKey] = transformations.length
+      cache.events[dependentKey] = transformations.length
         ? transformations
         : null
     }
@@ -531,7 +641,7 @@ export const getEnv = ({
     }
 
     // Call hook.
-    await onFetch?.([], transformations)
+    await onFetch?.(transformations)
 
     // Remove empty values.
     const definedTransformations = transformations.filter(
@@ -559,7 +669,14 @@ export const getEnv = ({
           name.name + ':'
     )
     names.forEach((key) =>
-      dependencies?.transformations.add(getDependentKey(contractAddress, key))
+      dependentKeys?.push({
+        key: getDependentKey(
+          WasmEventTransformation.dependentKeyNamespace,
+          contractAddress,
+          key
+        ),
+        prefix: key.endsWith(':'),
+      })
     )
 
     const nonMapNames = names.filter((_, index) => {
@@ -588,7 +705,7 @@ export const getEnv = ({
           }
         : nonMapNameFilter || mapNameFilter || {}
 
-    const transformations = await Transformation.findAll({
+    const transformations = await WasmEventTransformation.findAll({
       attributes: [
         // DISTINCT ON is not directly supported by Sequelize, so we need to
         // cast to unknown and back to string to insert this at the beginning of
@@ -605,7 +722,7 @@ export const getEnv = ({
       where: {
         contractAddress,
         name: nameFilter,
-        ...blockHeightFilter,
+        blockHeight: blockHeightFilter,
       },
       order: [
         // Needs to be first so we can use DISTINCT ON.
@@ -616,16 +733,20 @@ export const getEnv = ({
     })
 
     // Call hook.
-    await onFetch?.([], transformations)
+    await onFetch?.([])
 
     nonMapNames.forEach((name) => {
       // Find matching transformation for name.
       const transformation = transformations.find(
         (transformation) => transformation.name === name
       )
-      const dependentKey = getDependentKey(contractAddress, name)
+      const dependentKey = getDependentKey(
+        WasmEventTransformation.dependentKeyNamespace,
+        contractAddress,
+        name
+      )
       // If no transformation found or value null, cache null for nonexistent.
-      cache.transformations[dependentKey] =
+      cache.events[dependentKey] =
         !transformation || transformation.value === null
           ? null
           : [transformation]
@@ -636,20 +757,25 @@ export const getEnv = ({
       const transformationsForPrefix = transformations.filter(
         (transformation) => transformation.name.startsWith(mapNamePrefix)
       )
-      const dependentKey = getDependentKey(contractAddress, mapNamePrefix)
+      const dependentKey = getDependentKey(
+        WasmEventTransformation.dependentKeyNamespace,
+        contractAddress,
+        mapNamePrefix
+      )
       // If no transformations found, cache null for nonexistent.
-      cache.transformations[dependentKey] = transformationsForPrefix.length
+      cache.events[dependentKey] = transformationsForPrefix.length
         ? transformationsForPrefix
         : null
 
       // Cache transformations separately.
       transformationsForPrefix.forEach((transformation) => {
         const dependentKey = getDependentKey(
+          WasmEventTransformation.dependentKeyNamespace,
           contractAddress,
           transformation.name
         )
         // If key deleted, cache null for nonexistent.
-        cache.transformations[dependentKey] =
+        cache.events[dependentKey] =
           transformation.value === null ? null : [transformation]
       })
     })
@@ -661,15 +787,20 @@ export const getEnv = ({
     nameLike,
     where
   ) => {
-    dependencies?.transformations.add(
-      getDependentKey(contractAddress, nameLike)
-    )
+    dependentKeys?.push({
+      key: getDependentKey(
+        WasmEventTransformation.dependentKeyNamespace,
+        contractAddress,
+        nameLike
+      ),
+      prefix: false,
+    })
 
     // The cache consists of the most recent transformations for each name, but
     // this fetches the first transformation, so we can't use the cache.
 
     // Get first transformation for this name.
-    const transformation = await Transformation.findOne({
+    const transformation = await WasmEventTransformation.findOne({
       where: {
         name: {
           [Op.like]: nameLike,
@@ -680,7 +811,7 @@ export const getEnv = ({
         ...(where && {
           value: where,
         }),
-        ...blockHeightFilter,
+        blockHeight: blockHeightFilter,
       },
       order: [['blockHeight', 'ASC']],
     })
@@ -690,7 +821,7 @@ export const getEnv = ({
     }
 
     // Call hook.
-    await onFetch?.([], [transformation])
+    await onFetch?.([transformation])
 
     // Convert block time to date.
     const date = new Date(0)
@@ -751,6 +882,59 @@ export const getEnv = ({
     return codeIdKeys[0]
   }
 
+  const getSlashEvents: FormulaSlashEventsGetter = async (
+    validatorOperatorAddress
+  ) => {
+    const dependentKey = getDependentKey(
+      StakingSlashEvent.dependentKeyNamespace,
+      validatorOperatorAddress
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: true,
+    })
+
+    // Check cache.
+    const cached = cache.events[dependentKey]
+    const slashEvents =
+      // If undefined, we haven't tried to fetch them yet. If not undefined,
+      // either they exist or they don't (null).
+      cached !== undefined
+        ? ((cached ?? []) as StakingSlashEvent[])
+        : await StakingSlashEvent.findAll({
+            where: {
+              validatorOperatorAddress,
+              registeredBlockHeight: blockHeightFilter,
+            },
+            order: [['registeredBlockHeight', 'DESC']],
+          })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (
+      slashEvents.some(
+        (slashEvent) => !(slashEvent instanceof StakingSlashEvent)
+      )
+    ) {
+      throw new Error('Incorrect event type.')
+    }
+
+    // Cache transformations, null if nonexistent.
+    if (cached === undefined) {
+      cache.events[dependentKey] = slashEvents.length ? slashEvents : null
+    }
+
+    // If no transformations found, return undefined.
+    if (!slashEvents.length) {
+      return undefined
+    }
+
+    // Call hook.
+    await onFetch?.(slashEvents)
+
+    return slashEvents.map((slashEvent) => slashEvent.toJSON())
+  }
+
   return {
     block,
     date: useBlockDate ? new Date(Number(block.timeUnixMs)) : new Date(),
@@ -772,5 +956,7 @@ export const getEnv = ({
     getCodeIdsForKeys,
     contractMatchesCodeIdKeys,
     getCodeIdKeyForContract,
+
+    getSlashEvents,
   }
 }

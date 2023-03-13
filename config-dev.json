@@ -1,0 +1,44 @@
+{
+  "sources": {
+    "wasm": "./fake/wasm.out",
+    "staking": "./fake/staking.out"
+  },
+  "statusEndpoint": "https://rpc.uni.junonetwork.io/status",
+  "db": {
+    "data": {
+      "dialect": "postgres",
+      "host": "db_data",
+      "database": "dev_data",
+      "username": "dev",
+      "password": "dev"
+    },
+    "accounts": {
+      "dialect": "postgres",
+      "host": "db_accounts",
+      "database": "dev_accounts",
+      "username": "dev",
+      "password": "dev"
+    }
+  },
+  "codeIds": {
+    "cw20-stake": [155],
+    "dao-core": [163],
+    "dao-proposal-multiple": [170],
+    "dao-proposal-single": [171],
+    "dao-voting-cw20-staked": [172],
+    "dao-voting-cw4": [173],
+    "dao-voting-cw721-staked": [174],
+    "dao-voting-native-staked": [175],
+    "cw4-group": [178]
+  },
+  "daoDaoBase": "https://testnet.daodao.zone",
+  "discordNotifierApiKey": "key",
+  "followingDaosSecret": "secret",
+  "websocketsSecret": "secret",
+  "payment": {
+    "cwReceiptAddress": "juno1hkr8ka5hywvrxxq7r5jtqswe56hf8pzxmper6gsxeedgtlu8npas7drzdf",
+    "cwReceiptWebhookSecret": "secret",
+    "nativeDenomAccepted": "ibc/EAC38D55372F38F1AFD68DF7FE9EF762DCF69F26520643CF3F9D292A738D8034",
+    "creditScaleFactor": 0.001
+  }
+}

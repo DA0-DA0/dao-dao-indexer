@@ -16,8 +16,10 @@ describe('GET /status', () => {
       .expect('Content-Type', /json/)
       .expect({
         latestBlock: serializeBlock(state!.latestBlock),
-        lastBlockHeightExported:
-          state!.lastBlockHeightExported?.toString() || null,
+        lastStakingBlockHeightExported:
+          state!.lastStakingBlockHeightExported?.toString() || null,
+        lastWasmBlockHeightExported:
+          state!.lastWasmBlockHeightExported?.toString() || null,
       })
   })
 })

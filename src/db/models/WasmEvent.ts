@@ -1,5 +1,3 @@
-import { Worker } from 'worker_threads'
-
 import { Op, WhereOptions } from 'sequelize'
 import {
   AllowNull,
@@ -7,12 +5,17 @@ import {
   Column,
   DataType,
   ForeignKey,
-  Model,
   Table,
 } from 'sequelize-typescript'
 
-import { Block, ParsedEvent, SplitDependentKeys, getDependentKey } from '@/core'
+import {
+  Block,
+  ComputationDependentKey,
+  ParsedWasmEvent,
+  getDependentKey,
+} from '@/core'
 
+import { DependendableEventModel, DependentKeyNamespace } from '../types'
 import { Contract } from './Contract'
 
 @Table({
@@ -45,7 +48,7 @@ import { Contract } from './Contract'
     },
   ],
 })
-export class Event extends Model {
+export class WasmEvent extends DependendableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
@@ -96,10 +99,14 @@ export class Event extends Model {
   }
 
   get dependentKey(): string {
-    return getDependentKey(this.contractAddress, this.key)
+    return getDependentKey(
+      WasmEvent.dependentKeyNamespace,
+      this.contractAddress,
+      this.key
+    )
   }
 
-  get asParsedEvent(): ParsedEvent {
+  get asParsedEvent(): ParsedWasmEvent {
     // `Contract` must be included before using this getter.
     if (!this.contract) {
       throw new Error('Contract must be included when querying for this Event.')
@@ -121,10 +128,10 @@ export class Event extends Model {
   // Get the previous event for this key. If this is the first event for this
   // key, return null. Cache the result so it can be reused since this shouldn't
   // change.
-  previousEvent?: Event | null
-  async getPreviousEvent(cache = true): Promise<Event | null> {
+  previousEvent?: WasmEvent | null
+  async getPreviousEvent(cache = true): Promise<WasmEvent | null> {
     if (this.previousEvent === undefined || !cache) {
-      this.previousEvent = await Event.findOne({
+      this.previousEvent = await WasmEvent.findOne({
         where: {
           contractAddress: this.contractAddress,
           key: this.key,
@@ -139,63 +146,70 @@ export class Event extends Model {
     return this.previousEvent
   }
 
-  // Split dependent keys into two groups: non map keys and map prefixes. Map
-  // prefixes end with a comma because they are missing the final key segment,
-  // which is the key of each map entry.
-  static splitDependentKeys(dependentKeys: string[]): SplitDependentKeys {
-    return {
-      nonMapKeys: dependentKeys.filter((key) => key[key.length - 1] !== ','),
-      mapPrefixes: dependentKeys.filter((key) => key[key.length - 1] === ','),
-    }
-  }
+  static dependentKeyNamespace = DependentKeyNamespace.WasmEvent
+  static blockHeightKey: string = 'blockHeight'
 
   // Returns a where clause that will match all events that are described by the
-  // dependent keys, which contain various contract addresses, non map keys
-  // (potentially containing wildcards), and map prefix keys.
-  static getWhereClauseForDependentKeys(dependentKeys: string[]): WhereOptions {
+  // dependent keys.
+  static getWhereClauseForDependentKeys(
+    dependentKeys: ComputationDependentKey[]
+  ): WhereOptions {
     // Some keys (most likely those with wildcards) may not have a contract
     // address. It is fine to group these together.
     const dependentKeysByContract = dependentKeys.reduce(
       (acc, dependentKey) => {
-        // Dependent keys for any contract start with "%:".
-        const [contractAddress, key] = dependentKey.startsWith('%:')
-          ? [
-              '',
-              // Remove contract address wildcard.
-              dependentKey.split(':').slice(1).join(':'),
-            ]
-          : dependentKey.split(':')
+        // 1. Remove namespace from key.
+        let key = dependentKey.key.replace(
+          new RegExp(`^${this.dependentKeyNamespace}:`),
+          ''
+        )
+
+        // 2. Extract contract address from key.
+        // Dependent keys for any contract start with "*:".
+        const contractAddress = key.startsWith('*:') ? '' : key.split(':')[0]
+
+        key = key
+          // 3. Remove contract address from key.
+          .replace(new RegExp(`^${contractAddress || '\\*'}:`), '')
+          // 4. Replace wildcard symbol with LIKE wildcard for database query.
+          .replace(/\*/g, '%')
+
         return {
           ...acc,
-          [contractAddress]: [...(acc[contractAddress] ?? []), key],
+          [contractAddress]: [
+            ...(acc[contractAddress] ?? []),
+            {
+              key,
+              prefix: dependentKey.prefix,
+            },
+          ],
         }
       },
-      {} as Record<string, string[] | undefined>
+      {} as Record<string, { key: string; prefix: boolean }[]>
     )
 
     return {
       [Op.or]: Object.entries(dependentKeysByContract).map(
         ([contractAddress, keys]) => {
-          const { nonMapKeys, mapPrefixes } = Event.splitDependentKeys(keys!)
-
-          const exactKeys = nonMapKeys.filter((key) => !key.includes('%'))
-          const wildcardKeys = nonMapKeys.filter((key) => key.includes('%'))
+          const exactKeys = keys
+            .filter(({ key, prefix }) => !prefix && !key.includes('%'))
+            .map(({ key }) => key)
+          const wildcardKeys = keys
+            .filter(({ key, prefix }) => prefix || key.includes('%'))
+            .map(({ key, prefix }) => key + (prefix ? '%' : ''))
 
           return {
             // Only include if contract address is defined.
             ...(contractAddress && { contractAddress }),
-            // Same logic as in `updateComputationValidityDependentOnChanges` in
+            // Related logic in `makeComputationDependencyWhere` in
             // `src/db/utils.ts`.
             key: {
               [Op.or]: [
-                // Where key is one of the non map keys.
+                // Exact matches.
                 ...(exactKeys.length > 0 ? [{ [Op.in]: exactKeys }] : []),
+                // Wildcards. May or may not be prefixes.
                 ...wildcardKeys.map((key) => ({
                   [Op.like]: key,
-                })),
-                // Or where key is prefixed by one of the map prefixes.
-                ...mapPrefixes.map((prefix) => ({
-                  [Op.like]: prefix + '%',
                 })),
               ],
             },

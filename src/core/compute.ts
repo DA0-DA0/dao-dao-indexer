@@ -1,6 +1,11 @@
-import { Op } from 'sequelize'
+import { ModelStatic, Op } from 'sequelize'
 
-import { Contract, Event, Transformation } from '@/db'
+import {
+  Contract,
+  DependendableEventModel,
+  dependentKeyMatches,
+  getDependableEventModels,
+} from '@/db'
 
 import { getEnv } from './env'
 import {
@@ -8,13 +13,11 @@ import {
   Cache,
   CacheMap,
   CacheMapSingle,
+  ComputationDependentKey,
   ComputationOutput,
   ComputeOptions,
   ComputeRangeOptions,
-  Dependencies,
   FormulaType,
-  SetDependencies,
-  SplitDependentKeys,
 } from './types'
 
 export const compute = async ({
@@ -32,34 +35,27 @@ export const compute = async ({
     ? block
     : undefined
 
-  const onFetch = async (
-    events: Event[],
-    transformations: Transformation[]
-  ) => {
-    const latestItem: Event | Transformation = [
-      ...events,
-      ...transformations,
-    ].sort((a, b) => Number(BigInt(b.blockHeight) - BigInt(a.blockHeight)))[0]
+  const onFetch = async (events: DependendableEventModel[]) => {
+    const latestEvent = [...events].sort((a, b) =>
+      Number(b.block.height - a.block.height)
+    )[0]
 
     // If latest is unset, or if we found a later block height, update.
     if (
-      latestItem &&
+      latestEvent &&
       (latestBlock === undefined ||
-        BigInt(latestItem.blockHeight) > latestBlock.height)
+        latestEvent.block.height > latestBlock.height)
     ) {
-      latestBlock = latestItem.block
+      latestBlock = latestEvent.block
     }
   }
 
-  const dependencies: SetDependencies = {
-    events: new Set<string>(),
-    transformations: new Set<string>(),
-  }
+  const dependentKeys: ComputationDependentKey[] = []
 
   const env = getEnv({
     block,
     args,
-    dependencies,
+    dependentKeys,
     onFetch,
   })
   const value =
@@ -67,6 +63,11 @@ export const compute = async ({
       ? await options.formula.compute({
           ...env,
           contractAddress: targetAddress,
+        })
+      : options.type === FormulaType.Validator
+      ? await options.formula.compute({
+          ...env,
+          validatorOperatorAddress: targetAddress,
         })
       : options.type === FormulaType.Wallet
       ? await options.formula.compute({
@@ -78,10 +79,7 @@ export const compute = async ({
   return {
     block: latestBlock,
     value,
-    dependencies: {
-      events: Array.from(dependencies.events),
-      transformations: Array.from(dependencies.transformations),
-    },
+    dependentKeys,
   }
 }
 
@@ -92,22 +90,16 @@ export const computeRange = async ({
   blockEnd,
   ...options
 }: ComputeRangeOptions): Promise<ComputationOutput[]> => {
-  // Dependencies seen so far.
-  const allDependencies: SetDependencies = {
-    events: new Set<string>(),
-    transformations: new Set<string>(),
-  }
-  // All events for contractAddress:key pairs, sorted ascending by block height.
-  // These keys are different from dependent keys because dependent keys can
-  // include map prefixes. We need to store all events for each key so we can
-  // find the first event for a given key based on dynamic block height
-  // constraints. Map contents may change based on many different keys, so maps
-  // need to be reconstructed by individual key comparisons, meaning we need to
-  // store keys separately here and not combined into their maps.
-  const allEvents: Record<string, Event[] | undefined> = {}
-  // All transformations for contractAddress:name pairs, sorted ascending by
-  // block height.
-  const allTransformations: Record<string, Transformation[] | undefined> = {}
+  // Dependent keys seen so far.
+  const allDependentKeys: ComputationDependentKey[] = []
+  // All events sorted ascending by block height. These keys are different from
+  // dependent keys because dependent keys can include prefixes. We need to
+  // store all events for each key so we can find the first event for a given
+  // key based on dynamic block height constraints. Prefix groupings may change
+  // based on many different keys, so a map that uses a prefix needs to be
+  // reconstructed by individual key comparisons, meaning we need to store keys
+  // separately here and not combined into their maps.
+  const allEvents: Record<string, DependendableEventModel[] | undefined> = {}
 
   // Cache contracts across all computations since they stay constant.
   const contractCache: CacheMapSingle<Contract> = {}
@@ -117,9 +109,8 @@ export const computeRange = async ({
   ): Promise<{
     latestBlock: Block | undefined
     value: any
-    dependencies: Dependencies
-    eventsUsed: Event[]
-    transformationsUsed: Transformation[]
+    dependentKeys: ComputationDependentKey[]
+    eventsUsed: DependendableEventModel[]
   }> => {
     // Store the latest block that we've seen for all keys accessed. This is the
     // earliest this computation could have been made. If the formula is
@@ -129,71 +120,44 @@ export const computeRange = async ({
       ? block
       : undefined
 
-    // Store the events and transformations used for this computation.
-    let eventsUsed: Event[] = []
-    let transformationsUsed: Transformation[] = []
+    // Store the dependable events used for this computation.
+    let eventsUsed: DependendableEventModel[] = []
 
-    const onFetch = async (
-      events: Event[],
-      transformations: Transformation[]
-    ) => {
+    const onFetch = async (events: DependendableEventModel[]) => {
       if (events.length) {
         eventsUsed = [...eventsUsed, ...events]
       }
-      if (transformations.length) {
-        transformationsUsed = [...transformationsUsed, ...transformations]
-      }
 
-      const latestItem: Event | Transformation = [
-        ...events,
-        ...transformations,
-      ].sort((a, b) => Number(BigInt(b.blockHeight) - BigInt(a.blockHeight)))[0]
+      const latestEvent = [...events].sort((a, b) =>
+        Number(b.block.height - a.block.height)
+      )[0]
 
       // If latest is unset, or if we found a later block height, update.
       if (
-        latestItem &&
+        latestEvent &&
         (latestBlock === undefined ||
-          BigInt(latestItem.blockHeight) > latestBlock.height)
+          latestEvent.block.height > latestBlock.height)
       ) {
-        latestBlock = latestItem.block
+        latestBlock = latestEvent.block
       }
     }
 
-    // Build cache from all dependent events and transformations already loaded.
+    // Build cache from all dependent events already loaded.
     const initialCache: Cache = {
       events: {},
-      transformations: {},
       contracts: contractCache,
     }
 
-    if (allDependencies.events.size > 0) {
-      addToCache(
-        Event.splitDependentKeys(Array.from(allDependencies.events)),
-        allEvents,
-        initialCache.events,
-        block
-      )
-    }
-    if (allDependencies.transformations.size > 0) {
-      addToCache(
-        Transformation.splitDependentKeys(
-          Array.from(allDependencies.transformations)
-        ),
-        allTransformations,
-        initialCache.transformations,
-        block
-      )
+    if (allDependentKeys.length > 0) {
+      addToCache(allDependentKeys, allEvents, initialCache.events, block)
     }
 
-    const dependencies: SetDependencies = {
-      events: new Set<string>(),
-      transformations: new Set<string>(),
-    }
+    const dependentKeys: ComputationDependentKey[] = []
 
     const env = getEnv({
       block,
       args,
-      dependencies,
+      dependentKeys,
       onFetch,
       cache: initialCache,
     })
@@ -202,6 +166,11 @@ export const computeRange = async ({
         ? await options.formula.compute({
             ...env,
             contractAddress: targetAddress,
+          })
+        : options.type === FormulaType.Validator
+        ? await options.formula.compute({
+            ...env,
+            validatorOperatorAddress: targetAddress,
           })
         : options.type === FormulaType.Wallet
         ? await options.formula.compute({
@@ -213,12 +182,8 @@ export const computeRange = async ({
     return {
       latestBlock,
       value,
-      dependencies: {
-        events: Array.from(dependencies.events),
-        transformations: Array.from(dependencies.transformations),
-      },
+      dependentKeys,
       eventsUsed,
-      transformationsUsed,
     }
   }
 
@@ -250,29 +215,46 @@ export const computeRange = async ({
       results.push({
         block: result.latestBlock,
         value: result.value === undefined ? null : result.value,
-        dependencies: result.dependencies,
+        dependentKeys: result.dependentKeys,
         // At least valid until the requested block, which may be equal to or
         // after the latestBlock returned in the result.
         latestBlockHeightValid: currentBlock.height,
       })
     }
 
-    // Preload all events for new dependencies seen until the end.
-    const newDependentEvents = result.dependencies.events.filter(
-      (key) => !allDependencies.events.has(key)
+    // Preload all events for new dependent keys seen until the end.
+    const newDependentKeys = result.dependentKeys.filter(
+      (a) => !allDependentKeys.some((b) => dependentKeyMatches(a, b))
     )
-    if (newDependentEvents.length > 0) {
-      const futureEvents = await Event.findAll({
-        where: {
-          // After the current block up to the end block.
-          blockHeight: {
-            [Op.gt]: currentBlock.height,
-            [Op.lte]: blockEnd.height,
-          },
-          ...Event.getWhereClauseForDependentKeys(newDependentEvents),
-        },
-        order: [['blockHeight', 'ASC']],
-      })
+    if (newDependentKeys.length > 0) {
+      const futureEvents = (
+        await Promise.all(
+          getDependableEventModels().map(async (DependableEventModel) => {
+            const namespacedDependentKeys = newDependentKeys.filter(({ key }) =>
+              key.startsWith(DependableEventModel.dependentKeyNamespace)
+            )
+            if (namespacedDependentKeys.length === 0) {
+              return []
+            }
+
+            return await (
+              DependableEventModel as unknown as ModelStatic<DependendableEventModel>
+            ).findAll({
+              where: {
+                // After the current block up to the end block.
+                [DependableEventModel.blockHeightKey]: {
+                  [Op.gt]: currentBlock.height,
+                  [Op.lte]: blockEnd.height,
+                },
+                ...DependableEventModel.getWhereClauseForDependentKeys(
+                  namespacedDependentKeys
+                ),
+              },
+              order: [[DependableEventModel.blockHeightKey, 'ASC']],
+            })
+          })
+        )
+      ).flat()
 
       // Save for future computations.
       futureEvents.forEach((event) => {
@@ -290,250 +272,189 @@ export const computeRange = async ({
             event,
           ]
             // Sort ascending.
-            .sort((a, b) =>
-              Number(BigInt(a.blockHeight) - BigInt(b.blockHeight))
-            )
+            .sort((a, b) => Number(a.block.height - b.block.height))
         }
       })
-      newDependentEvents.forEach((key) => allDependencies.events.add(key))
+
+      newDependentKeys.forEach((key) => allDependentKeys.push(key))
     }
 
-    // Preload all transformations for new dependencies seen until the end.
-    const newDependentTransformations =
-      result.dependencies.transformations.filter(
-        (key) => !allDependencies.transformations.has(key)
-      )
-    if (newDependentTransformations.length > 0) {
-      const futureTransformations = await Transformation.findAll({
-        where: {
-          // After the current block up to the end block.
-          blockHeight: {
-            [Op.gt]: currentBlock.height,
-            [Op.lte]: blockEnd.height,
-          },
-          ...Transformation.getWhereClauseForDependentKeys(
-            newDependentTransformations
-          ),
-        },
-        order: [['blockHeight', 'ASC']],
-      })
-
-      // Save for future computations.
-      futureTransformations.forEach((transformation) => {
-        if (transformation.dependentKey in allEvents) {
-          allTransformations[transformation.dependentKey]!.push(transformation)
-        } else {
-          // If making new array, insert transformations used in the formula
-          // before future transformation. This way we cache the most recent
-          // transformations below the current block since they weren't fetched
-          // when getting all future transformations.
-          allTransformations[transformation.dependentKey] = [
-            ...result.transformationsUsed.filter(
-              (usedTransformation) =>
-                usedTransformation.dependentKey === transformation.dependentKey
-            ),
-            transformation,
-          ]
-            // Sort ascending.
-            .sort((a, b) =>
-              Number(BigInt(a.blockHeight) - BigInt(b.blockHeight))
-            )
-        }
-      })
-      // Add to all dependencies so we don't fetch these again.
-      newDependentTransformations.forEach((key) =>
-        allDependencies.transformations.add(key)
-      )
-    }
-
-    // Find the next event or transformation that has the potential to change
-    // the result for the given dependencies. If it remains undefined, then we
-    // know that the result will not change because no inputs changed.
-    nextPotentialBlock = undefined as Block | undefined
-
-    if (result.dependencies.events.length > 0) {
-      const eventNextPotentialBlock = getNextPotentialBlock(
-        Event.splitDependentKeys(result.dependencies.events),
-        allEvents,
-        currentBlock
-      )
-
-      if (
-        eventNextPotentialBlock &&
-        (nextPotentialBlock === undefined ||
-          eventNextPotentialBlock.height < nextPotentialBlock.height)
-      ) {
-        nextPotentialBlock = eventNextPotentialBlock
-      }
-    }
-    if (result.dependencies.transformations.length > 0) {
-      const transformationNextPotentialBlock = getNextPotentialBlock(
-        Transformation.splitDependentKeys(result.dependencies.transformations),
-        allTransformations,
-        currentBlock
-      )
-
-      if (
-        transformationNextPotentialBlock &&
-        (nextPotentialBlock === undefined ||
-          transformationNextPotentialBlock.height < nextPotentialBlock.height)
-      ) {
-        nextPotentialBlock = transformationNextPotentialBlock
-      }
-    }
+    // Find the next event that has the potential to change the result for the
+    // given dependencies. If it remains undefined, then we know that the result
+    // will not change because no inputs changed.
+    nextPotentialBlock = getNextPotentialBlock(
+      result.dependentKeys,
+      allEvents,
+      currentBlock
+    )
   }
 
   return results
 }
 
-const addToCache = <T extends Event | Transformation>(
-  { nonMapKeys, mapPrefixes }: SplitDependentKeys,
-  allItems: Record<string, T[] | undefined>,
-  initialCacheMap: CacheMap<T>,
+// This function takes the given dependent keys and all events that have been
+// loaded from those dependent keys, and then adds to the cache the latest event
+// for each dependent key that is before or at the given block. For dependent
+// key prefixes, it finds all unique keys that match the prefix and adds the
+// latest event for each of those keys to the cache. This populates the cache
+// with the events that will be relevant at the given block based on the loaded
+// events. It is used when computing ranges so that we can prefetch the
+// appropriate events for future computations that we already know will be
+// needed.
+const addToCache = (
+  dependentKeys: ComputationDependentKey[],
+  allEvents: Record<string, DependendableEventModel[] | undefined>,
+  cache: CacheMap<DependendableEventModel>,
   block: Block
 ) => {
-  for (const key of nonMapKeys) {
-    const allItemsForThisKey = allItems[key]
-    // No items found for this key, cache null to indicate it doesn't exist and
-    // pritem querying for it.
-    if (!allItemsForThisKey) {
-      initialCacheMap[key] = null
+  const nonPrefixes = dependentKeys.filter(({ prefix }) => !prefix)
+  const prefixes = dependentKeys.filter(({ prefix }) => prefix)
+
+  for (const { key } of nonPrefixes) {
+    const allEventsForThisKey = allEvents[key]
+    // No events found for this key, cache null to indicate it doesn't exist and
+    // prevent querying for it.
+    if (!allEventsForThisKey) {
+      cache[key] = null
       continue
     }
 
-    // Sorted ascending by block height, so we can find the latest item for a
+    // Sorted ascending by block height, so we can find the latest event for a
     // given key that is before or at the current block height by finding the
-    // index of the first item that is after the current block height and
+    // index of the first event that is after the current block height and
     // subtracting 1.
-    const nextIndex = allItemsForThisKey.findIndex(
-      (item) => BigInt(item.blockHeight) > block.height
+    const nextIndex = allEventsForThisKey.findIndex(
+      (event) => event.block.height > block.height
     )
 
     const currentIndex =
-      // If the next item index is undefined or is the first item, there is no
-      // current item.
+      // If the next event index is undefined or is the first event, there is no
+      // current event.
       nextIndex === undefined || nextIndex === 0
         ? undefined
-        : // If the next item index is greater than 0, the current item is the
-        // most recent item before this one, so subtract one.
+        : // If the next event index is greater than 0, the current event is the
+        // most recent event before this one, so subtract one.
         nextIndex > 0
         ? nextIndex - 1
-        : // If the next item index is -1, meaning no items matched the predicate, and items exist, the current item is the last item.
-        allItemsForThisKey.length > 0
-        ? allItemsForThisKey.length - 1
-        : // Otherwise there are no items before the current block height.
+        : // If the next event index is -1, meaning no events matched the predicate, and events exist, the current event is the last event.
+        allEventsForThisKey.length > 0
+        ? allEventsForThisKey.length - 1
+        : // Otherwise there are no events before the current block height.
           undefined
 
     if (currentIndex !== undefined) {
-      initialCacheMap[key] = [allItemsForThisKey[currentIndex]]
+      cache[key] = [allEventsForThisKey[currentIndex]]
 
-      // Remove all items that are before the current item we found, since
+      // Remove all events that are before the current event we found, since
       // future computations will only go up. Keep the one we found in case it's
       // used in the future.
-      allItems[key] = allItemsForThisKey.slice(currentIndex)
+      allEvents[key] = allEventsForThisKey.slice(currentIndex)
     } else {
-      initialCacheMap[key] = null
+      cache[key] = null
     }
   }
-  for (const prefixKey of mapPrefixes) {
-    const contractKeyItemEntries = Object.entries(allItems).filter(([key]) =>
+
+  for (const { key: prefixKey } of prefixes) {
+    const contractKeyEventEntries = Object.entries(allEvents).filter(([key]) =>
       key.startsWith(prefixKey)
     )
 
-    // Sorted ascending by block height, so we can find the latest item for each
-    // unique key in the map before or at the current block height by finding
-    // the index of the first item for each that is after the current block
-    // height and subtracting 1.
-    const currentIndexes = contractKeyItemEntries.map(([, items]) => {
-      if (!items) {
+    // Sorted ascending by block height, so we can find the latest event for
+    // each unique key before or at the current block height by finding the
+    // index of the first event for each that is after the current block height
+    // and subtracting 1.
+    const currentIndexes = contractKeyEventEntries.map(([, events]) => {
+      if (!events) {
         return undefined
       }
 
-      const nextIndex = items.findIndex(
-        (item) => BigInt(item.blockHeight) > block.height
+      const nextIndex = events.findIndex(
+        (event) => event.block.height > block.height
       )
 
-      // If the next item index is undefined or is the first item, there is no
-      // current item.
+      // If the next event index is undefined or is the first event, there is no
+      // current event.
       return nextIndex === undefined || nextIndex === 0
         ? undefined
-        : // If the next item index is greater than 0, the current item is the most recent item before this one, so subtract one.
+        : // If the next event index is greater than 0, the current event is the most recent event before this one, so subtract one.
         nextIndex > 0
         ? nextIndex - 1
-        : // If the next item index is -1, meaning no items matched the predicate, and there is only one item, the current item is the only item.
-        items.length === 1
+        : // If the next event index is -1, meaning no events matched the predicate, and there is only one event, the current event is the only event.
+        events.length === 1
         ? 0
-        : // Otherwise there are no items before the current block height.
+        : // Otherwise there are no events before the current block height.
           undefined
     })
 
-    initialCacheMap[prefixKey] = currentIndexes
-      .map((currentItemIndex, entryIndex) =>
-        currentItemIndex !== undefined
-          ? contractKeyItemEntries[entryIndex][1]![currentItemIndex]
+    cache[prefixKey] = currentIndexes
+      .map((currentEventIndex, entryIndex) =>
+        currentEventIndex !== undefined
+          ? contractKeyEventEntries[entryIndex][1]![currentEventIndex]
           : null
       )
-      .filter((item): item is T => item !== null)
+      .filter((event): event is DependendableEventModel => event !== null)
 
-    // Remove all items that are before the current item we found for each key,
-    // since future computations will only go up. Keep the one we found in case
-    // it's used in the future.
-    currentIndexes.forEach((currentItemIndex, index) => {
-      if (currentItemIndex !== undefined) {
-        allItems[contractKeyItemEntries[index][0]] =
-          allItems[contractKeyItemEntries[index][0]]?.slice(currentItemIndex)
+    // Remove all events that are before the current event we found for each
+    // key, since future computations will only go up. Keep the one we found in
+    // case it's used in the future.
+    currentIndexes.forEach((currentEventIndex, index) => {
+      if (currentEventIndex !== undefined) {
+        allEvents[contractKeyEventEntries[index][0]] =
+          allEvents[contractKeyEventEntries[index][0]]?.slice(currentEventIndex)
       }
     })
   }
 }
 
-// Find the next item that has the potential to change the result for the given
+// Find the next event that has the potential to change the result for the given
 // keys. If it remains undefined, then we know that the result will not change
 // because no inputs changed.
-export const getNextPotentialBlock = <T extends Event | Transformation>(
-  { nonMapKeys, mapPrefixes }: SplitDependentKeys,
-  allItems: Record<string, T[] | undefined>,
+export const getNextPotentialBlock = (
+  dependentKeys: ComputationDependentKey[],
+  allEvents: Record<string, DependendableEventModel[] | undefined>,
   currentBlock: Block
 ): Block | undefined => {
   let nextPotentialBlock: Block | undefined
 
-  for (const key of nonMapKeys) {
-    // Sorted ascending by block height, so we can find the next item for a
+  const nonPrefixes = dependentKeys.filter(({ prefix }) => !prefix)
+  const prefixes = dependentKeys.filter(({ prefix }) => prefix)
+
+  for (const { key } of nonPrefixes) {
+    // Sorted ascending by block height, so we can find the next event for a
     // given key that is after the current block height by selecting the first
     // one.
-    const matchingItem = allItems[key]?.find(
-      (item) => BigInt(item.blockHeight) > currentBlock.height
+    const matchingEvent = allEvents[key]?.find(
+      (event) => event.block.height > currentBlock.height
     )
 
     if (
-      matchingItem &&
+      matchingEvent &&
       (nextPotentialBlock === undefined ||
-        BigInt(matchingItem.blockHeight) < nextPotentialBlock.height)
+        matchingEvent.block.height < nextPotentialBlock.height)
     ) {
-      nextPotentialBlock = matchingItem.block
+      nextPotentialBlock = matchingEvent.block
     }
   }
 
-  for (const prefixKey of mapPrefixes) {
-    // Sorted ascending by block height, so we can find the next item for for
-    // each unique key in the map after the current block height by finding the
-    // first one.
-    const matchingItems = Object.entries(allItems)
+  for (const { key: prefixKey } of prefixes) {
+    // Sorted ascending by block height, so we can find the next event for for
+    // each unique key after the current block height by finding the first one.
+    const matchingEvents = Object.entries(allEvents)
       .filter(([key]) => key.startsWith(prefixKey))
-      .map(([, items]) =>
-        items?.find((item) => BigInt(item.blockHeight) > currentBlock.height)
+      .map(([, events]) =>
+        events?.find((event) => event.block.height > currentBlock.height)
       )
-      .filter((item): item is T => item !== undefined)
+      .filter((event): event is DependendableEventModel => event !== undefined)
 
-    const nextItem = matchingItems.sort((a, b) =>
-      Number(BigInt(a.blockHeight) - BigInt(b.blockHeight))
+    const nextEvent = matchingEvents.sort((a, b) =>
+      Number(a.block.height - b.block.height)
     )[0]
     if (
-      nextItem &&
+      nextEvent &&
       (nextPotentialBlock === undefined ||
-        BigInt(nextItem.blockHeight) < nextPotentialBlock.height)
+        nextEvent.block.height < nextPotentialBlock.height)
     ) {
-      nextPotentialBlock = nextItem.block
+      nextPotentialBlock = nextEvent.block
     }
   }
 

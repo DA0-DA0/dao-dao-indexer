@@ -2,6 +2,8 @@ node_modules/
 dist/
 /scripts/
 
+fake/
+
 config.json
 config.*.json
 *.crt

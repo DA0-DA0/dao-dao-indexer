@@ -1,4 +1,5 @@
 export * from './models'
 export * from './connection'
 export * from './setup'
+export * from './types'
 export * from './utils'
