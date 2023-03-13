@@ -350,7 +350,7 @@ export const getEnv = ({
         ? dbKeyForKeys(key)
         : !key.map
         ? dbKeyForKeys(...key.keys)
-        : // If it's a map, we need to filter by the prefix, so add an empty key at the end so append a comma. Also add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
+        : // If it's a map, we need to filter by the prefix, so add an empty key at the end and append a comma. Also add an empty key at the end so the name(s) are treated as a prefix. Prefixes have their lengths encoded in the key and are treated differently from the final key in the tuple.
           dbKeyForKeys(...key.keys, '') + ','
     )
     keys.forEach((key) =>
