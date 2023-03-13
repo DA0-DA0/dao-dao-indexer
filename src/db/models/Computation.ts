@@ -143,7 +143,7 @@ export class Computation extends Model {
 
     const firstNewerEvents =
       this.dependencies.length === 0
-        ? null
+        ? []
         : (
             await Promise.all(
               getDependableEventModels().map(async (DependableEventModel) => {
@@ -172,11 +172,12 @@ export class Computation extends Model {
             )
           ).filter((model): model is DependendableEventModel => model !== null)
 
-    const firstNewerEvent = firstNewerEvents
-      ? firstNewerEvents.reduce((newest, model) =>
-          newest.block.height < model.block.height ? newest : model
-        )
-      : null
+    const firstNewerEvent =
+      firstNewerEvents.length > 0
+        ? firstNewerEvents.reduce((newest, model) =>
+            newest.block.height < model.block.height ? newest : model
+          )
+        : null
 
     // If no new events for any of the dependent keys found, this computation is
     // still valid, so update validity.
