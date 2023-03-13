@@ -149,6 +149,7 @@ const main = async () => {
   ])
 }
 
+let lastBlockHeight = 0
 // Update db state. Returns latest block height for log.
 const updateState = async (): Promise<State> => {
   const { statusEndpoint } = loadConfig()
@@ -177,6 +178,11 @@ const updateState = async (): Promise<State> => {
       returning: true,
     }
   )
+
+  // If block height changed, log it.
+  if (lastBlockHeight && lastBlockHeight !== latestBlockHeight) {
+    console.log(`Updated block height: ${latestBlockHeight.toLocaleString()}`)
+  }
 
   return state
 }
