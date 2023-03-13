@@ -229,8 +229,15 @@ export const computeRange = async ({
     if (newDependentKeys.length > 0) {
       const futureEvents = (
         await Promise.all(
-          getDependableEventModels().map((DependableEventModel) =>
-            (
+          getDependableEventModels().map(async (DependableEventModel) => {
+            const namespacedDependentKeys = newDependentKeys.filter(({ key }) =>
+              key.startsWith(DependableEventModel.dependentKeyNamespace)
+            )
+            if (namespacedDependentKeys.length === 0) {
+              return []
+            }
+
+            return await (
               DependableEventModel as unknown as ModelStatic<DependendableEventModel>
             ).findAll({
               where: {
@@ -240,14 +247,12 @@ export const computeRange = async ({
                   [Op.lte]: blockEnd.height,
                 },
                 ...DependableEventModel.getWhereClauseForDependentKeys(
-                  newDependentKeys.filter(({ key }) =>
-                    key.startsWith(DependableEventModel.dependentKeyNamespace)
-                  )
+                  namespacedDependentKeys
                 ),
               },
               order: [[DependableEventModel.blockHeightKey, 'ASC']],
             })
-          )
+          })
         )
       ).flat()
 
@@ -299,10 +304,19 @@ export const computeRange = async ({
   return results
 }
 
+// This function takes the given dependent keys and all events that have been
+// loaded from those dependent keys, and then adds to the cache the latest event
+// for each dependent key that is before or at the given block. For dependent
+// key prefixes, it finds all unique keys that match the prefix and adds the
+// latest event for each of those keys to the cache. This populates the cache
+// with the events that will be relevant at the given block based on the loaded
+// events. It is used when computing ranges so that we can prefetch the
+// appropriate events for future computations that we already know will be
+// needed.
 const addToCache = (
   dependentKeys: ComputationDependentKey[],
   allEvents: Record<string, DependendableEventModel[] | undefined>,
-  initialCacheMap: CacheMap<DependendableEventModel>,
+  cache: CacheMap<DependendableEventModel>,
   block: Block
 ) => {
   const nonPrefixes = dependentKeys.filter(({ prefix }) => !prefix)
@@ -313,7 +327,7 @@ const addToCache = (
     // No events found for this key, cache null to indicate it doesn't exist and
     // prevent querying for it.
     if (!allEventsForThisKey) {
-      initialCacheMap[key] = null
+      cache[key] = null
       continue
     }
 
@@ -341,16 +355,17 @@ const addToCache = (
           undefined
 
     if (currentIndex !== undefined) {
-      initialCacheMap[key] = [allEventsForThisKey[currentIndex]]
+      cache[key] = [allEventsForThisKey[currentIndex]]
 
       // Remove all events that are before the current event we found, since
       // future computations will only go up. Keep the one we found in case it's
       // used in the future.
       allEvents[key] = allEventsForThisKey.slice(currentIndex)
     } else {
-      initialCacheMap[key] = null
+      cache[key] = null
     }
   }
+
   for (const { key: prefixKey } of prefixes) {
     const contractKeyEventEntries = Object.entries(allEvents).filter(([key]) =>
       key.startsWith(prefixKey)
@@ -383,7 +398,7 @@ const addToCache = (
           undefined
     })
 
-    initialCacheMap[prefixKey] = currentIndexes
+    cache[prefixKey] = currentIndexes
       .map((currentEventIndex, entryIndex) =>
         currentEventIndex !== undefined
           ? contractKeyEventEntries[entryIndex][1]![currentEventIndex]
