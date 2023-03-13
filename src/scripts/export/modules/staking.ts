@@ -164,7 +164,11 @@ const exporter = async (
       await Validator.bulkCreate(
         uniqueValidators.map((operatorAddress) => ({
           operatorAddress,
-        }))
+        })),
+        {
+          // If already exists, ignore.
+          ignoreDuplicates: true,
+        }
       )
 
       // Break on success.
