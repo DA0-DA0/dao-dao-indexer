@@ -1,7 +1,7 @@
 {
   "sources": {
     "wasm": "/Users/user/.juno/indexer/wasm.out",
-    "staking": "/Users/user/.juno/indexer/staking.out",
+    "staking": "/Users/user/.juno/indexer/staking.out"
   },
   "statusEndpoint": "http://localhost:26657/status",
   "db": {
