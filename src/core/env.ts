@@ -360,7 +360,7 @@ export const getEnv = ({
           contractAddress,
           key
         ),
-        prefix: false,
+        prefix: key.endsWith(','),
       })
     )
 
