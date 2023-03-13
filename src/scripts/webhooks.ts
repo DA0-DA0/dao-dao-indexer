@@ -42,7 +42,9 @@ const main = async () => {
     type: DbType.Accounts,
   })
 
-  console.log(`\n[${new Date().toISOString()}] Firing webhooks...`)
+  console.log(
+    `\n[webhooks] Firing account webhooks at ${new Date().toISOString()}...`
+  )
 
   // Statistics.
   let succeeded = 0
@@ -59,28 +61,33 @@ const main = async () => {
       limit: batch,
     })
 
+    let succeeded = 0
     if (pending.length > 0) {
       const requests = await Promise.allSettled(
         pending.map((pendingWebhook) => pendingWebhook.fire())
       )
 
-      const _succeeded = requests.filter(
+      succeeded = requests.filter(
         (request) => request.status === 'fulfilled'
       ).length
-      succeeded += _succeeded
-
-      const _failed = requests.filter(
+      const failed = requests.filter(
         (request) => request.status === 'rejected'
       ).length
-      failed += _failed
 
       console.log(
-        `[webhooks] S: ${_succeeded} F: ${_failed} (total: ${succeeded.toLocaleString()} succeeded, ${failed.toLocaleString()} failed).`
+        `[webhooks] ${[
+          succeeded > 0 && `${succeeded.toLocaleString()} succeeded`,
+          failed > 0 && `${failed.toLocaleString()} failed`,
+        ]
+          .filter(Boolean)
+          .join(', ')}`
       )
     }
 
-    // Wait one second between webhook checks so we're not spamming the DB.
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // If no webhooks or all failed, wait between loops to prevent spamming.
+    if (succeeded === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
   }
 
   process.exit(0)
