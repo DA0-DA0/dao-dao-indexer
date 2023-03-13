@@ -20,8 +20,9 @@ program.option(
   '-c, --config <path>',
   'path to config file, falling back to config.json'
 )
+program.requiredOption('-e, --exported <block>')
 program.parse()
-const { config: _config } = program.opts()
+const { config: _config, exported } = program.opts()
 
 // Load config with config option.
 loadConfig(_config)
@@ -40,13 +41,10 @@ export const main = async () => {
   await WasmEventTransformation.sync()
 
   // Migrate State.
-  const lastBlockHeightExported = (await State.getSingleton())?.get(
-    'lastBlockHeightExported'
-  )
   await State.sync({ alter: true })
   await State.update(
     {
-      lastWasmBlockHeightExported: lastBlockHeightExported,
+      lastWasmBlockHeightExported: exported,
     },
     {
       where: {

@@ -14,6 +14,7 @@
     "build:watch": "concurrently --raw \"tsc -w\" \"tsc-alias -w\"",
     "db:setup": "node dist/scripts/db/setup.js",
     "db:alter": "node dist/scripts/db/alter.js",
+    "db:migrate": "node dist/scripts/db/migrate.js",
     "clear-cache": "node dist/scripts/clearCache.js",
     "export": "node dist/scripts/export/index.js",
     "export:dev": "docker-compose -f compose.dev.yml up --exit-code-from export",
