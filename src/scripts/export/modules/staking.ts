@@ -41,6 +41,10 @@ export const staking: ModuleExporterMaker = ({
     // set.
     BigInt(state.lastStakingBlockHeightExported ?? '0') + 1n
 
+  console.log(
+    `[staking] Catching up to initial block ${initialBlock.toLocaleString()}...`
+  )
+
   let lastBlockHeightSeen = 0
   let catchingUp = true
 

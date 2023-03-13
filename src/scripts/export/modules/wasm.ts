@@ -45,6 +45,10 @@ export const wasm: ModuleExporterMaker = ({
     // set.
     BigInt(state.lastWasmBlockHeightExported ?? '0') + 1n
 
+  console.log(
+    `[wasm] Catching up to initial block ${initialBlock.toLocaleString()}...`
+  )
+
   let lastBlockHeightSeen = 0
   let catchingUp = true
 
@@ -139,7 +143,7 @@ export const wasm: ModuleExporterMaker = ({
       // Capture error so we can investigate.
       Sentry.captureException(err, {
         tags: {
-          module: 'staking',
+          module: 'wasm',
         },
         extra: {
           line,
