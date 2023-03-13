@@ -3,6 +3,8 @@
 // of uint8 values that represents a byte array. See `Event` model for more
 // information.
 
+import { DependentKeyNamespace } from '@/db'
+
 import { Block, FormulaType, SerializedBlock } from '../types'
 
 // Convert base64 string to comma-separated list of bytes. See explanation in
@@ -83,7 +85,7 @@ export const dbKeyToKeys = (
 }
 
 export const getDependentKey = (
-  namespace: string,
+  namespace: DependentKeyNamespace,
   // If undefined, wildcard used for all addresses.
   address: string | undefined,
   ...keys: string[]
