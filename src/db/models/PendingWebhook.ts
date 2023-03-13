@@ -29,10 +29,10 @@ export class PendingWebhook extends Model {
   @AllowNull(false)
   @ForeignKey(() => WasmEvent)
   @Column
-  eventId!: number
+  wasmEventId!: number
 
   @BelongsTo(() => WasmEvent)
-  event!: WasmEvent
+  wasmEvent!: WasmEvent
 
   @AllowNull(false)
   @Column(DataType.JSONB)
@@ -104,7 +104,7 @@ export class PendingWebhook extends Model {
   // Events must be loaded with `Contract` included.
   static async queueWebhooks(
     state: State,
-    events: WasmEvent[]
+    wasmEvents: WasmEvent[]
   ): Promise<number> {
     const webhooks = getProcessedWebhooks(loadConfig(), state)
     if (webhooks.length === 0) {
@@ -113,22 +113,22 @@ export class PendingWebhook extends Model {
 
     const pendingWebhooksToCreate = (
       await Promise.all(
-        events.flatMap((event) => {
+        wasmEvents.flatMap((wasmEvent) => {
           const webhooksForEvent = webhooks.filter((webhook) =>
-            webhook.filter(event)
+            webhook.filter(wasmEvent)
           )
 
           return webhooksForEvent.map(async (webhook) => {
             const env: ContractEnv = {
               ...getEnv({
-                block: event.block,
+                block: wasmEvent.block,
                 cache: {
                   contracts: {
-                    [event.contract.address]: event.contract,
+                    [wasmEvent.contract.address]: wasmEvent.contract,
                   },
                 },
               }),
-              contractAddress: event.contractAddress,
+              contractAddress: wasmEvent.contractAddress,
             }
 
             // Wrap in try/catch in case a webhook errors. Don't want to prevent
@@ -136,19 +136,19 @@ export class PendingWebhook extends Model {
             let value
             try {
               value = await webhook.getValue(
-                event,
+                wasmEvent,
                 async () => {
                   // Find most recent event for this contract and key before
                   // this block.
 
                   // Check events in case the most recent event is in the
                   // current group of events.
-                  const previousEvent = events
+                  const previousEvent = wasmEvents
                     .filter(
                       (e) =>
-                        e.contractAddress === event.contractAddress &&
+                        e.contractAddress === wasmEvent.contractAddress &&
                         e.key === e.key &&
-                        e.blockHeight < event.blockHeight
+                        e.blockHeight < wasmEvent.blockHeight
                     )
                     .slice(-1)[0]
 
@@ -157,7 +157,7 @@ export class PendingWebhook extends Model {
                   }
 
                   // Fallback to database.
-                  const lastEvent = await event.getPreviousEvent()
+                  const lastEvent = await wasmEvent.getPreviousEvent()
                   return !lastEvent || lastEvent.delete
                     ? null
                     : lastEvent.valueJson
@@ -167,7 +167,7 @@ export class PendingWebhook extends Model {
             } catch (error) {
               // TODO: Store somewhere.
               console.error(
-                `Error getting webhook value for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
+                `Error getting webhook value for event ${wasmEvent.blockHeight}/${wasmEvent.contractAddress}/${wasmEvent.key}: ${error}`
               )
             }
 
@@ -177,12 +177,12 @@ export class PendingWebhook extends Model {
             try {
               endpoint =
                 typeof webhook.endpoint === 'function'
-                  ? await webhook.endpoint(event, env)
+                  ? await webhook.endpoint(wasmEvent, env)
                   : webhook.endpoint
             } catch (error) {
               // TODO: Store somewhere.
               console.error(
-                `Error getting webhook endpoint for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
+                `Error getting webhook endpoint for event ${wasmEvent.blockHeight}/${wasmEvent.contractAddress}/${wasmEvent.key}: ${error}`
               )
             }
 
@@ -194,7 +194,7 @@ export class PendingWebhook extends Model {
             }
 
             return {
-              eventId: event.id,
+              wasmEventId: wasmEvent.id,
               endpoint,
               value,
               failures: 0,
@@ -206,7 +206,7 @@ export class PendingWebhook extends Model {
       (
         w
       ): w is {
-        eventId: number
+        wasmEventId: number
         endpoint: WebhookEndpoint
         value: any
         failures: number
