@@ -1,8 +1,9 @@
 import { ContractFormula, dbKeyToKeys } from '@/core'
 
-type Validator = {
+type ValidatorStake = {
   validator: string
   timeMs: number
+  // Staked + unstaking
   amount: string
 }
 
@@ -11,7 +12,8 @@ export const info: ContractFormula = {
     await get(contractAddress, 'vesting'),
 }
 
-export const validators: ContractFormula<Validator[]> = {
+// The amount staked and unstaking for each validator over time.
+export const validatorStakes: ContractFormula<ValidatorStake[]> = {
   compute: async ({ contractAddress, getMap }) => {
     const validatorsMap =
       (await getMap(contractAddress, 'validator', {
@@ -19,7 +21,7 @@ export const validators: ContractFormula<Validator[]> = {
       })) ?? {}
 
     const validators = Object.entries(validatorsMap)
-      .map(([key, amount]): Validator => {
+      .map(([key, amount]): ValidatorStake => {
         const [validator, epoch] = dbKeyToKeys(key, [false, true]) as [
           string,
           number
@@ -31,8 +33,8 @@ export const validators: ContractFormula<Validator[]> = {
           amount,
         }
       })
-      // Sort ascending by time.
-      .sort((a, b) => a.timeMs - b.timeMs)
+      // Sort descending by time.
+      .sort((a, b) => b.timeMs - a.timeMs)
 
     return validators
   },
