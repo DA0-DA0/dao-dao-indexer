@@ -10,7 +10,7 @@ import {
 
 import { Block, ComputationDependentKey, getDependentKey } from '@/core'
 
-import { DependendableEventModel } from '../types'
+import { DependendableEventModel, DependentKeyNamespace } from '../types'
 import { Validator } from './Validator'
 
 @Table({
@@ -86,7 +86,7 @@ export class StakingSlashEvent extends DependendableEventModel {
     )
   }
 
-  static dependentKeyNamespace = 'staking_slash'
+  static dependentKeyNamespace = DependentKeyNamespace.StakingSlash
   static blockHeightKey: string = 'registeredBlockHeight'
 
   // Returns a where clause that will match all events that are described by the

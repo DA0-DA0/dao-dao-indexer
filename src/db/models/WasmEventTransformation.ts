@@ -18,7 +18,7 @@ import {
 } from '@/core'
 import { getProcessedTransformers } from '@/data/transformers'
 
-import { DependendableEventModel } from '../types'
+import { DependendableEventModel, DependentKeyNamespace } from '../types'
 import { Contract } from './Contract'
 
 @Table({
@@ -90,7 +90,7 @@ export class WasmEventTransformation extends DependendableEventModel {
     )
   }
 
-  static dependentKeyNamespace = 'wasm_t'
+  static dependentKeyNamespace = DependentKeyNamespace.WasmEventTransformation
   static blockHeightKey: string = 'blockHeight'
 
   // Returns a where clause that will match all events that are described by the

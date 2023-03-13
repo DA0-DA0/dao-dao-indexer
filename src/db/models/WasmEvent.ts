@@ -15,7 +15,7 @@ import {
   getDependentKey,
 } from '@/core'
 
-import { DependendableEventModel } from '../types'
+import { DependendableEventModel, DependentKeyNamespace } from '../types'
 import { Contract } from './Contract'
 
 @Table({
@@ -146,7 +146,7 @@ export class WasmEvent extends DependendableEventModel {
     return this.previousEvent
   }
 
-  static dependentKeyNamespace: string = 'wasm_e'
+  static dependentKeyNamespace = DependentKeyNamespace.WasmEvent
   static blockHeightKey: string = 'blockHeight'
 
   // Returns a where clause that will match all events that are described by the
