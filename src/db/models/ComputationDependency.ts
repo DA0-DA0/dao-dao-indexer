@@ -3,6 +3,7 @@ import {
   AllowNull,
   BelongsTo,
   Column,
+  DataType,
   Default,
   ForeignKey,
   Model,
@@ -44,7 +45,7 @@ export class ComputationDependency extends Model {
   computation!: Computation
 
   @AllowNull(false)
-  @Column
+  @Column(DataType.TEXT)
   key!: string
 
   // If true, the computation depends on all keys that start with the given key.
