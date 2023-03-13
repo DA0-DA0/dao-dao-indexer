@@ -11,7 +11,6 @@ import {
 } from '@/db'
 
 let shuttingDown = false
-let logInterval: NodeJS.Timeout
 
 // Parse arguments.
 const program = new Command()
@@ -108,6 +107,5 @@ main()
 
 process.on('SIGINT', () => {
   shuttingDown = true
-  clearInterval(logInterval)
   console.log('\nShutting down after current batch finishes...')
 })
