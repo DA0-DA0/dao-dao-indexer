@@ -20,6 +20,7 @@ import { updateIndexesForContracts } from '@/ms'
 import { ModuleExporter, ModuleExporterMaker } from '../types'
 
 type IndexerWasmEvent = {
+  type: 'state'
   blockHeight: number
   blockTimeUnixMs: number
   contractAddress: string
@@ -128,6 +129,7 @@ export const wasm: ModuleExporterMaker = ({
       // If event not of expected structure, skip.
       if (
         !objectMatchesStructure(event, {
+          type: {},
           blockHeight: {},
           blockTimeUnixMs: {},
           contractAddress: {},
@@ -151,6 +153,11 @@ export const wasm: ModuleExporterMaker = ({
       })
 
       // If event not valid JSON, skip.
+      return
+    }
+
+    // Only process state events for now.
+    if (event.type !== 'state') {
       return
     }
 
