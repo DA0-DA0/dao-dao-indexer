@@ -20,19 +20,19 @@ import {
 import { getProcessedWebhooks } from '@/data/webhooks'
 
 import { State } from './State'
-import { WasmEvent } from './WasmEvent'
+import { WasmStateEvent } from './WasmStateEvent'
 
 @Table({
   timestamps: true,
 })
 export class PendingWebhook extends Model {
   @AllowNull(false)
-  @ForeignKey(() => WasmEvent)
+  @ForeignKey(() => WasmStateEvent)
   @Column
   wasmEventId!: number
 
-  @BelongsTo(() => WasmEvent)
-  wasmEvent!: WasmEvent
+  @BelongsTo(() => WasmStateEvent)
+  wasmEvent!: WasmStateEvent
 
   @AllowNull(false)
   @Column(DataType.JSONB)
@@ -104,7 +104,7 @@ export class PendingWebhook extends Model {
   // Events must be loaded with `Contract` included.
   static async queueWebhooks(
     state: State,
-    wasmEvents: WasmEvent[]
+    wasmEvents: WasmStateEvent[]
   ): Promise<number> {
     const webhooks = getProcessedWebhooks(loadConfig(), state)
     if (webhooks.length === 0) {

@@ -3,8 +3,8 @@ import { Op, Sequelize } from 'sequelize'
 import {
   Contract,
   StakingSlashEvent,
-  WasmEvent,
-  WasmEventTransformation,
+  WasmStateEvent,
+  WasmStateEventTransformation,
 } from '@/db'
 
 import { loadConfig } from './config'
@@ -53,7 +53,7 @@ export const getEnv = ({
   const get: FormulaGetter = async (contractAddress, ...keys) => {
     const key = dbKeyForKeys(...keys)
     const dependentKey = getDependentKey(
-      WasmEvent.dependentKeyNamespace,
+      WasmStateEvent.dependentKeyNamespace,
       contractAddress,
       key
     )
@@ -69,7 +69,7 @@ export const getEnv = ({
       // either it exists or it doesn't (null).
       cachedEvent !== undefined
         ? cachedEvent?.[0]
-        : await WasmEvent.findOne({
+        : await WasmStateEvent.findOne({
             where: {
               contractAddress,
               key,
@@ -80,7 +80,7 @@ export const getEnv = ({
 
     // Type-check. Should never happen assuming dependent key namespaces are
     // unique across different event types.
-    if (event && !(event instanceof WasmEvent)) {
+    if (event && !(event instanceof WasmStateEvent)) {
       throw new Error('Incorrect event type.')
     }
 
@@ -118,7 +118,7 @@ export const getEnv = ({
           dbKeyForKeys(...name, '')
         : dbKeyForKeys(name, '')) + ','
     const dependentKey = getDependentKey(
-      WasmEvent.dependentKeyNamespace,
+      WasmStateEvent.dependentKeyNamespace,
       contractAddress,
       keyPrefix
     )
@@ -134,8 +134,8 @@ export const getEnv = ({
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
       cachedEvents !== undefined
-        ? ((cachedEvents ?? []) as WasmEvent[])
-        : await WasmEvent.findAll({
+        ? ((cachedEvents ?? []) as WasmStateEvent[])
+        : await WasmStateEvent.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -165,7 +165,7 @@ export const getEnv = ({
 
     // Type-check. Should never happen assuming dependent key namespaces are
     // unique across different event types.
-    if (events.some((event) => !(event instanceof WasmEvent))) {
+    if (events.some((event) => !(event instanceof WasmStateEvent))) {
       throw new Error('Incorrect event type.')
     }
 
@@ -210,7 +210,7 @@ export const getEnv = ({
   ) => {
     const key = dbKeyForKeys(...keys)
     const dependentKey = getDependentKey(
-      WasmEvent.dependentKeyNamespace,
+      WasmStateEvent.dependentKeyNamespace,
       contractAddress,
       key
     )
@@ -228,7 +228,7 @@ export const getEnv = ({
       // either it exists or it doesn't (null).
       cachedEvent !== undefined
         ? cachedEvent?.[0]
-        : await WasmEvent.findOne({
+        : await WasmStateEvent.findOne({
             where: {
               contractAddress,
               key,
@@ -239,7 +239,7 @@ export const getEnv = ({
 
     // Type-check. Should never happen assuming dependent key namespaces are
     // unique across different event types.
-    if (event && !(event instanceof WasmEvent)) {
+    if (event && !(event instanceof WasmStateEvent)) {
       throw new Error('Incorrect event type.')
     }
 
@@ -269,7 +269,7 @@ export const getEnv = ({
     const key = dbKeyForKeys(...keys)
     dependentKeys?.push({
       key: getDependentKey(
-        WasmEvent.dependentKeyNamespace,
+        WasmStateEvent.dependentKeyNamespace,
         contractAddress,
         key
       ),
@@ -280,7 +280,7 @@ export const getEnv = ({
     // fetches the first event, so we can't use the cache.
 
     // Get first set event for this key.
-    const event = await WasmEvent.findOne({
+    const event = await WasmStateEvent.findOne({
       where: {
         contractAddress,
         key,
@@ -309,7 +309,7 @@ export const getEnv = ({
       const key = dbKeyForKeys(...keys)
       dependentKeys?.push({
         key: getDependentKey(
-          WasmEvent.dependentKeyNamespace,
+          WasmStateEvent.dependentKeyNamespace,
           contractAddress,
           key
         ),
@@ -320,7 +320,7 @@ export const getEnv = ({
       // fetches the first event, so we can't use the cache.
 
       // Get first set event for this key.
-      const event = await WasmEvent.findOne({
+      const event = await WasmStateEvent.findOne({
         where: {
           contractAddress,
           key,
@@ -356,7 +356,7 @@ export const getEnv = ({
     keys.forEach((key) =>
       dependentKeys?.push({
         key: getDependentKey(
-          WasmEvent.dependentKeyNamespace,
+          WasmStateEvent.dependentKeyNamespace,
           contractAddress,
           key
         ),
@@ -389,7 +389,7 @@ export const getEnv = ({
           }
         : nonMapKeyFilter || mapKeyFilter || {}
 
-    const events = await WasmEvent.findAll({
+    const events = await WasmStateEvent.findAll({
       attributes: [
         // DISTINCT ON is not directly supported by Sequelize, so we need to
         // cast to unknown and back to string to insert this at the beginning of
@@ -421,7 +421,7 @@ export const getEnv = ({
       // Find matching event for key.
       const event = events.find((event) => event.key === key)
       const dependentKey = getDependentKey(
-        WasmEvent.dependentKeyNamespace,
+        WasmStateEvent.dependentKeyNamespace,
         contractAddress,
         key
       )
@@ -435,7 +435,7 @@ export const getEnv = ({
         event.key.startsWith(keyPrefix)
       )
       const dependentKey = getDependentKey(
-        WasmEvent.dependentKeyNamespace,
+        WasmStateEvent.dependentKeyNamespace,
         contractAddress,
         keyPrefix
       )
@@ -447,7 +447,7 @@ export const getEnv = ({
       // Cache events separately.
       eventsForPrefix.forEach((event) => {
         const dependentKey = getDependentKey(
-          WasmEvent.dependentKeyNamespace,
+          WasmStateEvent.dependentKeyNamespace,
           contractAddress,
           event.key
         )
@@ -464,7 +464,7 @@ export const getEnv = ({
     whereCodeId
   ) => {
     const dependentKey = getDependentKey(
-      WasmEventTransformation.dependentKeyNamespace,
+      WasmStateEventTransformation.dependentKeyNamespace,
       contractAddress,
       nameLike
     )
@@ -479,8 +479,8 @@ export const getEnv = ({
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
       cachedTransformations !== undefined
-        ? ((cachedTransformations ?? []) as WasmEventTransformation[])
-        : await WasmEventTransformation.findAll({
+        ? ((cachedTransformations ?? []) as WasmStateEventTransformation[])
+        : await WasmStateEventTransformation.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -532,7 +532,8 @@ export const getEnv = ({
     // unique across different event types.
     if (
       transformations.some(
-        (transformation) => !(transformation instanceof WasmEventTransformation)
+        (transformation) =>
+          !(transformation instanceof WasmStateEventTransformation)
       )
     ) {
       throw new Error('Incorrect event type.')
@@ -571,7 +572,7 @@ export const getEnv = ({
   ) => {
     const mapNamePrefix = namePrefix + ':'
     const dependentKey = getDependentKey(
-      WasmEventTransformation.dependentKeyNamespace,
+      WasmStateEventTransformation.dependentKeyNamespace,
       contractAddress,
       mapNamePrefix
     )
@@ -586,8 +587,8 @@ export const getEnv = ({
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
       cachedTransformations !== undefined
-        ? ((cachedTransformations ?? []) as WasmEventTransformation[])
-        : await WasmEventTransformation.findAll({
+        ? ((cachedTransformations ?? []) as WasmStateEventTransformation[])
+        : await WasmStateEventTransformation.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -622,7 +623,8 @@ export const getEnv = ({
     // unique across different event types.
     if (
       transformations.some(
-        (transformation) => !(transformation instanceof WasmEventTransformation)
+        (transformation) =>
+          !(transformation instanceof WasmStateEventTransformation)
       )
     ) {
       throw new Error('Incorrect event type.')
@@ -671,7 +673,7 @@ export const getEnv = ({
     names.forEach((key) =>
       dependentKeys?.push({
         key: getDependentKey(
-          WasmEventTransformation.dependentKeyNamespace,
+          WasmStateEventTransformation.dependentKeyNamespace,
           contractAddress,
           key
         ),
@@ -705,7 +707,7 @@ export const getEnv = ({
           }
         : nonMapNameFilter || mapNameFilter || {}
 
-    const transformations = await WasmEventTransformation.findAll({
+    const transformations = await WasmStateEventTransformation.findAll({
       attributes: [
         // DISTINCT ON is not directly supported by Sequelize, so we need to
         // cast to unknown and back to string to insert this at the beginning of
@@ -741,7 +743,7 @@ export const getEnv = ({
         (transformation) => transformation.name === name
       )
       const dependentKey = getDependentKey(
-        WasmEventTransformation.dependentKeyNamespace,
+        WasmStateEventTransformation.dependentKeyNamespace,
         contractAddress,
         name
       )
@@ -758,7 +760,7 @@ export const getEnv = ({
         (transformation) => transformation.name.startsWith(mapNamePrefix)
       )
       const dependentKey = getDependentKey(
-        WasmEventTransformation.dependentKeyNamespace,
+        WasmStateEventTransformation.dependentKeyNamespace,
         contractAddress,
         mapNamePrefix
       )
@@ -770,7 +772,7 @@ export const getEnv = ({
       // Cache transformations separately.
       transformationsForPrefix.forEach((transformation) => {
         const dependentKey = getDependentKey(
-          WasmEventTransformation.dependentKeyNamespace,
+          WasmStateEventTransformation.dependentKeyNamespace,
           contractAddress,
           transformation.name
         )
@@ -789,7 +791,7 @@ export const getEnv = ({
   ) => {
     dependentKeys?.push({
       key: getDependentKey(
-        WasmEventTransformation.dependentKeyNamespace,
+        WasmStateEventTransformation.dependentKeyNamespace,
         contractAddress,
         nameLike
       ),
@@ -800,7 +802,7 @@ export const getEnv = ({
     // this fetches the first transformation, so we can't use the cache.
 
     // Get first transformation for this name.
-    const transformation = await WasmEventTransformation.findOne({
+    const transformation = await WasmStateEventTransformation.findOne({
       where: {
         name: {
           [Op.like]: nameLike,

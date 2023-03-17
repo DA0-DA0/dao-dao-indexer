@@ -1,7 +1,7 @@
 import request from 'supertest'
 
 import { dbKeyForKeys } from '@/core/utils'
-import { Contract, State, WasmEvent } from '@/db'
+import { Contract, State, WasmStateEvent } from '@/db'
 
 import { app } from '../app'
 import { ComputerTestOptions } from './types'
@@ -12,7 +12,7 @@ export const loadCreditsTests = (options: ComputerTestOptions) => {
       await Contract.create({ address: 'valid_contract', codeId: 1 })
 
       const date = new Date()
-      await WasmEvent.bulkCreate([
+      await WasmStateEvent.bulkCreate([
         {
           contractAddress: 'valid_contract',
           blockHeight: 1,

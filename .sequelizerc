@@ -1,0 +1,12 @@
+const path = require('path')
+
+const MIGRATING_DB = process.env.MIGRATING_DB === 'true'
+// If migrating, use the compiled files. If not migrating, we are generating,
+// so use the source files.
+const base = MIGRATING_DB ? 'dist' : 'src'
+
+module.exports = {
+  config: path.resolve('dist', 'db', 'config.js'),
+  'models-path': path.resolve(base, 'db', 'models'),
+  'migrations-path': path.resolve(base, 'db', 'migrations'),
+}

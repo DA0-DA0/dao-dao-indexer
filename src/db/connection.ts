@@ -19,8 +19,9 @@ import {
   StakingSlashEvent,
   State,
   Validator,
-  WasmEvent,
-  WasmEventTransformation,
+  WasmStateEvent,
+  WasmStateEventTransformation,
+  WasmTxEvent,
 } from './models'
 
 const sequelizeInstances: Partial<Record<DbType, Sequelize>> = {}
@@ -42,8 +43,9 @@ const getModelsForType = (type: DbType): SequelizeOptions['models'] =>
         StakingSlashEvent,
         State,
         Validator,
-        WasmEvent,
-        WasmEventTransformation,
+        WasmStateEvent,
+        WasmStateEventTransformation,
+        WasmTxEvent,
       ]
     : type === DbType.Accounts
     ? [

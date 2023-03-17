@@ -8,8 +8,9 @@ import { Block, ComputationDependentKey } from '@/core/types'
 // dependent key. ALSO DON'T FORGET TO ADD YOUR MODEL TO THE
 // `getDependableEventModels` FUNCTION IN `src/db/utils.ts`.
 export enum DependentKeyNamespace {
-  WasmEvent = 'wasm_event',
-  WasmEventTransformation = 'wasm_event_transformation',
+  WasmStateEvent = 'wasm_state',
+  WasmStateEventTransformation = 'wasm_state_transformation',
+  WasmTxEvent = 'wasm_tx',
   StakingSlash = 'staking_slash',
 }
 

@@ -1,7 +1,7 @@
 import request from 'supertest'
 
 import { FormulaType, dbKeyForKeys } from '@/core'
-import { Computation, State, WasmEvent } from '@/db'
+import { Computation, State, WasmStateEvent } from '@/db'
 
 import { app } from '../../app'
 import { ComputerTestOptions } from '../types'
@@ -10,7 +10,7 @@ export const loadWasmTests = (options: ComputerTestOptions) => {
   describe('wasm', () => {
     beforeEach(async () => {
       const date = new Date()
-      await WasmEvent.bulkCreate([
+      await WasmStateEvent.bulkCreate([
         {
           contractAddress: 'valid_contract',
           blockHeight: 1,

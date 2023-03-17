@@ -86,10 +86,9 @@ export const dbKeyToKeys = (
 
 export const getDependentKey = (
   namespace: DependentKeyNamespace,
-  // If undefined, wildcard used for all addresses.
-  address: string | undefined,
-  ...keys: string[]
-) => `${namespace}:${address || '*'}:${keys.join(':')}`
+  // If empty/undefined, wildcard used.
+  ...keys: (string | undefined)[]
+) => `${namespace}:${keys.map((key) => key || '*').join(':')}`
 
 export const validateBlockString = (block: string, subject: string): Block => {
   let parsedBlock

@@ -6,7 +6,7 @@ import {
   DependendableEventModel,
   StakingSlashEvent,
   State,
-  WasmEvent,
+  WasmStateEvent,
 } from '@/db'
 
 type DB = { uri?: string } & Pick<
@@ -371,7 +371,8 @@ export type SerializedBlock = {
   timeUnixMs: string
 }
 
-export type ParsedWasmEvent = {
+export type ParsedWasmStateEvent = {
+  type: 'state'
   codeId: number
   contractAddress: string
   blockHeight: string
@@ -382,6 +383,27 @@ export type ParsedWasmEvent = {
   valueJson: any
   delete: boolean
 }
+
+export type ParsedWasmTxEvent = {
+  type: 'tx'
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  txIndex: number
+  messageId: string
+  contractAddress: string
+  codeId: number
+  action: string
+  sender: string
+  msg: string | null
+  msgJson: any
+  reply: object | null
+  funds: object
+  response: object | null
+  gasUsed: string
+}
+
+export type ParsedWasmEvent = ParsedWasmStateEvent | ParsedWasmTxEvent
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -395,14 +417,14 @@ export type Transformer<V = any> = {
   filter: RequireAtLeastOne<{
     codeIdsKeys: string[]
     contractAddresses: string[]
-    matches: (event: ParsedWasmEvent) => boolean
+    matches: (event: ParsedWasmStateEvent) => boolean
   }>
   // If `name` returns `undefined`, the transformation will not be saved.
-  name: string | ((event: ParsedWasmEvent) => string | undefined)
+  name: string | ((event: ParsedWasmStateEvent) => string | undefined)
   // If `getValue` returns `undefined`, the transformation will not be saved.
   // All other values, including `null`, will be saved.
   getValue: (
-    event: ParsedWasmEvent,
+    event: ParsedWasmStateEvent,
     getLastValue: () => Promise<V | null>
   ) => V | null | undefined | Promise<V | null | undefined>
   // By default, a transformation gets created with a value of `null` if the
@@ -415,7 +437,7 @@ export type Transformer<V = any> = {
 export type TransformerMaker = (config: Config) => Transformer
 
 export type ProcessedTransformer<V = any> = Omit<Transformer<V>, 'filter'> & {
-  filter: (event: ParsedWasmEvent) => boolean
+  filter: (event: ParsedWasmStateEvent) => boolean
 }
 
 export enum WebhookType {
@@ -440,20 +462,20 @@ export type Webhook<V = any> = {
   filter: RequireAtLeastOne<{
     codeIdsKeys: string[]
     contractAddresses: string[]
-    matches: (event: WasmEvent) => boolean
+    matches: (event: WasmStateEvent) => boolean
   }>
   // If returns undefined, the webhook will not be called.
   endpoint:
     | WebhookEndpoint
     | undefined
-    | ((event: WasmEvent, env: ContractEnv) => WebhookEndpoint | undefined)
+    | ((event: WasmStateEvent, env: ContractEnv) => WebhookEndpoint | undefined)
     | ((
-        event: WasmEvent,
+        event: WasmStateEvent,
         env: ContractEnv
       ) => Promise<WebhookEndpoint | undefined>)
   // If returns undefined, the webhook will not be called.
   getValue: (
-    event: WasmEvent,
+    event: WasmStateEvent,
     getLastValue: () => Promise<any | null>,
     env: ContractEnv
   ) => V | undefined | Promise<V | undefined>
@@ -465,7 +487,7 @@ export type WebhookMaker = (
 ) => Webhook | null | undefined
 
 export type ProcessedWebhook<V = any> = Omit<Webhook<V>, 'filter'> & {
-  filter: (event: WasmEvent) => boolean
+  filter: (event: WasmStateEvent) => boolean
 }
 
 export type PendingWebhook = {

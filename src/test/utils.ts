@@ -10,7 +10,7 @@ import {
   AccountWebhook,
   AccountWebhookEvent,
   Contract,
-  WasmEvent,
+  WasmStateEvent,
 } from '@/db'
 import { AuthRequestBody } from '@/server/routes/account/types'
 
@@ -157,7 +157,7 @@ export const createContractAndEvent = async (
 
   const blockTimestamp = new Date()
   const valueJson = { key: 'value' }
-  const event = await WasmEvent.create({
+  const event = await WasmStateEvent.create({
     contractAddress: contract.address,
     blockHeight: blockHeight.toString(),
     blockTimeUnixMs: blockTimestamp.getTime().toString(),

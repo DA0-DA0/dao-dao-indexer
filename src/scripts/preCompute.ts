@@ -10,7 +10,7 @@ import {
   validateBlockString,
 } from '@/core'
 import { getTypedFormula } from '@/data'
-import { Computation, Contract, State, WasmEvent, loadDb } from '@/db'
+import { Computation, Contract, State, WasmStateEvent, loadDb } from '@/db'
 
 export const main = async () => {
   // Parse arguments.
@@ -100,7 +100,7 @@ export const main = async () => {
   const blockStart: Block | undefined = options.start
     ? validateBlockString(options.start, 'start')
     : (
-        await WasmEvent.findOne({
+        await WasmStateEvent.findOne({
           where: {
             contractAddress: contractAddresses,
           },
@@ -151,7 +151,7 @@ export const main = async () => {
         block.height + BigInt(options.batch),
         blockEnd.height + 1n
       )
-      const endBlockEvent = await WasmEvent.findOne({
+      const endBlockEvent = await WasmStateEvent.findOne({
         where: {
           contractAddress: targetAddress,
           blockHeight: {

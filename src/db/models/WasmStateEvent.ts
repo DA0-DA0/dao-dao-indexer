@@ -11,7 +11,7 @@ import {
 import {
   Block,
   ComputationDependentKey,
-  ParsedWasmEvent,
+  ParsedWasmStateEvent,
   getDependentKey,
 } from '@/core'
 
@@ -48,7 +48,7 @@ import { Contract } from './Contract'
     },
   ],
 })
-export class WasmEvent extends DependendableEventModel {
+export class WasmStateEvent extends DependendableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
@@ -100,19 +100,20 @@ export class WasmEvent extends DependendableEventModel {
 
   get dependentKey(): string {
     return getDependentKey(
-      WasmEvent.dependentKeyNamespace,
+      WasmStateEvent.dependentKeyNamespace,
       this.contractAddress,
       this.key
     )
   }
 
-  get asParsedEvent(): ParsedWasmEvent {
+  get asParsedEvent(): ParsedWasmStateEvent {
     // `Contract` must be included before using this getter.
     if (!this.contract) {
       throw new Error('Contract must be included when querying for this Event.')
     }
 
     return {
+      type: 'state',
       codeId: this.contract.codeId,
       contractAddress: this.contractAddress,
       blockHeight: this.blockHeight,
@@ -128,10 +129,10 @@ export class WasmEvent extends DependendableEventModel {
   // Get the previous event for this key. If this is the first event for this
   // key, return null. Cache the result so it can be reused since this shouldn't
   // change.
-  previousEvent?: WasmEvent | null
-  async getPreviousEvent(cache = true): Promise<WasmEvent | null> {
+  previousEvent?: WasmStateEvent | null
+  async getPreviousEvent(cache = true): Promise<WasmStateEvent | null> {
     if (this.previousEvent === undefined || !cache) {
-      this.previousEvent = await WasmEvent.findOne({
+      this.previousEvent = await WasmStateEvent.findOne({
         where: {
           contractAddress: this.contractAddress,
           key: this.key,
@@ -146,7 +147,7 @@ export class WasmEvent extends DependendableEventModel {
     return this.previousEvent
   }
 
-  static dependentKeyNamespace = DependentKeyNamespace.WasmEvent
+  static dependentKeyNamespace = DependentKeyNamespace.WasmStateEvent
   static blockHeightKey: string = 'blockHeight'
 
   // Returns a where clause that will match all events that are described by the

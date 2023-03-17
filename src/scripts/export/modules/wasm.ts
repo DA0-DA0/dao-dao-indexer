@@ -3,6 +3,8 @@ import { Sequelize } from 'sequelize'
 
 import {
   ParsedWasmEvent,
+  ParsedWasmStateEvent,
+  ParsedWasmTxEvent,
   base64KeyToEventKey,
   objectMatchesStructure,
 } from '@/core'
@@ -11,24 +13,42 @@ import {
   Contract,
   PendingWebhook,
   State,
-  WasmEvent,
-  WasmEventTransformation,
+  WasmStateEvent,
+  WasmStateEventTransformation,
+  WasmTxEvent,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
 import { updateIndexesForContracts } from '@/ms'
 
 import { ModuleExporter, ModuleExporterMaker } from '../types'
 
-type IndexerWasmEvent = {
-  type: 'state'
-  blockHeight: number
-  blockTimeUnixMs: number
-  contractAddress: string
-  codeId: number
-  key: string
-  value: string
-  delete: boolean
-}
+type IndexerWasmEvent =
+  | {
+      type: 'state'
+      blockHeight: number
+      blockTimeUnixMs: number
+      contractAddress: string
+      codeId: number
+      key: string
+      value: string
+      delete: boolean
+    }
+  | {
+      type: 'tx'
+      blockHeight: number
+      blockTimeUnixMs: number
+      txIndex: number
+      messageId: string
+      contractAddress: string
+      codeId: number
+      action: string
+      sender: string
+      msg: string
+      reply: object | null
+      funds: object
+      response: object | null
+      gasUsed: string
+    }
 
 export const wasm: ModuleExporterMaker = ({
   config,
@@ -58,48 +78,94 @@ export const wasm: ModuleExporterMaker = ({
       return
     }
 
-    // For events with the same blockHeight, contractAddress, and key, only
-    // keep the last event. This is because the indexer guarantees that events
-    // are emitted in order, and the last event is the most up-to-date.
+    // For state events with the same blockHeight, contractAddress, and key,
+    // only keep the last event. This is because the indexer guarantees that
+    // events are emitted in order, and the last event is the most up-to-date.
     // Multiple events may occur if the value is updated multiple times across
     // different messages. The indexer can only maintain uniqueness within a
-    // message and its submessages, but different messages in the same block
-    // can write to the same key, and the indexer emits all the messages.
+    // message and its submessages, but different messages in the same block can
+    // write to the same key, and the indexer emits all the messages. For tx
+    // events, all events should be unique, so just use a unique key which
+    // should get all of them.
     const uniqueIndexerEvents = pending.reduce((acc, event) => {
-      const key = event.blockHeight + event.contractAddress + event.key
+      const key =
+        event.type === 'state'
+          ? event.blockHeight + event.contractAddress + event.key
+          : event.blockHeight + event.txIndex.toString() + event.messageId
       acc[key] = event
       return acc
     }, {} as Record<string, IndexerWasmEvent>)
     const eventsToExport = Object.values(uniqueIndexerEvents)
 
     const parsedEvents = eventsToExport.map((event): ParsedWasmEvent => {
-      // Convert base64 value to utf-8 string, if present.
-      const value =
-        event.value && Buffer.from(event.value, 'base64').toString('utf-8')
+      if (event.type === 'state') {
+        // Convert base64 value to utf-8 string, if present.
+        const value =
+          event.value && Buffer.from(event.value, 'base64').toString('utf-8')
 
-      let valueJson = null
-      if (!event.delete && value) {
-        try {
-          valueJson = JSON.parse(value ?? 'null')
-        } catch {
-          // Ignore parsing errors.
+        let valueJson = null
+        if (!event.delete && value) {
+          try {
+            valueJson = JSON.parse(value ?? 'null')
+          } catch {
+            // Ignore parsing errors.
+          }
         }
-      }
 
-      const blockTimestamp = new Date(event.blockTimeUnixMs)
+        const blockTimestamp = new Date(event.blockTimeUnixMs)
 
-      return {
-        codeId: event.codeId,
-        contractAddress: event.contractAddress,
-        blockHeight: event.blockHeight.toString(),
-        blockTimeUnixMs: event.blockTimeUnixMs.toString(),
-        blockTimestamp,
-        // Convert base64 key to comma-separated list of bytes. See
-        // explanation in `Event` model for more information.
-        key: base64KeyToEventKey(event.key),
-        value,
-        valueJson,
-        delete: event.delete,
+        return {
+          type: 'state',
+          codeId: event.codeId,
+          contractAddress: event.contractAddress,
+          blockHeight: event.blockHeight.toString(),
+          blockTimeUnixMs: event.blockTimeUnixMs.toString(),
+          blockTimestamp,
+          // Convert base64 key to comma-separated list of bytes. See
+          // explanation in `Event` model for more information.
+          key: base64KeyToEventKey(event.key),
+          value,
+          valueJson,
+          delete: event.delete,
+        }
+      } else if (event.type === 'tx') {
+        // Convert base64 msg to utf-8 string, if present.
+        const msg =
+          event.msg && Buffer.from(event.msg, 'base64').toString('utf-8')
+
+        let msgJson = null
+        if (msg) {
+          try {
+            msgJson = JSON.parse(msg ?? 'null')
+          } catch {
+            // Ignore parsing errors.
+          }
+        }
+
+        const blockTimestamp = new Date(event.blockTimeUnixMs)
+
+        return {
+          type: 'tx',
+          blockHeight: event.blockHeight.toString(),
+          blockTimeUnixMs: event.blockTimeUnixMs.toString(),
+          blockTimestamp,
+          txIndex: event.txIndex,
+          messageId: event.messageId,
+          contractAddress: event.contractAddress,
+          codeId: event.codeId,
+          action: event.action,
+          sender: event.sender,
+          msg,
+          msgJson,
+          reply: event.reply,
+          funds: event.funds,
+          response: event.response,
+          gasUsed: event.gasUsed,
+        }
+      } else {
+        throw new Error(
+          `Unexpected event type for event: ${JSON.stringify(event)}`
+        )
       }
     })
 
@@ -128,16 +194,34 @@ export const wasm: ModuleExporterMaker = ({
 
       // If event not of expected structure, skip.
       if (
-        !objectMatchesStructure(event, {
-          type: {},
-          blockHeight: {},
-          blockTimeUnixMs: {},
-          contractAddress: {},
-          codeId: {},
-          key: {},
-          value: {},
-          delete: {},
-        })
+        ((('type' in event && event.type === 'tx') || !event.type) &&
+          !objectMatchesStructure(event, {
+            blockHeight: {},
+            blockTimeUnixMs: {},
+            contractAddress: {},
+            codeId: {},
+            key: {},
+            value: {},
+            delete: {},
+          })) ||
+        ('type' in event &&
+          event.type === 'state' &&
+          !objectMatchesStructure(event, {
+            blockHeight: {},
+            blockTimeUnixMs: {},
+            txIndex: {},
+            messageId: {},
+            contractAddress: {},
+            codeId: {},
+            action: {},
+            sender: {},
+            msg: {},
+            reply: {},
+            funds: {},
+            response: {},
+            gasUsed: {},
+          })) ||
+        ('type' in event && event.type !== 'tx' && event.type !== 'state')
       ) {
         throw new Error('Invalid line structure.')
       }
@@ -153,11 +237,6 @@ export const wasm: ModuleExporterMaker = ({
       })
 
       // If event not valid JSON, skip.
-      return
-    }
-
-    // Only process state events for now.
-    if (event.type !== 'state') {
       return
     }
 
@@ -277,13 +356,39 @@ const exporter = async (
     },
   })
 
+  const parsedStateEvents = parsedEvents.filter(
+    (event): event is ParsedWasmStateEvent => event.type === 'state'
+  )
+  const parsedTxEvents = parsedEvents.filter(
+    (event): event is ParsedWasmTxEvent => event.type === 'tx'
+  )
+
   // Unique index on [blockHeight, contractAddress, key] ensures that we don't
   // insert duplicate events. If we encounter a duplicate, we update the
   // `value`, `valueJson`, and `delete` fields in case event processing for a
   // block was batched separately.
-  const exportedEvents = await WasmEvent.bulkCreate(parsedEvents, {
-    updateOnDuplicate: ['value', 'valueJson', 'delete'],
-  })
+  const exportedEvents = [
+    ...(parsedStateEvents.length > 0
+      ? await WasmStateEvent.bulkCreate(parsedStateEvents, {
+          updateOnDuplicate: ['value', 'valueJson', 'delete'],
+        })
+      : []),
+    ...(parsedTxEvents.length > 0
+      ? await WasmTxEvent.bulkCreate(parsedTxEvents, {
+          updateOnDuplicate: [
+            'contractAddress',
+            'action',
+            'sender',
+            'msg',
+            'msgJson',
+            'reply',
+            'funds',
+            'response',
+            'gasUsed',
+          ],
+        })
+      : []),
+  ]
   // Add contracts to events since webhooks need to access contract code IDs.
   exportedEvents.forEach((event) => {
     event.contract = contracts.find(
@@ -292,9 +397,10 @@ const exporter = async (
   })
 
   // Transform events as needed.
-  const transformations = await WasmEventTransformation.transformParsedEvents(
-    parsedEvents
-  )
+  const transformations =
+    await WasmStateEventTransformation.transformParsedStateEvents(
+      parsedStateEvents
+    )
 
   let computationsUpdated = 0
   let computationsDestroyed = 0
@@ -308,11 +414,15 @@ const exporter = async (
     computationsDestroyed = computationUpdates.destroyed
   }
 
+  const exportedStateEvents = exportedEvents.filter(
+    (e): e is WasmStateEvent => e instanceof WasmStateEvent
+  )
   // Queue webhooks as needed.
-  const webhooksQueued = dontSendWebhooks
-    ? 0
-    : (await PendingWebhook.queueWebhooks(state, exportedEvents)) +
-      (await AccountWebhook.queueWebhooks(exportedEvents))
+  const webhooksQueued =
+    dontSendWebhooks || exportedStateEvents.length === 0
+      ? 0
+      : (await PendingWebhook.queueWebhooks(state, exportedStateEvents)) +
+        (await AccountWebhook.queueWebhooks(exportedStateEvents))
 
   // Store last block height exported, and update latest block height/time if
   // the last export is newer.

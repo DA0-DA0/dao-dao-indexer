@@ -11,7 +11,7 @@ import {
 import {
   Block,
   ComputationDependentKey,
-  ParsedWasmEvent,
+  ParsedWasmStateEvent,
   ProcessedTransformer,
   getDependentKey,
   loadConfig,
@@ -50,7 +50,7 @@ import { Contract } from './Contract'
     },
   ],
 })
-export class WasmEventTransformation extends DependendableEventModel {
+export class WasmStateEventTransformation extends DependendableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
@@ -84,13 +84,14 @@ export class WasmEventTransformation extends DependendableEventModel {
 
   get dependentKey(): string {
     return getDependentKey(
-      WasmEventTransformation.dependentKeyNamespace,
+      WasmStateEventTransformation.dependentKeyNamespace,
       this.contractAddress,
       this.name
     )
   }
 
-  static dependentKeyNamespace = DependentKeyNamespace.WasmEventTransformation
+  static dependentKeyNamespace =
+    DependentKeyNamespace.WasmStateEventTransformation
   static blockHeightKey: string = 'blockHeight'
 
   // Returns a where clause that will match all events that are described by the
@@ -163,9 +164,9 @@ export class WasmEventTransformation extends DependendableEventModel {
     }
   }
 
-  static async transformParsedEvents(
-    events: ParsedWasmEvent[]
-  ): Promise<WasmEventTransformation[]> {
+  static async transformParsedStateEvents(
+    events: ParsedWasmStateEvent[]
+  ): Promise<WasmStateEventTransformation[]> {
     const transformers = getProcessedTransformers(loadConfig())
     if (transformers.length === 0) {
       return []
@@ -255,7 +256,7 @@ export class WasmEventTransformation extends DependendableEventModel {
                 // Fallback to database.
                 return (
                   (
-                    await WasmEventTransformation.findOne({
+                    await WasmStateEventTransformation.findOne({
                       where: {
                         contractAddress: event.contractAddress,
                         name: pendingTransformation.name,
@@ -308,9 +309,12 @@ export class WasmEventTransformation extends DependendableEventModel {
     }
 
     // Save all pending transformations.
-    return await WasmEventTransformation.bulkCreate(evaluatedTransformations, {
-      updateOnDuplicate: ['value'],
-    })
+    return await WasmStateEventTransformation.bulkCreate(
+      evaluatedTransformations,
+      {
+        updateOnDuplicate: ['value'],
+      }
+    )
   }
 }
 
@@ -323,7 +327,7 @@ type PendingTransformation = {
 }
 
 type UnevaluatedEventTransformation = {
-  event: ParsedWasmEvent
+  event: ParsedWasmStateEvent
   transformer: ProcessedTransformer
   pendingTransformation: PendingTransformation
 }

@@ -4,8 +4,8 @@ import { Op } from 'sequelize'
 import { loadConfig } from '@/core'
 import {
   Contract,
-  WasmEvent,
-  WasmEventTransformation,
+  WasmStateEvent,
+  WasmStateEventTransformation,
   loadDb,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
@@ -93,7 +93,7 @@ const main = async () => {
   }
 
   let latestBlockHeight = initial
-  const total = await WasmEvent.count({
+  const total = await WasmStateEvent.count({
     where: {
       ...addressFilter,
       blockHeight: {
@@ -119,7 +119,7 @@ const main = async () => {
 
   let latestBlockEventIdsSeen: number[] = []
   while (processed < total) {
-    const events = await WasmEvent.findAll({
+    const events = await WasmStateEvent.findAll({
       where: {
         ...addressFilter,
         // Since there can be multiple events per block, the fixed batch size
@@ -165,9 +165,10 @@ const main = async () => {
     processed += events.length
     latestBlockHeight = Number(newLatestBlockHeight)
 
-    const transformations = await WasmEventTransformation.transformParsedEvents(
-      events.map((event) => event.asParsedEvent)
-    )
+    const transformations =
+      await WasmStateEventTransformation.transformParsedStateEvents(
+        events.map((event) => event.asParsedEvent)
+      )
 
     transformed += transformations.length
 

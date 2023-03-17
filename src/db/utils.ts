@@ -8,8 +8,9 @@ import {
   Computation,
   ComputationDependency,
   StakingSlashEvent,
-  WasmEvent,
-  WasmEventTransformation,
+  WasmStateEvent,
+  WasmStateEventTransformation,
+  WasmTxEvent,
 } from './models'
 import { DependendableEventModel } from './types'
 
@@ -254,8 +255,9 @@ const makeComputationDependencyWhere = (
 
 export const getDependableEventModels =
   (): typeof DependendableEventModel[] => [
-    WasmEvent,
-    WasmEventTransformation,
+    WasmStateEvent,
+    WasmStateEventTransformation,
+    WasmTxEvent,
     StakingSlashEvent,
   ]
 
