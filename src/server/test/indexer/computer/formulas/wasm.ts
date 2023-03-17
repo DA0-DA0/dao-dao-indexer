@@ -107,7 +107,9 @@ export const loadWasmTests = (options: ComputerTestOptions) => {
       expect(computation.args).toBe('{}')
       expect(computation.dependencies.length).toBe(1)
       expect(computation.dependencies[0].key).toEqual(
-        `wasm_event:valid_contract:${dbKeyForKeys('some_state')}`
+        `${WasmStateEvent.dependentKeyNamespace}:valid_contract:${dbKeyForKeys(
+          'some_state'
+        )}`
       )
       expect(computation.dependencies[0].prefix).toBe(false)
       expect(computation.output).toEqual(JSON.stringify(response.body))

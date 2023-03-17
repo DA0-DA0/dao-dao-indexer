@@ -194,38 +194,52 @@ export const wasm: ModuleExporterMaker = ({
 
       // If event not of expected structure, skip.
       if (
-        ((('type' in event && event.type === 'tx') || !event.type) &&
-          !objectMatchesStructure(event, {
-            blockHeight: {},
-            blockTimeUnixMs: {},
-            contractAddress: {},
-            codeId: {},
-            key: {},
-            value: {},
-            delete: {},
-          })) ||
+        ((('type' in event && event.type === 'state') || !event.type) &&
+          !objectMatchesStructure(
+            event,
+            {
+              blockHeight: {},
+              blockTimeUnixMs: {},
+              contractAddress: {},
+              codeId: {},
+              key: {},
+              value: {},
+              delete: {},
+            },
+            {
+              ignoreNullUndefined: true,
+            }
+          )) ||
         ('type' in event &&
-          event.type === 'state' &&
-          !objectMatchesStructure(event, {
-            blockHeight: {},
-            blockTimeUnixMs: {},
-            txIndex: {},
-            messageId: {},
-            contractAddress: {},
-            codeId: {},
-            action: {},
-            sender: {},
-            msg: {},
-            reply: {},
-            funds: {},
-            response: {},
-            gasUsed: {},
-          })) ||
+          event.type === 'tx' &&
+          !objectMatchesStructure(
+            event,
+            {
+              blockHeight: {},
+              blockTimeUnixMs: {},
+              txIndex: {},
+              messageId: {},
+              contractAddress: {},
+              codeId: {},
+              action: {},
+              sender: {},
+              msg: {},
+              reply: {},
+              funds: {},
+              response: {},
+              gasUsed: {},
+            },
+            {
+              ignoreNullUndefined: true,
+            }
+          )) ||
         ('type' in event && event.type !== 'tx' && event.type !== 'state')
       ) {
         throw new Error('Invalid line structure.')
       }
     } catch (err) {
+      console.error(err)
+
       // Capture error so we can investigate.
       Sentry.captureException(err, {
         tags: {
