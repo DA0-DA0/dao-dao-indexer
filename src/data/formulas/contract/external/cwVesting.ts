@@ -44,7 +44,7 @@ export const validatorStakes: ContractFormula<ValidatorStake[]> = {
 
 // The amount staked and unstaking for each validator over time.
 export const stakeHistory: ContractFormula<any[]> = {
-  // For now because getTxEvents
+  // For now because getTxEvents is not cached.
   dynamic: true,
   compute: async ({ contractAddress, getTxEvents }) => {
     const txEvents =
