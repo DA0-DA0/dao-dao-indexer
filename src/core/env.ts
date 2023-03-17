@@ -5,6 +5,7 @@ import {
   StakingSlashEvent,
   WasmStateEvent,
   WasmStateEventTransformation,
+  WasmTxEvent,
 } from '@/db'
 
 import { loadConfig } from './config'
@@ -27,6 +28,7 @@ import {
   FormulaTransformationMapGetter,
   FormulaTransformationMatchGetter,
   FormulaTransformationMatchesGetter,
+  FormulaTxEventsGetter,
 } from './types'
 import { dbKeyForKeys, dbKeyToKeys, getDependentKey } from './utils'
 
@@ -937,6 +939,25 @@ export const getEnv = ({
     return slashEvents.map((slashEvent) => slashEvent.toJSON())
   }
 
+  const getTxEvents: FormulaTxEventsGetter = async (contractAddress, where) => {
+    const txEvents = await WasmTxEvent.findAll({
+      where: {
+        ...where,
+
+        contractAddress,
+        blockHeight: blockHeightFilter,
+      },
+      order: [['blockHeight', 'DESC']],
+    })
+
+    // If no transformations found, return undefined.
+    if (!txEvents.length) {
+      return undefined
+    }
+
+    return txEvents.map((txEvent) => txEvent.toJSON())
+  }
+
   return {
     block,
     date: useBlockDate ? new Date(Number(block.timeUnixMs)) : new Date(),
@@ -960,5 +981,7 @@ export const getEnv = ({
     getCodeIdKeyForContract,
 
     getSlashEvents,
+
+    getTxEvents,
   }
 }

@@ -1,3 +1,5 @@
+import { Op, Sequelize } from 'sequelize'
+
 import { ContractFormula, dbKeyToKeys } from '@/core'
 
 type ValidatorStake = {
@@ -37,5 +39,31 @@ export const validatorStakes: ContractFormula<ValidatorStake[]> = {
       .sort((a, b) => b.timeMs - a.timeMs)
 
     return validators
+  },
+}
+
+// The amount staked and unstaking for each validator over time.
+export const stakeHistory: ContractFormula<any[]> = {
+  // For now because getTxEvents
+  dynamic: true,
+  compute: async ({ contractAddress, getTxEvents }) => {
+    const txEvents =
+      (await getTxEvents(contractAddress, {
+        [Op.and]: [
+          {
+            action: 'execute',
+          },
+          {
+            [Op.or]: [
+              Sequelize.literal('"msgJson" ? \'delegate\''),
+              Sequelize.literal('"msgJson" ? \'undelegate\''),
+              Sequelize.literal('"msgJson" ? \'redelegate\''),
+              Sequelize.literal('"msgJson" ? \'register_slash\''),
+            ],
+          },
+        ],
+      })) ?? []
+
+    return txEvents
   },
 }

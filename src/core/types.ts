@@ -1,4 +1,5 @@
 import { Options as PusherOptions } from 'pusher'
+import { WhereOptions } from 'sequelize'
 import { SequelizeOptions } from 'sequelize-typescript'
 
 import {
@@ -7,6 +8,7 @@ import {
   StakingSlashEvent,
   State,
   WasmStateEvent,
+  WasmTxEvent,
 } from '@/db'
 
 type DB = { uri?: string } & Pick<
@@ -197,6 +199,23 @@ export type FormulaSlashEventsGetter = (
   | undefined
 >
 
+export type FormulaTxEventsGetter = (
+  contractAddress: string,
+  where?: WhereOptions<WasmTxEvent>
+) => Promise<
+  | Pick<
+      WasmTxEvent,
+      | 'blockHeight'
+      | 'blockTimeUnixMs'
+      | 'blockTimestamp'
+      | 'sender'
+      | 'msgJson'
+      | 'funds'
+      | 'response'
+    >[]
+  | undefined
+>
+
 export type Env<Args extends Record<string, string> = {}> = {
   block: Block
   // If latest block is being used, this will be the current date. If fetching
@@ -223,6 +242,8 @@ export type Env<Args extends Record<string, string> = {}> = {
   getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
 
   getSlashEvents: FormulaSlashEventsGetter
+
+  getTxEvents: FormulaTxEventsGetter
 }
 
 export interface EnvOptions {
