@@ -158,6 +158,8 @@ export const stakeHistory: ContractFormula<{
         }
       )
       .filter((event): event is StakeEvent => !!event)
+      // Sort ascending.
+      .sort((a, b) => Number(a.blockHeight) - Number(b.blockHeight))
 
     const slashRegistrations = txEvents
       .map(({ msgJson }): SlashRegistration | undefined => {
@@ -180,6 +182,8 @@ export const stakeHistory: ContractFormula<{
         }
       })
       .filter((event): event is SlashRegistration => !!event)
+      // Sort ascending.
+      .sort((a, b) => Number(a.time) - Number(b.time))
 
     return {
       stakeEvents,
