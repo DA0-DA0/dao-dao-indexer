@@ -81,20 +81,20 @@ export class WasmTxEvent extends DependendableEventModel {
 
   @AllowNull
   @Column(DataType.JSONB)
-  msgJson!: object | null
+  msgJson!: any | null
 
   // Null if `msg` is not empty.
   @AllowNull
   @Column(DataType.JSONB)
-  reply!: object | null
+  reply!: any | null
 
   @AllowNull(false)
   @Column(DataType.JSONB)
-  funds!: object
+  funds!: any
 
   @AllowNull
   @Column(DataType.JSONB)
-  response!: object | null
+  response!: any | null
 
   @AllowNull(false)
   @Column(DataType.BIGINT)

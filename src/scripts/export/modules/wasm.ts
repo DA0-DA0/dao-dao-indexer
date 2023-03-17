@@ -44,9 +44,9 @@ type IndexerWasmEvent =
       action: string
       sender: string
       msg: string
-      reply: object | null
+      reply: any | null
       funds: object
-      response: object | null
+      response: any | null
       gasUsed: string
     }
 

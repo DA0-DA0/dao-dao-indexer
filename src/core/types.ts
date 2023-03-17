@@ -208,6 +208,8 @@ export type FormulaTxEventsGetter = (
       | 'blockHeight'
       | 'blockTimeUnixMs'
       | 'blockTimestamp'
+      | 'contractAddress'
+      | 'action'
       | 'sender'
       | 'msgJson'
       | 'funds'
@@ -418,9 +420,9 @@ export type ParsedWasmTxEvent = {
   sender: string
   msg: string | null
   msgJson: any
-  reply: object | null
-  funds: object
-  response: object | null
+  reply: any | null
+  funds: any
+  response: any | null
   gasUsed: string
 }
 
