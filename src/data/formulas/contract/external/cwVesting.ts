@@ -43,6 +43,11 @@ export const info: ContractFormula = {
     await get(contractAddress, 'vesting'),
 }
 
+export const unbondingDurationSeconds: ContractFormula = {
+  compute: async ({ contractAddress, get }) =>
+    await get(contractAddress, 'ubs'),
+}
+
 // The amount staked and unstaking for each validator over time.
 export const validatorStakes: ContractFormula<ValidatorStake[]> = {
   compute: async ({ contractAddress, getMap }) => {
