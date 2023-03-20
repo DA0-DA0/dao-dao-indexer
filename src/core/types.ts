@@ -195,6 +195,8 @@ export type FormulaSlashEventsGetter = (
       | 'infractionBlockHeight'
       | 'slashFactor'
       | 'amountSlashed'
+      | 'effectiveFraction'
+      | 'stakedTokensBurned'
     >[]
   | undefined
 >

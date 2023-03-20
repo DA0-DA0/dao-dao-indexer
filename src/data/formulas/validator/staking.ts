@@ -6,6 +6,8 @@ type Slash = {
   infractionBlockHeight: string
   slashFactor: string
   amountSlashed: string
+  effectiveFraction: string
+  stakedTokensBurned: string
 }
 
 export const slashes: ValidatorFormula<Slash[]> = {
@@ -17,12 +19,16 @@ export const slashes: ValidatorFormula<Slash[]> = {
         infractionBlockHeight,
         slashFactor,
         amountSlashed,
+        effectiveFraction,
+        stakedTokensBurned,
       }) => ({
         registeredBlockHeight,
         registeredBlockTimeUnixMs,
         infractionBlockHeight,
         slashFactor,
         amountSlashed,
+        effectiveFraction,
+        stakedTokensBurned,
       })
     ),
 }

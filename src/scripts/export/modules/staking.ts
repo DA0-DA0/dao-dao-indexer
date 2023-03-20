@@ -14,6 +14,8 @@ type IndexerStakingEvent = {
   validatorOperator: string
   slashFactor: string
   amountSlashed: string
+  effectiveFraction: string
+  stakedTokensBurned: string
 }
 
 type ParsedStakingEvent = {
@@ -25,6 +27,8 @@ type ParsedStakingEvent = {
   validatorOperatorAddress: string
   slashFactor: string
   amountSlashed: string
+  effectiveFraction: string
+  stakedTokensBurned: string
 }
 
 export const staking: ModuleExporterMaker = ({
@@ -65,6 +69,8 @@ export const staking: ModuleExporterMaker = ({
         validatorOperatorAddress: event.validatorOperator,
         slashFactor: event.slashFactor,
         amountSlashed: event.amountSlashed,
+        effectiveFraction: event.effectiveFraction,
+        stakedTokensBurned: event.stakedTokensBurned,
       }
     })
 
@@ -98,6 +104,8 @@ export const staking: ModuleExporterMaker = ({
             validatorOperator: {},
             slashFactor: {},
             amountSlashed: {},
+            effectiveFraction: {},
+            stakedTokensBurned: {},
           }))
       ) {
         throw new Error('Invalid line structure.')

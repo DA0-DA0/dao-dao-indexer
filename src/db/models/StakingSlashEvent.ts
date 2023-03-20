@@ -70,6 +70,14 @@ export class StakingSlashEvent extends DependendableEventModel {
   @Column(DataType.BIGINT)
   amountSlashed!: string
 
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  effectiveFraction!: string
+
+  @AllowNull(false)
+  @Column(DataType.BIGINT)
+  stakedTokensBurned!: string
+
   get block(): Block {
     return {
       height: BigInt(this.registeredBlockHeight),
