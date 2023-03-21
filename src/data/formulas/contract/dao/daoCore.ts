@@ -5,6 +5,10 @@ import { isExpirationExpired } from '../../utils'
 import { info, instantiatedAt } from '../common'
 import { balance } from '../external/cw20'
 import {
+  listMembers as listCw4Members,
+  totalWeight as totalCw4Weight,
+} from '../external/cw4Group'
+import {
   openProposals as multipleChoiceOpenProposals,
   proposalCount as multipleChoiceProposalCount,
 } from '../proposal/daoProposalMultiple'
@@ -16,15 +20,19 @@ import { ProposalResponse } from '../proposal/types'
 import {
   totalPower as daoVotingCw20StakedTotalPower,
   votingPower as daoVotingCw20StakedVotingPower,
+  topStakers as topCw20Stakers,
 } from '../voting/daoVotingCw20Staked'
 import {
   totalPower as daoVotingCw4TotalPower,
   votingPower as daoVotingCw4VotingPower,
+  groupContract,
 } from '../voting/daoVotingCw4'
 import {
   totalPower as daoVotingCw721StakedTotalPower,
   votingPower as daoVotingCw721StakedVotingPower,
+  topStakers as topCw721Stakers,
 } from '../voting/daoVotingCw721Staked'
+import { topStakers as topNativeStakers } from '../voting/daoVotingNativeStaked'
 
 interface Config {
   automatically_add_cw20s: boolean
@@ -674,6 +682,126 @@ export const potentialSubDaos: ContractFormula<
       contractAddress,
       info: infos[index],
     }))
+  },
+}
+
+export const allMembers: ContractFormula<Record<string, string[]>> = {
+  compute: async (env) => {
+    const pendingDaos = new Set([env.contractAddress])
+    const daosSeen = new Set(env.contractAddress)
+
+    const subDaoMembers: Record<string, DaoMember[]> = {}
+
+    while (pendingDaos.size > 0) {
+      const subDao = pendingDaos.values().next().value
+      pendingDaos.delete(subDao)
+
+      // Get members.
+      const members = await listMembers.compute({
+        ...env,
+        contractAddress: subDao,
+      })
+      subDaoMembers[subDao] = members ?? []
+
+      // Get SubDAOs.
+      const subDaos = await listSubDaos.compute({
+        ...env,
+        contractAddress: subDao,
+      })
+
+      // Add to queue if not already added.
+      if (subDaos.length > 0) {
+        for (const { addr } of subDaos) {
+          if (!daosSeen.has(addr)) {
+            daosSeen.add(addr)
+            pendingDaos.add(addr)
+          }
+        }
+      }
+    }
+
+    return Object.entries(subDaoMembers).reduce(
+      (acc, [dao, members]) => ({
+        ...acc,
+        [dao]: members.map((m) => m.address),
+      }),
+      {} as Record<string, string[]>
+    )
+  },
+}
+
+type DaoMember = {
+  address: string
+  votingPowerPercent: number
+}
+
+export const listMembers: ContractFormula<DaoMember[] | undefined> = {
+  compute: async (env) => {
+    const { contractAddress, contractMatchesCodeIdKeys } = env
+
+    // Get members.
+    const votingModuleAddress = await votingModule.compute({
+      ...env,
+      contractAddress,
+    })
+    if (!votingModuleAddress) {
+      return
+    }
+
+    if (await contractMatchesCodeIdKeys('dao-voting-cw4')) {
+      const cw4Group = await groupContract.compute({
+        ...env,
+        contractAddress: votingModuleAddress,
+      })
+      if (cw4Group) {
+        const totalWeight = await totalCw4Weight.compute({
+          ...env,
+          contractAddress: cw4Group,
+        })
+        const members = await listCw4Members.compute({
+          ...env,
+          contractAddress: cw4Group,
+        })
+
+        return members.map(({ addr, weight }) => ({
+          address: addr,
+          votingPowerPercent: totalWeight ? weight / totalWeight : 0,
+        }))
+      }
+    } else if (await contractMatchesCodeIdKeys('dao-voting-cw20-staked')) {
+      const stakers = await topCw20Stakers.compute({
+        ...env,
+        contractAddress: votingModuleAddress,
+      })
+      if (stakers) {
+        return stakers.map(({ address, votingPowerPercent }) => ({
+          address,
+          votingPowerPercent,
+        }))
+      }
+    } else if (await contractMatchesCodeIdKeys('dao-voting-cw721-staked')) {
+      const stakers = await topCw721Stakers.compute({
+        ...env,
+        contractAddress: votingModuleAddress,
+      })
+      if (stakers) {
+        return stakers.map(({ address, votingPowerPercent }) => ({
+          address,
+          votingPowerPercent,
+        }))
+      }
+    } else if (await contractMatchesCodeIdKeys('dao-voting-native-staked')) {
+      const stakers = await topNativeStakers.compute({
+        ...env,
+        contractAddress: votingModuleAddress,
+      })
+      if (stakers) {
+        return stakers.map(({ address, votingPowerPercent }) => ({
+          address,
+          votingPowerPercent,
+        }))
+      }
+    }
   },
 }
 
