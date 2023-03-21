@@ -781,7 +781,7 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
 
         return members.map(({ addr, weight }) => ({
           address: addr,
-          votingPowerPercent: totalWeight ? weight / totalWeight : 0,
+          votingPowerPercent: totalWeight ? (weight / totalWeight) * 100 : 0,
         }))
       }
     } else if (
