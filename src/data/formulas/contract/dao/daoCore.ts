@@ -737,18 +737,17 @@ type DaoMember = {
 
 export const listMembers: ContractFormula<DaoMember[] | undefined> = {
   compute: async (env) => {
-    const { contractAddress, contractMatchesCodeIdKeys } = env
+    const { contractMatchesCodeIdKeys } = env
 
     // Get members.
-    const votingModuleAddress = await votingModule.compute({
-      ...env,
-      contractAddress,
-    })
+    const votingModuleAddress = await votingModule.compute(env)
     if (!votingModuleAddress) {
       return
     }
 
-    if (await contractMatchesCodeIdKeys(contractAddress, 'dao-voting-cw4')) {
+    if (
+      await contractMatchesCodeIdKeys(votingModuleAddress, 'dao-voting-cw4')
+    ) {
       const cw4Group = await groupContract.compute({
         ...env,
         contractAddress: votingModuleAddress,
@@ -769,12 +768,16 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
         }))
       }
     } else if (
-      await contractMatchesCodeIdKeys(contractAddress, 'dao-voting-cw20-staked')
+      await contractMatchesCodeIdKeys(
+        votingModuleAddress,
+        'dao-voting-cw20-staked'
+      )
     ) {
       const stakers = await topCw20Stakers.compute({
         ...env,
         contractAddress: votingModuleAddress,
       })
+
       if (stakers) {
         return stakers.map(({ address, votingPowerPercent }) => ({
           address,
@@ -783,7 +786,7 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
       }
     } else if (
       await contractMatchesCodeIdKeys(
-        contractAddress,
+        votingModuleAddress,
         'dao-voting-cw721-staked'
       )
     ) {
@@ -791,15 +794,14 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
         ...env,
         contractAddress: votingModuleAddress,
       })
-      if (stakers) {
-        return stakers.map(({ address, votingPowerPercent }) => ({
-          address,
-          votingPowerPercent,
-        }))
-      }
+
+      return stakers.map(({ address, votingPowerPercent }) => ({
+        address,
+        votingPowerPercent,
+      }))
     } else if (
       await contractMatchesCodeIdKeys(
-        contractAddress,
+        votingModuleAddress,
         'dao-voting-native-staked'
       )
     ) {
@@ -807,6 +809,7 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
         ...env,
         contractAddress: votingModuleAddress,
       })
+
       if (stakers) {
         return stakers.map(({ address, votingPowerPercent }) => ({
           address,
