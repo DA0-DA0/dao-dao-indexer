@@ -685,23 +685,46 @@ export const potentialSubDaos: ContractFormula<
   },
 }
 
-export const allMembers: ContractFormula<Record<string, string[]>> = {
+export const allMembers: ContractFormula<
+  Record<
+    string,
+    {
+      name: string | undefined
+      members: DaoMember[]
+    }
+  >
+> = {
   compute: async (env) => {
     const pendingDaos = new Set([env.contractAddress])
     const daosSeen = new Set(env.contractAddress)
 
-    const subDaoMembers: Record<string, DaoMember[]> = {}
+    const _allMembers: Record<
+      string,
+      {
+        name: string | undefined
+        members: DaoMember[]
+      }
+    > = {}
 
     while (pendingDaos.size > 0) {
       const subDao = pendingDaos.values().next().value
       pendingDaos.delete(subDao)
+
+      // Get config.
+      const daoConfig = await config.compute({
+        ...env,
+        contractAddress: subDao,
+      })
 
       // Get members.
       const members = await listMembers.compute({
         ...env,
         contractAddress: subDao,
       })
-      subDaoMembers[subDao] = members ?? []
+      _allMembers[subDao] = {
+        name: daoConfig?.name,
+        members: members ?? [],
+      }
 
       // Get SubDAOs.
       const subDaos = await listSubDaos.compute({
@@ -720,13 +743,7 @@ export const allMembers: ContractFormula<Record<string, string[]>> = {
       }
     }
 
-    return Object.entries(subDaoMembers).reduce(
-      (acc, [dao, members]) => ({
-        ...acc,
-        [dao]: members.map((m) => m.address),
-      }),
-      {} as Record<string, string[]>
-    )
+    return _allMembers
   },
 }
 
