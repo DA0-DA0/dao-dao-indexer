@@ -25,6 +25,8 @@ export const loadStakingTests = (options: ComputerTestOptions) => {
           infractionBlockHeight: 1,
           slashFactor: '0.25',
           amountSlashed: '25000000000000',
+          effectiveFraction: '0.25',
+          stakedTokensBurned: '25000000000000',
         },
         {
           validatorOperatorAddress: validator2.operatorAddress,
@@ -34,6 +36,8 @@ export const loadStakingTests = (options: ComputerTestOptions) => {
           infractionBlockHeight: 4,
           slashFactor: '0.1',
           amountSlashed: '100000000000',
+          effectiveFraction: '0.1',
+          stakedTokensBurned: '100000000000',
         },
         {
           validatorOperatorAddress: validator1.operatorAddress,
@@ -43,6 +47,8 @@ export const loadStakingTests = (options: ComputerTestOptions) => {
           infractionBlockHeight: 9,
           slashFactor: '0.2',
           amountSlashed: '15000000000000',
+          effectiveFraction: '0.2',
+          stakedTokensBurned: '15000000000000',
         },
       ])
 
@@ -65,6 +71,8 @@ export const loadStakingTests = (options: ComputerTestOptions) => {
             infractionBlockHeight: '9',
             slashFactor: '0.2',
             amountSlashed: '15000000000000',
+            effectiveFraction: '0.2',
+            stakedTokensBurned: '15000000000000',
           },
           {
             registeredBlockHeight: '3',
@@ -72,6 +80,8 @@ export const loadStakingTests = (options: ComputerTestOptions) => {
             infractionBlockHeight: '1',
             slashFactor: '0.25',
             amountSlashed: '25000000000000',
+            effectiveFraction: '0.25',
+            stakedTokensBurned: '25000000000000',
           },
         ])
     })
