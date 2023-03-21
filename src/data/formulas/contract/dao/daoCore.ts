@@ -748,7 +748,7 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
       return
     }
 
-    if (await contractMatchesCodeIdKeys('dao-voting-cw4')) {
+    if (await contractMatchesCodeIdKeys(contractAddress, 'dao-voting-cw4')) {
       const cw4Group = await groupContract.compute({
         ...env,
         contractAddress: votingModuleAddress,
@@ -768,7 +768,9 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
           votingPowerPercent: totalWeight ? weight / totalWeight : 0,
         }))
       }
-    } else if (await contractMatchesCodeIdKeys('dao-voting-cw20-staked')) {
+    } else if (
+      await contractMatchesCodeIdKeys(contractAddress, 'dao-voting-cw20-staked')
+    ) {
       const stakers = await topCw20Stakers.compute({
         ...env,
         contractAddress: votingModuleAddress,
@@ -779,7 +781,12 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
           votingPowerPercent,
         }))
       }
-    } else if (await contractMatchesCodeIdKeys('dao-voting-cw721-staked')) {
+    } else if (
+      await contractMatchesCodeIdKeys(
+        contractAddress,
+        'dao-voting-cw721-staked'
+      )
+    ) {
       const stakers = await topCw721Stakers.compute({
         ...env,
         contractAddress: votingModuleAddress,
@@ -790,7 +797,12 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
           votingPowerPercent,
         }))
       }
-    } else if (await contractMatchesCodeIdKeys('dao-voting-native-staked')) {
+    } else if (
+      await contractMatchesCodeIdKeys(
+        contractAddress,
+        'dao-voting-native-staked'
+      )
+    ) {
       const stakers = await topNativeStakers.compute({
         ...env,
         contractAddress: votingModuleAddress,
