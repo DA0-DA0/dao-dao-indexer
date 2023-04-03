@@ -41,9 +41,7 @@ const main = async () => {
     type: DbType.Accounts,
   })
 
-  console.log(
-    `\n[webhooks] Firing account webhooks at ${new Date().toISOString()}...`
-  )
+  console.log(`\n[webhooks] Firing webhooks at ${new Date().toISOString()}...`)
 
   while (!shuttingDown) {
     const pending = await PendingWebhook.findAll({
