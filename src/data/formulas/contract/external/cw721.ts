@@ -171,6 +171,7 @@ export const tokens: ContractFormula<
         `tokenOwner:${owner}`
       )) ?? {}
     const tokens = Object.keys(tokensMap)
+      .map(decodeTokenId)
       // Ascending by token ID.
       .sort(([a], [b]) => a.localeCompare(b))
       .filter(
@@ -196,6 +197,7 @@ export const allTokens: ContractFormula<
     const tokensMap =
       (await getTransformationMap<string>(contractAddress, 'token')) ?? {}
     const tokens = Object.keys(tokensMap)
+      .map(decodeTokenId)
       // Ascending by token ID.
       .sort(([a], [b]) => a.localeCompare(b))
       .filter(
@@ -272,4 +274,26 @@ export const approvals: ContractFormula<
 
     return info?.approvals
   },
+}
+
+// Helpers
+
+// Some NFT contracts store token IDs as numbers, even though the cw721-base
+// contract stores them as strings. This function attempts to detect when a
+// string actually a utf-8 encoded number and turn it into the proper string
+// representation of a number.
+const decodeTokenId = (tokenId: string): string => {
+  // If the token ID is 8 bytes long and starts with a null byte or all bytes
+  // are 0xFF, it is a utf-8 encoded number. Only the largest Uint64 number
+  // won't start with a null byte, and it'll only consist of 0xFF bytes.
+  if (
+    tokenId.length === 8 &&
+    (tokenId[0] === '\0' || tokenId === '\xFF'.repeat(8))
+  ) {
+    const buffer = Buffer.from(tokenId, 'utf-8')
+    const number = buffer.readBigUint64BE()
+    return number.toString()
+  }
+
+  return tokenId
 }
