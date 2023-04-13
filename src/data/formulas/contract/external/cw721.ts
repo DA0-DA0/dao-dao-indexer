@@ -283,9 +283,9 @@ export const approvals: ContractFormula<
 // string actually a utf-8 encoded number and turn it into the proper string
 // representation of a number.
 const decodeTokenId = (tokenId: string): string => {
-  // Replace escaped backslashes with a single backslash to get the unescaped
+  // Replace escaped null bytes with a single backslash to get the unescaped
   // bytes.
-  const unescaped = tokenId.replace(/\\\\/g, '\\')
+  const unescaped = tokenId.replace(/\\0/g, '\0')
   // If the unescaped token ID is 8 bytes long and starts with a null byte or
   // all bytes are 0xFF, it is a utf-8 encoded number. Only the largest Uint64
   // number won't start with a null byte, and it'll only consist of 0xFF bytes.
