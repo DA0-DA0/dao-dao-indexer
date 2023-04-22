@@ -1,2 +1,2 @@
 export * from './featured'
-export * from './token'
+export * as token from './token'
