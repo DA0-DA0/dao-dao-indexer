@@ -5,26 +5,41 @@ interface StakerBalance {
   balance: string
 }
 
+type Config = {
+  denom: string
+}
+
 export const votingPower: ContractFormula<string, { address: string }> = {
-  compute: async ({ contractAddress, get, args: { address } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { address },
+  }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
     return (
-      (await get<string>(contractAddress, 'staked_balances', address)) || '0'
+      (
+        await getTransformationMatch<string>(
+          contractAddress,
+          `stakedBalance:${address}`
+        )
+      )?.value ?? '0'
     )
   },
 }
 
 export const totalPower: ContractFormula<string> = {
-  compute: async ({ contractAddress, get }) =>
-    (await get<string>(contractAddress, 'total_staked')) || '0',
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<string>(contractAddress, 'totalStaked'))
+      ?.value || '0',
 }
 
 export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'dao'),
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<string | undefined>(contractAddress, 'dao'))
+      ?.value,
 }
 
 export const claims: ContractFormula<any[] | undefined, { address: string }> = {
@@ -37,9 +52,9 @@ export const claims: ContractFormula<any[] | undefined, { address: string }> = {
   },
 }
 
-export const config: ContractFormula = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'config'),
+export const config: ContractFormula<Config | undefined> = {
+  compute: async ({ contractAddress, getTransformationMatch }) =>
+    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value,
 }
 
 export const listStakers: ContractFormula<
