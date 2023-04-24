@@ -685,13 +685,16 @@ export const potentialSubDaos: ContractFormula<
   },
 }
 
+// Count of unique members in the DAO and all of its SubDAOs.
 export const memberCount: ContractFormula<number> = {
   compute: async (env) => {
     const memberTree = await allMembers.compute(env)
-    return Object.values(memberTree).reduce(
-      (sum, { members }) => sum + members.length,
-      0
+    const uniqueMembers = new Set(
+      Object.values(memberTree)
+        .flatMap(({ members }) => members)
+        .map(({ address }) => address)
     )
+    return uniqueMembers.size
   },
 }
 
