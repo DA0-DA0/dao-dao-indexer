@@ -685,8 +685,14 @@ export const potentialSubDaos: ContractFormula<
   },
 }
 
-// Count of unique members in the DAO and all of its SubDAOs.
-export const memberCount: ContractFormula<number> = {
+// Count of unique members in the DAO and SubDAOs if `recursive` is enabled.
+// `recursive` follows the same rules as in `allMembers`.
+export const memberCount: ContractFormula<
+  number,
+  {
+    recursive?: string
+  }
+> = {
   compute: async (env) => {
     const memberTree = await allMembers.compute(env)
     const uniqueMembers = new Set(
