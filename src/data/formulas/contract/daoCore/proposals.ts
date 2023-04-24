@@ -130,7 +130,7 @@ const PROPOSAL_COUNT_MAP: Record<string, ContractFormula<number> | undefined> =
   }
 
 export const passedProposals: ContractFormula<
-  ProposalResponse<any>[] | undefined
+  (ProposalResponse<any> & { proposalModuleAddress: string })[] | undefined
 > = {
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
@@ -149,13 +149,16 @@ export const passedProposals: ContractFormula<
 
         const passedProposalsFormula =
           PASSED_PROPOSALS_MAP[info.contract.replace('crates.io:', '')]
-
-        return (
+        const proposals =
           (await passedProposalsFormula?.compute({
             ...env,
             contractAddress: proposalModuleAddress,
           })) ?? []
-        )
+
+        return proposals.map((proposal) => ({
+          proposalModuleAddress,
+          ...proposal,
+        }))
       })
     )
 
