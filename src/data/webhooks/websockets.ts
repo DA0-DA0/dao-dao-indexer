@@ -2,7 +2,7 @@ import { Webhook, WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 import { State } from '@/db'
 
-import { activeProposalModules } from '../formulas/contract/dao/daoCore'
+import { activeProposalModules } from '../formulas/contract/daoCore/base'
 import { getDaoAddressForProposalModule } from './utils'
 
 const CODE_IDS_KEY_SINGLE = 'dao-proposal-single'

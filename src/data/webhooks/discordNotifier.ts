@@ -4,7 +4,7 @@ import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 import {
   activeProposalModules,
   config as daoCoreConfig,
-} from '../formulas/contract/dao/daoCore'
+} from '../formulas/contract/daoCore/base'
 import { Status } from '../formulas/contract/proposal/types'
 import { getDaoAddressForProposalModule } from './utils'
 

@@ -415,6 +415,26 @@ export const openProposals: ContractFormula<
   },
 }
 
+// Return passed proposals.
+export const passedProposals: ContractFormula<
+  ProposalResponse<SingleChoiceProposal>[]
+> = {
+  // This formula depends on the block height/time to check expiration.
+  dynamic: true,
+  compute: async (env) =>
+    (
+      await listProposals.compute({
+        ...env,
+        args: {},
+      })
+    ).filter(
+      ({ proposal }) =>
+        proposal.status === Status.Passed ||
+        proposal.status === Status.Executed ||
+        proposal.status === Status.ExecutionFailed
+    ),
+}
+
 // Helpers
 
 // https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/contracts/proposal/dao-proposal-single/src/proposal.rs#L50

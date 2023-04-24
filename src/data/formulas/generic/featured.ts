@@ -1,6 +1,6 @@
 import { GenericFormula } from '@/core'
 
-import { dumpState } from '../contract/dao/daoCore'
+import { dumpState } from '../contract/daoCore/base'
 import featuredDaosList from './featured_daos.json'
 
 export const featuredDaos: GenericFormula = {

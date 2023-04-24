@@ -1,4 +1,4 @@
-export * from './dao'
+export * from './daoCore'
 export * from './external'
 export * from './prePropose'
 export * from './proposal'

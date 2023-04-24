@@ -5,36 +5,20 @@ import { isExpirationExpired } from '../../utils'
 import { info, instantiatedAt } from '../common'
 import { balance } from '../external/cw20'
 import {
-  listMembers as listCw4Members,
-  totalWeight as totalCw4Weight,
-} from '../external/cw4Group'
-import {
-  openProposals as multipleChoiceOpenProposals,
-  proposalCount as multipleChoiceProposalCount,
-} from '../proposal/daoProposalMultiple'
-import {
-  openProposals as singleChoiceOpenProposals,
-  proposalCount as singleChoiceProposalCount,
-} from '../proposal/daoProposalSingle'
-import { ProposalResponse } from '../proposal/types'
-import {
   totalPower as daoVotingCw20StakedTotalPower,
   votingPower as daoVotingCw20StakedVotingPower,
-  topStakers as topCw20Stakers,
 } from '../voting/daoVotingCw20Staked'
 import {
   totalPower as daoVotingCw4TotalPower,
   votingPower as daoVotingCw4VotingPower,
-  groupContract,
 } from '../voting/daoVotingCw4'
 import {
   totalPower as daoVotingCw721StakedTotalPower,
   votingPower as daoVotingCw721StakedVotingPower,
-  topStakers as topCw721Stakers,
 } from '../voting/daoVotingCw721Staked'
-import { topStakers as topNativeStakers } from '../voting/daoVotingNativeStaked'
+import { proposalCount } from './proposals'
 
-interface Config {
+export type Config = {
   automatically_add_cw20s: boolean
   automatically_add_cw721s: boolean
   dao_uri?: string | null
@@ -43,11 +27,11 @@ interface Config {
   name: string
 }
 
-interface ProposalModuleWithInfo extends ProposalModule {
+export type ProposalModuleWithInfo = ProposalModule & {
   info?: ContractInfo
 }
 
-type PausedResponse =
+export type PausedResponse =
   | {
       Paused: {
         expiration: Expiration
@@ -57,7 +41,7 @@ type PausedResponse =
       Unpaused: {}
     }
 
-interface DumpState {
+export type DumpState = {
   // Same as contract query, except `pause_info`. `pause_info` is dynamic by
   // block since it deals with expiration, so it cannot be cached. However, we
   // want to cache DumpState to speed up the UI. The UI accesses `pause_info`
@@ -82,19 +66,14 @@ interface DumpState {
   proposalCount?: number
 }
 
-interface Cw20Balance {
+export type Cw20Balance = {
   addr: string
   balance?: string
 }
 
-interface SubDao {
+export type SubDao = {
   addr: string
   charter?: string | null
-}
-
-interface InboxItem {
-  proposalModuleAddress: string
-  proposals: (ProposalResponse<any> & { voted?: boolean })[]
 }
 
 const CONTRACT_NAMES = ['cw-core', 'cwd-core', 'dao-core']
@@ -542,117 +521,6 @@ const TOTAL_POWER_FORMULAS: ContractFormula<string>[] = [
   daoVotingCw721StakedTotalPower,
 ]
 
-// Return open proposals and whether or not the given address voted. If no
-// address provided, just return open proposals.
-export const openProposals: ContractFormula<
-  InboxItem[] | undefined,
-  { address?: string }
-> = {
-  // This formula depends on the block height/time to check expiration.
-  dynamic: true,
-  compute: async (env) => {
-    const proposalModules = await activeProposalModules.compute(env)
-
-    if (!proposalModules) {
-      return undefined
-    }
-
-    return (
-      await Promise.all(
-        proposalModules.map(
-          async ({ address: proposalModuleAddress, info }) => {
-            if (!info) {
-              return undefined
-            }
-
-            const openProposalsFormula =
-              OPEN_PROPOSALS_MAP[info.contract.replace('crates.io:', '')]
-            const openProposals = await openProposalsFormula?.compute({
-              ...env,
-              contractAddress: proposalModuleAddress,
-            })
-
-            return (
-              openProposals && {
-                proposalModuleAddress,
-                proposals: openProposals,
-              }
-            )
-          }
-        )
-      )
-    ).filter(Boolean) as InboxItem[]
-  },
-}
-
-// Map contract name to open proposal formula.
-const OPEN_PROPOSALS_MAP: Record<
-  string,
-  | ContractFormula<
-      (ProposalResponse<any> & { voted?: boolean })[],
-      { address?: string }
-    >
-  | undefined
-> = {
-  // Single choice
-  // V1
-  'cw-govmod-single': singleChoiceOpenProposals,
-  'cw-proposal-single': singleChoiceOpenProposals,
-  // V2
-  'cwd-proposal-single': singleChoiceOpenProposals,
-  'dao-proposal-single': singleChoiceOpenProposals,
-
-  // Multiple choice
-  'cwd-proposal-multiple': multipleChoiceOpenProposals,
-  'dao-proposal-multiple': multipleChoiceOpenProposals,
-}
-
-export const proposalCount: ContractFormula<number | undefined> = {
-  compute: async (env) => {
-    const proposalModules = await activeProposalModules.compute(env)
-    if (!proposalModules) {
-      return undefined
-    }
-
-    // Get proposal count for each proposal module.
-    const proposalCounts = await Promise.all(
-      proposalModules.map(async ({ address: proposalModuleAddress, info }) => {
-        if (!info) {
-          return 0
-        }
-
-        const proposalCountFormula =
-          PROPOSAL_COUNT_MAP[info.contract.replace('crates.io:', '')]
-        const proposalCount = await proposalCountFormula?.compute({
-          ...env,
-          contractAddress: proposalModuleAddress,
-        })
-
-        return proposalCount ?? 0
-      })
-    )
-
-    // Sum.
-    return proposalCounts.reduce((a, b) => a + b)
-  },
-}
-
-// Map contract name to proposal count formula.
-const PROPOSAL_COUNT_MAP: Record<string, ContractFormula<number> | undefined> =
-  {
-    // Single choice
-    // V1
-    'cw-govmod-single': singleChoiceProposalCount,
-    'cw-proposal-single': singleChoiceProposalCount,
-    // V2
-    'cwd-proposal-single': singleChoiceProposalCount,
-    'dao-proposal-single': singleChoiceProposalCount,
-
-    // Multiple choice
-    'cwd-proposal-multiple': multipleChoiceProposalCount,
-    'dao-proposal-multiple': multipleChoiceProposalCount,
-  }
-
 // Returns contracts with an admin state key set to this DAO. Hopefully these
 // are mostly DAO contracts.
 export const potentialSubDaos: ContractFormula<
@@ -682,188 +550,6 @@ export const potentialSubDaos: ContractFormula<
       contractAddress,
       info: infos[index],
     }))
-  },
-}
-
-// Count of unique members in the DAO and SubDAOs if `recursive` is enabled.
-// `recursive` follows the same rules as in `allMembers`.
-export const memberCount: ContractFormula<
-  number,
-  {
-    recursive?: string
-  }
-> = {
-  compute: async (env) => {
-    const memberTree = await allMembers.compute(env)
-    const uniqueMembers = new Set(
-      Object.values(memberTree)
-        .flatMap(({ members }) => members)
-        .map(({ address }) => address)
-    )
-    return uniqueMembers.size
-  },
-}
-
-export const allMembers: ContractFormula<
-  Record<
-    string,
-    {
-      name: string | undefined
-      members: DaoMember[]
-    }
-  >,
-  {
-    // Whether or not to recurse into SubDAOs. Defaults to true. `true` or `1`
-    // means recurse, anything else means don't recurse.
-    recursive?: string
-  }
-> = {
-  compute: async (env) => {
-    const pendingDaos = new Set([env.contractAddress])
-    const daosSeen = new Set(env.contractAddress)
-
-    const _allMembers: Record<
-      string,
-      {
-        name: string | undefined
-        members: DaoMember[]
-      }
-    > = {}
-
-    while (pendingDaos.size > 0) {
-      const dao = pendingDaos.values().next().value
-      pendingDaos.delete(dao)
-
-      // Get config.
-      const daoConfig = await config.compute({
-        ...env,
-        contractAddress: dao,
-      })
-
-      // Get members.
-      const members = await listMembers.compute({
-        ...env,
-        contractAddress: dao,
-      })
-      _allMembers[dao] = {
-        name: daoConfig?.name,
-        members: members ?? [],
-      }
-
-      // Get SubDAOs if `recursive` is enabled.
-      if (
-        !('recursive' in env.args) ||
-        env.args.recursive === 'true' ||
-        env.args.recursive === '1'
-      ) {
-        const subDaos = await listSubDaos.compute({
-          ...env,
-          contractAddress: dao,
-        })
-
-        // Add to queue if not already added.
-        if (subDaos.length > 0) {
-          for (const { addr } of subDaos) {
-            if (!daosSeen.has(addr)) {
-              daosSeen.add(addr)
-              pendingDaos.add(addr)
-            }
-          }
-        }
-      }
-    }
-
-    return _allMembers
-  },
-}
-
-type DaoMember = {
-  address: string
-  votingPowerPercent: number
-}
-
-export const listMembers: ContractFormula<DaoMember[] | undefined> = {
-  compute: async (env) => {
-    const { contractMatchesCodeIdKeys } = env
-
-    // Get members.
-    const votingModuleAddress = await votingModule.compute(env)
-    if (!votingModuleAddress) {
-      return
-    }
-
-    if (
-      await contractMatchesCodeIdKeys(votingModuleAddress, 'dao-voting-cw4')
-    ) {
-      const cw4Group = await groupContract.compute({
-        ...env,
-        contractAddress: votingModuleAddress,
-      })
-      if (cw4Group) {
-        const totalWeight = await totalCw4Weight.compute({
-          ...env,
-          contractAddress: cw4Group,
-        })
-        const members = await listCw4Members.compute({
-          ...env,
-          contractAddress: cw4Group,
-        })
-
-        return members.map(({ addr, weight }) => ({
-          address: addr,
-          votingPowerPercent: totalWeight ? (weight / totalWeight) * 100 : 0,
-        }))
-      }
-    } else if (
-      await contractMatchesCodeIdKeys(
-        votingModuleAddress,
-        'dao-voting-cw20-staked'
-      )
-    ) {
-      const stakers = await topCw20Stakers.compute({
-        ...env,
-        contractAddress: votingModuleAddress,
-      })
-
-      if (stakers) {
-        return stakers.map(({ address, votingPowerPercent }) => ({
-          address,
-          votingPowerPercent,
-        }))
-      }
-    } else if (
-      await contractMatchesCodeIdKeys(
-        votingModuleAddress,
-        'dao-voting-cw721-staked'
-      )
-    ) {
-      const stakers = await topCw721Stakers.compute({
-        ...env,
-        contractAddress: votingModuleAddress,
-      })
-
-      return stakers.map(({ address, votingPowerPercent }) => ({
-        address,
-        votingPowerPercent,
-      }))
-    } else if (
-      await contractMatchesCodeIdKeys(
-        votingModuleAddress,
-        'dao-voting-native-staked'
-      )
-    ) {
-      const stakers = await topNativeStakers.compute({
-        ...env,
-        contractAddress: votingModuleAddress,
-      })
-
-      if (stakers) {
-        return stakers.map(({ address, votingPowerPercent }) => ({
-          address,
-          votingPowerPercent,
-        }))
-      }
-    }
   },
 }
 
