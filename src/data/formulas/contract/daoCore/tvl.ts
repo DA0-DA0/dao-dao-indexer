@@ -9,7 +9,7 @@ import { getUniqueSubDaosInTree } from './utils'
 
 // TVL in USD.
 export const tvl: ContractFormula<
-  number | string[],
+  number,
   {
     // Whether or not to recurse into SubDAOs. Defaults to true. `true` or `1`
     // means recurse, anything else means don't recurse.
@@ -63,18 +63,17 @@ export const tvl: ContractFormula<
       env.args.recursive === '1'
     ) {
       const subDaos = await getUniqueSubDaosInTree(env, env.contractAddress)
-      return subDaos
 
-      // for (const subDao of subDaos) {
-      //   totalTvl += await tvl.compute({
-      //     ...env,
-      //     contractAddress: subDao,
-      //     // Already recursed and got all SubDAOs in tree.
-      //     args: {
-      //       recursive: 'false',
-      //     },
-      //   })
-      // }
+      for (const subDao of subDaos) {
+        totalTvl += await tvl.compute({
+          ...env,
+          contractAddress: subDao,
+          // Already recursed and got all SubDAOs in tree.
+          args: {
+            recursive: 'false',
+          },
+        })
+      }
     }
 
     return totalTvl

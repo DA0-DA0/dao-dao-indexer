@@ -7,8 +7,8 @@ export const getUniqueSubDaosInTree = async (
   env: ContractEnv,
   daoAddress: string
 ): Promise<string[]> => {
-  const pendingDaos = new Set<string>([daoAddress])
-  const daosSeen = new Set(daoAddress)
+  const pendingDaos = new Set([daoAddress])
+  const daosSeen = new Set([daoAddress])
 
   while (pendingDaos.size > 0) {
     const dao = pendingDaos.values().next().value
