@@ -8,7 +8,8 @@ import { topStakers as topCw20Stakers } from '../voting/daoVotingCw20Staked'
 import { groupContract } from '../voting/daoVotingCw4'
 import { topStakers as topCw721Stakers } from '../voting/daoVotingCw721Staked'
 import { topStakers as topNativeStakers } from '../voting/daoVotingNativeStaked'
-import { config, listSubDaos, votingModule } from './base'
+import { config, votingModule } from './base'
+import { getUniqueSubDaosInTree } from './utils'
 
 export type DaoMember = {
   address: string
@@ -49,8 +50,15 @@ export const allMembers: ContractFormula<
   }
 > = {
   compute: async (env) => {
-    const pendingDaos = new Set([env.contractAddress])
-    const daosSeen = new Set(env.contractAddress)
+    const daos = [
+      env.contractAddress,
+      // Add SubDAOs if `recursive` is enabled.
+      ...(!('recursive' in env.args) ||
+      env.args.recursive === 'true' ||
+      env.args.recursive === '1'
+        ? await getUniqueSubDaosInTree(env, env.contractAddress)
+        : []),
+    ]
 
     const _allMembers: Record<
       string,
@@ -60,10 +68,7 @@ export const allMembers: ContractFormula<
       }
     > = {}
 
-    while (pendingDaos.size > 0) {
-      const dao = pendingDaos.values().next().value
-      pendingDaos.delete(dao)
-
+    for (const dao of daos) {
       // Get config.
       const daoConfig = await config.compute({
         ...env,
@@ -75,31 +80,10 @@ export const allMembers: ContractFormula<
         ...env,
         contractAddress: dao,
       })
+
       _allMembers[dao] = {
         name: daoConfig?.name,
         members: members ?? [],
-      }
-
-      // Get SubDAOs if `recursive` is enabled.
-      if (
-        !('recursive' in env.args) ||
-        env.args.recursive === 'true' ||
-        env.args.recursive === '1'
-      ) {
-        const subDaos = await listSubDaos.compute({
-          ...env,
-          contractAddress: dao,
-        })
-
-        // Add to queue if not already added.
-        if (subDaos.length > 0) {
-          for (const { addr } of subDaos) {
-            if (!daosSeen.has(addr)) {
-              daosSeen.add(addr)
-              pendingDaos.add(addr)
-            }
-          }
-        }
       }
     }
 
