@@ -685,6 +685,16 @@ export const potentialSubDaos: ContractFormula<
   },
 }
 
+export const memberCount: ContractFormula<number> = {
+  compute: async (env) => {
+    const memberTree = await allMembers.compute(env)
+    return Object.values(memberTree).reduce(
+      (sum, { members }) => sum + members.length,
+      0
+    )
+  },
+}
+
 export const allMembers: ContractFormula<
   Record<
     string,
@@ -707,21 +717,21 @@ export const allMembers: ContractFormula<
     > = {}
 
     while (pendingDaos.size > 0) {
-      const subDao = pendingDaos.values().next().value
-      pendingDaos.delete(subDao)
+      const dao = pendingDaos.values().next().value
+      pendingDaos.delete(dao)
 
       // Get config.
       const daoConfig = await config.compute({
         ...env,
-        contractAddress: subDao,
+        contractAddress: dao,
       })
 
       // Get members.
       const members = await listMembers.compute({
         ...env,
-        contractAddress: subDao,
+        contractAddress: dao,
       })
-      _allMembers[subDao] = {
+      _allMembers[dao] = {
         name: daoConfig?.name,
         members: members ?? [],
       }
@@ -729,7 +739,7 @@ export const allMembers: ContractFormula<
       // Get SubDAOs.
       const subDaos = await listSubDaos.compute({
         ...env,
-        contractAddress: subDao,
+        contractAddress: dao,
       })
 
       // Add to queue if not already added.
