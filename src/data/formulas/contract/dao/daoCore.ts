@@ -705,7 +705,12 @@ export const allMembers: ContractFormula<
       name: string | undefined
       members: DaoMember[]
     }
-  >
+  >,
+  {
+    // Whether or not to recurse into SubDAOs. Defaults to true. `true` or `1`
+    // means recurse, anything else means don't recurse.
+    recursive?: string
+  }
 > = {
   compute: async (env) => {
     const pendingDaos = new Set([env.contractAddress])
@@ -739,18 +744,24 @@ export const allMembers: ContractFormula<
         members: members ?? [],
       }
 
-      // Get SubDAOs.
-      const subDaos = await listSubDaos.compute({
-        ...env,
-        contractAddress: dao,
-      })
+      // Get SubDAOs if `recursive` is enabled.
+      if (
+        !('recursive' in env.args) ||
+        env.args.recursive === 'true' ||
+        env.args.recursive === '1'
+      ) {
+        const subDaos = await listSubDaos.compute({
+          ...env,
+          contractAddress: dao,
+        })
 
-      // Add to queue if not already added.
-      if (subDaos.length > 0) {
-        for (const { addr } of subDaos) {
-          if (!daosSeen.has(addr)) {
-            daosSeen.add(addr)
-            pendingDaos.add(addr)
+        // Add to queue if not already added.
+        if (subDaos.length > 0) {
+          for (const { addr } of subDaos) {
+            if (!daosSeen.has(addr)) {
+              daosSeen.add(addr)
+              pendingDaos.add(addr)
+            }
           }
         }
       }
