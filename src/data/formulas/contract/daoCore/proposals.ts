@@ -12,6 +12,7 @@ import {
 } from '../proposal/daoProposalSingle'
 import { ProposalResponse } from '../proposal/types'
 import { activeProposalModules } from './base'
+import { getUniqueSubDaosInTree } from './utils'
 
 export type OpenProposal = {
   proposalModuleAddress: string
@@ -129,40 +130,72 @@ const PROPOSAL_COUNT_MAP: Record<string, ContractFormula<number> | undefined> =
     'dao-proposal-multiple': multipleChoiceProposalCount,
   }
 
-export const passedProposals: ContractFormula<
-  (ProposalResponse<any> & { proposalModuleAddress: string })[] | undefined
+type PassedProposal = ProposalResponse<any> & {
+  coreAddress: string
+  proposalModuleAddress: string
+}
+
+export const allPassedProposals: ContractFormula<
+  PassedProposal[] | undefined,
+  {
+    // Whether or not to recurse into SubDAOs. Defaults to true. `true` or `1`
+    // means recurse, anything else means don't recurse.
+    recursive?: string
+  }
 > = {
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
-    const proposalModules = await activeProposalModules.compute(env)
-    if (!proposalModules) {
-      return undefined
+    const daos = [
+      env.contractAddress,
+      // Add SubDAOs if `recursive` is enabled.
+      ...(!('recursive' in env.args) ||
+      env.args.recursive === 'true' ||
+      env.args.recursive === '1'
+        ? await getUniqueSubDaosInTree(env, env.contractAddress)
+        : []),
+    ]
+
+    const all: PassedProposal[] = []
+
+    for (const dao of daos) {
+      const proposalModules =
+        (await activeProposalModules.compute({
+          ...env,
+          contractAddress: dao,
+        })) ?? []
+
+      // Get passed proposals for each proposal module.
+      const passedProposals = await Promise.all(
+        proposalModules.map(
+          async ({ address: proposalModuleAddress, info }) => {
+            if (!info) {
+              return []
+            }
+
+            const passedProposalsFormula =
+              PASSED_PROPOSALS_MAP[info.contract.replace('crates.io:', '')]
+            const proposals =
+              (await passedProposalsFormula?.compute({
+                ...env,
+                contractAddress: proposalModuleAddress,
+              })) ?? []
+
+            return proposals.map(
+              (proposal): PassedProposal => ({
+                coreAddress: dao,
+                proposalModuleAddress,
+                ...proposal,
+              })
+            )
+          }
+        )
+      )
+
+      all.push(...passedProposals.flat())
     }
 
-    // Get passed proposals for each proposal module.
-    const passedProposals = await Promise.all(
-      proposalModules.map(async ({ address: proposalModuleAddress, info }) => {
-        if (!info) {
-          return []
-        }
-
-        const passedProposalsFormula =
-          PASSED_PROPOSALS_MAP[info.contract.replace('crates.io:', '')]
-        const proposals =
-          (await passedProposalsFormula?.compute({
-            ...env,
-            contractAddress: proposalModuleAddress,
-          })) ?? []
-
-        return proposals.map((proposal) => ({
-          proposalModuleAddress,
-          ...proposal,
-        }))
-      })
-    )
-
-    return passedProposals.flat()
+    return all
   },
 }
 
