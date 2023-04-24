@@ -72,10 +72,12 @@ export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
     }
     // If dao-voting-cw721-staked or dao-voting-native-staked...
     else if (
-      [
-        ...env.getCodeIdsForKeys(DAO_VOTING_CW721_STAKED_CODE_IDS_KEY),
-        ...env.getCodeIdsForKeys(DAO_VOTING_NATIVE_STAKED_CODE_IDS_KEY),
-      ].includes(event.contract.codeId)
+      env
+        .getCodeIdsForKeys(
+          DAO_VOTING_CW721_STAKED_CODE_IDS_KEY,
+          DAO_VOTING_NATIVE_STAKED_CODE_IDS_KEY
+        )
+        .includes(event.contract.codeId)
     ) {
       // Get DAO from voting contract.
       const dao = (
@@ -92,7 +94,7 @@ export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
 
     return {
       type: WebhookType.Url,
-      url: `https://following-daos.dao-dao.workers.dev/webhook/${state.chainId}/${walletAddress}/${daoAddress}`,
+      url: `https://following.daodao.zone/webhook/${state.chainId}/${walletAddress}/${daoAddress}`,
       method: 'POST',
       headers: {
         'x-api-key': config.followingDaosSecret,
