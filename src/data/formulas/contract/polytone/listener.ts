@@ -1,5 +1,10 @@
 import { ContractFormula } from '@/core'
 
+export const note: ContractFormula<string | undefined> = {
+  compute: async ({ contractAddress, get }) =>
+    await get<string>(contractAddress, 'note'),
+}
+
 export const result: ContractFormula<
   any,
   { initiator: string; initiatorMsg: string }
