@@ -1,7 +1,7 @@
-import * as ear from './ear'
+import * as listener from './listener'
 import * as note from './note'
 
 export const polytone = {
   note,
-  ear,
+  listener,
 }
