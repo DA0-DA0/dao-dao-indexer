@@ -49,7 +49,8 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
     const mainDaoVotingPowers = allMembers[env.contractAddress].members.map(
       ({ votingPowerPercent }) => votingPowerPercent
     )
-    const giniCoefficient = gini(mainDaoVotingPowers)
+    const giniCoefficient =
+      mainDaoVotingPowers.length > 0 ? gini(mainDaoVotingPowers) : -1
 
     const memberCount = await memberCountFormula.compute(env)
 
