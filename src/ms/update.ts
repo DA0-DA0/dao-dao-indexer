@@ -28,11 +28,17 @@ export const updateIndexesForContracts = async (
 
   for (const {
     index,
+    automatic = true,
     formula: formulaName,
     args = {},
     codeIdsKeys,
     contractAddresses,
   } of config.meilisearch.indexes) {
+    // If not automatic, skip.
+    if (!automatic) {
+      continue
+    }
+
     const formula = getContractFormula(formulaName)
     if (!formula) {
       throw new Error(`Formula ${formulaName} not found`)

@@ -44,6 +44,9 @@ export type Config = {
     apiKey?: string
     indexes: {
       index: string
+      // If true, the index will automatically be updated when the contract is
+      // modified. If false, it must be updated manually. Default: true.
+      automatic?: boolean
       filterableAttributes?: string[]
       sortableAttributes?: string[]
       formula: string
