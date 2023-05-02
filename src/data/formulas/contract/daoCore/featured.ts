@@ -1,6 +1,9 @@
 import { ContractFormula } from '@/core'
 
-import { memberCount as memberCountFormula } from './members'
+import {
+  allMembers as allMembersFormula,
+  memberCount as memberCountFormula,
+} from './members'
 import { allPassedProposals as allPassedProposalsFormula } from './proposals'
 import { tvl as tvlFormula } from './tvl'
 
@@ -37,8 +40,16 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
           )
         : -1
 
-    // TODO: Compute.
-    const giniCoefficient = 0
+    const allMembers = await allMembersFormula.compute({
+      ...env,
+      args: {
+        recursive: 'false',
+      },
+    })
+    const mainDaoVotingPowers = allMembers[env.contractAddress].members.map(
+      ({ votingPowerPercent }) => votingPowerPercent
+    )
+    const giniCoefficient = gini(mainDaoVotingPowers)
 
     const memberCount = await memberCountFormula.compute(env)
 
@@ -49,4 +60,26 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
       memberCount,
     }
   },
+}
+
+const gini = (values: number[]): number => {
+  // Mean absolute difference
+  const mad = meanAbsoluteDifference(values)
+  // Relative mean absolute difference
+  const rmad = values.reduce((a, b) => a + b, 0) / values.length
+  // Gini coefficient
+  const gini = mad / (2 * rmad)
+  return gini
+}
+
+const meanAbsoluteDifference = (values: number[]): number => {
+  let sum = 0
+  let count = 0
+  for (let i = 0; i < values.length; i++) {
+    for (let j = i + 1; j < values.length; j++) {
+      sum += Math.abs(values[i] - values[j])
+      count++
+    }
+  }
+  return sum / count
 }
