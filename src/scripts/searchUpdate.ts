@@ -1,10 +1,8 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/core/config'
 import { loadDb } from '@/db'
-
-import { setupMeilisearch } from '../ms/setup'
-import { updateIndexesForContracts } from '../ms/update'
+import { setupMeilisearch, updateIndexesForContracts } from '@/ms'
 
 const main = async () => {
   // Parse arguments.
