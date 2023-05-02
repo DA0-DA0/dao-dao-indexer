@@ -123,7 +123,7 @@ export const updateIndexesForContracts = async ({
         )
 
         console.log(
-          `[${index}] Finished computing ${documents.length}/${matchingContracts.length} formulas...`
+          `[${index}] Finished computing ${documents.length.toLocaleString()}/${matchingContracts.length.toLocaleString()} formulas...`
         )
       }
 
