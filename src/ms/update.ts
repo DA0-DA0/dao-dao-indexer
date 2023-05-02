@@ -6,9 +6,17 @@ import { Contract, State } from '@/db'
 
 import { loadMeilisearch } from './client'
 
-export const updateIndexesForContracts = async (
+type UpdateIndexesForContractsOptions = {
   contracts?: Contract[]
-): Promise<number> => {
+  mode?: 'automatic' | 'manual'
+  index?: string
+}
+
+export const updateIndexesForContracts = async ({
+  contracts,
+  mode = 'automatic',
+  index: filterIndex,
+}: UpdateIndexesForContractsOptions = {}): Promise<number> => {
   const config = loadConfig()
 
   // If no meilisearch in config, nothing to update.
@@ -34,8 +42,13 @@ export const updateIndexesForContracts = async (
     codeIdsKeys,
     contractAddresses,
   } of config.meilisearch.indexes) {
+    // If filter index is provided and does not match, skip.
+    if (filterIndex && filterIndex !== index) {
+      continue
+    }
+
     // If not automatic, skip.
-    if (!automatic) {
+    if (!automatic && mode === 'automatic') {
       continue
     }
 

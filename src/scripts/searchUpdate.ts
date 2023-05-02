@@ -3,8 +3,8 @@ import { Command } from 'commander'
 import { loadConfig } from '@/core'
 import { loadDb } from '@/db'
 
-import { setupMeilisearch } from './setup'
-import { updateIndexesForContracts } from './update'
+import { setupMeilisearch } from '../ms/setup'
+import { updateIndexesForContracts } from '../ms/update'
 
 const main = async () => {
   // Parse arguments.
@@ -12,6 +12,10 @@ const main = async () => {
   program.option(
     '-c, --config <path>',
     'path to config file, falling back to config.json'
+  )
+  program.option(
+    '-i, --index <index>',
+    'only update the specified index, falling back to all indexes'
   )
   program.parse()
   const options = program.opts()
@@ -27,7 +31,10 @@ const main = async () => {
     await setupMeilisearch()
 
     // Update.
-    const updated = await updateIndexesForContracts()
+    const updated = await updateIndexesForContracts({
+      mode: 'manual',
+      index: options.index,
+    })
 
     console.log(`Updated ${updated} documents.`)
   } catch (err) {

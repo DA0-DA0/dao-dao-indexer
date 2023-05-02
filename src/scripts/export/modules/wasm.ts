@@ -472,7 +472,9 @@ const exporter = async (
 
   // Update meilisearch indexes. This must happen after the state is updated
   // since it uses the latest block.
-  await updateIndexesForContracts(contracts)
+  await updateIndexesForContracts({
+    contracts,
+  })
 
   return {
     computationsUpdated,
