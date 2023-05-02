@@ -194,7 +194,7 @@ const getTokenUsdPrice = async (
 let stargateClient: StargateClient | undefined
 const getStargateClient = async () => {
   if (!stargateClient) {
-    stargateClient = await StargateClient.connect('https://juno-rpc.reece.sh')
+    stargateClient = await StargateClient.connect('http://localhost:26657')
   }
 
   return stargateClient
