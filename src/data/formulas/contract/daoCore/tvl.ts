@@ -2,6 +2,7 @@ import { StargateClient } from '@cosmjs/stargate'
 import axios from 'axios'
 
 import { ContractEnv, ContractFormula } from '@/core'
+import { loadConfig } from '@/core/config'
 
 import { tokenInfo } from '../external/cw20'
 import { getUniqueSubDaosInTree } from './utils'
@@ -194,7 +195,8 @@ const getTokenUsdPrice = async (
 let stargateClient: StargateClient | undefined
 const getStargateClient = async () => {
   if (!stargateClient) {
-    stargateClient = await StargateClient.connect('http://localhost:26657')
+    const { rpc } = loadConfig()
+    stargateClient = await StargateClient.connect(rpc)
   }
 
   return stargateClient

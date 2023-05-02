@@ -144,8 +144,8 @@ const main = async () => {
 let lastBlockHeight = 0
 // Update db state. Returns latest block height for log.
 const updateState = async (): Promise<State> => {
-  const { statusEndpoint } = loadConfig()
-  const { data } = await axios.get(statusEndpoint, {
+  const { rpc } = loadConfig()
+  const { data } = await axios.get(rpc + '/status', {
     // https://stackoverflow.com/a/74735197
     headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
   })

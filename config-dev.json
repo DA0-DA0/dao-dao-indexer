@@ -3,7 +3,7 @@
     "wasm": "./fake/wasm.out",
     "staking": "./fake/staking.out"
   },
-  "statusEndpoint": "https://rpc.uni.junonetwork.io/status",
+  "rpc": "https://rpc.uni.junonetwork.io",
   "db": {
     "data": {
       "dialect": "postgres",

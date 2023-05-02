@@ -3,7 +3,7 @@
     "wasm": "/Users/user/.juno/indexer/wasm.out",
     "staking": "/Users/user/.juno/indexer/staking.out"
   },
-  "statusEndpoint": "http://localhost:26657/status",
+  "rpc": "http://localhost:26657",
   "db": {
     "data": {
       "dialect": "postgres",

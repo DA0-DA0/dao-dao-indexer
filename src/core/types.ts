@@ -34,7 +34,7 @@ export type Config = {
     wasm: string
     staking: string
   }
-  statusEndpoint: string
+  rpc: string
   db: {
     data: DB
     accounts: DB
