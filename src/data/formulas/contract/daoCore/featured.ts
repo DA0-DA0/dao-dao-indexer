@@ -1,7 +1,7 @@
 import { ContractFormula } from '@/core'
 
 import {
-  allMembers as allMembersFormula,
+  listMembers as listMembersFormula,
   memberCount as memberCountFormula,
 } from './members'
 import { allPassedProposals as allPassedProposalsFormula } from './proposals'
@@ -40,17 +40,11 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
           )
         : -1
 
-    const allMembers = await allMembersFormula.compute({
-      ...env,
-      args: {
-        recursive: 'false',
-      },
-    })
-    const mainDaoVotingPowers = allMembers[env.contractAddress].members.map(
-      ({ votingPowerPercent }) => votingPowerPercent
-    )
+    const memberVotingPowers = (
+      (await listMembersFormula.compute(env)) ?? []
+    ).map(({ votingPowerPercent }) => votingPowerPercent)
     const giniCoefficient =
-      mainDaoVotingPowers.length > 0 ? gini(mainDaoVotingPowers) : -1
+      memberVotingPowers.length > 0 ? gini(memberVotingPowers) : -1
 
     const memberCount = await memberCountFormula.compute(env)
 
