@@ -242,14 +242,11 @@ export type Env<Args extends Record<string, string> = {}> = {
   getDateFirstTransformed: FormulaTransformationDateGetter
   prefetch: FormulaPrefetch
   prefetchTransformations: FormulaPrefetchTransformations
-
   getContract: FormulaContractGetter
   getCodeIdsForKeys: FormulaCodeIdsForKeysGetter
   contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter
   getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
-
   getSlashEvents: FormulaSlashEventsGetter
-
   getTxEvents: FormulaTxEventsGetter
 }
 
@@ -282,9 +279,10 @@ export type ValidatorEnv<Args extends Record<string, string> = {}> =
 // Formulas compute a value for the state at one block height.
 export type Formula<R = any, E extends Env = Env> = {
   compute: (env: E) => Promise<R>
-  // If true, the formula is dynamic based on block input. This likely means
-  // that some expiration is being computed, which affects the output of the
-  // formula without any state changing.
+  // If true, the formula is non-deterministic within the same block, so it
+  // cannot be cached. This likely means that some expiration is being checked
+  // based on the latest time, which affects the output of the formula without
+  // any state changing.
   dynamic?: boolean
 }
 
