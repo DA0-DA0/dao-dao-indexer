@@ -2,6 +2,7 @@
   "name": "wasmd-indexer",
   "version": "1.0.0",
   "description": "",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "lint": "eslint .",
     "format": "eslint . --fix",
