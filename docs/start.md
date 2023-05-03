@@ -27,8 +27,8 @@ would have to index every single transfer message in order, from the beginning,
 and keep a running total manually. If the indexer crashes, you'll have to make
 sure to start from the same block height, and if you miss a block, the number
 will be wrong. Moreover, if a _different_ contract executes a transfer on a cw20
-contract (as part of a \_sub_message, which is one contract calling another), you
-won't be able to index that transfer at all, unless that contract decided to
+contract (as part of a \_sub_message, which is one contract calling another),
+you won't be able to index that transfer at all, unless that contract decided to
 emit the transfer amount in its events too. Thus, to index the balance of a
 cw20, you would have to know every single contract that could possibly execute a
 transfer on that cw20 contract and index all of those, assuming all contracts

@@ -1,10 +1,10 @@
 # Formulas
 
-A formula is a function that processes the "current" state and returns an
-output. It is block-agnostic, meaning it does not request state from any
-specific block—it purely defines the relationship between the current state and
-an output. The indexer API is responsible for giving the formula access to only
-the state at the point in time requested by the user.
+A formula processes the "current" state and returns an output. It is
+block-agnostic, meaning it does not request state from any specific block—it
+purely defines the relationship between the current state and an output. The
+indexer API is responsible for giving the formula access to only the state at
+the point in time requested by the user.
 
 This formula abstraction allows the indexer to intelligently cache formula
 computations and invalidate those caches when any of the inputs change. This

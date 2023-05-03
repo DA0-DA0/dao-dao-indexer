@@ -20,7 +20,6 @@ export const makeTransformer = (
 
 interface TransformerForMapOptions<V = any> {
   numericKey?: boolean
-  fallback?: any
   getValue?: Transformer<V>['getValue']
 }
 
@@ -28,11 +27,7 @@ export const makeTransformerForMap = <V = any>(
   codeIdsKeys: string[],
   mapPrefix: string,
   keyPrefixOrPrefixes: string | string[],
-  {
-    numericKey = false,
-    fallback = '',
-    getValue,
-  }: TransformerForMapOptions<V> = {}
+  { numericKey = false, getValue }: TransformerForMapOptions<V> = {}
 ): Transformer<V> => {
   const dbKeyPrefixes = [keyPrefixOrPrefixes]
     .flat()
@@ -48,7 +43,6 @@ export const makeTransformerForMap = <V = any>(
       const [, key] = dbKeyToKeys(event.key, [false, numericKey])
       return `${mapPrefix}:${key}`
     },
-    // Null transformed value indicates delete event, so fallback to a value.
-    getValue: getValue || ((event) => event.valueJson ?? fallback),
+    getValue: getValue || ((event) => event.valueJson),
   }
 }
