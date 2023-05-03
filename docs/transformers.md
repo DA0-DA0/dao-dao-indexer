@@ -21,6 +21,8 @@ Transformers are designed to be used to pre-aggregate data that is commonly
 queried. They are stored in a separate table from the state-change events for
 more efficient querying.
 
+Transformers are defined in the `data/transformers` directory.
+
 ## Transformer Structure
 
 A transformer is an object that contains a filter, a name derivation function,
@@ -100,6 +102,10 @@ To add a new transformer, it must be exported from
 nested files that are imported there. Transformers are exported as arrays since
 all need to be checked for every state change event. All matching transformers
 get transformed, so the order does not matter.
+
+Be sure to check out the [keys docs](./keys.md) for a very important explanation
+of how keys are formatted. It describes some utility functions that are
+essentially required to create transformers, specifically `dbKeyToKeys`.
 
 There are a couple of helper functions provided to make it easier to create
 simple transformers.

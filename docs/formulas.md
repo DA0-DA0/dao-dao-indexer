@@ -120,7 +120,7 @@ the [transformers docs](./transformers.md) to learn more about transforming
 state and when it would be useful.
 
 Also be sure to check out the [keys docs](./keys.md) for a very important
-explanation of how keys are managed. It describes some utility functions that
+explanation of how keys are formatted. It describes some utility functions that
 may come in handy when writing formulas. One is used below in a complex
 multi-key Map scenario (`dbKeyToKeys`).
 

@@ -1,6 +1,6 @@
 # Architecture
 
-There are three pieces: the indexer, the API, and Meilisearch.
+There are three pieces: the indexer, the API, Meilisearch, and Soketi.
 
 ### Indexer
 
@@ -36,3 +36,10 @@ This indexer is also capable of exporting data to a
 [Meilisearch](https://www.meilisearch.com/) instance, which can be used to power
 a search engine. If `meilisearch` is not defined in the config, this will be
 disabled. It is optional.
+
+### Soketi
+
+This indexer is also capable of exporting data to a
+[Soketi](https://docs.soketi.app/) instance, which can be used to power
+WebSockets. This is only used by webhooks, and is optional. Check out the
+[webhooks docs](./webhooks.md) for more information.
