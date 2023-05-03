@@ -18,9 +18,12 @@ As the exporter is exporting, it also transforms data, updates the cache, and
 triggers webhooks based on state changes. More information on each of these can
 be found in their respective docs:
 
-- [formulas docs](./formulas.md)
+- [transformers docs](./transformers.md)
 - [cache docs](./cache.md)
 - [webhooks docs](./webhooks.md)
+
+Read the [formulas docs](./formulas.md) for more information on how to write
+formulas that can be used to query the database.
 
 ### API
 
