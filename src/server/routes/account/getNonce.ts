@@ -3,13 +3,9 @@ import { DefaultContext, DefaultState } from 'koa'
 
 import { Account } from '@/db'
 
-type GetNonceResponse =
-  | {
-      nonce: number
-    }
-  | {
-      error: string
-    }
+type GetNonceResponse = {
+  nonce: number
+}
 
 export const getNonce: Router.Middleware<
   DefaultState,

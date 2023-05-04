@@ -4,7 +4,8 @@ Webhooks allow you to notify your own application right when a state change
 event occurs. This effectively lets you listen to events on the blockchain in
 real time.
 
-Webhooks are defined in the `data/webhooks` directory.
+Webhooks are defined in the `data/webhooks` directory. Accounts can also create
+webhooks using the API. See the [API docs](./api.md) for more information.
 
 Be sure to check out the [keys docs](./keys.md) for a very important explanation
 of how keys are formatted. It describes some utility functions that are

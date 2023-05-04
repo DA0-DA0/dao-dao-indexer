@@ -14,6 +14,9 @@ and writes them to a PostgreSQL database. Each line written to the file is a
 JSON object representing a state change and its metadata, such as the contract
 and block height.
 
+Read the [exporter docs](./exporter.md) for more information on how the exporter
+works and what its responsibilities are.
+
 As the exporter is exporting, it also transforms data, updates the cache, and
 triggers webhooks based on state changes. More information on each of these can
 be found in their respective docs:
