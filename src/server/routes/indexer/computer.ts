@@ -26,7 +26,7 @@ import { captureSentryException } from '../../sentry'
 
 // Map IP address to last time it was used.
 const testRateLimit = new Map<string, number>()
-const testCooldownSeconds = 30
+const testCooldownSeconds = 10
 
 export const computer: Router.Middleware = async (ctx) => {
   const config = loadConfig()
@@ -113,7 +113,7 @@ export const computer: Router.Middleware = async (ctx) => {
     const lastUsed = testRateLimit.get(ctx.ip)
     if (lastUsed && now - lastUsed < testCooldownSeconds * 1000) {
       ctx.status = 429
-      ctx.body = 'rate limit exceeded'
+      ctx.body = `${testCooldownSeconds} second test rate limit exceeded`
       return
     }
     testRateLimit.set(ctx.ip, now)
