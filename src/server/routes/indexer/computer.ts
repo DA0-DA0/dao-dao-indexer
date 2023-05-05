@@ -95,7 +95,7 @@ export const computer: Router.Middleware = async (ctx) => {
   // If test account key, apply CORS and rate limit.
   if (accountKey.isTest) {
     // CORS.
-    if (ctx.hostname === 'localhost') {
+    if (ctx.origin === 'http://localhost:3000') {
       ctx.set('Access-Control-Allow-Origin', 'http://localhost:3000')
     } else {
       ctx.set('Access-Control-Allow-Origin', 'https://indexer.zone')
