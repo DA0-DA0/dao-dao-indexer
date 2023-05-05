@@ -44,7 +44,8 @@ export const main = async () => {
     ],
   })
   // Create test account key if it doesn't exist.
-  if (!testAccount.keys.some(({ name }) => name === 'test')) {
+  const keys = (await testAccount.$get('keys')) ?? []
+  if (!keys.some(({ name }) => name === 'test')) {
     const accountKey = await testAccount.$create<AccountKey>('key', {
       name: 'test',
       description: 'test',
