@@ -23,9 +23,6 @@ export const main = async () => {
   // Load config with config option.
   loadConfig(_config)
 
-  const dataSequelize = await loadDb({
-    type: DbType.Data,
-  })
   const accountsSequelize = await loadDb({
     type: DbType.Accounts,
   })
@@ -62,7 +59,6 @@ export const main = async () => {
     })
   }
 
-  await dataSequelize.close()
   await accountsSequelize.close()
 }
 
