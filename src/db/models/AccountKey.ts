@@ -83,6 +83,10 @@ export class AccountKey extends Model {
     })
   }
 
+  public get isTest(): boolean {
+    return this.name === 'test' && this.hashedKey === AccountKey.hashKey('test')
+  }
+
   public async getApiJson(): Promise<AccountKeyApiJson> {
     // Load credits in case they haven't been loaded yet.
     this.credits ||= (await this.$get('credits')) ?? ([] as AccountKeyCredit[])

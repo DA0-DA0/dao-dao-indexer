@@ -24,6 +24,10 @@ import {
 
 import { captureSentryException } from '../../sentry'
 
+// Map IP address to last time it was used.
+const testRateLimit = new Map<string, number>()
+const testCooldownSeconds = 30
+
 export const computer: Router.Middleware = async (ctx) => {
   const config = loadConfig()
 
@@ -86,6 +90,29 @@ export const computer: Router.Middleware = async (ctx) => {
     ctx.status = 401
     ctx.body = 'invalid API key'
     return
+  }
+
+  // If test account key, apply CORS and rate limit.
+  if (accountKey.isTest) {
+    // CORS.
+    ctx.set('Access-Control-Allow-Origin', 'https://indexer.zone')
+
+    // Remove old rate limited IPs.
+    const now = Date.now()
+    for (const [ip, lastUsed] of testRateLimit.entries()) {
+      if (now - lastUsed >= testCooldownSeconds * 1000) {
+        testRateLimit.delete(ip)
+      }
+    }
+
+    // Rate limit.
+    const lastUsed = testRateLimit.get(ctx.ip)
+    if (lastUsed && now - lastUsed < testCooldownSeconds * 1000) {
+      ctx.status = 429
+      ctx.body = 'rate limit exceeded'
+      return
+    }
+    testRateLimit.set(ctx.ip, now)
   }
 
   // Validate address.
