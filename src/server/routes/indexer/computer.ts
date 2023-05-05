@@ -95,7 +95,11 @@ export const computer: Router.Middleware = async (ctx) => {
   // If test account key, apply CORS and rate limit.
   if (accountKey.isTest) {
     // CORS.
-    ctx.set('Access-Control-Allow-Origin', 'https://indexer.zone')
+    if (ctx.hostname === 'localhost') {
+      ctx.set('Access-Control-Allow-Origin', 'http://localhost:3000')
+    } else {
+      ctx.set('Access-Control-Allow-Origin', 'https://indexer.zone')
+    }
 
     // Remove old rate limited IPs.
     const now = Date.now()
