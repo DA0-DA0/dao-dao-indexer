@@ -349,7 +349,7 @@ export const computer: Router.Middleware = async (ctx) => {
     }
 
     // If times passed, compute blocks that correlate with those times.
-    if (times) {
+    if (times && !accountKey.isTest) {
       // If times are negative, subtract from latest block.
       if (times[0] < 0) {
         times[0] += BigInt(state.latestBlockTimeUnixMs)
@@ -399,7 +399,7 @@ export const computer: Router.Middleware = async (ctx) => {
     // formula output that's valid at the provided start block depends on key
     // events that happened in the past. Each computation in the range indicates
     // what block it was first valid at, so the first one should too.
-    if (blocks) {
+    if (blocks && !accountKey.isTest) {
       // Cap end block at latest block.
       if (blocks[1].height > BigInt(state.latestBlockHeight)) {
         blocks[1] = state.latestBlock
