@@ -24,3 +24,5 @@ export interface ProposalResponse<Proposal> {
   executedAt?: string
   closedAt?: string
 }
+
+export type ListProposalFilter = 'passed'

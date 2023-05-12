@@ -1,16 +1,16 @@
 import { ContractFormula } from '@/core'
 
 import {
+  listProposals as multipleChoiceListProposals,
   openProposals as multipleChoiceOpenProposals,
-  passedProposals as multipleChoicePassedProposals,
   proposalCount as multipleChoiceProposalCount,
 } from '../proposal/daoProposalMultiple'
 import {
+  listProposals as singleChoiceListProposals,
   openProposals as singleChoiceOpenProposals,
-  passedProposals as singleChoicePassedProposals,
   proposalCount as singleChoiceProposalCount,
 } from '../proposal/daoProposalSingle'
-import { ProposalResponse } from '../proposal/types'
+import { ListProposalFilter, ProposalResponse } from '../proposal/types'
 import { activeProposalModules } from './base'
 import { getUniqueSubDaosInTree } from './utils'
 
@@ -130,14 +130,15 @@ const PROPOSAL_COUNT_MAP: Record<string, ContractFormula<number> | undefined> =
     'dao-proposal-multiple': multipleChoiceProposalCount,
   }
 
-type PassedProposal = ProposalResponse<any> & {
+type Proposal = ProposalResponse<any> & {
   coreAddress: string
   proposalModuleAddress: string
 }
 
-export const allPassedProposals: ContractFormula<
-  PassedProposal[] | undefined,
+export const allProposals: ContractFormula<
+  Proposal[] | undefined,
   {
+    filter?: ListProposalFilter
     // Whether or not to recurse into SubDAOs. Defaults to true. `true` or `1`
     // means recurse, anything else means don't recurse.
     recursive?: string
@@ -156,7 +157,7 @@ export const allPassedProposals: ContractFormula<
         : []),
     ]
 
-    const all: PassedProposal[] = []
+    const all: Proposal[] = []
 
     for (const dao of daos) {
       const proposalModules =
@@ -165,24 +166,24 @@ export const allPassedProposals: ContractFormula<
           contractAddress: dao,
         })) ?? []
 
-      // Get passed proposals for each proposal module.
-      const passedProposals = await Promise.all(
+      // Get proposals for each proposal module and filter.
+      const proposals = await Promise.all(
         proposalModules.map(
           async ({ address: proposalModuleAddress, info }) => {
             if (!info) {
               return []
             }
 
-            const passedProposalsFormula =
-              PASSED_PROPOSALS_MAP[info.contract.replace('crates.io:', '')]
+            const listProposalsFormula =
+              LIST_PROPOSALS_MAP[info.contract.replace('crates.io:', '')]
             const proposals =
-              (await passedProposalsFormula?.compute({
+              (await listProposalsFormula?.compute({
                 ...env,
                 contractAddress: proposalModuleAddress,
               })) ?? []
 
             return proposals.map(
-              (proposal): PassedProposal => ({
+              (proposal): Proposal => ({
                 coreAddress: dao,
                 proposalModuleAddress,
                 ...proposal,
@@ -192,27 +193,28 @@ export const allPassedProposals: ContractFormula<
         )
       )
 
-      all.push(...passedProposals.flat())
+      all.push(...proposals.flat())
     }
 
     return all
   },
 }
 
-// Map contract name to passed proposals formula.
-const PASSED_PROPOSALS_MAP: Record<
+// Map contract name to list proposals formula.
+const LIST_PROPOSALS_MAP: Record<
   string,
-  ContractFormula<ProposalResponse<any>[]> | undefined
+  | ContractFormula<ProposalResponse<any>[], { filter?: ListProposalFilter }>
+  | undefined
 > = {
   // Single choice
   // V1
-  'cw-govmod-single': singleChoicePassedProposals,
-  'cw-proposal-single': singleChoicePassedProposals,
+  'cw-govmod-single': singleChoiceListProposals,
+  'cw-proposal-single': singleChoiceListProposals,
   // V2
-  'cwd-proposal-single': singleChoicePassedProposals,
-  'dao-proposal-single': singleChoicePassedProposals,
+  'cwd-proposal-single': singleChoiceListProposals,
+  'dao-proposal-single': singleChoiceListProposals,
 
   // Multiple choice
-  'cwd-proposal-multiple': multipleChoicePassedProposals,
-  'dao-proposal-multiple': multipleChoicePassedProposals,
+  'cwd-proposal-multiple': multipleChoiceListProposals,
+  'dao-proposal-multiple': multipleChoiceListProposals,
 }

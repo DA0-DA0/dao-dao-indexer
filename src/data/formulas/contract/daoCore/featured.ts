@@ -4,7 +4,7 @@ import {
   listMembers as listMembersFormula,
   memberCount as memberCountFormula,
 } from './members'
-import { allPassedProposals as allPassedProposalsFormula } from './proposals'
+import { allProposals as allProposalsFormula } from './proposals'
 import { tvl as tvlFormula } from './tvl'
 
 type FeaturedRank = {
@@ -20,9 +20,14 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
   compute: async (env) => {
     const tvl = await tvlFormula.compute(env)
 
-    // Sort proposals by completedAt date, descending, most recent first.
+    // Sort passed proposals by completedAt date, descending, most recent first.
     const allPassedProposals = (
-      (await allPassedProposalsFormula.compute(env)) ?? []
+      (await allProposalsFormula.compute({
+        ...env,
+        args: {
+          filter: 'passed',
+        },
+      })) ?? []
     ).sort((a, b) =>
       a.completedAt && b.completedAt
         ? new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()

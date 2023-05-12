@@ -18,6 +18,7 @@ export const getUniqueSubDaosInTree = async (
     const subDaos = await listSubDaos.compute({
       ...env,
       contractAddress: dao,
+      args: {},
     })
 
     // Add to queue if not already added.

@@ -4,7 +4,7 @@ import { ContractEnv, ContractFormula } from '@/core'
 
 import { VoteCast, VoteInfo } from '../../../../types'
 import { isExpirationExpired } from '../../../utils'
-import { ProposalResponse, Status } from '../types'
+import { ListProposalFilter, ProposalResponse, Status } from '../types'
 import { isPassed, isRejected } from './status'
 import { Ballot, MultipleChoiceProposal } from './types'
 
@@ -56,6 +56,8 @@ export const listProposals: ContractFormula<
   {
     limit?: string
     startAfter?: string
+    // Filter by status.
+    filter?: ListProposalFilter
   }
 > = {
   // This formula depends on the block height/time to check expiration.
@@ -93,8 +95,16 @@ export const listProposals: ContractFormula<
       .filter((id) => id > startAfterNum)
       .slice(0, limitNum)
 
-    const proposalResponses = await Promise.all(
-      proposalIds.map((id) => intoResponse(env, proposals[id], id))
+    const proposalResponses = (
+      await Promise.all(
+        proposalIds.map((id) => intoResponse(env, proposals[id], id))
+      )
+    ).filter(({ proposal }) =>
+      env.args.filter === 'passed'
+        ? proposal.status === Status.Passed ||
+          proposal.status === Status.Executed ||
+          proposal.status === Status.ExecutionFailed
+        : true
     )
 
     return proposalResponses
@@ -356,26 +366,6 @@ export const openProposals: ContractFormula<
 
     return openProposalsWithVotes
   },
-}
-
-// Return passed proposals.
-export const passedProposals: ContractFormula<
-  ProposalResponse<MultipleChoiceProposal>[]
-> = {
-  // This formula depends on the block height/time to check expiration.
-  dynamic: true,
-  compute: async (env) =>
-    (
-      await listProposals.compute({
-        ...env,
-        args: {},
-      })
-    ).filter(
-      ({ proposal }) =>
-        proposal.status === Status.Passed ||
-        proposal.status === Status.Executed ||
-        proposal.status === Status.ExecutionFailed
-    ),
 }
 
 // Helpers
