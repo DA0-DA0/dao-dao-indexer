@@ -175,3 +175,32 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
     }
   },
 }
+
+// Date membership was last updated for a member-based DAO.
+export const lastMembershipChange: ContractFormula<string | undefined> = {
+  compute: async (env) => {
+    // Get members.
+    const votingModuleAddress = await votingModule.compute(env)
+
+    if (
+      !votingModuleAddress ||
+      !(await env.contractMatchesCodeIdKeys(
+        votingModuleAddress,
+        'dao-voting-cw4'
+      ))
+    ) {
+      throw new Error(
+        `lastMembershipChange is only supported for member-based DAOs`
+      )
+    }
+
+    const lastChanged = (
+      await env.getTransformationMatches(votingModuleAddress, 'userWeight:*')
+    )
+      ?.map(({ block }) => new Date(Number(block.timeUnixMs)))
+      .sort()
+      .pop()
+
+    return lastChanged?.toISOString()
+  },
+}

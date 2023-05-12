@@ -3,14 +3,14 @@ import { ContractFormula } from '@/core'
 import { instantiatedAt } from '../common'
 import { config as configFormula, item } from './base'
 import { memberCount as memberCountFormula } from './members'
-import { allProposals } from './proposals'
+import { allProposals, lastActivity as lastActivityFormula } from './proposals'
 
 type JunoHomeMetadata = {
   name?: string
   founded?: string
   image?: string
-  cover?: string
   description?: string
+  cover?: string
   lastActivity?: string
   proposalCount?: number
   memberCount?: number
@@ -34,21 +34,8 @@ export const junoHomeMetadata: ContractFormula<JunoHomeMetadata> = {
       },
     })
     const founded = await instantiatedAt.compute(env)
-    const proposals = (await allProposals.compute(env)) ?? []
-    const proposalCount = proposals.length
-    // Get date of most recent proposal event, either completion or creation.
-    const lastActivity = proposals
-      .map(({ createdAt, completedAt }) =>
-        completedAt
-          ? new Date(completedAt)
-          : createdAt
-          ? new Date(createdAt)
-          : null
-      )
-      .filter(Boolean)
-      .sort()
-      .pop()
-      ?.toISOString()
+    const proposalCount = ((await allProposals.compute(env)) ?? []).length
+    const lastActivity = await lastActivityFormula.compute(env)
     const memberCount = await memberCountFormula.compute(env)
 
     return {
@@ -56,10 +43,10 @@ export const junoHomeMetadata: ContractFormula<JunoHomeMetadata> = {
       founded,
       image: config?.image_url ?? undefined,
       description: config?.description,
+      cover,
       lastActivity,
       proposalCount,
       memberCount,
-      cover,
     }
   },
 }

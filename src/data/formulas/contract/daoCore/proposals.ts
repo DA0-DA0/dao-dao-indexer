@@ -218,3 +218,20 @@ const LIST_PROPOSALS_MAP: Record<
   'cwd-proposal-multiple': multipleChoiceListProposals,
   'dao-proposal-multiple': multipleChoiceListProposals,
 }
+
+// Get date of most recent proposal event, either completion or creation.
+export const lastActivity: ContractFormula<string | undefined> = {
+  compute: async (env) =>
+    ((await allProposals.compute(env)) ?? [])
+      .map(({ createdAt, completedAt }) =>
+        completedAt
+          ? new Date(completedAt)
+          : createdAt
+          ? new Date(createdAt)
+          : null
+      )
+      .filter(Boolean)
+      .sort()
+      .pop()
+      ?.toISOString(),
+}

@@ -557,6 +557,7 @@ export const getEnv = ({
     await onFetch?.(transformations)
 
     return transformations.map((transformation) => ({
+      block: transformation.block,
       contractAddress: transformation.contractAddress,
       codeId: transformation.contract.codeId,
       name: transformation.name,

@@ -132,7 +132,13 @@ export type FormulaTransformationMatchesGetter = <T>(
   whereClause?: any,
   whereCodeId?: any
 ) => Promise<
-  | { contractAddress: string; codeId: number; name: string; value: T }[]
+  | {
+      block: Block
+      contractAddress: string
+      codeId: number
+      name: string
+      value: T
+    }[]
   | undefined
 >
 
