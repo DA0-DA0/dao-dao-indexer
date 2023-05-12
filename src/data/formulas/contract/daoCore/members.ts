@@ -197,10 +197,10 @@ export const lastMembershipChange: ContractFormula<string | undefined> = {
     const lastChanged = (
       await env.getTransformationMatches(votingModuleAddress, 'userWeight:*')
     )
-      ?.map(({ block }) => new Date(Number(block.timeUnixMs)))
+      ?.map(({ block }) => Number(block.timeUnixMs))
       .sort()
       .pop()
 
-    return lastChanged?.toISOString()
+    return lastChanged ? new Date(lastChanged).toISOString() : undefined
   },
 }

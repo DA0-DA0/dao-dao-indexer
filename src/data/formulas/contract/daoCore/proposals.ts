@@ -221,17 +221,21 @@ const LIST_PROPOSALS_MAP: Record<
 
 // Get date of most recent proposal event, either completion or creation.
 export const lastActivity: ContractFormula<string | undefined> = {
-  compute: async (env) =>
-    ((await allProposals.compute(env)) ?? [])
+  compute: async (env) => {
+    const lastProposalAction = ((await allProposals.compute(env)) ?? [])
       .map(({ createdAt, completedAt }) =>
         completedAt
-          ? new Date(completedAt)
+          ? Date.parse(completedAt)
           : createdAt
-          ? new Date(createdAt)
+          ? Date.parse(createdAt)
           : null
       )
       .filter(Boolean)
       .sort()
       .pop()
-      ?.toISOString(),
+
+    return lastProposalAction
+      ? new Date(lastProposalAction).toISOString()
+      : undefined
+  },
 }
