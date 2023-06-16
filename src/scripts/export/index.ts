@@ -241,6 +241,7 @@ const makeModulePromise = (
           readingPerModule[name] = false
         }
       } catch (err) {
+        readingPerModule[name] = false
         Sentry.captureException(err, {
           tags: {
             script: 'export',
