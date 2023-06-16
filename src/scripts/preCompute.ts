@@ -68,6 +68,10 @@ export const main = async () => {
   }
 
   const sequelize = await loadDb()
+  const state = await State.getSingleton()
+  if (!state) {
+    throw new Error('No state found.')
+  }
 
   let contractAddresses: string[]
 
@@ -115,7 +119,7 @@ export const main = async () => {
 
   const blockEnd: Block | undefined = options.end
     ? validateBlockString(options.end, 'end')
-    : (await State.getSingleton())?.latestBlock
+    : state?.latestBlock
 
   // If blockEnd undefined, no state found.
   if (!blockEnd) {
@@ -170,6 +174,7 @@ export const main = async () => {
 
       const outputs = await computeRange({
         ...typedFormula,
+        chainId: state.chainId,
         targetAddress,
         args,
         blockStart: block,

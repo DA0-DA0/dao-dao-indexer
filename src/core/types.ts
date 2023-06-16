@@ -230,6 +230,7 @@ export type FormulaTxEventsGetter = (
 >
 
 export type Env<Args extends Record<string, string> = {}> = {
+  chainId: string
   block: Block
   // If latest block is being used, this will be the current date. If fetching
   // at a specific block, this will be the date of that block.
@@ -257,6 +258,7 @@ export type Env<Args extends Record<string, string> = {}> = {
 }
 
 export interface EnvOptions {
+  chainId: string
   block: Block
   // If latest block is being used, this will be false. If fetching at a
   // specific block, this will be true.
@@ -344,12 +346,14 @@ export type TypedFormula = { name: string } & (
 )
 
 export type ComputeOptions = {
+  chainId: string
   targetAddress: string
   args: Record<string, any>
   block: Block
 } & TypedFormula
 
 export type ComputeRangeOptions = {
+  chainId: string
   targetAddress: string
   args: Record<string, any>
   blockStart: Block

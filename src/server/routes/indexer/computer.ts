@@ -478,6 +478,7 @@ export const computer: Router.Middleware = async (ctx) => {
         if (isRangeCoveredBeforeEnd && !entireRangeValid) {
           const missingComputations = await computeRange({
             ...typedFormula,
+            chainId: state.chainId,
             targetAddress: address,
             args,
             // Start at the block of the last existing computation, since we
@@ -528,6 +529,7 @@ export const computer: Router.Middleware = async (ctx) => {
       if (!existingUsed) {
         const rangeComputations = await computeRange({
           ...typedFormula,
+          chainId: state.chainId,
           targetAddress: address,
           args,
           blockStart: blocks[0],
@@ -660,6 +662,7 @@ export const computer: Router.Middleware = async (ctx) => {
         // Compute if did not find or use existing.
         const computationOutput = await compute({
           ...typedFormula,
+          chainId: state.chainId,
           targetAddress: address,
           args,
           block,

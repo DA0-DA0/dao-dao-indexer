@@ -21,6 +21,7 @@ import {
 } from './types'
 
 export const compute = async ({
+  chainId,
   targetAddress,
   args,
   block,
@@ -53,6 +54,7 @@ export const compute = async ({
   const dependentKeys: ComputationDependentKey[] = []
 
   const env = getEnv({
+    chainId,
     block,
     args,
     dependentKeys,
@@ -84,6 +86,7 @@ export const compute = async ({
 }
 
 export const computeRange = async ({
+  chainId,
   targetAddress,
   args,
   blockStart,
@@ -155,6 +158,7 @@ export const computeRange = async ({
     const dependentKeys: ComputationDependentKey[] = []
 
     const env = getEnv({
+      chainId,
       block,
       args,
       dependentKeys,

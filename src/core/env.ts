@@ -34,6 +34,7 @@ import { dbKeyForKeys, dbKeyToKeys, getDependentKey } from './utils'
 
 // Generate environment for computation.
 export const getEnv = ({
+  chainId,
   block,
   useBlockDate = false,
   args = {},
@@ -960,6 +961,7 @@ export const getEnv = ({
   }
 
   return {
+    chainId,
     block,
     date: useBlockDate ? new Date(Number(block.timeUnixMs)) : new Date(),
     args,

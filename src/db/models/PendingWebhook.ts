@@ -121,6 +121,7 @@ export class PendingWebhook extends Model {
           return webhooksForEvent.map(async (webhook) => {
             const env: ContractEnv = {
               ...getEnv({
+                chainId: state.chainId,
                 block: wasmEvent.block,
                 cache: {
                   contracts: {
