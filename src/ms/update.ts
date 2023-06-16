@@ -105,6 +105,7 @@ export const updateIndexesForContracts = async ({
           ...(await Promise.all(
             matchingContracts.slice(i, i + 100).map(async (contract) => {
               const { block, value } = await compute({
+                chainId: state.chainId,
                 name: formulaName,
                 type: FormulaType.Contract,
                 targetAddress: contract.address,

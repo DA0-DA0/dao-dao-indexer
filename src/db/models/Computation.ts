@@ -23,6 +23,7 @@ import { getTypedFormula } from '@/data'
 import { DependendableEventModel } from '../types'
 import { dependentKeyMatches, getDependableEventModels } from '../utils'
 import { ComputationDependency } from './ComputationDependency'
+import { State } from './State'
 
 @Table({
   timestamps: true,
@@ -208,6 +209,11 @@ export class Computation extends Model {
   // deleted. Returns true if it stayed the same, and false if it got replaced
   // or deleted.
   async revalidate(): Promise<boolean> {
+    const state = await State.getSingleton()
+    if (!state) {
+      throw new Error('No state found.')
+    }
+
     let typedFormula
     let args
     let computation
@@ -215,6 +221,7 @@ export class Computation extends Model {
       typedFormula = getTypedFormula(this.type, this.formula)
       args = JSON.parse(this.args)
       computation = await compute({
+        chainId: state.chainId,
         ...typedFormula,
         targetAddress: this.targetAddress,
         args,
