@@ -60,9 +60,9 @@ export const updateIndexesForContracts = async ({
     const codeIds = codeIdsKeys?.flatMap((key) => config.codeIds?.[key] ?? [])
 
     if (!codeIds?.length && !contractAddresses?.length) {
-      console.error(
-        'One of codeIds or contractAddresses must be present in config.meilisearch.outputs'
-      )
+      // console.error(
+      //   'One of codeIds or contractAddresses must be present in config.meilisearch.outputs'
+      // )
       continue
     }
 
