@@ -14,8 +14,9 @@ export const main = async () => {
     'path to config file, falling back to config.json'
   )
   program.option('-f, --force', "don't ask for confirmation")
+  program.option('-d, --destroy', 'destroy tables if they already exist')
   program.parse()
-  const { config: _config, force } = program.opts()
+  const { config: _config, force, destroy = false } = program.opts()
 
   // Load config with config option.
   loadConfig(_config)
@@ -34,8 +35,8 @@ export const main = async () => {
 
   const setup = async () => {
     try {
-      await setupDb(dataSequelize)
-      await setupDb(accountsSequelize)
+      await setupDb(dataSequelize, destroy)
+      await setupDb(accountsSequelize, destroy)
 
       console.log('\nDropped and recreated all tables.')
     } catch (err) {
