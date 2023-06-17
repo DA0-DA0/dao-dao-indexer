@@ -33,7 +33,7 @@
   },
   "daoDaoBase": "https://testnet.daodao.zone",
   "discordNotifierApiKey": "key",
-  "followingDaosSecret": "secret",
+  "inboxSecret": "secret",
   "websocketsSecret": "secret",
   "payment": {
     "cwReceiptAddress": "juno1hkr8ka5hywvrxxq7r5jtqswe56hf8pzxmper6gsxeedgtlu8npas7drzdf",

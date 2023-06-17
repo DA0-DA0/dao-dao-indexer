@@ -29,7 +29,20 @@ export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
       !event.delete &&
       event.valueJson !== '0',
   },
-  endpoint: async (event, env) => {
+  endpoint: async (_) => ({
+    type: WebhookType.Url,
+    url: 'https://inbox.daodao.zone/add',
+    method: 'POST',
+    headers: {
+      'x-api-key': config.inboxSecret,
+    },
+  }),
+  getValue: async (event, getLastValue, env) => {
+    // Only send if the first time this is set.
+    if ((await getLastValue()) !== null) {
+      return
+    }
+
     const [, walletAddress] = dbKeyToKeys(event.key, [false, false])
 
     // If cw20-stake...
@@ -93,21 +106,12 @@ export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
     }
 
     return {
-      type: WebhookType.Url,
-      url: `https://following.daodao.zone/webhook/${state.chainId}/${walletAddress}/${daoAddress}`,
-      method: 'POST',
-      headers: {
-        'x-api-key': config.followingDaosSecret,
+      chainId: state.chainId,
+      walletAddress,
+      type: 'pending_follow',
+      data: {
+        dao: daoAddress,
       },
     }
-  },
-  getValue: async (_, getLastValue) => {
-    // Only send if the first time this is set.
-    if ((await getLastValue()) !== null) {
-      return
-    }
-
-    // Always send webhook. All data is in URL parameters and headers.
-    return ''
   },
 })

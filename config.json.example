@@ -60,7 +60,7 @@
   },
   "daoDaoBase": "https://testnet.daodao.zone",
   "discordNotifierApiKey": "key",
-  "followingDaosSecret": "secret",
+  "inboxSecret": "secret",
   "websocketsSecret": "secret",
   "accountsJwtSecret": "secret"
 }
