@@ -29,14 +29,14 @@ export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
       !event.delete &&
       event.valueJson !== '0',
   },
-  endpoint: async (_) => ({
+  endpoint: {
     type: WebhookType.Url,
     url: 'https://inbox.daodao.zone/add',
     method: 'POST',
     headers: {
       'x-api-key': config.inboxSecret,
     },
-  }),
+  },
   getValue: async (event, getLastValue, env) => {
     // Only send if the first time this is set.
     if ((await getLastValue()) !== null) {
