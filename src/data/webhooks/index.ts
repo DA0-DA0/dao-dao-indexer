@@ -2,8 +2,8 @@ import { Config, ProcessedWebhook, Webhook, WebhookMaker } from '@/core'
 import { State } from '@/db'
 
 import { makeProposalCreated } from './discordNotifier'
-import { makeAddPendingFollow } from './following'
 import { makeIndexerCwReceiptPaid } from './indexerCwReceipt'
+import { makeInboxJoinedDao } from './joined'
 import { makeBroadcastVoteCast, makeProposalStatusChanged } from './websockets'
 
 let processedWebhooks: ProcessedWebhook[] | undefined
@@ -15,7 +15,7 @@ export const getProcessedWebhooks = (
     const webhookMakers: WebhookMaker[] = [
       // Add webhook makers here.
       makeProposalCreated,
-      makeAddPendingFollow,
+      makeInboxJoinedDao,
       makeIndexerCwReceiptPaid,
       makeBroadcastVoteCast,
       makeProposalStatusChanged,

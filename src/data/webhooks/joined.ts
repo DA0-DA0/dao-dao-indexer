@@ -14,7 +14,7 @@ const KEY_PREFIX_USER_WEIGHTS = dbKeyForKeys('user_weights', '')
 const KEY_PREFIX_NB = dbKeyForKeys('nb', '')
 
 // Fire webhook when a user becomes a member of a DAO.
-export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
+export const makeInboxJoinedDao: WebhookMaker = (config, state) => ({
   filter: {
     codeIdsKeys: [
       CW20_STAKE_CODE_IDS_KEY,
@@ -116,7 +116,7 @@ export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
     return {
       chainId: state.chainId,
       walletAddress,
-      type: 'pending_follow',
+      type: 'joined_dao',
       data: {
         dao: daoAddress,
         name,
