@@ -105,12 +105,21 @@ export const makeAddPendingFollow: WebhookMaker = (config, state) => ({
       return
     }
 
+    // Get name for DAO.
+    const config = (await env.getTransformationMatch(daoAddress, 'config'))
+      ?.value
+    const name =
+      typeof config === 'object' && !!config && 'name' in config
+        ? config.name
+        : undefined
+
     return {
       chainId: state.chainId,
       walletAddress,
       type: 'pending_follow',
       data: {
         dao: daoAddress,
+        name,
       },
     }
   },
