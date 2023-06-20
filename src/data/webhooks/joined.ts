@@ -112,6 +112,10 @@ export const makeInboxJoinedDao: WebhookMaker = (config, state) => ({
       typeof config === 'object' && !!config && 'name' in config
         ? config.name
         : undefined
+    const imageUrl =
+      typeof config === 'object' && !!config && 'image_url' in config
+        ? config.image_url
+        : undefined
 
     return {
       chainId: state.chainId,
@@ -120,6 +124,7 @@ export const makeInboxJoinedDao: WebhookMaker = (config, state) => ({
       data: {
         dao: daoAddress,
         name,
+        imageUrl,
       },
     }
   },
