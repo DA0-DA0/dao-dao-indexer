@@ -1,6 +1,8 @@
 import { WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
+import { config as daoCoreConfig } from '../../formulas/contract/daoCore/base'
+
 const CW20_STAKE_CODE_IDS_KEY = 'cw20-stake'
 const DAO_VOTING_CW4_CODE_IDS_KEY = 'dao-voting-cw4'
 const DAO_VOTING_CW721_STAKED_CODE_IDS_KEY = 'dao-voting-cw721-staked'
@@ -29,21 +31,23 @@ export const makeInboxJoinedDao: WebhookMaker = (config, state) => ({
       !event.delete &&
       event.valueJson !== '0',
   },
-  endpoint: {
-    type: WebhookType.Url,
-    url: 'https://inbox.daodao.zone/add',
-    method: 'POST',
-    headers: {
-      'x-api-key': config.inboxSecret,
-    },
+  endpoint: (event) => {
+    const [, walletAddress] = dbKeyToKeys(event.key, [false, false])
+
+    return {
+      type: WebhookType.Url,
+      url: 'https://inbox.daodao.zone/add/bech32/' + walletAddress,
+      method: 'POST',
+      headers: {
+        'x-api-key': config.inboxSecret,
+      },
+    }
   },
   getValue: async (event, getLastValue, env) => {
     // Only send if the first time this is set.
     if ((await getLastValue()) !== null) {
       return
     }
-
-    const [, walletAddress] = dbKeyToKeys(event.key, [false, false])
 
     // If cw20-stake...
     let daoAddress: string | undefined
@@ -105,26 +109,22 @@ export const makeInboxJoinedDao: WebhookMaker = (config, state) => ({
       return
     }
 
-    // Get name for DAO.
-    const config = (await env.getTransformationMatch(daoAddress, 'config'))
-      ?.value
-    const name =
-      typeof config === 'object' && !!config && 'name' in config
-        ? config.name
-        : undefined
-    const imageUrl =
-      typeof config === 'object' && !!config && 'image_url' in config
-        ? config.image_url
-        : undefined
+    const daoConfig = await daoCoreConfig.compute({
+      ...env,
+      contractAddress: daoAddress,
+    })
+
+    if (!daoConfig) {
+      return
+    }
 
     return {
       chainId: state.chainId,
-      walletAddress,
       type: 'joined_dao',
       data: {
         dao: daoAddress,
-        name,
-        imageUrl,
+        name: daoConfig?.name,
+        imageUrl: daoConfig?.image_url ?? undefined,
       },
     }
   },
