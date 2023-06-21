@@ -5,6 +5,8 @@ import {
   activeProposalModules,
   config as daoCoreConfig,
 } from '../../formulas/contract/daoCore/base'
+import { MultipleChoiceProposal } from '../../formulas/contract/proposal/daoProposalMultiple/types'
+import { SingleChoiceProposal } from '../../formulas/contract/proposal/daoProposalSingle/types'
 import { Status } from '../../formulas/contract/proposal/types'
 import { getDaoAddressForProposalModule } from '../utils'
 
@@ -63,15 +65,18 @@ export const makeInboxProposalCreated: WebhookMaker = (config, state) => ({
     // "proposals"|"proposals_v2", proposalNum
     const [, proposalNum] = dbKeyToKeys(event.key, [false, true])
     const proposalId = `${proposalModule.prefix}${proposalNum}`
+    const proposal: SingleChoiceProposal | MultipleChoiceProposal =
+      event.valueJson
 
     return {
       type: 'proposal_created',
       data: {
         chainId: state.chainId,
         dao: daoAddress,
-        proposalId,
-        name: daoConfig.name,
+        daoName: daoConfig.name,
         imageUrl: daoConfig.image_url ?? undefined,
+        proposalId,
+        proposalName: proposal.title,
       },
     }
   },
