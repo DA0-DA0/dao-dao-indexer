@@ -76,7 +76,7 @@ export const makeInboxProposalCreated: WebhookMaker = (config, state) => ({
         daoName: daoConfig.name,
         imageUrl: daoConfig.image_url ?? undefined,
         proposalId,
-        proposalName: proposal.title,
+        proposalTitle: proposal.title,
       },
     }
   },
