@@ -50,5 +50,13 @@ module.exports = {
       wait_ready: true,
       listen_timeout: 10000,
     },
+    {
+      name: 'server_osmosis-testnet',
+      script: 'dist/server/serve.js',
+      args: ['-p', '3433', '-c', 'config.osmosis-testnet.json'],
+      instances: 2,
+      wait_ready: true,
+      listen_timeout: 10000,
+    },
   ],
 }
