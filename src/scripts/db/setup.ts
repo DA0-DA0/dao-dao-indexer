@@ -38,7 +38,9 @@ export const main = async () => {
       await setupDb(dataSequelize, destroy)
       await setupDb(accountsSequelize, destroy)
 
-      console.log('\nDropped and recreated all tables.')
+      console.log(
+        `\n${destroy ? 'Dropped and recreated' : 'Synced'} all tables.`
+      )
     } catch (err) {
       console.error(err)
     }
@@ -55,7 +57,9 @@ export const main = async () => {
     await close()
   } else {
     rl.question(
-      'Are you sure you want to recreate all tables? All existing data will be lost. [y/n] ',
+      `Are you sure you want to ${destroy ? 'recreate' : 'sync'} all tables?${
+        destroy ? ' All existing data will be lost.' : ''
+      } [y/n] `,
       async (answer) => {
         if (answer === 'y') {
           await setup()
