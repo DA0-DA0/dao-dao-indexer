@@ -942,6 +942,13 @@ export const getEnv = ({
   }
 
   const getTxEvents: FormulaTxEventsGetter = async (contractAddress, where) => {
+    // Add dependent key for any TX events for this contract. Thus a formula
+    // will be recomputed whenever a new TX event occurs for this contract.
+    dependentKeys?.push({
+      key: getDependentKey(WasmTxEvent.dependentKeyNamespace, contractAddress),
+      prefix: true,
+    })
+
     const txEvents = await WasmTxEvent.findAll({
       where: {
         ...where,

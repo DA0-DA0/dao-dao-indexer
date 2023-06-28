@@ -110,6 +110,7 @@ export class WasmTxEvent extends DependendableEventModel {
   get dependentKey(): string {
     return getDependentKey(
       WasmTxEvent.dependentKeyNamespace,
+      this.contractAddress,
       this.blockHeight,
       this.txIndex.toString(),
       this.messageId
@@ -125,7 +126,7 @@ export class WasmTxEvent extends DependendableEventModel {
     dependentKeys: ComputationDependentKey[]
   ): WhereOptions {
     const transformedDependentKeys = dependentKeys.map(({ key }) => {
-      const [blockHeight, txIndex, messageId] = key
+      const [contractAddress, blockHeight, txIndex, messageId] = key
         // 1. Remove namespace from key.
         .replace(new RegExp(`^${this.dependentKeyNamespace}:`), '')
         // 2. Replace wildcard symbol with LIKE wildcard for database query.
@@ -134,6 +135,7 @@ export class WasmTxEvent extends DependendableEventModel {
         .split(':')
 
       return {
+        contractAddress,
         blockHeight,
         txIndex,
         messageId,
@@ -142,7 +144,9 @@ export class WasmTxEvent extends DependendableEventModel {
 
     return {
       [Op.or]: transformedDependentKeys.map(
-        ({ blockHeight, txIndex, messageId }) => ({
+        ({ contractAddress, blockHeight, txIndex, messageId }) => ({
+          // Exact match.
+          contractAddress,
           // Exact and wildcard matches.
           ...(!blockHeight || blockHeight === '*' ? {} : { blockHeight }),
           // Exact and wildcard matches.

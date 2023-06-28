@@ -81,8 +81,6 @@ export const stakeHistory: ContractFormula<{
   stakeEvents: StakeEvent[]
   slashRegistrations: SlashRegistration[]
 }> = {
-  // For now because getTxEvents is not cached.
-  dynamic: true,
   compute: async ({ contractAddress, getTxEvents }) => {
     const txEvents =
       (await getTxEvents(contractAddress, {
