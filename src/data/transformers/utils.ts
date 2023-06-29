@@ -1,5 +1,10 @@
-import { Transformer } from '@/core/types'
+import { ParsedWasmStateEvent, Transformer } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
+
+const defaultGetValue = (event: ParsedWasmStateEvent) =>
+  // If value is null but this is not a delete event, store an empty string
+  // instead so this transformation doesn't look like a delete.
+  event.valueJson === null && !event.delete ? '' : event.valueJson
 
 export const makeTransformer = (
   codeIdsKeys: string[],
@@ -14,7 +19,7 @@ export const makeTransformer = (
       matches: (event) => dbKeys.includes(event.key),
     },
     name,
-    getValue: (event) => event.valueJson,
+    getValue: defaultGetValue,
   }
 }
 
@@ -43,6 +48,6 @@ export const makeTransformerForMap = <V = any>(
       const [, key] = dbKeyToKeys(event.key, [false, numericKey])
       return `${mapPrefix}:${key}`
     },
-    getValue: getValue || ((event) => event.valueJson),
+    getValue: getValue || defaultGetValue,
   }
 }
