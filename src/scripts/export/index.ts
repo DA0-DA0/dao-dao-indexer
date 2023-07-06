@@ -213,9 +213,8 @@ const makeModulePromise = (
 
         const lineHandler = (line: string) => {
           if (shuttingDown) {
-            handlingPromise = handlingPromise.finally(() => exit())
             rl.close()
-            rl.removeAllListeners()
+            exit()
             return
           }
 
