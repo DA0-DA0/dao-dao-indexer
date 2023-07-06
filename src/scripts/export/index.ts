@@ -213,10 +213,9 @@ const makeModulePromise = (
 
         const lineHandler = (line: string) => {
           if (shuttingDown) {
-            console.log('Stopping line handler...')
-            rl.off('line', lineHandler)
-            rl.close()
             handlingPromise = handlingPromise.finally(() => exit())
+            rl.close()
+            rl.removeAllListeners()
             return
           }
 
@@ -232,7 +231,7 @@ const makeModulePromise = (
 
         // Wait for readline to close.
         await once(rl, 'close')
-        rl.off('line', lineHandler)
+        rl.removeAllListeners()
 
         // Wait for last handling to finish.
         await handlingPromise
