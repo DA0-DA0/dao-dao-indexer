@@ -208,6 +208,9 @@ const makeModulePromise = (
           terminal: false,
         })
 
+        // Buffer lines until we have a full JSON object.
+        let bufferedLine = ''
+
         for await (const line of rl) {
           if (shuttingDown) {
             exit()
@@ -218,8 +221,22 @@ const makeModulePromise = (
             continue
           }
 
+          bufferedLine += line
+          // Validate JSON. If invalid, buffer and wait for next line. This is
+          // necessary if we start reading a line before it is fully written.
+          // The first pass will read the first part of the line, and the second
+          // pass will read the rest of the line.
+          try {
+            JSON.parse(bufferedLine)
+          } catch {
+            continue
+          }
+
           // Send to module handler.
-          await handler(line)
+          await handler(bufferedLine)
+
+          // Reset buffer.
+          bufferedLine = ''
         }
 
         // Tell module to flush once we finish reading.

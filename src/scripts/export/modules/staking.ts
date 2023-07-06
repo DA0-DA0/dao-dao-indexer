@@ -111,6 +111,8 @@ export const staking: ModuleExporterMaker = ({
         throw new Error('Invalid line structure.')
       }
     } catch (err) {
+      console.error(err)
+
       // Capture error so we can investigate.
       Sentry.captureException(err, {
         tags: {
