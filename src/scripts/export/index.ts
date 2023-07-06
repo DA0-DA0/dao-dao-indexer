@@ -100,7 +100,7 @@ const main = async () => {
       makeModule({
         config,
         state: initialState,
-        initialBlockHeight: initial || undefined,
+        initialBlockHeight: initial !== undefined ? initial : undefined,
         batch,
         updateComputations: !!update,
         sendWebhooks: !!webhooks,
