@@ -1,4 +1,3 @@
-import { once } from 'events'
 import * as fs from 'fs'
 import readline from 'readline'
 
@@ -209,33 +208,21 @@ const makeModulePromise = (
           terminal: false,
         })
 
-        let handlingPromise = Promise.resolve()
-
-        const lineHandler = (line: string) => {
+        for await (const line of rl) {
           if (shuttingDown) {
-            rl.close()
             exit()
             return
           }
 
           if (!line) {
-            return
+            continue
           }
 
           // Send to module handler.
-          handlingPromise = handlingPromise.finally(() => handler(line))
+          await handler(line)
         }
 
-        rl.on('line', lineHandler)
-
-        // Wait for readline to close.
-        await once(rl, 'close')
-        rl.removeAllListeners()
-
-        // Wait for last handling to finish.
-        await handlingPromise
-
-        // Tell module to flush once we finish reading and handling.
+        // Tell module to flush once we finish reading.
         await flush()
 
         // Update bytes read so we can start at this point in the next read.
