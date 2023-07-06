@@ -1,3 +1,4 @@
+import { once } from 'events'
 import * as fs from 'fs'
 import readline from 'readline'
 
@@ -205,23 +206,37 @@ const makeModulePromise = (
           input: fileStream,
           // Recognize all instances of CR LF ('\r\n') as a single line break.
           crlfDelay: Infinity,
+          terminal: false,
         })
 
-        for await (const line of rl) {
+        let handlingPromise = Promise.resolve()
+
+        const lineHandler = (line: string) => {
           if (shuttingDown) {
-            exit()
+            rl.off('line', lineHandler)
+            rl.close()
+            handlingPromise.finally(() => exit())
             return
           }
 
           if (!line) {
-            continue
+            return
           }
 
           // Send to module handler.
-          await handler(line)
+          handlingPromise = handlingPromise.finally(() => handler(line))
         }
 
-        // Tell module to flush once we finish reading.
+        rl.on('line', lineHandler)
+
+        // Wait for readline to close.
+        await once(rl, 'close')
+        rl.off('line', lineHandler)
+
+        // Wait for last handling to finish.
+        await handlingPromise
+
+        // Tell module to flush once we finish reading and handling.
         await flush()
 
         // Update bytes read so we can start at this point in the next read.
