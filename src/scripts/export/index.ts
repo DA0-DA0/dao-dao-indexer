@@ -144,11 +144,26 @@ const main = async () => {
 let lastBlockHeight = 0
 // Update db state. Returns latest block height for log.
 const updateState = async (): Promise<State> => {
-  const { rpc } = loadConfig()
-  const { data } = await axios.get(rpc + '/status', {
-    // https://stackoverflow.com/a/74735197
-    headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
-  })
+  let data
+  try {
+    const statusResponse = await axios.get(config.rpc + '/status', {
+      // https://stackoverflow.com/a/74735197
+      headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
+    })
+    data = statusResponse.data
+  } catch (err) {
+    const state = await State.getSingleton()
+    if (!state) {
+      throw new Error('Failed to get State singleton.')
+    }
+
+    lastBlockHeight = Number(state.latestBlockHeight ?? '0')
+    console.error(
+      `Failed to get status from RPC. Is it down? Latest block height: ${lastBlockHeight.toLocaleString()}`
+    )
+
+    return state
+  }
 
   const chainId = data.result.node_info.network
   const latestBlockHeight = Number(data.result.sync_info.latest_block_height)
