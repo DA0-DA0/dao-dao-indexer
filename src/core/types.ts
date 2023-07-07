@@ -30,11 +30,13 @@ type DB = { uri?: string } & Pick<
 >
 
 export type Config = {
+  trace: string
   sources: {
     wasm: string
     staking: string
   }
   rpc: string
+  bech32Prefix: string
   db: {
     data: DB
     accounts: DB

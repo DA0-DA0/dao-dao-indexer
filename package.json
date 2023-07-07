@@ -19,7 +19,7 @@
     "db:migrate:data": "MIGRATING_DB=true sequelize-cli db:migrate --env data",
     "db:migrate:accounts": "MIGRATING_DB=true sequelize-cli db:migrate --env accounts",
     "clear-cache": "node dist/scripts/clearCache.js",
-    "export": "node dist/scripts/export/index.js",
+    "export": "node dist/scripts/export-trace/index.js",
     "export:dev": "docker-compose -f compose.dev.yml up --exit-code-from export",
     "export:prod": "npm run build && pm2 stop exporter webhooks && npm run db:migrate:data && pm2 reload ecosystem.config.js --only exporter,webhooks",
     "webhooks": "node dist/scripts/webhooks.js",
@@ -75,6 +75,7 @@
   },
   "dependencies": {
     "@cosmjs/amino": "^0.29.5",
+    "@cosmjs/cosmwasm-stargate": "^0.30.1",
     "@cosmjs/crypto": "^0.29.5",
     "@cosmjs/encoding": "^0.29.5",
     "@cosmjs/stargate": "^0.30.1",

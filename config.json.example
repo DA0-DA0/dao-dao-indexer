@@ -1,9 +1,11 @@
 {
+  "trace": "/Users/noah/.juno/indexer/trace.out",
   "sources": {
     "wasm": "/Users/user/.juno/indexer/wasm.out",
     "staking": "/Users/user/.juno/indexer/staking.out"
   },
   "rpc": "http://localhost:26657",
+  "bech32Prefix": "juno",
   "db": {
     "data": {
       "dialect": "postgres",
