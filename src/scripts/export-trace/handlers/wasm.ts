@@ -82,8 +82,12 @@ export const wasm: HandlerMaker = async ({
     // wasm keys are formatted as:
     // ContractStorePrefix || contractAddressBytes || keyBytes
 
+    // ContractKeyPrefix = 0x02
+    // contract info keys are formatted as:
+    // ContractKeyPrefix || contractAddressBytes
+
     const keyData = fromBase64(trace.key)
-    if (keyData[0] !== 0x03) {
+    if (keyData[0] !== 0x02 && keyData[0] !== 0x03) {
       return false
     }
 
@@ -122,21 +126,53 @@ export const wasm: HandlerMaker = async ({
     }
 
     // Get code ID and block timestamp from chain.
-    const codeId = await getCodeId(cosmWasmClient, chainId, contractAddress)
-    const blockTimeUnixMs = await getBlockTimeUnixMs(
-      cosmWasmClient,
-      chainId,
-
-      trace.metadata.blockHeight
-    )
+    const blockHeight = BigInt(trace.metadata.blockHeight).toString()
+    const blockTimeUnixMs = BigInt(
+      await getBlockTimeUnixMs(
+        cosmWasmClient,
+        chainId,
+        trace.metadata.blockHeight
+      )
+    ).toString()
     const blockTimestamp = new Date(blockTimeUnixMs)
 
+    // If contract key, save contract info.
+    if (trace.operation === 'write' && keyData[0] === 0x02) {
+      if (!valueJson) {
+        throw new Error('Contract info value not found.')
+      }
+
+      const codeId = parseInt(valueJson.code_id)
+      const [contract, created] = await Contract.findOrCreate({
+        where: {
+          address: contractAddress,
+        },
+        defaults: {
+          address: contractAddress,
+          codeId,
+          instantiatedAtBlockHeight: blockHeight,
+          instantiatedAtBlockTimeUnixMs: blockTimeUnixMs,
+          instantiatedAtBlockTimestamp: blockTimestamp,
+        },
+      })
+      // Update code ID if it's changed.
+      if (!created && contract.codeId !== codeId) {
+        await contract.update({
+          codeId: parseInt(valueJson.code_id),
+        })
+      }
+
+      return true
+    }
+
+    // Otherwise, save state event.
+    const codeId = await getCodeId(cosmWasmClient, chainId, contractAddress)
     const event: ParsedWasmStateEvent = {
       type: 'state',
       codeId,
       contractAddress,
-      blockHeight: BigInt(trace.metadata.blockHeight).toString(),
-      blockTimeUnixMs: BigInt(blockTimeUnixMs).toString(),
+      blockHeight,
+      blockTimeUnixMs,
       blockTimestamp,
       // Convert key to comma-separated list of bytes. See explanation in
       // `Event` model for more information.
