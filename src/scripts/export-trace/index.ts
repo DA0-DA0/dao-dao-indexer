@@ -84,7 +84,9 @@ const main = async () => {
 
   // Ensure trace file exists.
   if (!config.trace || !fs.existsSync(config.trace)) {
-    throw new Error(`Trace file not found: ${config.trace}`)
+    throw new Error(
+      `Trace file not found: ${config.trace}. Create it with "mkfifo ${config.trace}".`
+    )
   }
 
   let cosmWasmClient: CosmWasmClient | undefined
