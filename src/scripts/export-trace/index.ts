@@ -146,10 +146,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }))
   )
 
-  fd = fs.openSync(
-    config.trace,
-    fs.constants.O_RDONLY | fs.constants.O_NONBLOCK
-  )
+  fd = fs.openSync(config.trace, fs.constants.O_RDONLY)
   const fifoRs = fs.createReadStream(null, { fd })
   const rl = readline.createInterface({
     input: fifoRs,
