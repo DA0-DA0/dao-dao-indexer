@@ -19,15 +19,19 @@ fi
 
 TRACE_FILE=$DAEMON_HOME/indexer/trace.out
 
+echo "Stopping $SERVICE..."
 systemctl stop $SERVICE
 
+echo "Waiting for trace reading to complete..."
 while [ -f $TRACE_FILE.reading ]
 do
     sleep 1
 done
 
+echo "Stopping exporter..."
 pm2 stop all
 
+echo "Rotating trace file..."
 if [ -f $TRACE_FILE.3 ]
 then
     rm $TRACE_FILE.3
@@ -48,4 +52,7 @@ then
     mv $TRACE_FILE $TRACE_FILE.1
 fi
 
+echo "Starting $SERVICE..."
 systemctl start $SERVICE
+
+echo "Done!"
