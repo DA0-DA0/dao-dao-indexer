@@ -455,11 +455,15 @@ const getCodeId = async (
       if (tries > 0) {
         console.error(
           `Failed to get code ID. Trying ${tries} more time(s)...\n`,
-          err,
+          err instanceof Error ? err.message : err,
           contractAddress
         )
       } else {
-        console.error('Failed to get code ID. Giving up.', err, contractAddress)
+        console.error(
+          'Failed to get code ID. Giving up.',
+          err instanceof Error ? err.message : err,
+          contractAddress
+        )
         Sentry.captureException(err, {
           tags: {
             type: 'failed-get-code-id',
@@ -506,11 +510,15 @@ const getBlockTimeUnixMs = async (
       if (tries > 0) {
         console.error(
           `Failed to get block. Trying ${tries} more time(s)...\n`,
-          err,
+          err instanceof Error ? err.message : err,
           blockHeight
         )
       } else {
-        console.error('Failed to get block. Giving up.', err, blockHeight)
+        console.error(
+          'Failed to get block. Giving up.',
+          err instanceof Error ? err.message : err,
+          blockHeight
+        )
         Sentry.captureException(err, {
           tags: {
             type: 'failed-get-block',
