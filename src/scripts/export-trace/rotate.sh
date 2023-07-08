@@ -22,6 +22,9 @@ TRACE_FILE=$DAEMON_HOME/indexer/trace.out
 echo "Stopping $SERVICE..."
 systemctl stop $SERVICE
 
+# wait 10 seconds for the exporter to finish reading
+sleep 10
+
 echo "Waiting for trace reading to complete..."
 while [ -f $TRACE_FILE.reading ]
 do
@@ -54,6 +57,9 @@ fi
 
 echo "Starting $SERVICE..."
 systemctl start $SERVICE
+
+# wait 10 seconds for the node to start
+sleep 10
 
 echo "Starting exporter..."
 sudo -u indexer pm2 start all

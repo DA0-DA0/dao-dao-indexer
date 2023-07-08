@@ -135,7 +135,9 @@ const setReadingFile = (reading: boolean) => {
   if (reading) {
     fs.closeSync(fs.openSync(readingFile, 'w'))
   } else {
-    fs.unlinkSync(readingFile)
+    if (fs.existsSync(readingFile)) {
+      fs.unlinkSync(readingFile)
+    }
   }
 }
 
