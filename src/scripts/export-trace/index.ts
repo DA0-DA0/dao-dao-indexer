@@ -326,7 +326,10 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
   }
 }
 
-main().catch(console.error)
+main().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})
 
 process.on('SIGINT', () => {
   console.log('Shutting down after handlers finish...')
