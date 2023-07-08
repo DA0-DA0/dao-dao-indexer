@@ -94,20 +94,30 @@ const main = async () => {
     fs.closeSync(fs.openSync(config.trace, 'w'))
   }
 
+  let cosmWasmClient: CosmWasmClient | undefined
+  try {
+    cosmWasmClient = await CosmWasmClient.connect(config.rpc)
+  } catch {
+    // If failed, use alt RPC.
+    cosmWasmClient = await CosmWasmClient.connect(config.altRpc)
+  }
+  const altCosmWasmClient = await CosmWasmClient.connect(config.altRpc)
+
+  if (!cosmWasmClient) {
+    throw new Error('Failed to connect to RPC and alt RPC.')
+  }
+
   // Tell pm2 we're ready right before we start reading.
   if (process.send) {
     process.send('ready')
   }
-
-  const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
-  const altCosmWasmClient = await CosmWasmClient.connect(config.altRpc)
 
   return Promise.all([
     // Update state every second.
     new Promise(() => {
       // Update db state every second.
       const stateInterval = setInterval(async () => {
-        await updateState(cosmWasmClient, altCosmWasmClient)
+        await updateState(cosmWasmClient!, altCosmWasmClient)
 
         if (shuttingDown) {
           clearInterval(stateInterval)
