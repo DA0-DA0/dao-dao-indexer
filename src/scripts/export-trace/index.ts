@@ -283,6 +283,7 @@ const reader = (
           }
 
           if (!line) {
+            noBufferReset = false
             continue
           }
 
@@ -294,9 +295,14 @@ const reader = (
           let tracedEvent: TracedEvent | undefined
           try {
             tracedEvent = JSON.parse(bufferedLine)
-          } catch {
+          } catch (err) {
             noBufferReset = true
-            console.log('Partial line read, buffering...')
+            console.log(
+              'Partial line read, buffering...',
+              err,
+              bufferedLine,
+              line
+            )
             continue
           }
 
