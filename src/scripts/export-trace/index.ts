@@ -89,6 +89,12 @@ const main = async () => {
     )
   }
 
+  // Verify trace file is a FIFO.
+  const stat = fs.statSync(config.trace)
+  if (!stat.isFIFO()) {
+    throw new Error(`Trace file is not a FIFO: ${config.trace}.`)
+  }
+
   let cosmWasmClient: CosmWasmClient | undefined
   try {
     cosmWasmClient = await CosmWasmClient.connect(config.rpc)
