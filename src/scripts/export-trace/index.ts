@@ -1,5 +1,4 @@
 import * as fs from 'fs'
-import readline from 'readline'
 
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import * as Sentry from '@sentry/node'
@@ -129,7 +128,7 @@ const updateState = async (cosmWasmClient: CosmWasmClient): Promise<void> => {
   )
 }
 
-let fd: number | undefined
+let shuttingDown = false
 
 const trace = async (cosmWasmClient: CosmWasmClient) => {
   // Setup handlers.
@@ -146,13 +145,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }))
   )
 
-  fd = fs.openSync(config.trace, fs.constants.O_RDONLY)
-  const fifoRs = fs.createReadStream(null, { fd })
-  const rl = readline.createInterface({
-    input: fifoRs,
-    crlfDelay: Infinity,
-    terminal: false,
-  })
+  const fifoRs = fs.createReadStream(config.trace)
   fifoRs.setEncoding('utf-8')
 
   // Flush all handlers.
@@ -188,32 +181,58 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
   console.log(`\n[${new Date().toISOString()}] Exporting from trace`)
 
   let buffer = ''
-  for await (const line of rl) {
-    if (!line) {
+  while (true) {
+    if (shuttingDown) {
+      break
+    }
+
+    const chunk = fifoRs.read()
+    if (!chunk) {
       continue
     }
 
-    // Only begin buffer with a JSON object.
-    if (!buffer && !line.startsWith('{')) {
-      throw new Error(`Invalid line beginning: ${line}`)
-    }
+    const lines = chunk.split('\n')
 
-    buffer += line
+    for (const line of lines) {
+      // Only begin buffer with a JSON object.
+      if (!buffer && !line.startsWith('{')) {
+        throw new Error(`Invalid line beginning: ${line}`)
+      }
 
-    // Check if buffer is a valid JSON object, and process if so.
-    let tracedEvent: TracedEvent | undefined
-    try {
-      tracedEvent = JSON.parse(buffer)
-    } catch (err) {
-      // If invalid but begins correctly, continue buffering.
-      if (
-        err instanceof SyntaxError &&
-        err.message.includes('Unexpected end of JSON input')
-      ) {
-        console.log(
-          'JSON incomplete from buffer. Buffering...',
+      buffer += line
+
+      // Check if buffer is a valid JSON object, and process if so.
+      let tracedEvent: TracedEvent | undefined
+      try {
+        tracedEvent = JSON.parse(buffer)
+      } catch (err) {
+        // If invalid but begins correctly, continue buffering.
+        if (
+          err instanceof SyntaxError &&
+          err.message.includes('Unexpected end of JSON input')
+        ) {
+          console.log(
+            'JSON incomplete from buffer. Buffering...',
+            JSON.stringify(
+              {
+                chunk,
+                buffer,
+                line,
+              },
+              null,
+              2
+            )
+          )
+          continue
+        }
+
+        // Capture other unexpected errors and ignore.
+        console.error(
+          'Failed to parse JSON',
+          err,
           JSON.stringify(
             {
+              chunk,
               buffer,
               line,
             },
@@ -221,105 +240,91 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
             2
           )
         )
-        continue
-      }
-
-      // Capture other unexpected errors and ignore.
-      console.error(
-        'Failed to parse JSON',
-        err,
-        JSON.stringify(
-          {
+        Sentry.captureException(err, {
+          tags: {
+            type: 'ignored-trace',
+            script: 'export-trace',
+          },
+          extra: {
+            chunk,
             buffer,
             line,
           },
-          null,
-          2
-        )
-      )
-      Sentry.captureException(err, {
-        tags: {
-          type: 'ignored-trace',
-          script: 'export-trace',
-        },
-        extra: {
-          buffer,
-          line,
-        },
-      })
+        })
 
-      // Reset buffer after processing and ignore.
-      buffer = ''
-      continue
-    }
-
-    try {
-      // Ensure this is a traced write event. Otherwise, reset buffer.
-      if (
-        !tracedEvent ||
-        !objectMatchesStructure(tracedEvent, {
-          operation: {},
-          key: {},
-          value: {},
-          metadata: {
-            blockHeight: {},
-            txHash: {},
-          },
-        }) ||
-        (tracedEvent.operation !== 'write' &&
-          tracedEvent.operation !== 'delete')
-      ) {
+        // Reset buffer after processing and ignore.
+        buffer = ''
         continue
       }
 
-      // Try to handle with each module, and stop once handled.
-      for (const { name, handler } of handlers) {
-        let tries = 3
-        let handled = false
-        while (tries > 0) {
-          try {
-            handled = await handler.handle(tracedEvent)
-            // Set tries to 0 to break out of retry loop.
-            tries = 0
-          } catch (err) {
-            tries--
+      try {
+        // Ensure this is a traced write event. Otherwise, reset buffer.
+        if (
+          !tracedEvent ||
+          !objectMatchesStructure(tracedEvent, {
+            operation: {},
+            key: {},
+            value: {},
+            metadata: {
+              blockHeight: {},
+              txHash: {},
+            },
+          }) ||
+          (tracedEvent.operation !== 'write' &&
+            tracedEvent.operation !== 'delete')
+        ) {
+          continue
+        }
 
-            if (tries > 0) {
-              console.error(
-                `[${name}] Failed to handle. Trying ${tries} more time(s)...`
-              )
-            } else {
-              console.error(`[${name}] Failed to handle. Giving up.`)
-              Sentry.captureException(err, {
-                tags: {
-                  type: 'failed-handle',
-                  script: 'export-trace',
-                },
-                extra: {
-                  handler: name,
-                  tracedEvent,
-                },
-              })
+        // Try to handle with each module, and stop once handled.
+        for (const { name, handler } of handlers) {
+          let tries = 3
+          let handled = false
+          while (tries > 0) {
+            try {
+              handled = await handler.handle(tracedEvent)
+              // Set tries to 0 to break out of retry loop.
+              tries = 0
+            } catch (err) {
+              tries--
+
+              if (tries > 0) {
+                console.error(
+                  `[${name}] Failed to handle. Trying ${tries} more time(s)...`
+                )
+              } else {
+                console.error(`[${name}] Failed to handle. Giving up.`)
+                Sentry.captureException(err, {
+                  tags: {
+                    type: 'failed-handle',
+                    script: 'export-trace',
+                  },
+                  extra: {
+                    handler: name,
+                    tracedEvent,
+                  },
+                })
+              }
             }
           }
-        }
 
-        // If handled, stop trying other handlers.
-        if (handled) {
-          break
+          // If handled, stop trying other handlers.
+          if (handled) {
+            break
+          }
         }
+      } finally {
+        // Reset buffer after processing.
+        buffer = ''
       }
-    } finally {
-      // Reset buffer after processing.
-      buffer = ''
     }
   }
 
   // Tell each handler to flush once the socket closes.
   await flushAll()
 
-  if (fd !== undefined) {
-    fs.closeSync(fd)
+  if (!fifoRs.closed) {
+    fifoRs.close()
   }
 }
 
@@ -329,13 +334,11 @@ main().catch((err) => {
 })
 
 process.on('SIGINT', () => {
-  console.log('Shutting down after handlers finish...')
-
-  if (fd !== undefined) {
-    fs.closeSync(fd)
-    fd = undefined
-  } else {
-    // Quit if no trace file.
-    process.exit(0)
+  // If already shutting down, exit immediately.
+  if (shuttingDown) {
+    process.exit(1)
   }
+
+  shuttingDown = true
+  console.log('Shutting down after handlers finish...')
 })
