@@ -3,7 +3,6 @@ import readline from 'readline'
 
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import * as Sentry from '@sentry/node'
-import axios from 'axios'
 import { Command } from 'commander'
 
 import { DbType, loadConfig, objectMatchesStructure } from '@/core'
@@ -100,12 +99,15 @@ const main = async () => {
     process.send('ready')
   }
 
+  const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
+  const altCosmWasmClient = await CosmWasmClient.connect(config.altRpc)
+
   return Promise.all([
     // Update state every second.
     new Promise(() => {
       // Update db state every second.
       const stateInterval = setInterval(async () => {
-        await updateState()
+        await updateState(cosmWasmClient, altCosmWasmClient)
 
         if (shuttingDown) {
           clearInterval(stateInterval)
@@ -113,7 +115,7 @@ const main = async () => {
       }, 1000)
     }),
     // Start reading.
-    reader(),
+    reader(cosmWasmClient, altCosmWasmClient),
   ])
 }
 
@@ -129,42 +131,47 @@ const setReadingFile = (reading: boolean) => {
 
 let lastBlockHeight = 0
 // Update db state. Returns latest block height for log.
-const updateState = async (): Promise<State> => {
-  let data
+const updateState = async (
+  cosmWasmClient: CosmWasmClient,
+  altCosmWasmClient: CosmWasmClient
+): Promise<State> => {
+  let chainId: string | undefined
+  let latestBlockHeight: number | undefined
+  let latestBlockTimeUnixMs: number | undefined
   try {
-    const statusResponse = await axios.get(config.rpc + '/status', {
-      // https://stackoverflow.com/a/74735197
-      headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
-    })
-    data = statusResponse.data
+    chainId = await cosmWasmClient.getChainId()
+    latestBlockHeight = await cosmWasmClient.getHeight()
+    latestBlockTimeUnixMs = Date.parse(
+      (await cosmWasmClient.getBlock(latestBlockHeight)).header.time
+    )
   } catch {
     // If failed, use alt RPC.
     try {
-      const statusResponse = await axios.get(config.altRpc + '/status', {
-        // https://stackoverflow.com/a/74735197
-        headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
-      })
-      data = statusResponse.data
-    } catch {
-      const state = await State.getSingleton()
-      if (!state) {
-        throw new Error('Failed to get State singleton.')
-      }
-
-      lastBlockHeight = Number(state.latestBlockHeight ?? '0')
-      console.error(
-        `Failed to get status from RPC and alt RPC. Are they both down? Latest block height: ${lastBlockHeight.toLocaleString()}`
+      chainId = await altCosmWasmClient.getChainId()
+      latestBlockHeight = await altCosmWasmClient.getHeight()
+      latestBlockTimeUnixMs = Date.parse(
+        (await altCosmWasmClient.getBlock(latestBlockHeight)).header.time
       )
-
-      return state
-    }
+    } catch {}
   }
 
-  const chainId = data.result.node_info.network
-  const latestBlockHeight = Number(data.result.sync_info.latest_block_height)
-  const latestBlockTimeUnixMs = Date.parse(
-    data.result.sync_info.latest_block_time
-  )
+  if (
+    !chainId ||
+    latestBlockHeight === undefined ||
+    latestBlockTimeUnixMs === undefined
+  ) {
+    const state = await State.getSingleton()
+    if (!state) {
+      throw new Error('Failed to get State singleton.')
+    }
+
+    lastBlockHeight = Number(state.latestBlockHeight ?? '0')
+    console.error(
+      `Failed to get status from RPC and alt RPC. Are they both down? Latest block height: ${lastBlockHeight.toLocaleString()}`
+    )
+
+    return state
+  }
 
   // Update state singleton with latest information.
   const [, [state]] = await State.update(
@@ -190,14 +197,15 @@ const updateState = async (): Promise<State> => {
   return state
 }
 
-const reader = () =>
+const reader = (
+  cosmWasmClient: CosmWasmClient,
+  altCosmWasmClient: CosmWasmClient
+) =>
   new Promise(async (_, reject) => {
     // Update state with latest from RPC.
-    const initialState = await updateState()
+    const initialState = await updateState(cosmWasmClient, altCosmWasmClient)
 
-    // Setup client and handlers.
-    const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
-    const altCosmWasmClient = await CosmWasmClient.connect(config.altRpc)
+    // Setup handlers.
     const handlers = handlerMakers.map((handlerMaker) =>
       handlerMaker({
         cosmWasmClient,
