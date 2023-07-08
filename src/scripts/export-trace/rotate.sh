@@ -22,6 +22,10 @@ TRACE_FILE=$DAEMON_HOME/indexer/trace.out
 echo "Stopping $SERVICE..."
 systemctl stop $SERVICE
 
+# wait 10 seconds for the exporter to detect the last changes to the trace file
+# and begin its final read through to the end
+sleep 10
+
 echo "Waiting for trace reading to complete..."
 while [ -f $TRACE_FILE.reading ]
 do
