@@ -151,9 +151,9 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 
   // Flush all handlers.
   const flushAll = async () => {
-    let tries = 3
-    while (tries > 0) {
-      for (const { handler } of handlers) {
+    for (const { handler } of handlers) {
+      let tries = 3
+      while (tries > 0) {
         try {
           await handler.flush()
           break
@@ -173,9 +173,9 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
           }
         }
       }
-
-      console.log('Flushed.')
     }
+
+    console.log('Flushed.')
   }
 
   // Flush every n seconds.
