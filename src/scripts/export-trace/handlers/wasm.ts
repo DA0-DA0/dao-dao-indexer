@@ -369,14 +369,9 @@ const getCodeId = async (
     const { codeId } = await cosmWasmClient.getContract(contractAddress)
     codeIds[contractAddress] = codeId
   } catch (err) {
-    if (
-      err instanceof Error &&
-      err.message.includes('Query failed with (18): not found')
-    ) {
-      // If contract doesn't exist, return 0.
-      codeIds[contractAddress] = 0
-    }
-    throw err
+    console.error(`Failed to get code ID for ${contractAddress}`, err)
+    // If failed to get code ID, set to 0.
+    codeIds[contractAddress] = 0
   }
 
   return codeIds[contractAddress]

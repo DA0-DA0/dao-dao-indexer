@@ -298,16 +298,30 @@ const reader = () =>
 
           // Try to handle each line with each module, and stop once handled.
           for (const handler of handlers) {
-            const handled = await handler.handle(tracedEvent)
-            if (handled) {
-              break
+            try {
+              const handled = await handler.handle(tracedEvent)
+              if (handled) {
+                break
+              }
+            } catch (err) {
+              console.error('Failed to handle event', err)
+              // Restart the read without flushing or updating bytes read.
+              read()
+              return
             }
           }
         }
 
         // Tell each handler to flush once we finish reading.
         for (const handler of handlers) {
-          await handler.flush()
+          try {
+            await handler.flush()
+          } catch (err) {
+            console.error('Failed to flush', err)
+            // Restart the read without updating bytes read.
+            read()
+            return
+          }
         }
 
         // Update bytes read so we can start at this point in the next read.
