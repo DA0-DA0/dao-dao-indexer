@@ -386,7 +386,7 @@ const reader = (
         })
         reject(err)
       } finally {
-        if (!reading && !pendingRead) {
+        if (!reading) {
           setReadingFile(false)
         }
       }
