@@ -156,6 +156,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
       fd,
     })
   )
+  pipe.setEncoding('utf-8')
 
   // Flush all handlers.
   const flushAll = async () => {
@@ -190,9 +191,8 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
   console.log(`\n[${new Date().toISOString()}] Exporting from trace`)
 
   let buffer = ''
-  for await (const chunk of pipe) {
+  for await (const chunk of pipe.iterate()) {
     console.log(chunk)
-
     // setEncoding('utf-8') will return strings, type-check to be safe.
     if (typeof chunk !== 'string') {
       continue
