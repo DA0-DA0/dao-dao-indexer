@@ -22,7 +22,7 @@
     "export": "node dist/scripts/export-trace/index.js",
     "export:dev": "docker-compose -f compose.dev.yml up --exit-code-from export",
     "export:prod": "npm run build && pm2 stop exporter webhooks && npm run db:migrate:data && pm2 reload ecosystem.config.js --only exporter,webhooks",
-    "export-trace-rotate": "./src/scripts/export-trace/rotate.sh",
+    "export-trace-rotate": "sudo ./src/scripts/export-trace/rotate.sh",
     "webhooks": "node dist/scripts/webhooks.js",
     "accountWebhooks": "node dist/scripts/accountWebhooks.js",
     "transform": "node dist/scripts/transform.js",
