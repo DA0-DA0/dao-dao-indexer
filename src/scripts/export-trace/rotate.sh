@@ -8,15 +8,12 @@
 #    deleted.
 # 4. Starts the node
 
-if [ -z "$DAEMON_HOME" ]
-then
-    echo "DAEMON_HOME is not set"
-    exit 1
-fi
+DAEMON_HOME=$1
+SERVICE=$2
 
-if [ -z "$SERVICE" ]
+if [ -z "$DAEMON_HOME" ] || [ -z "$SERVICE" ]
 then
-    echo "SERVICE is not set"
+    echo "Syntax: $0 <daemon home> <service>"
     exit 1
 fi
 
