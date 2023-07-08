@@ -1,13 +1,13 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
 import * as Sentry from '@sentry/node'
+import { ContractInfo } from 'cosmjs-types/cosmwasm/wasm/v1/types'
 import { Sequelize } from 'sequelize'
 
 import {
   ParsedWasmEvent,
   ParsedWasmStateEvent,
   ParsedWasmTxEvent,
-  objectMatchesStructure,
 } from '@/core'
 import {
   AccountWebhook,
@@ -137,18 +137,6 @@ export const wasm: HandlerMaker = async ({
       await flush()
     }
 
-    // Convert base64 value to utf-8 string, if present.
-    const value = trace.value && fromUtf8(fromBase64(trace.value))
-
-    let valueJson = null
-    if (trace.operation !== 'delete' && value) {
-      try {
-        valueJson = JSON.parse(value ?? 'null')
-      } catch {
-        // Ignore parsing errors.
-      }
-    }
-
     // Get code ID and block timestamp from chain.
     const blockHeight = BigInt(trace.metadata.blockHeight).toString()
     const blockTimeUnixMsNum = await getBlockTimeUnixMs(
@@ -161,16 +149,16 @@ export const wasm: HandlerMaker = async ({
 
     // If contract key, save contract info.
     if (trace.operation === 'write' && keyData[0] === 0x02) {
-      if (
-        !objectMatchesStructure(valueJson, {
-          code_id: {},
-        })
-      ) {
+      // Protobuf value:
+      const protobufContractInfo = fromBase64(trace.value)
+      const contractInfo = ContractInfo.decode(protobufContractInfo)
+
+      if (!contractInfo.codeId) {
         // If no code ID found in JSON, ignore.
         return false
       }
 
-      const codeId = parseInt(valueJson.code_id)
+      const codeId = contractInfo.codeId.toInt()
       const [contract, created] = await Contract.findOrCreate({
         where: {
           address: contractAddress,
@@ -186,7 +174,7 @@ export const wasm: HandlerMaker = async ({
       // Update code ID if it's changed.
       if (!created && contract.codeId !== codeId) {
         await contract.update({
-          codeId: parseInt(valueJson.code_id),
+          codeId,
         })
       }
 
@@ -194,6 +182,25 @@ export const wasm: HandlerMaker = async ({
     }
 
     // Otherwise, save state event.
+
+    // Convert base64 value to utf-8 string, if present.
+    let value
+    try {
+      value = trace.value && fromUtf8(fromBase64(trace.value))
+    } catch (err) {
+      // Ignore decoding errors.
+      value = trace.value
+    }
+
+    let valueJson = null
+    if (trace.operation !== 'delete' && value) {
+      try {
+        valueJson = JSON.parse(value ?? 'null')
+      } catch {
+        // Ignore parsing errors.
+      }
+    }
+
     const codeId = await getCodeId(cosmWasmClient, chainId, contractAddress)
     const event: ParsedWasmStateEvent = {
       type: 'state',

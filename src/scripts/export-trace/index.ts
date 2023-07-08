@@ -285,13 +285,13 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 
             // Try to handle with each module, and stop once handled.
             for (const { name, handler } of handlers) {
-              let tries = 3
               let handled = false
+
+              let tries = 3
               while (tries > 0) {
                 try {
                   handled = await handler.handle(tracedEvent)
-                  // Set tries to 0 to break out of retry loop.
-                  tries = 0
+                  break
                 } catch (err) {
                   tries--
 
