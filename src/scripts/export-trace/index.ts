@@ -303,6 +303,7 @@ const reader = (
               bufferedLine,
               line
             )
+            await new Promise((resolve) => setTimeout(resolve, 2000))
             continue
           }
 
