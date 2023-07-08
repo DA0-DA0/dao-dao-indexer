@@ -29,7 +29,7 @@ do
 done
 
 echo "Stopping exporter..."
-pm2 stop all
+sudo -u indexer pm2 stop all
 
 echo "Rotating trace file..."
 if [ -f $TRACE_FILE.3 ]
@@ -54,5 +54,8 @@ fi
 
 echo "Starting $SERVICE..."
 systemctl start $SERVICE
+
+echo "Starting exporter..."
+sudo -u indexer pm2 start all
 
 echo "Done!"
