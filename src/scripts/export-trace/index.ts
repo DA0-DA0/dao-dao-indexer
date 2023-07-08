@@ -69,7 +69,10 @@ let reading = false
 // When true, shut down ASAP.
 let shuttingDown = false
 
-const exit = () => process.exit(0)
+const exit = () => {
+  setReadingFile(false)
+  process.exit(0)
+}
 
 const main = async () => {
   // Load DB on start.
@@ -112,6 +115,16 @@ const main = async () => {
     // Start reading.
     reader(),
   ])
+}
+
+// Create or remove trace reading file.
+const setReadingFile = (reading: boolean) => {
+  const readingFile = config.trace + '.reading'
+  if (reading) {
+    fs.closeSync(fs.openSync(readingFile, 'w'))
+  } else {
+    fs.unlinkSync(readingFile)
+  }
 }
 
 let lastBlockHeight = 0
@@ -210,6 +223,7 @@ const reader = () =>
 
       try {
         reading = true
+        setReadingFile(true)
 
         const fileStream = fs.createReadStream(config.trace, {
           start: bytesRead,
@@ -323,6 +337,10 @@ const reader = () =>
           },
         })
         reject(err)
+      }
+
+      if (!reading && !pendingRead) {
+        setReadingFile(false)
       }
     }
 
