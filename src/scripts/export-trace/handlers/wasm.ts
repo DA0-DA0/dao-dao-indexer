@@ -7,6 +7,7 @@ import {
   ParsedWasmEvent,
   ParsedWasmStateEvent,
   ParsedWasmTxEvent,
+  objectMatchesStructure,
 } from '@/core'
 import {
   AccountWebhook,
@@ -137,8 +138,13 @@ export const wasm: HandlerMaker = async ({
 
     // If contract key, save contract info.
     if (trace.operation === 'write' && keyData[0] === 0x02) {
-      if (!valueJson) {
-        throw new Error('Contract info value not found.')
+      if (
+        !objectMatchesStructure(valueJson, {
+          code_id: {},
+        })
+      ) {
+        // If no code ID found in JSON, ignore.
+        return false
       }
 
       const codeId = parseInt(valueJson.code_id)
