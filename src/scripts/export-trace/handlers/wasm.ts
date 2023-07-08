@@ -55,6 +55,8 @@ export const wasm: HandlerMaker = ({
     }, {} as Record<string, ParsedWasmStateEvent>)
     const eventsToExport = Object.values(uniqueIndexerEvents)
 
+    console.log('[wasm] Exporting...')
+
     // Export events.
     const {
       computationsUpdated,

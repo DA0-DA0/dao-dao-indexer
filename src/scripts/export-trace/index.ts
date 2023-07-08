@@ -296,6 +296,7 @@ const reader = (
             tracedEvent = JSON.parse(bufferedLine)
           } catch {
             noBufferReset = true
+            console.log('Partial line read, buffering...')
             continue
           }
 
@@ -366,10 +367,12 @@ const reader = (
 
         // Read again if pending.
         if (pendingRead) {
+          console.log('Finished reading and continuing due to more available.')
           pendingRead = false
           read()
         } else {
           reading = false
+          console.log('Finished reading trace file.')
         }
       } catch (err) {
         reading = false
