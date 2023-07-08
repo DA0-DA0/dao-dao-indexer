@@ -127,20 +127,13 @@ export const wasm: HandlerMaker = async ({
 
     // Get code ID and block timestamp from chain.
     const blockHeight = BigInt(trace.metadata.blockHeight).toString()
-    const blockTimeUnixMs = BigInt(
-      await getBlockTimeUnixMs(
-        cosmWasmClient,
-        chainId,
-        trace.metadata.blockHeight
-      )
-    ).toString()
-    const blockTimestamp = new Date(blockTimeUnixMs)
-    console.log(
-      JSON.stringify(trace, null, 2),
-      blockHeight,
-      blockTimeUnixMs,
-      blockTimestamp
+    const blockTimeUnixMsNum = await getBlockTimeUnixMs(
+      cosmWasmClient,
+      chainId,
+      trace.metadata.blockHeight
     )
+    const blockTimeUnixMs = BigInt(blockTimeUnixMsNum).toString()
+    const blockTimestamp = new Date(blockTimeUnixMsNum)
 
     // If contract key, save contract info.
     if (trace.operation === 'write' && keyData[0] === 0x02) {
