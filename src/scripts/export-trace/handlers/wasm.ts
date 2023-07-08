@@ -254,11 +254,12 @@ const exporter = async (
       // Break on success.
       break
     } catch (err) {
-      console.error('wasm', err)
+      console.error('[wasm] Failed to create contracts', err)
       Sentry.captureException(err, {
         tags: {
-          script: 'export',
-          module: 'wasm',
+          script: 'export-trace',
+          type: 'wasm-failed-create-contract',
+          handler: 'wasm',
         },
         extra: {
           uniqueContracts,
