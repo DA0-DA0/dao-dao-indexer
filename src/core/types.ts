@@ -36,6 +36,7 @@ export type Config = {
     staking: string
   }
   rpc: string
+  altRpc: string
   bech32Prefix: string
   db: {
     data: DB

@@ -12,6 +12,7 @@ export type Handler = {
 
 export type HandlerMakerOptions = {
   cosmWasmClient: CosmWasmClient
+  altCosmWasmClient: CosmWasmClient
   config: Config
   batch: number
   updateComputations: boolean

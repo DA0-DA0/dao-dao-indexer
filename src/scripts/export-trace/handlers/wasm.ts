@@ -26,6 +26,7 @@ const CONTRACT_BYTE_LENGTH = 32
 
 export const wasm: HandlerMaker = ({
   cosmWasmClient,
+  altCosmWasmClient,
   config,
   batch,
   updateComputations,
@@ -119,9 +120,14 @@ export const wasm: HandlerMaker = ({
     }
 
     // Get code ID and block timestamp from chain.
-    const codeId = await getCodeId(cosmWasmClient, contractAddress)
+    const codeId = await getCodeId(
+      cosmWasmClient,
+      altCosmWasmClient,
+      contractAddress
+    )
     const blockTimeUnixMs = await getBlockTimeUnixMs(
       cosmWasmClient,
+      altCosmWasmClient,
       trace.metadata.blockHeight
     )
     const blockTimestamp = new Date(blockTimeUnixMs)
@@ -359,6 +365,7 @@ const exporter = async (
 let codeIds: Record<string, number> = {}
 const getCodeId = async (
   cosmWasmClient: CosmWasmClient,
+  altCosmWasmClient: CosmWasmClient,
   contractAddress: string
 ): Promise<number> => {
   if (codeIds[contractAddress]) {
@@ -369,9 +376,15 @@ const getCodeId = async (
     const { codeId } = await cosmWasmClient.getContract(contractAddress)
     codeIds[contractAddress] = codeId
   } catch (err) {
-    console.error(`Failed to get code ID for ${contractAddress}`, err)
-    // If failed to get code ID, set to 0.
-    codeIds[contractAddress] = 0
+    // If failed, use alt client to get code ID.
+    try {
+      const { codeId } = await altCosmWasmClient.getContract(contractAddress)
+      codeIds[contractAddress] = codeId
+    } catch (err) {
+      console.error(`Failed to get code ID for ${contractAddress}`, err)
+      // If failed to get code ID, set to 0.
+      codeIds[contractAddress] = 0
+    }
   }
 
   return codeIds[contractAddress]
@@ -381,16 +394,27 @@ const getCodeId = async (
 let blockTimes: Record<number, number> = {}
 const getBlockTimeUnixMs = async (
   cosmWasmClient: CosmWasmClient,
+  altCosmWasmClient: CosmWasmClient,
   blockHeight: number
 ): Promise<number> => {
   if (blockTimes[blockHeight]) {
     return blockTimes[blockHeight]
   }
 
-  const {
-    header: { time },
-  } = await cosmWasmClient.getBlock(blockHeight)
+  try {
+    const {
+      header: { time },
+    } = await cosmWasmClient.getBlock(blockHeight)
 
-  blockTimes[blockHeight] = Date.parse(time)
-  return blockTimes[blockHeight]
+    blockTimes[blockHeight] = Date.parse(time)
+    return blockTimes[blockHeight]
+  } catch {
+    // If failed, use alt client to get block time.
+    const {
+      header: { time },
+    } = await altCosmWasmClient.getBlock(blockHeight)
+
+    blockTimes[blockHeight] = Date.parse(time)
+    return blockTimes[blockHeight]
+  }
 }

@@ -5,6 +5,7 @@
     "staking": "/Users/user/.juno/indexer/staking.out"
   },
   "rpc": "http://localhost:26657",
+  "altRpc": "https://uni-rpc.reece.sh",
   "bech32Prefix": "juno",
   "db": {
     "data": {

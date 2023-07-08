@@ -188,9 +188,11 @@ const reader = () =>
 
     // Setup client and handlers.
     const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
+    const altCosmWasmClient = await CosmWasmClient.connect(config.altRpc)
     const handlers = handlerMakers.map((handlerMaker) =>
       handlerMaker({
         cosmWasmClient,
+        altCosmWasmClient,
         config,
         batch,
         updateComputations: !!update,
