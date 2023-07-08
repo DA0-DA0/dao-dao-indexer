@@ -156,7 +156,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
       fd,
     })
   )
-  pipe.setEncoding('utf-8')
 
   // Flush all handlers.
   const flushAll = async () => {
