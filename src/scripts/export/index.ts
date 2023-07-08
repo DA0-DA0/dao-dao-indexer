@@ -151,18 +151,27 @@ const updateState = async (): Promise<State> => {
       headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
     })
     data = statusResponse.data
-  } catch (err) {
-    const state = await State.getSingleton()
-    if (!state) {
-      throw new Error('Failed to get State singleton.')
+  } catch {
+    // If failed, use alt RPC.
+    try {
+      const statusResponse = await axios.get(config.altRpc + '/status', {
+        // https://stackoverflow.com/a/74735197
+        headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
+      })
+      data = statusResponse.data
+    } catch {
+      const state = await State.getSingleton()
+      if (!state) {
+        throw new Error('Failed to get State singleton.')
+      }
+
+      lastBlockHeight = Number(state.latestBlockHeight ?? '0')
+      console.error(
+        `Failed to get status from RPC and alt RPC. Are they both down? Latest block height: ${lastBlockHeight.toLocaleString()}`
+      )
+
+      return state
     }
-
-    lastBlockHeight = Number(state.latestBlockHeight ?? '0')
-    console.error(
-      `Failed to get status from RPC. Is it down? Latest block height: ${lastBlockHeight.toLocaleString()}`
-    )
-
-    return state
   }
 
   const chainId = data.result.node_info.network
