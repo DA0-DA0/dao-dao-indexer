@@ -382,10 +382,10 @@ const reader = (
           },
         })
         reject(err)
-      }
-
-      if (!reading && !pendingRead) {
-        setReadingFile(false)
+      } finally {
+        if (!reading && !pendingRead) {
+          setReadingFile(false)
+        }
       }
     }
 
