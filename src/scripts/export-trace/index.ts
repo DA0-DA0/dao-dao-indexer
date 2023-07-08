@@ -192,8 +192,8 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
           return
         }
 
-        console.log('CHUNK:', JSON.stringify(chunk))
-        const lines = chunk.split('\n')
+        // Chunk ends in newline.
+        const lines = chunk.trimEnd().split('\n')
 
         for (const line of lines) {
           // Ignore empty line.
