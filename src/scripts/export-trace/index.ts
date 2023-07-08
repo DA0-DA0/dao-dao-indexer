@@ -80,8 +80,6 @@ const main = async () => {
   // Initialize state.
   await State.createSingletonIfMissing()
 
-  console.log(`\n[${new Date().toISOString()}] Exporting from trace`)
-
   // Ensure trace file exists.
   if (!config.trace || !fs.existsSync(config.trace)) {
     throw new Error(
@@ -95,80 +93,32 @@ const main = async () => {
     throw new Error(`Trace file is not a FIFO: ${config.trace}.`)
   }
 
-  let cosmWasmClient: CosmWasmClient | undefined
-  try {
-    cosmWasmClient = await CosmWasmClient.connect(config.rpc)
-  } catch {
-    // If failed, use alt RPC.
-    cosmWasmClient = await CosmWasmClient.connect(config.altRpc)
-  }
-  const altCosmWasmClient = await CosmWasmClient.connect(config.altRpc)
-
-  if (!cosmWasmClient) {
-    throw new Error('Failed to connect to RPC and alt RPC.')
-  }
+  const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
 
   // Tell pm2 we're ready right before we start reading.
   if (process.send) {
     process.send('ready')
   }
 
-  // Update db state every second.
-  setInterval(
-    () => updateState(cosmWasmClient!, altCosmWasmClient),
-    1000
-  ).unref()
+  console.log(`\n[${new Date().toISOString()}] Exporting from trace`)
+
+  // Update state singleton.
+  await updateState(cosmWasmClient)
 
   // Read from trace file.
-  await trace(cosmWasmClient, altCosmWasmClient)
+  await trace(cosmWasmClient)
 }
 
-let lastBlockHeight = 0
 // Update db state. Returns latest block height for log.
-const updateState = async (
-  cosmWasmClient: CosmWasmClient,
-  altCosmWasmClient: CosmWasmClient
-): Promise<State> => {
-  let chainId: string | undefined
-  let latestBlockHeight: number | undefined
-  let latestBlockTimeUnixMs: number | undefined
-  try {
-    chainId = await cosmWasmClient.getChainId()
-    latestBlockHeight = await cosmWasmClient.getHeight()
-    latestBlockTimeUnixMs = Date.parse(
-      (await cosmWasmClient.getBlock(latestBlockHeight)).header.time
-    )
-  } catch {
-    // If failed, use alt RPC.
-    try {
-      chainId = await altCosmWasmClient.getChainId()
-      latestBlockHeight = await altCosmWasmClient.getHeight()
-      latestBlockTimeUnixMs = Date.parse(
-        (await altCosmWasmClient.getBlock(latestBlockHeight)).header.time
-      )
-    } catch {}
-  }
-
-  if (
-    !chainId ||
-    latestBlockHeight === undefined ||
-    latestBlockTimeUnixMs === undefined
-  ) {
-    const state = await State.getSingleton()
-    if (!state) {
-      throw new Error('Failed to get State singleton.')
-    }
-
-    lastBlockHeight = Number(state.latestBlockHeight ?? '0')
-    console.error(
-      `Failed to get status from RPC and alt RPC. Are they both down? Latest block height: ${lastBlockHeight.toLocaleString()}`
-    )
-
-    return state
-  }
+const updateState = async (cosmWasmClient: CosmWasmClient): Promise<void> => {
+  const chainId = await cosmWasmClient.getChainId()
+  const latestBlockHeight = await cosmWasmClient.getHeight()
+  const latestBlockTimeUnixMs = Date.parse(
+    (await cosmWasmClient.getBlock(latestBlockHeight)).header.time
+  )
 
   // Update state singleton with latest information.
-  const [, [state]] = await State.update(
+  await State.update(
     {
       chainId,
       latestBlockHeight,
@@ -178,41 +128,25 @@ const updateState = async (
       where: {
         singleton: true,
       },
-      returning: true,
     }
   )
-
-  // If block height changed, log it.
-  if (lastBlockHeight && lastBlockHeight !== latestBlockHeight) {
-    console.log(`Updated block height: ${latestBlockHeight.toLocaleString()}`)
-  }
-  lastBlockHeight = latestBlockHeight
-
-  return state
 }
 
 let fd: number | undefined
 
-const trace = async (
-  cosmWasmClient: CosmWasmClient,
-  altCosmWasmClient: CosmWasmClient
-) => {
-  // Update state with latest from RPC.
-  await updateState(cosmWasmClient, altCosmWasmClient)
-
+const trace = async (cosmWasmClient: CosmWasmClient) => {
   // Setup handlers.
-  const handlers = Object.entries(handlerMakers).map(
-    ([name, handlerMaker]) => ({
+  const handlers = await Promise.all(
+    Object.entries(handlerMakers).map(async ([name, handlerMaker]) => ({
       name,
-      handler: handlerMaker({
+      handler: await handlerMaker({
         cosmWasmClient,
-        altCosmWasmClient,
         config,
         batch,
         updateComputations: !!update,
         sendWebhooks: !!webhooks,
       }),
-    })
+    }))
   )
 
   fd = fs.openSync(

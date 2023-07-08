@@ -5,7 +5,6 @@
     "staking": "./fake/staking.out"
   },
   "rpc": "https://uni-rpc.reece.sh",
-  "altRpc": "https://rpc.uni.junonetwork.io",
   "bech32Prefix": "juno",
   "db": {
     "data": {

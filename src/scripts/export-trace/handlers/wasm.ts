@@ -24,14 +24,14 @@ import { Handler, HandlerMaker } from '../types'
 
 const CONTRACT_BYTE_LENGTH = 32
 
-export const wasm: HandlerMaker = ({
+export const wasm: HandlerMaker = async ({
   cosmWasmClient,
-  altCosmWasmClient,
   config,
   batch,
   updateComputations,
   sendWebhooks,
 }) => {
+  const chainId = await cosmWasmClient.getChainId()
   const pending: ParsedWasmStateEvent[] = []
 
   const flush = async () => {
@@ -122,14 +122,11 @@ export const wasm: HandlerMaker = ({
     }
 
     // Get code ID and block timestamp from chain.
-    const codeId = await getCodeId(
-      cosmWasmClient,
-      altCosmWasmClient,
-      contractAddress
-    )
+    const codeId = await getCodeId(cosmWasmClient, chainId, contractAddress)
     const blockTimeUnixMs = await getBlockTimeUnixMs(
       cosmWasmClient,
-      altCosmWasmClient,
+      chainId,
+
       trace.metadata.blockHeight
     )
     const blockTimestamp = new Date(blockTimeUnixMs)
@@ -367,25 +364,44 @@ const exporter = async (
 let codeIds: Record<string, number> = {}
 const getCodeId = async (
   cosmWasmClient: CosmWasmClient,
-  altCosmWasmClient: CosmWasmClient,
+  chainId: string,
   contractAddress: string
 ): Promise<number> => {
   if (codeIds[contractAddress]) {
     return codeIds[contractAddress]
   }
 
-  try {
-    const { codeId } = await cosmWasmClient.getContract(contractAddress)
-    codeIds[contractAddress] = codeId
-  } catch (err) {
-    // If failed, use alt client to get code ID.
+  let tries = 3
+  while (tries > 0) {
     try {
-      const { codeId } = await altCosmWasmClient.getContract(contractAddress)
+      const { codeId } = await cosmWasmClient.getContract(contractAddress)
       codeIds[contractAddress] = codeId
+      break
     } catch (err) {
-      console.error(`Failed to get code ID for ${contractAddress}`, err)
-      // If failed to get code ID, set to 0.
-      codeIds[contractAddress] = 0
+      tries--
+
+      if (tries > 0) {
+        console.error(
+          `Failed to get code ID. Trying ${tries} more time(s)...\n`,
+          err,
+          contractAddress
+        )
+      } else {
+        console.error('Failed to get code ID. Giving up.', err, contractAddress)
+        Sentry.captureException(err, {
+          tags: {
+            type: 'failed-get-code-id',
+            script: 'export-trace',
+          },
+          extra: {
+            chainId,
+            contractAddress,
+          },
+        })
+
+        // Set to 0 on failure so we can continue.
+        codeIds[contractAddress] = 0
+      }
     }
   }
 
@@ -396,27 +412,49 @@ const getCodeId = async (
 let blockTimes: Record<number, number> = {}
 const getBlockTimeUnixMs = async (
   cosmWasmClient: CosmWasmClient,
-  altCosmWasmClient: CosmWasmClient,
+  chainId: string,
   blockHeight: number
 ): Promise<number> => {
   if (blockTimes[blockHeight]) {
     return blockTimes[blockHeight]
   }
 
-  try {
-    const {
-      header: { time },
-    } = await cosmWasmClient.getBlock(blockHeight)
+  let tries = 3
+  while (tries > 0) {
+    try {
+      const {
+        header: { time },
+      } = await cosmWasmClient.getBlock(blockHeight)
+      blockTimes[blockHeight] = Date.parse(time)
 
-    blockTimes[blockHeight] = Date.parse(time)
-    return blockTimes[blockHeight]
-  } catch {
-    // If failed, use alt client to get block time.
-    const {
-      header: { time },
-    } = await altCosmWasmClient.getBlock(blockHeight)
+      break
+    } catch (err) {
+      tries--
 
-    blockTimes[blockHeight] = Date.parse(time)
-    return blockTimes[blockHeight]
+      if (tries > 0) {
+        console.error(
+          `Failed to get block. Trying ${tries} more time(s)...\n`,
+          err,
+          blockHeight
+        )
+      } else {
+        console.error('Failed to get block. Giving up.', err, blockHeight)
+        Sentry.captureException(err, {
+          tags: {
+            type: 'failed-get-block',
+            script: 'export-trace',
+          },
+          extra: {
+            chainId,
+            blockHeight,
+          },
+        })
+
+        // Set to 0 on failure so we can continue.
+        blockTimes[blockHeight] = 0
+      }
+    }
   }
+
+  return blockTimes[blockHeight]
 }

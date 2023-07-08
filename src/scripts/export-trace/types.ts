@@ -12,14 +12,13 @@ export type Handler = {
 
 export type HandlerMakerOptions = {
   cosmWasmClient: CosmWasmClient
-  altCosmWasmClient: CosmWasmClient
   config: Config
   batch: number
   updateComputations: boolean
   sendWebhooks: boolean
 }
 
-export type HandlerMaker = (options: HandlerMakerOptions) => Handler
+export type HandlerMaker = (options: HandlerMakerOptions) => Promise<Handler>
 
 export type TracedEvent = {
   operation: 'write' | 'delete'

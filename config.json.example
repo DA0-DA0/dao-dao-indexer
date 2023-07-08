@@ -4,8 +4,7 @@
     "wasm": "/Users/user/.juno/indexer/wasm.out",
     "staking": "/Users/user/.juno/indexer/staking.out"
   },
-  "rpc": "http://localhost:26657",
-  "altRpc": "https://uni-rpc.reece.sh",
+  "rpc": "https://uni-rpc.reece.sh",
   "bech32Prefix": "juno",
   "db": {
     "data": {
