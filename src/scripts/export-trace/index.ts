@@ -402,12 +402,16 @@ const trace = async (
   }
 }
 
-main()
+main().catch(console.error)
 
 process.on('SIGINT', () => {
   console.log('Shutting down after handlers finish...')
+
   if (fd !== undefined) {
     fs.closeSync(fd)
     fd = undefined
+  } else {
+    // Quit if no trace file.
+    process.exit(0)
   }
 })
