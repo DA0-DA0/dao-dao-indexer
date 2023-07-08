@@ -365,9 +365,21 @@ const getCodeId = async (
     return codeIds[contractAddress]
   }
 
-  const { codeId } = await cosmWasmClient.getContract(contractAddress)
-  codeIds[contractAddress] = codeId
-  return codeId
+  try {
+    const { codeId } = await cosmWasmClient.getContract(contractAddress)
+    codeIds[contractAddress] = codeId
+  } catch (err) {
+    if (
+      err instanceof Error &&
+      err.message.includes('Query failed with (18): not found')
+    ) {
+      // If contract doesn't exist, return 0.
+      codeIds[contractAddress] = 0
+    }
+    throw err
+  }
+
+  return codeIds[contractAddress]
 }
 
 // Get block time for block, cached in memory.
