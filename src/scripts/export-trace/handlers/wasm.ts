@@ -135,6 +135,12 @@ export const wasm: HandlerMaker = async ({
       )
     ).toString()
     const blockTimestamp = new Date(blockTimeUnixMs)
+    console.log(
+      JSON.stringify(trace, null, 2),
+      blockHeight,
+      blockTimeUnixMs,
+      blockTimestamp
+    )
 
     // If contract key, save contract info.
     if (trace.operation === 'write' && keyData[0] === 0x02) {

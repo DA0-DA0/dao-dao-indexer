@@ -174,8 +174,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
         }
       }
     }
-
-    console.log('Flushed.')
   }
 
   // Flush every n seconds.
@@ -190,7 +188,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     // Resume at the end of the chunk processing.
     ;(async () => {
       try {
-        console.log('CHUNK', chunk)
         if (!chunk || typeof chunk !== 'string') {
           return
         }
@@ -294,7 +291,9 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 
                   if (tries > 0) {
                     console.error(
-                      `[${name}] Failed to handle. Trying ${tries} more time(s)...`
+                      `[${name}] Failed to handle. Trying ${tries} more time(s)...`,
+                      err,
+                      JSON.stringify(tracedEvent, null, 2)
                     )
                   } else {
                     console.error(`[${name}] Failed to handle. Giving up.`)
