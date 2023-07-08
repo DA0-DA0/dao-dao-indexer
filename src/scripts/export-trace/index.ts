@@ -100,8 +100,6 @@ const main = async () => {
     process.send('ready')
   }
 
-  console.log(`\n[${new Date().toISOString()}] Exporting from trace`)
-
   // Update state singleton.
   await updateState(cosmWasmClient)
 
@@ -190,8 +188,12 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
   // Flush every n seconds.
   setInterval(flushAll, flush * 1000).unref()
 
+  console.log(`\n[${new Date().toISOString()}] Exporting from trace`)
+
   let buffer = ''
   for await (const chunk of pipe) {
+    console.log(chunk)
+
     // setEncoding('utf-8') will return strings, type-check to be safe.
     if (typeof chunk !== 'string') {
       continue
