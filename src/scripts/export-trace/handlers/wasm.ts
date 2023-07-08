@@ -56,24 +56,47 @@ export const wasm: HandlerMaker = async ({
     }, {} as Record<string, ParsedWasmStateEvent>)
     const eventsToExport = Object.values(uniqueIndexerEvents)
 
+    // Clear queue.
+    pending.length = 0
+
     console.log('[wasm] Exporting...')
 
     // Export events.
-    const {
-      computationsUpdated,
-      computationsDestroyed,
-      transformations,
-      webhooksQueued,
-      lastBlockHeightExported,
-    } = await exporter(eventsToExport, !updateComputations, !sendWebhooks)
+    let tries = 3
+    while (tries > 0) {
+      try {
+        const {
+          computationsUpdated,
+          computationsDestroyed,
+          transformations,
+          webhooksQueued,
+          lastBlockHeightExported,
+        } = await exporter(eventsToExport, !updateComputations, !sendWebhooks)
 
-    // Log.
-    console.log(
-      `[wasm] Exported: ${eventsToExport.length.toLocaleString()}. Latest block exported: ${lastBlockHeightExported.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. Webhooks queued: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
-    )
+        // Log.
+        console.log(
+          `[wasm] Exported: ${eventsToExport.length.toLocaleString()}. Latest block exported: ${lastBlockHeightExported.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. Webhooks queued: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
+        )
 
-    // Clear queue.
-    pending.length = 0
+        break
+      } catch (err) {
+        tries--
+
+        if (tries > 0) {
+          console.error(
+            `[wasm] Failed to export pending. Trying ${tries} more time(s)...`
+          )
+        } else {
+          console.error('Failed to export pending. Giving up.')
+          Sentry.captureException(err, {
+            tags: {
+              type: 'wasm-failed-export-pending',
+              script: 'export-trace',
+            },
+          })
+        }
+      }
+    }
   }
 
   let lastBlockHeightSeen = 0
