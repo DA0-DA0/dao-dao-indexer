@@ -1,5 +1,5 @@
 {
-  "trace": "/Users/noah/.juno/indexer/trace.out",
+  "trace": "/Users/noah/.juno/indexer/trace.pipe",
   "sources": {
     "wasm": "/Users/user/.juno/indexer/wasm.out",
     "staking": "/Users/user/.juno/indexer/staking.out"

@@ -1,0 +1,13 @@
+diff --git a/node_modules/promise-duplex/lib/promise-duplex.d.ts b/node_modules/promise-duplex/lib/promise-duplex.d.ts
+index 2794377..0ac4f63 100644
+--- a/node_modules/promise-duplex/lib/promise-duplex.d.ts
++++ b/node_modules/promise-duplex/lib/promise-duplex.d.ts
+@@ -3,7 +3,7 @@ import "core-js/modules/es.symbol.async-iterator";
+ import { Duplex } from "stream";
+ import { PromiseReadable } from "promise-readable";
+ import { PromiseWritable } from "promise-writable";
+-interface DuplexStream extends Duplex {
++interface DuplexStream extends Omit<Duplex, 'closed'> {
+     closed?: boolean;
+ }
+ export declare class PromiseDuplex<TDuplex extends DuplexStream> extends PromiseReadable<TDuplex> implements AsyncIterable<Buffer | string> {
