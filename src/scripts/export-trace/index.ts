@@ -136,6 +136,13 @@ const main = async () => {
       const latestBlockHeight = Number(height)
       const latestBlockTimeUnixMs = Date.parse(time)
 
+      console.log(
+        'New block!',
+        chain_id,
+        latestBlockHeight.toLocaleString(),
+        latestBlockTimeUnixMs.toLocaleString()
+      )
+
       // Update state singleton with latest information.
       await State.update(
         {
