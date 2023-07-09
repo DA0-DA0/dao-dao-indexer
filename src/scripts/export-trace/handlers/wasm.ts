@@ -59,6 +59,21 @@ export const wasm: HandlerMaker = async ({
 
     // Export events.
     await exporter(eventsToExport)
+
+    // Connect to local WebSocket after first flush.
+    if (!wsConnected) {
+      try {
+        setUpWebSocketNewBlockListener({
+          rpc: 'http://localhost:26657',
+          onNewBlock: (block) => {
+            console.log('NEW BLOCK:\n', JSON.stringify(block, null, 2))
+          },
+        })
+        wsConnected = true
+      } catch (err) {
+        console.error('Local Web Socket failed.\n', err)
+      }
+    }
   }
 
   let lastBlockHeightSeen = 0
@@ -147,17 +162,6 @@ export const wasm: HandlerMaker = async ({
     }
 
     // Otherwise, save state event.
-
-    // Connect to local WebSocket after first state key set.
-    if (!wsConnected) {
-      setUpWebSocketNewBlockListener({
-        rpc: 'http://localhost:26657',
-        onNewBlock: (block) => {
-          console.log('NEW BLOCK:\n', JSON.stringify(block, null, 2))
-        },
-      })
-      wsConnected = true
-    }
 
     // Convert base64 value to utf-8 string, if present.
     let value
