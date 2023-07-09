@@ -132,6 +132,7 @@ const updateState = async (cosmWasmClient: CosmWasmClient): Promise<void> => {
 }
 
 let shuttingDown = false
+let reading = false
 
 const trace = async (cosmWasmClient: CosmWasmClient) => {
   // Setup handlers.
@@ -193,6 +194,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
   let buffer = ''
   let lastBlockHeightSeen = 0
   fifoRs.on('data', (chunk) => {
+    reading = true
     // Pause before processing this chunk.
     fifoRs.pause()
     // Resume at the end of the chunk processing.
@@ -356,6 +358,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
         } else {
           // Other resume after processing this chunk.
           fifoRs.resume()
+          reading = false
         }
       }
     })()
@@ -379,6 +382,10 @@ main().catch((err) => {
 })
 
 process.on('SIGINT', () => {
+  if (!reading) {
+    process.exit(0)
+  }
+
   // If already shutting down, exit immediately.
   if (shuttingDown) {
     process.exit(1)
