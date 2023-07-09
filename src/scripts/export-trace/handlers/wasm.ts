@@ -305,6 +305,14 @@ export const wasm: HandlerMaker = async ({
         codeIdCache.set(contractAddress, codeId)
         break
       } catch (err) {
+        // Check if exists in database.
+        const contract = await Contract.findByPk(contractAddress)
+        if (contract) {
+          codeIdCache.set(contractAddress, contract.codeId)
+          break
+        }
+
+        // If contract not found, set to -1 and ignore.
         if (
           err instanceof Error &&
           err.message.includes('not found: invalid request')
