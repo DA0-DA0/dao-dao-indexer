@@ -8,8 +8,8 @@ type FifoJsonTracerOptions = {
   file: string
   onData: (data: unknown) => void | Promise<void>
   // If provided, this callback will be called when a JSON object cannot be
-  // parsed from the buffer.
-  onError?: (buffer: string, error: unknown) => void | Promise<void>
+  // parsed from the line.
+  onError?: (line: string, error: unknown) => void | Promise<void>
   // If provided, this function will be called when processing a chunk of data.
   onProcessingStateChange?: (processing: boolean) => void | Promise<void>
 }
@@ -124,11 +124,11 @@ export const setUpFifoJsonTracer = ({
 
           let data: unknown | undefined
           try {
-            data = JSON.parse(buffer)
+            data = JSON.parse(line)
           } catch (error) {
             // If we cannot parse the buffer as a JSON object, call the error
             // callback if provided.
-            await onError?.(buffer, error)
+            await onError?.(line, error)
             continue
           }
 
