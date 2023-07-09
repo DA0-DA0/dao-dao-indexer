@@ -458,6 +458,8 @@ const getCodeId = async (
           err instanceof Error ? err.message : err,
           contractAddress
         )
+        // Wait 500ms before trying again.
+        await new Promise((resolve) => setTimeout(resolve, 500))
       } else {
         console.error(
           'Failed to get code ID. Giving up.',
@@ -513,6 +515,8 @@ const getBlockTimeUnixMs = async (
           err instanceof Error ? err.message : err,
           blockHeight
         )
+        // Wait 500ms before trying again.
+        await new Promise((resolve) => setTimeout(resolve, 500))
       } else {
         console.error(
           'Failed to get block. Giving up.',
