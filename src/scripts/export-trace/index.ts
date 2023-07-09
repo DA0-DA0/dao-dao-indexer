@@ -95,65 +95,6 @@ const main = async () => {
     process.send('ready')
   }
 
-  // Get new-block WebSocket.
-  stateWebSocket = new WebSocket(
-    config.rpc.replace('http', 'ws') + '/websocket'
-  )
-  stateWebSocket.on('open', () => {
-    // Subscribe to new blocks.
-    stateWebSocket!.send(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'subscribe',
-        id: 1,
-        params: ["tm.event = 'NewBlock'"],
-      })
-    )
-  })
-  // Listen for new blocks.
-  stateWebSocket.on('message', async (data) => {
-    try {
-      const { result } = JSON.parse(data.toString())
-      if (
-        !objectMatchesStructure(result, {
-          data: {
-            value: {
-              block: {
-                header: {
-                  chain_id: {},
-                  height: {},
-                  time: {},
-                },
-              },
-            },
-          },
-        })
-      ) {
-        return
-      }
-
-      const { chain_id, height, time } = result.data.value.block.header
-      const latestBlockHeight = Number(height)
-      const latestBlockTimeUnixMs = Date.parse(time)
-
-      // Update state singleton with latest information.
-      await State.update(
-        {
-          chainId: chain_id,
-          latestBlockHeight,
-          latestBlockTimeUnixMs,
-        },
-        {
-          where: {
-            singleton: true,
-          },
-        }
-      )
-    } catch {
-      // Fail silently.
-    }
-  })
-
   // Read from trace file.
   await trace(cosmWasmClient)
 }
@@ -215,6 +156,68 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
       }
     }
   }
+
+  // Get new-block WebSocket.
+  stateWebSocket = new WebSocket(
+    config.rpc.replace('http', 'ws') + '/websocket'
+  )
+  stateWebSocket.on('open', () => {
+    // Subscribe to new blocks.
+    stateWebSocket!.send(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'subscribe',
+        id: 1,
+        params: ["tm.event = 'NewBlock'"],
+      })
+    )
+  })
+  // Listen for new blocks.
+  stateWebSocket.on('message', async (data) => {
+    try {
+      const { result } = JSON.parse(data.toString())
+      if (
+        !objectMatchesStructure(result, {
+          data: {
+            value: {
+              block: {
+                header: {
+                  chain_id: {},
+                  height: {},
+                  time: {},
+                },
+              },
+            },
+          },
+        })
+      ) {
+        return
+      }
+
+      const { chain_id, height, time } = result.data.value.block.header
+      const latestBlockHeight = Number(height)
+      const latestBlockTimeUnixMs = Date.parse(time)
+
+      // Update state singleton with latest information.
+      await State.update(
+        {
+          chainId: chain_id,
+          latestBlockHeight,
+          latestBlockTimeUnixMs,
+        },
+        {
+          where: {
+            singleton: true,
+          },
+        }
+      )
+
+      // Flush all handlers.
+      await flushAll()
+    } catch {
+      // Fail silently.
+    }
+  })
 
   console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
 
