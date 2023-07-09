@@ -54,8 +54,6 @@ export const wasm: HandlerMaker = async ({
     // Clear queue.
     pending.length = 0
 
-    console.log('[wasm] Exporting...')
-
     // Export events.
     let tries = 3
     while (tries > 0) {
