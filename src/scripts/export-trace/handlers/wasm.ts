@@ -21,7 +21,7 @@ import {
 } from '@/db'
 import { updateIndexesForContracts } from '@/ms'
 
-import { Handler, HandlerMaker } from '../types'
+import { Handler, HandlerMaker, TracedEvent } from '../types'
 
 const CONTRACT_BYTE_LENGTH = 32
 
@@ -142,7 +142,7 @@ export const wasm: HandlerMaker = async ({
     const blockTimeUnixMsNum = await getBlockTimeUnixMs(
       cosmWasmClient,
       chainId,
-      trace.metadata.blockHeight
+      trace
     )
     const blockTimeUnixMs = BigInt(blockTimeUnixMsNum).toString()
     const blockTimestamp = new Date(blockTimeUnixMsNum)
@@ -151,7 +151,13 @@ export const wasm: HandlerMaker = async ({
     if (trace.operation === 'write' && keyData[0] === 0x02) {
       // Protobuf value:
       const protobufContractInfo = fromBase64(trace.value)
-      const contractInfo = ContractInfo.decode(protobufContractInfo)
+      let contractInfo
+      try {
+        contractInfo = ContractInfo.decode(protobufContractInfo)
+      } catch {
+        // If failed to decode, not contract info.
+        return false
+      }
 
       if (!contractInfo.codeId) {
         // If no code ID found in JSON, ignore.
@@ -201,7 +207,12 @@ export const wasm: HandlerMaker = async ({
       }
     }
 
-    const codeId = await getCodeId(cosmWasmClient, chainId, contractAddress)
+    const codeId = await getCodeId(
+      cosmWasmClient,
+      chainId,
+      contractAddress,
+      trace
+    )
     const event: ParsedWasmStateEvent = {
       type: 'state',
       codeId,
@@ -437,7 +448,8 @@ let codeIds: Record<string, number> = {}
 const getCodeId = async (
   cosmWasmClient: CosmWasmClient,
   chainId: string,
-  contractAddress: string
+  contractAddress: string,
+  trace: TracedEvent
 ): Promise<number> => {
   if (codeIds[contractAddress]) {
     return codeIds[contractAddress]
@@ -454,17 +466,19 @@ const getCodeId = async (
 
       if (tries > 0) {
         console.error(
-          `Failed to get code ID. Trying ${tries} more time(s)...\n`,
-          err instanceof Error ? err.message : err,
-          contractAddress
+          `Failed to get code ID. Trying ${tries} more time(s)...`,
+          contractAddress,
+          '\n' + JSON.stringify(trace, null, 2) + '\n',
+          err instanceof Error ? err.message : err
         )
         // Wait 500ms before trying again.
         await new Promise((resolve) => setTimeout(resolve, 500))
       } else {
         console.error(
           'Failed to get code ID. Giving up.',
-          err instanceof Error ? err.message : err,
-          contractAddress
+          contractAddress,
+          '\n' + JSON.stringify(trace, null, 2) + '\n',
+          err instanceof Error ? err.message : err
         )
         Sentry.captureException(err, {
           tags: {
@@ -491,8 +505,10 @@ let blockTimes: Record<number, number> = {}
 const getBlockTimeUnixMs = async (
   cosmWasmClient: CosmWasmClient,
   chainId: string,
-  blockHeight: number
+  trace: TracedEvent
 ): Promise<number> => {
+  const blockHeight = trace.metadata.blockHeight
+
   if (blockTimes[blockHeight]) {
     return blockTimes[blockHeight]
   }
@@ -512,16 +528,18 @@ const getBlockTimeUnixMs = async (
       if (tries > 0) {
         console.error(
           `Failed to get block. Trying ${tries} more time(s)...\n`,
-          err instanceof Error ? err.message : err,
-          blockHeight
+          blockHeight,
+          '\n' + JSON.stringify(trace, null, 2) + '\n',
+          err instanceof Error ? err.message : err
         )
         // Wait 500ms before trying again.
         await new Promise((resolve) => setTimeout(resolve, 500))
       } else {
         console.error(
           'Failed to get block. Giving up.',
-          err instanceof Error ? err.message : err,
-          blockHeight
+          blockHeight,
+          '\n' + JSON.stringify(trace, null, 2) + '\n',
+          err instanceof Error ? err.message : err
         )
         Sentry.captureException(err, {
           tags: {
