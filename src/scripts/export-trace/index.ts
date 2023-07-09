@@ -4,6 +4,7 @@ import path from 'path'
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
+import WebSocket from 'ws'
 
 import { DbType, loadConfig, objectMatchesStructure } from '@/core'
 import { State, loadDb } from '@/db'
@@ -49,6 +50,8 @@ if (config.sentryDsn) {
 const traceFile = path.join(config.home, 'trace.pipe')
 const updateFile = path.join(config.home, 'update.pipe')
 
+let stateWebSocket: WebSocket | undefined
+
 const main = async () => {
   // Load DB on start.
   await loadDb({
@@ -92,43 +95,67 @@ const main = async () => {
     process.send('ready')
   }
 
-  // Update state.
-  await updateState(cosmWasmClient)
-
-  // Update state every 1.5 seconds.
-  setInterval(async () => {
+  // Get new-block WebSocket.
+  stateWebSocket = new WebSocket(
+    config.rpc.replace('http', 'ws') + '/websocket'
+  )
+  stateWebSocket.on('open', () => {
+    // Subscribe to new blocks.
+    stateWebSocket!.send(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'subscribe',
+        id: 1,
+        params: ["tm.event = 'NewBlock'"],
+      })
+    )
+  })
+  // Listen for new blocks.
+  stateWebSocket.on('message', async (data) => {
     try {
-      await updateState(cosmWasmClient)
+      const { result } = JSON.parse(data.toString())
+      if (
+        !objectMatchesStructure(result, {
+          data: {
+            value: {
+              block: {
+                header: {
+                  chain_id: {},
+                  height: {},
+                  time: {},
+                },
+              },
+            },
+          },
+        })
+      ) {
+        return
+      }
+
+      const { chain_id, height, time } = result.data.value.block.header
+      const latestBlockHeight = Number(height)
+      const latestBlockTimeUnixMs = Date.parse(time)
+
+      // Update state singleton with latest information.
+      await State.update(
+        {
+          chainId: chain_id,
+          latestBlockHeight,
+          latestBlockTimeUnixMs,
+        },
+        {
+          where: {
+            singleton: true,
+          },
+        }
+      )
     } catch {
-      // Silently fail.
+      // Fail silently.
     }
-  }, 1500).unref()
+  })
 
   // Read from trace file.
   await trace(cosmWasmClient)
-}
-
-// Update db state. Returns latest block height for log.
-const updateState = async (cosmWasmClient: CosmWasmClient): Promise<void> => {
-  const chainId = await cosmWasmClient.getChainId()
-  const latestBlockHeight = await cosmWasmClient.getHeight()
-  const latestBlockTimeUnixMs = Date.parse(
-    (await cosmWasmClient.getBlock(latestBlockHeight)).header.time
-  )
-
-  // Update state singleton with latest information.
-  await State.update(
-    {
-      chainId,
-      latestBlockHeight,
-      latestBlockTimeUnixMs,
-    },
-    {
-      where: {
-        singleton: true,
-      },
-    }
-  )
 }
 
 let shuttingDown = false
