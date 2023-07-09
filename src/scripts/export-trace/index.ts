@@ -13,7 +13,7 @@ import { setupMeilisearch } from '@/ms'
 
 import { handlerMakers } from './handlers'
 import { TracedEvent } from './types'
-import { setUpFifoJsonTracer } from './utils'
+import { setUpFifoJsonTracer, setUpWebSocketNewBlockListener } from './utils'
 
 // Parse arguments.
 const program = new Command()
@@ -145,43 +145,10 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
   }
 
   // Get new-block WebSocket.
-  stateWebSocket = new WebSocket(
-    config.rpc.replace('http', 'ws') + '/websocket'
-  )
-  stateWebSocket.on('open', () => {
-    // Subscribe to new blocks.
-    stateWebSocket!.send(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'subscribe',
-        id: 1,
-        params: ["tm.event = 'NewBlock'"],
-      })
-    )
-  })
-  // Listen for new blocks.
-  stateWebSocket.on('message', async (data) => {
-    try {
-      const { result } = JSON.parse(data.toString())
-      if (
-        !objectMatchesStructure(result, {
-          data: {
-            value: {
-              block: {
-                header: {
-                  chain_id: {},
-                  height: {},
-                  time: {},
-                },
-              },
-            },
-          },
-        })
-      ) {
-        return
-      }
-
-      const { chain_id, height, time } = result.data.value.block.header
+  stateWebSocket = await setUpWebSocketNewBlockListener({
+    rpc: config.rpc,
+    onNewBlock: async (block) => {
+      const { chain_id, height, time } = (block as any).header
       const latestBlockHeight = Number(height)
       const latestBlockTimeUnixMs = Date.parse(time)
 
@@ -201,9 +168,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 
       // Flush all handlers.
       await flushAll()
-    } catch {
-      // Fail silently.
-    }
+    },
   })
 
   console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
