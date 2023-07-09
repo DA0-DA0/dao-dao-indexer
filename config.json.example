@@ -1,9 +1,5 @@
 {
-  "trace": "/Users/noah/.juno/indexer/trace.pipe",
-  "sources": {
-    "wasm": "/Users/user/.juno/indexer/wasm.out",
-    "staking": "/Users/user/.juno/indexer/staking.out"
-  },
+  "home": "/Users/noah/.juno/indexer",
   "rpc": "https://uni-rpc.reece.sh",
   "bech32Prefix": "juno",
   "db": {

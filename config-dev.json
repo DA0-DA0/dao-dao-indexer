@@ -1,9 +1,5 @@
 {
-  "trace": "./fake/trace.pipe",
-  "sources": {
-    "wasm": "./fake/wasm.out",
-    "staking": "./fake/staking.out"
-  },
+  "home": "./fake",
   "rpc": "https://uni-rpc.reece.sh",
   "bech32Prefix": "juno",
   "db": {
