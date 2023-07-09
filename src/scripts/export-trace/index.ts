@@ -95,14 +95,14 @@ const main = async () => {
   // Update state.
   await updateState(cosmWasmClient)
 
-  // Update state every 3 seconds.
+  // Update state every 1.5 seconds.
   setInterval(async () => {
     try {
       await updateState(cosmWasmClient)
     } catch {
       // Silently fail.
     }
-  }, 3000).unref()
+  }, 1500).unref()
 
   // Read from trace file.
   await trace(cosmWasmClient)
