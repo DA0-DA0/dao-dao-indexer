@@ -298,7 +298,9 @@ const run = async () => {
 
             // Log.
             console.log(
-              `Updated: ${events.length.toLocaleString()}. Latest block exported: ${lastBlockHeightExported.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. Webhooks queued: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
+              `Updated: ${events.length.toLocaleString()}. Latest block exported: ${BigInt(
+                lastBlockHeightExported
+              ).toLocaleString()}. Transformed: ${transformations.length.toLocaleString()}. Webhooks queued: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
             )
           } finally {
             // Reset buffer after processing.
