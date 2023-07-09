@@ -348,6 +348,11 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
   if (!fifoRs.closed) {
     fifoRs.close()
   }
+
+  console.log(`\n[${new Date().toISOString()}] Trace file closed.`)
+
+  // Exit after handlers finish.
+  process.exit(0)
 }
 
 main().catch((err) => {
