@@ -1,9 +1,7 @@
 {
-  "sources": {
-    "wasm": "./fake/wasm.out",
-    "staking": "./fake/staking.out"
-  },
-  "rpc": "https://rpc.uni.junonetwork.io",
+  "home": "./fake",
+  "rpc": "https://uni-rpc.reece.sh",
+  "bech32Prefix": "juno",
   "db": {
     "data": {
       "dialect": "postgres",
