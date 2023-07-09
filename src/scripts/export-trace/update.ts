@@ -95,6 +95,7 @@ const main = async () => {
 }
 
 let shuttingDown = false
+let reading = false
 
 const run = async () => {
   const fifoRs = fs.createReadStream(updateFile, {
@@ -105,6 +106,7 @@ const run = async () => {
 
   let buffer = ''
   fifoRs.on('data', (chunk) => {
+    reading = true
     // Pause before processing this chunk.
     fifoRs.pause()
     // Resume at the end of the chunk processing.
@@ -301,6 +303,7 @@ const run = async () => {
         } else {
           // Other resume after processing this chunk.
           fifoRs.resume()
+          reading = false
         }
       }
     })()
@@ -321,6 +324,10 @@ main().catch((err) => {
 })
 
 process.on('SIGINT', () => {
+  if (!reading) {
+    process.exit(0)
+  }
+
   // If already shutting down, exit immediately.
   if (shuttingDown) {
     process.exit(1)
