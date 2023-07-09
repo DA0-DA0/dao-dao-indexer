@@ -20,6 +20,7 @@
     "db:migrate:accounts": "MIGRATING_DB=true sequelize-cli db:migrate --env accounts",
     "clear-cache": "node dist/scripts/clearCache.js",
     "export": "node dist/scripts/export-trace/index.js",
+    "export:update": "node dist/scripts/export-trace/update.js",
     "export:dev": "docker-compose -f compose.dev.yml up --exit-code-from export",
     "export:prod": "npm run build && pm2 stop exporter exporter-updater webhooks && npm run db:migrate:data && pm2 reload ecosystem.config.js --only exporter,exporter-updater,webhooks",
     "webhooks": "node dist/scripts/webhooks.js",
