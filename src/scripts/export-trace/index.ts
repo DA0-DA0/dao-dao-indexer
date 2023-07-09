@@ -219,17 +219,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
               err instanceof SyntaxError &&
               err.message.includes('Unexpected end of JSON input')
             ) {
-              console.log(
-                'JSON incomplete from buffer. Buffering...',
-                JSON.stringify(
-                  {
-                    buffer,
-                    line,
-                  },
-                  null,
-                  2
-                )
-              )
+              console.log('JSON incomplete from buffer. Buffering...')
               continue
             }
 
