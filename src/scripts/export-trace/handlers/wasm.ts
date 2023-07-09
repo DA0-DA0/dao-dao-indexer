@@ -3,6 +3,7 @@ import * as fs from 'fs'
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
 import * as Sentry from '@sentry/node'
 import { ContractInfo } from 'cosmjs-types/cosmwasm/wasm/v1/types'
+import { LRUCache } from 'lru-cache'
 
 import { ParsedWasmStateEvent } from '@/core'
 import {
@@ -288,27 +289,29 @@ export const wasm: HandlerMaker = async ({
   }
 
   // Get code ID for contract, cached in memory.
-  let codeIds: Record<string, number> = {}
+  const codeIdCache = new LRUCache<string, number>({
+    max: 1000,
+  })
   const getCodeId = async (
     contractAddress: string,
     trace: TracedEvent
   ): Promise<number> => {
-    if (codeIds[contractAddress]) {
-      return codeIds[contractAddress]
+    if (codeIdCache.has(contractAddress)) {
+      return codeIdCache.get(contractAddress) ?? -1
     }
 
     let tries = 3
     while (tries > 0) {
       try {
         const { codeId } = await cosmWasmClient.getContract(contractAddress)
-        codeIds[contractAddress] = codeId
+        codeIdCache.set(contractAddress, codeId)
         break
       } catch (err) {
         if (
           err instanceof Error &&
           err.message.includes('not found: invalid request')
         ) {
-          codeIds[contractAddress] = -1
+          codeIdCache.set(contractAddress, -1)
           break
         }
 
@@ -346,21 +349,23 @@ export const wasm: HandlerMaker = async ({
           })
 
           // Set to -1 on failure so we can continue.
-          codeIds[contractAddress] = -1
+          codeIdCache.set(contractAddress, -1)
         }
       }
     }
 
-    return codeIds[contractAddress]
+    return codeIdCache.get(contractAddress) ?? -1
   }
 
   // Get block time for block, cached in memory.
-  let blockTimes: Record<number, number> = {}
+  const blockTimesCache = new LRUCache<number, number>({
+    max: 1000,
+  })
   const getBlockTimeUnixMs = async (trace: TracedEvent): Promise<number> => {
     const blockHeight = trace.metadata.blockHeight
 
-    if (blockTimes[blockHeight]) {
-      return blockTimes[blockHeight]
+    if (blockTimesCache.has(blockHeight)) {
+      return blockTimesCache.get(blockHeight) ?? 0
     }
 
     let tries = 3
@@ -369,7 +374,7 @@ export const wasm: HandlerMaker = async ({
         const {
           header: { time },
         } = await cosmWasmClient.getBlock(blockHeight)
-        blockTimes[blockHeight] = Date.parse(time)
+        blockTimesCache.set(blockHeight, Date.parse(time))
 
         break
       } catch (err) {
@@ -407,12 +412,12 @@ export const wasm: HandlerMaker = async ({
           })
 
           // Set to 0 on failure so we can continue.
-          blockTimes[blockHeight] = 0
+          blockTimesCache.set(blockHeight, 0)
         }
       }
     }
 
-    return blockTimes[blockHeight]
+    return blockTimesCache.get(blockHeight) ?? 0
   }
 
   return {
