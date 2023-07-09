@@ -240,6 +240,9 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
         }
       }
     },
+    onError: (buffer, error) => {
+      console.error(`Failed to buffer:`, buffer, error)
+    },
     onProcessingStateChange: async (processing) => {
       // Stop reading from FIFO if we're done processing and shutting down.
       if (!processing && shuttingDown) {
