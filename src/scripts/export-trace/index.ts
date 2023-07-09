@@ -144,8 +144,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }
   }
 
-  let wsConnected = false
-
   // Get new-block WebSocket.
   stateWebSocket = await setUpWebSocketNewBlockListener({
     rpc: config.rpc,
@@ -249,17 +247,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
       // Used to determine if we can kill the process immediately when SIGINT is
       // received.
       reading = processing
-
-      // Connect to local WebSocket after first processing finishes.
-      if (!processing && !wsConnected) {
-        setUpWebSocketNewBlockListener({
-          rpc: 'http://localhost:26657',
-          onNewBlock: (block) => {
-            console.log('NEW BLOCK:\n', JSON.stringify(block, null, 2))
-          },
-        })
-        wsConnected = true
-      }
     },
   })
 

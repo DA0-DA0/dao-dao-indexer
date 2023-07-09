@@ -15,8 +15,10 @@ import {
 } from '@/db'
 
 import { Handler, HandlerMaker, TracedEvent, UpdateMessage } from '../types'
+import { setUpWebSocketNewBlockListener } from '../utils'
 
 const CONTRACT_BYTE_LENGTH = 32
+let wsConnected = false
 
 export const wasm: HandlerMaker = async ({
   cosmWasmClient,
@@ -145,6 +147,17 @@ export const wasm: HandlerMaker = async ({
     }
 
     // Otherwise, save state event.
+
+    // Connect to local WebSocket after first state key set.
+    if (!wsConnected) {
+      setUpWebSocketNewBlockListener({
+        rpc: 'http://localhost:26657',
+        onNewBlock: (block) => {
+          console.log('NEW BLOCK:\n', JSON.stringify(block, null, 2))
+        },
+      })
+      wsConnected = true
+    }
 
     // Convert base64 value to utf-8 string, if present.
     let value
