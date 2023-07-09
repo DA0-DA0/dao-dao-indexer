@@ -1,27 +1,18 @@
-import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
+import * as fs from 'fs'
+
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
 import * as Sentry from '@sentry/node'
 import { ContractInfo } from 'cosmjs-types/cosmwasm/wasm/v1/types'
-import { Sequelize } from 'sequelize'
 
+import { ParsedWasmStateEvent } from '@/core'
 import {
-  ParsedWasmEvent,
-  ParsedWasmStateEvent,
-  ParsedWasmTxEvent,
-} from '@/core'
-import {
-  AccountWebhook,
   Contract,
-  PendingWebhook,
   State,
   WasmStateEvent,
   WasmStateEventTransformation,
-  WasmTxEvent,
-  updateComputationValidityDependentOnChanges,
 } from '@/db'
-import { updateIndexesForContracts } from '@/ms'
 
-import { Handler, HandlerMaker, TracedEvent } from '../types'
+import { Handler, HandlerMaker, TracedEvent, UpdateMessage } from '../types'
 
 const CONTRACT_BYTE_LENGTH = 32
 
@@ -29,11 +20,14 @@ export const wasm: HandlerMaker = async ({
   cosmWasmClient,
   config,
   batch,
-  updateComputations,
-  sendWebhooks,
+  updateFile,
 }) => {
   const chainId = await cosmWasmClient.getChainId()
   const pending: ParsedWasmStateEvent[] = []
+
+  const fifoWs = fs.createWriteStream(updateFile, {
+    encoding: 'utf-8',
+  })
 
   const flush = async () => {
     if (pending.length === 0) {
@@ -65,18 +59,7 @@ export const wasm: HandlerMaker = async ({
     let tries = 3
     while (tries > 0) {
       try {
-        const {
-          computationsUpdated,
-          computationsDestroyed,
-          transformations,
-          webhooksQueued,
-          lastBlockHeightExported,
-        } = await exporter(eventsToExport, !updateComputations, !sendWebhooks)
-
-        // Log.
-        console.log(
-          `[wasm] Exported: ${eventsToExport.length.toLocaleString()}. Latest block exported: ${lastBlockHeightExported.toLocaleString()}. Transformed: ${transformations.toLocaleString()}. Webhooks queued: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
-        )
+        await exporter(eventsToExport)
 
         break
       } catch (err) {
@@ -147,11 +130,7 @@ export const wasm: HandlerMaker = async ({
 
     // Get code ID and block timestamp from chain.
     const blockHeight = BigInt(trace.metadata.blockHeight).toString()
-    const blockTimeUnixMsNum = await getBlockTimeUnixMs(
-      cosmWasmClient,
-      chainId,
-      trace
-    )
+    const blockTimeUnixMsNum = await getBlockTimeUnixMs(trace)
     const blockTimeUnixMs = BigInt(blockTimeUnixMsNum).toString()
     const blockTimestamp = new Date(blockTimeUnixMsNum)
 
@@ -215,12 +194,7 @@ export const wasm: HandlerMaker = async ({
       }
     }
 
-    const codeId = await getCodeId(
-      cosmWasmClient,
-      chainId,
-      contractAddress,
-      trace
-    )
+    const codeId = await getCodeId(contractAddress, trace)
     const event: ParsedWasmStateEvent = {
       type: 'state',
       codeId,
@@ -242,309 +216,199 @@ export const wasm: HandlerMaker = async ({
     return true
   }
 
+  const exporter = async (parsedEvents: ParsedWasmStateEvent[]) => {
+    const state = await State.getSingleton()
+    if (!state) {
+      throw new Error('State not found while exporting.')
+    }
+
+    const uniqueContracts = [
+      ...new Set(parsedEvents.map((event) => event.contractAddress)),
+    ]
+
+    // Ensure contract exists before creating events. `address` is unique.
+    await Contract.bulkCreate(
+      uniqueContracts.map((address) => {
+        const event = parsedEvents.find(
+          (event) => event.contractAddress === address
+        )
+        // Should never happen since `uniqueContracts` is derived from
+        // `parsedEvents`.
+        if (!event) {
+          throw new Error('Event not found when creating contract.')
+        }
+
+        return {
+          address,
+          codeId: event.codeId,
+          // Set the contract instantiation block to the first event found in
+          // the list of parsed events. Events are sorted in ascending order
+          // by creation block. These won't get updated if the contract
+          // already exists, so it's safe to always attempt creation with the
+          // first event's block. Only `codeId` gets updated below when a
+          // duplicate is found.
+          instantiatedAtBlockHeight: event.blockHeight,
+          instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
+          instantiatedAtBlockTimestamp: event.blockTimestamp,
+        }
+      }),
+      // When contract is migrated, codeId changes.
+      {
+        updateOnDuplicate: ['codeId'],
+      }
+    )
+
+    // Unique index on [blockHeight, contractAddress, key] ensures that we don't
+    // insert duplicate events. If we encounter a duplicate, we update the
+    // `value`, `valueJson`, and `delete` fields in case event processing for a
+    // block was batched separately.
+    const events =
+      parsedEvents.length > 0
+        ? await WasmStateEvent.bulkCreate(parsedEvents, {
+            updateOnDuplicate: ['value', 'valueJson', 'delete'],
+          })
+        : []
+
+    // Transform events as needed.
+    const transformations =
+      await WasmStateEventTransformation.transformParsedStateEvents(
+        parsedEvents
+      )
+
+    // Send to update FIFO.
+    const updateMessage: UpdateMessage = {
+      type: 'wasm',
+      eventIds: events.map((event) => event.id),
+      transformationIds: transformations.map(
+        (transformation) => transformation.id
+      ),
+    }
+
+    fifoWs.write(JSON.stringify(updateMessage) + '\n')
+  }
+
+  // Get code ID for contract, cached in memory.
+  let codeIds: Record<string, number> = {}
+  const getCodeId = async (
+    contractAddress: string,
+    trace: TracedEvent
+  ): Promise<number> => {
+    if (codeIds[contractAddress]) {
+      return codeIds[contractAddress]
+    }
+
+    let tries = 3
+    while (tries > 0) {
+      try {
+        const { codeId } = await cosmWasmClient.getContract(contractAddress)
+        codeIds[contractAddress] = codeId
+        break
+      } catch (err) {
+        tries--
+
+        if (tries > 0) {
+          console.error(
+            '-------\n',
+            `Failed to get code ID. Trying ${tries} more time(s)...`,
+            contractAddress,
+            '\n' + JSON.stringify(trace, null, 2) + '\n',
+            err instanceof Error ? err.message : err,
+            '\n-------'
+          )
+          // Wait 500ms before trying again.
+          await new Promise((resolve) => setTimeout(resolve, 500))
+        } else {
+          console.error(
+            '-------\n',
+            'Failed to get code ID. Giving up.',
+            contractAddress,
+            '\n' + JSON.stringify(trace, null, 2) + '\n',
+            err instanceof Error ? err.message : err,
+            '\n-------'
+          )
+          Sentry.captureException(err, {
+            tags: {
+              type: 'failed-get-code-id',
+              script: 'export-trace',
+            },
+            extra: {
+              chainId,
+              contractAddress,
+            },
+          })
+
+          // Set to 0 on failure so we can continue.
+          codeIds[contractAddress] = 0
+        }
+      }
+    }
+
+    return codeIds[contractAddress]
+  }
+
+  // Get block time for block, cached in memory.
+  let blockTimes: Record<number, number> = {}
+  const getBlockTimeUnixMs = async (trace: TracedEvent): Promise<number> => {
+    const blockHeight = trace.metadata.blockHeight
+
+    if (blockTimes[blockHeight]) {
+      return blockTimes[blockHeight]
+    }
+
+    let tries = 3
+    while (tries > 0) {
+      try {
+        const {
+          header: { time },
+        } = await cosmWasmClient.getBlock(blockHeight)
+        blockTimes[blockHeight] = Date.parse(time)
+
+        break
+      } catch (err) {
+        tries--
+
+        if (tries > 0) {
+          console.error(
+            '-------\n',
+            `Failed to get block. Trying ${tries} more time(s)...`,
+            blockHeight,
+            '\n' + JSON.stringify(trace, null, 2) + '\n',
+            err instanceof Error ? err.message : err,
+            '\n-------'
+          )
+          // Wait 500ms before trying again.
+          await new Promise((resolve) => setTimeout(resolve, 500))
+        } else {
+          console.error(
+            '-------\n',
+            'Failed to get block. Giving up.',
+            blockHeight,
+            '\n' + JSON.stringify(trace, null, 2) + '\n',
+            err instanceof Error ? err.message : err,
+            '\n-------'
+          )
+          Sentry.captureException(err, {
+            tags: {
+              type: 'failed-get-block',
+              script: 'export-trace',
+            },
+            extra: {
+              chainId,
+              blockHeight,
+            },
+          })
+
+          // Set to 0 on failure so we can continue.
+          blockTimes[blockHeight] = 0
+        }
+      }
+    }
+
+    return blockTimes[blockHeight]
+  }
+
   return {
     handle,
     flush,
   }
-}
-
-// TODO: Create pipeline architecture, handle errors better, etc.
-const exporter = async (
-  parsedEvents: ParsedWasmEvent[],
-  dontUpdateComputations = false,
-  dontSendWebhooks = false
-): Promise<{
-  computationsUpdated: number
-  computationsDestroyed: number
-  transformations: number
-  webhooksQueued: number
-  lastBlockHeightExported: bigint
-}> => {
-  const state = await State.getSingleton()
-  if (!state) {
-    throw new Error('State not found while exporting')
-  }
-
-  const uniqueContracts = [
-    ...new Set(parsedEvents.map((event) => event.contractAddress)),
-  ]
-
-  // Ensure contract exists before creating events. `address` is unique.
-  await Contract.bulkCreate(
-    uniqueContracts.map((address) => {
-      const event = parsedEvents.find(
-        (event) => event.contractAddress === address
-      )
-      // Should never happen since `uniqueContracts` is derived from
-      // `parsedEvents`.
-      if (!event) {
-        throw new Error('Event not found when creating contract.')
-      }
-
-      return {
-        address,
-        codeId: event.codeId,
-        // Set the contract instantiation block to the first event found in
-        // the list of parsed events. Events are sorted in ascending order
-        // by creation block. These won't get updated if the contract
-        // already exists, so it's safe to always attempt creation with the
-        // first event's block. Only `codeId` gets updated below when a
-        // duplicate is found.
-        instantiatedAtBlockHeight: event.blockHeight,
-        instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
-        instantiatedAtBlockTimestamp: event.blockTimestamp,
-      }
-    }),
-    // When contract is migrated, codeId changes.
-    {
-      updateOnDuplicate: ['codeId'],
-    }
-  )
-
-  // Get updated contracts.
-  const contracts = await Contract.findAll({
-    where: {
-      address: uniqueContracts,
-    },
-  })
-
-  const parsedStateEvents = parsedEvents.filter(
-    (event): event is ParsedWasmStateEvent => event.type === 'state'
-  )
-  const parsedTxEvents = parsedEvents.filter(
-    (event): event is ParsedWasmTxEvent => event.type === 'tx'
-  )
-
-  // Unique index on [blockHeight, contractAddress, key] ensures that we don't
-  // insert duplicate events. If we encounter a duplicate, we update the
-  // `value`, `valueJson`, and `delete` fields in case event processing for a
-  // block was batched separately.
-  const exportedEvents = [
-    ...(parsedStateEvents.length > 0
-      ? await WasmStateEvent.bulkCreate(parsedStateEvents, {
-          updateOnDuplicate: ['value', 'valueJson', 'delete'],
-        })
-      : []),
-    ...(parsedTxEvents.length > 0
-      ? await WasmTxEvent.bulkCreate(parsedTxEvents, {
-          updateOnDuplicate: [
-            'contractAddress',
-            'action',
-            'sender',
-            'msg',
-            'msgJson',
-            'reply',
-            'funds',
-            'response',
-            'gasUsed',
-          ],
-        })
-      : []),
-  ]
-  // Add contracts to events since webhooks need to access contract code IDs.
-  exportedEvents.forEach((event) => {
-    event.contract = contracts.find(
-      (contract) => contract.address === event.contractAddress
-    )!
-  })
-
-  // Transform events as needed.
-  const transformations =
-    await WasmStateEventTransformation.transformParsedStateEvents(
-      parsedStateEvents
-    )
-
-  let computationsUpdated = 0
-  let computationsDestroyed = 0
-  if (!dontUpdateComputations) {
-    const computationUpdates =
-      await updateComputationValidityDependentOnChanges([
-        ...exportedEvents,
-        ...transformations,
-      ])
-    computationsUpdated = computationUpdates.updated
-    computationsDestroyed = computationUpdates.destroyed
-  }
-
-  const exportedStateEvents = exportedEvents.filter(
-    (e): e is WasmStateEvent => e instanceof WasmStateEvent
-  )
-  // Queue webhooks as needed.
-  const webhooksQueued =
-    dontSendWebhooks || exportedStateEvents.length === 0
-      ? 0
-      : (await PendingWebhook.queueWebhooks(state, exportedStateEvents)) +
-        (await AccountWebhook.queueWebhooks(exportedStateEvents))
-
-  // Store last block height exported, and update latest block height/time if
-  // the last export is newer.
-  const lastBlockHeightExported =
-    parsedEvents[parsedEvents.length - 1].blockHeight
-  const lastBlockTimeUnixMsExported =
-    parsedEvents[parsedEvents.length - 1].blockTimeUnixMs
-  await State.update(
-    {
-      lastWasmBlockHeightExported: Sequelize.fn(
-        'GREATEST',
-        Sequelize.col('lastWasmBlockHeightExported'),
-        lastBlockHeightExported
-      ),
-
-      latestBlockHeight: Sequelize.fn(
-        'GREATEST',
-        Sequelize.col('latestBlockHeight'),
-        lastBlockHeightExported
-      ),
-      latestBlockTimeUnixMs: Sequelize.fn(
-        'GREATEST',
-        Sequelize.col('latestBlockTimeUnixMs'),
-        lastBlockTimeUnixMsExported
-      ),
-    },
-    {
-      where: {
-        singleton: true,
-      },
-    }
-  )
-
-  // Update meilisearch indexes. This must happen after the state is updated
-  // since it uses the latest block.
-  await updateIndexesForContracts({
-    contracts,
-  })
-
-  return {
-    computationsUpdated,
-    computationsDestroyed,
-    transformations: transformations.length,
-    lastBlockHeightExported: BigInt(lastBlockHeightExported),
-    webhooksQueued,
-  }
-}
-
-// Get code ID for contract, cached in memory.
-let codeIds: Record<string, number> = {}
-const getCodeId = async (
-  cosmWasmClient: CosmWasmClient,
-  chainId: string,
-  contractAddress: string,
-  trace: TracedEvent
-): Promise<number> => {
-  if (codeIds[contractAddress]) {
-    return codeIds[contractAddress]
-  }
-
-  let tries = 3
-  while (tries > 0) {
-    try {
-      const { codeId } = await cosmWasmClient.getContract(contractAddress)
-      codeIds[contractAddress] = codeId
-      break
-    } catch (err) {
-      tries--
-
-      if (tries > 0) {
-        console.error(
-          '-------\n',
-          `Failed to get code ID. Trying ${tries} more time(s)...`,
-          contractAddress,
-          '\n' + JSON.stringify(trace, null, 2) + '\n',
-          err instanceof Error ? err.message : err,
-          '\n-------'
-        )
-        // Wait 500ms before trying again.
-        await new Promise((resolve) => setTimeout(resolve, 500))
-      } else {
-        console.error(
-          '-------\n',
-          'Failed to get code ID. Giving up.',
-          contractAddress,
-          '\n' + JSON.stringify(trace, null, 2) + '\n',
-          err instanceof Error ? err.message : err,
-          '\n-------'
-        )
-        Sentry.captureException(err, {
-          tags: {
-            type: 'failed-get-code-id',
-            script: 'export-trace',
-          },
-          extra: {
-            chainId,
-            contractAddress,
-          },
-        })
-
-        // Set to 0 on failure so we can continue.
-        codeIds[contractAddress] = 0
-      }
-    }
-  }
-
-  return codeIds[contractAddress]
-}
-
-// Get block time for block, cached in memory.
-let blockTimes: Record<number, number> = {}
-const getBlockTimeUnixMs = async (
-  cosmWasmClient: CosmWasmClient,
-  chainId: string,
-  trace: TracedEvent
-): Promise<number> => {
-  const blockHeight = trace.metadata.blockHeight
-
-  if (blockTimes[blockHeight]) {
-    return blockTimes[blockHeight]
-  }
-
-  let tries = 3
-  while (tries > 0) {
-    try {
-      const {
-        header: { time },
-      } = await cosmWasmClient.getBlock(blockHeight)
-      blockTimes[blockHeight] = Date.parse(time)
-
-      break
-    } catch (err) {
-      tries--
-
-      if (tries > 0) {
-        console.error(
-          '-------\n',
-          `Failed to get block. Trying ${tries} more time(s)...`,
-          blockHeight,
-          '\n' + JSON.stringify(trace, null, 2) + '\n',
-          err instanceof Error ? err.message : err,
-          '\n-------'
-        )
-        // Wait 500ms before trying again.
-        await new Promise((resolve) => setTimeout(resolve, 500))
-      } else {
-        console.error(
-          '-------\n',
-          'Failed to get block. Giving up.',
-          blockHeight,
-          '\n' + JSON.stringify(trace, null, 2) + '\n',
-          err instanceof Error ? err.message : err,
-          '\n-------'
-        )
-        Sentry.captureException(err, {
-          tags: {
-            type: 'failed-get-block',
-            script: 'export-trace',
-          },
-          extra: {
-            chainId,
-            blockHeight,
-          },
-        })
-
-        // Set to 0 on failure so we can continue.
-        blockTimes[blockHeight] = 0
-      }
-    }
-  }
-
-  return blockTimes[blockHeight]
 }

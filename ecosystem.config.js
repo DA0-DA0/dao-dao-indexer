@@ -8,6 +8,13 @@ module.exports = {
       kill_timeout: 30000,
     },
     {
+      name: 'exporter-updater',
+      script: 'dist/scripts/export-trace/update.js',
+      wait_ready: true,
+      listen_timeout: 30000,
+      kill_timeout: 30000,
+    },
+    {
       name: 'webhooks',
       script: 'dist/scripts/webhooks.js',
       kill_timeout: 30000,

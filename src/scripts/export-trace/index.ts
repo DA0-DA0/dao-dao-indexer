@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import path from 'path'
 
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import * as Sentry from '@sentry/node'
@@ -24,31 +25,19 @@ program.option(
   1000
 )
 program.option(
-  // Adds inverted `update` boolean to the options object.
-  '--no-update',
-  "don't update computation validity based on new events or transformations"
-)
-program.option(
-  // Adds inverted `webhooks` boolean to the options object.
-  '--no-webhooks',
-  "don't send webhooks"
-)
-program.option(
   '-m, --modules <modules>',
   'comma-separated list of modules to export, falling back to all modules',
   (value) => value.split(',')
 )
 program.parse()
-const {
-  config: _config,
-  batch,
-  update,
-  webhooks,
-  modules: _modules,
-} = program.opts()
+const { config: _config, batch, modules: _modules } = program.opts()
 
 // Load config with config option.
 const config = loadConfig(_config)
+
+if (!config.home) {
+  throw new Error('Config missing home directory.')
+}
 
 // Add Sentry error reporting.
 if (config.sentryDsn) {
@@ -56,6 +45,9 @@ if (config.sentryDsn) {
     dsn: config.sentryDsn,
   })
 }
+
+const traceFile = path.join(config.home, 'trace.pipe')
+const updateFile = path.join(config.home, 'update.pipe')
 
 const main = async () => {
   // Load DB on start.
@@ -71,17 +63,26 @@ const main = async () => {
   // Initialize state.
   await State.createSingletonIfMissing()
 
-  // Ensure trace file exists.
-  if (!config.trace || !fs.existsSync(config.trace)) {
+  // Ensure trace and update files exist.
+  if (!fs.existsSync(traceFile)) {
     throw new Error(
-      `Trace file not found: ${config.trace}. Create it with "mkfifo ${config.trace}".`
+      `Trace file not found: ${traceFile}. Create it with "mkfifo ${traceFile}".`
+    )
+  }
+  if (!fs.existsSync(updateFile)) {
+    throw new Error(
+      `Update file not found: ${updateFile}. Create it with "mkfifo ${updateFile}".`
     )
   }
 
-  // Verify trace file is a FIFO.
-  const stat = fs.statSync(config.trace)
+  // Verify trace and update files are FIFOs.
+  const stat = fs.statSync(traceFile)
   if (!stat.isFIFO()) {
-    throw new Error(`Trace file is not a FIFO: ${config.trace}.`)
+    throw new Error(`Trace file is not a FIFO: ${traceFile}.`)
+  }
+  const stat2 = fs.statSync(updateFile)
+  if (!stat2.isFIFO()) {
+    throw new Error(`Update file is not a FIFO: ${updateFile}.`)
   }
 
   const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
@@ -132,13 +133,12 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
         cosmWasmClient,
         config,
         batch,
-        updateComputations: !!update,
-        sendWebhooks: !!webhooks,
+        updateFile,
       }),
     }))
   )
 
-  const fifoRs = fs.createReadStream(config.trace, {
+  const fifoRs = fs.createReadStream(traceFile, {
     encoding: 'utf-8',
   })
 

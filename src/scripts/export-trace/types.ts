@@ -14,8 +14,7 @@ export type HandlerMakerOptions = {
   cosmWasmClient: CosmWasmClient
   config: Config
   batch: number
-  updateComputations: boolean
-  sendWebhooks: boolean
+  updateFile: string
 }
 
 export type HandlerMaker = (options: HandlerMakerOptions) => Promise<Handler>
@@ -28,4 +27,10 @@ export type TracedEvent = {
     blockHeight: number
     txHash: string
   }
+}
+
+export type UpdateMessage = {
+  type: 'wasm'
+  eventIds: number[]
+  transformationIds: number[]
 }
