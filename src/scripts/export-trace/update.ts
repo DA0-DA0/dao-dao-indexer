@@ -226,7 +226,7 @@ const run = async () => {
       } catch (err) {
         console.error(
           '-------\nFailed to update:\n',
-          err,
+          err instanceof Error ? err.message : err,
           '\nData: ' + JSON.stringify(data, null, 2) + '\n-------'
         )
         Sentry.captureException(err, {

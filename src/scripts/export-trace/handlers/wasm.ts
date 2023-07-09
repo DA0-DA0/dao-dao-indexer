@@ -313,7 +313,7 @@ export const wasm: HandlerMaker = async ({
     } catch (err) {
       console.error(
         '-------\nFailed to get code ID:\n',
-        err,
+        err instanceof Error ? err.message : err,
         '\nContract: ' +
           contractAddress +
           '\nData: ' +
@@ -365,7 +365,7 @@ export const wasm: HandlerMaker = async ({
     } catch (err) {
       console.error(
         '-------\nFailed to get block:\n',
-        err,
+        err instanceof Error ? err.message : err,
         '\nBlock height: ' +
           BigInt(blockHeight).toLocaleString() +
           '\nData: ' +

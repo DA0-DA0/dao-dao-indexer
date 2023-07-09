@@ -135,7 +135,11 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
           interval: 100,
         })
       } catch (err) {
-        console.error('-------\nFailed to flush:\n', err, '\n-------')
+        console.error(
+          '-------\nFailed to flush:\n',
+          err instanceof Error ? err.message : err,
+          '\n-------'
+        )
         Sentry.captureException(err, {
           tags: {
             type: 'failed-flush',
@@ -240,7 +244,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
         } catch (err) {
           console.error(
             '-------\nFailed to handle:\n',
-            err,
+            err instanceof Error ? err.message : err,
             '\nHandler: ' +
               name +
               '\nData: ' +
