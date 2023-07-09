@@ -144,7 +144,6 @@ const run = async () => {
                 'JSON incomplete from buffer. Buffering...',
                 JSON.stringify(
                   {
-                    chunk,
                     buffer,
                     line,
                   },
@@ -163,7 +162,6 @@ const run = async () => {
               '\n' +
                 JSON.stringify(
                   {
-                    chunk,
                     buffer,
                     line,
                   },

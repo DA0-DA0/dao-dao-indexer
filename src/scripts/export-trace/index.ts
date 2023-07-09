@@ -223,7 +223,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
                 'JSON incomplete from buffer. Buffering...',
                 JSON.stringify(
                   {
-                    chunk,
                     buffer,
                     line,
                   },
@@ -242,7 +241,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
               '\n' +
                 JSON.stringify(
                   {
-                    chunk,
                     buffer,
                     line,
                   },
