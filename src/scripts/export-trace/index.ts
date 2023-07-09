@@ -161,9 +161,19 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
           tries--
 
           if (tries > 0) {
-            console.error(`Failed to flush. Trying ${tries} more time(s)...`)
+            console.error(
+              '-------\n',
+              `Failed to flush. Trying ${tries} more time(s)...\n`,
+              err instanceof Error ? err.message : `${err}`,
+              '\n-------'
+            )
           } else {
-            console.error('Failed to flush. Giving up.')
+            console.error(
+              '-------\n',
+              'Failed to flush. Giving up.\n',
+              err instanceof Error ? err.message : `${err}`,
+              '\n-------'
+            )
             Sentry.captureException(err, {
               tags: {
                 type: 'failed-flush',
@@ -235,17 +245,20 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 
             // Capture other unexpected errors and ignore.
             console.error(
-              'Failed to parse JSON',
+              '-------\n',
+              'Failed to parse JSON\n',
               err,
-              JSON.stringify(
-                {
-                  chunk,
-                  buffer,
-                  line,
-                },
-                null,
-                2
-              )
+              '\n' +
+                JSON.stringify(
+                  {
+                    chunk,
+                    buffer,
+                    line,
+                  },
+                  null,
+                  2
+                ),
+              '\n-------'
             )
             Sentry.captureException(err, {
               tags: {
@@ -297,12 +310,20 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 
                   if (tries > 0) {
                     console.error(
+                      '-------\n',
                       `[${name}] Failed to handle. Trying ${tries} more time(s)...`,
+                      '\n' + JSON.stringify(tracedEvent, null, 2) + '\n',
                       err,
-                      JSON.stringify(tracedEvent, null, 2)
+                      '\n-------'
                     )
                   } else {
-                    console.error(`[${name}] Failed to handle. Giving up.`)
+                    console.error(
+                      '-------\n',
+                      `[${name}] Failed to handle. Giving up.`,
+                      '\n' + JSON.stringify(tracedEvent, null, 2) + '\n',
+                      err,
+                      '\n-------'
+                    )
                     Sentry.captureException(err, {
                       tags: {
                         type: 'failed-handle',

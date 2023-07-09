@@ -84,10 +84,18 @@ export const wasm: HandlerMaker = async ({
 
         if (tries > 0) {
           console.error(
-            `[wasm] Failed to export pending. Trying ${tries} more time(s)...`
+            '-------\n',
+            `[wasm] Failed to export pending. Trying ${tries} more time(s)...\n`,
+            err,
+            '\n-------'
           )
         } else {
-          console.error('Failed to export pending. Giving up.')
+          console.error(
+            '-------\n',
+            'Failed to export pending. Giving up.\n',
+            err,
+            '\n-------'
+          )
           Sentry.captureException(err, {
             tags: {
               type: 'wasm-failed-export-pending',
@@ -261,65 +269,37 @@ const exporter = async (
     ...new Set(parsedEvents.map((event) => event.contractAddress)),
   ]
 
-  // Try to create contracts up to 3 times. This has previously failed due to a
-  // deadlock.
-  let contractCreationAttempts = 3
-  while (contractCreationAttempts > 0) {
-    try {
-      // Ensure contract exists before creating events. `address` is unique.
-      await Contract.bulkCreate(
-        uniqueContracts.map((address) => {
-          const event = parsedEvents.find(
-            (event) => event.contractAddress === address
-          )
-          // Should never happen since `uniqueContracts` is derived from
-          // `parsedEvents`.
-          if (!event) {
-            throw new Error('Event not found when creating contract.')
-          }
-
-          return {
-            address,
-            codeId: event.codeId,
-            // Set the contract instantiation block to the first event found in
-            // the list of parsed events. Events are sorted in ascending order
-            // by creation block. These won't get updated if the contract
-            // already exists, so it's safe to always attempt creation with the
-            // first event's block. Only `codeId` gets updated below when a
-            // duplicate is found.
-            instantiatedAtBlockHeight: event.blockHeight,
-            instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
-            instantiatedAtBlockTimestamp: event.blockTimestamp,
-          }
-        }),
-        // When contract is migrated, codeId changes.
-        {
-          updateOnDuplicate: ['codeId'],
-        }
+  // Ensure contract exists before creating events. `address` is unique.
+  await Contract.bulkCreate(
+    uniqueContracts.map((address) => {
+      const event = parsedEvents.find(
+        (event) => event.contractAddress === address
       )
-
-      // Break on success.
-      break
-    } catch (err) {
-      console.error('[wasm] Failed to create contracts', err)
-      Sentry.captureException(err, {
-        tags: {
-          script: 'export-trace',
-          type: 'wasm-failed-create-contract',
-          handler: 'wasm',
-        },
-        extra: {
-          uniqueContracts,
-        },
-      })
-      contractCreationAttempts--
-
-      // If we've tried all times, throw the error so we halt.
-      if (contractCreationAttempts === 0) {
-        throw err
+      // Should never happen since `uniqueContracts` is derived from
+      // `parsedEvents`.
+      if (!event) {
+        throw new Error('Event not found when creating contract.')
       }
+
+      return {
+        address,
+        codeId: event.codeId,
+        // Set the contract instantiation block to the first event found in
+        // the list of parsed events. Events are sorted in ascending order
+        // by creation block. These won't get updated if the contract
+        // already exists, so it's safe to always attempt creation with the
+        // first event's block. Only `codeId` gets updated below when a
+        // duplicate is found.
+        instantiatedAtBlockHeight: event.blockHeight,
+        instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
+        instantiatedAtBlockTimestamp: event.blockTimestamp,
+      }
+    }),
+    // When contract is migrated, codeId changes.
+    {
+      updateOnDuplicate: ['codeId'],
     }
-  }
+  )
 
   // Get updated contracts.
   const contracts = await Contract.findAll({
@@ -466,19 +446,23 @@ const getCodeId = async (
 
       if (tries > 0) {
         console.error(
+          '-------\n',
           `Failed to get code ID. Trying ${tries} more time(s)...`,
           contractAddress,
           '\n' + JSON.stringify(trace, null, 2) + '\n',
-          err instanceof Error ? err.message : err
+          err instanceof Error ? err.message : err,
+          '\n-------'
         )
         // Wait 500ms before trying again.
         await new Promise((resolve) => setTimeout(resolve, 500))
       } else {
         console.error(
+          '-------\n',
           'Failed to get code ID. Giving up.',
           contractAddress,
           '\n' + JSON.stringify(trace, null, 2) + '\n',
-          err instanceof Error ? err.message : err
+          err instanceof Error ? err.message : err,
+          '\n-------'
         )
         Sentry.captureException(err, {
           tags: {
@@ -527,19 +511,23 @@ const getBlockTimeUnixMs = async (
 
       if (tries > 0) {
         console.error(
-          `Failed to get block. Trying ${tries} more time(s)...\n`,
+          '-------\n',
+          `Failed to get block. Trying ${tries} more time(s)...`,
           blockHeight,
           '\n' + JSON.stringify(trace, null, 2) + '\n',
-          err instanceof Error ? err.message : err
+          err instanceof Error ? err.message : err,
+          '\n-------'
         )
         // Wait 500ms before trying again.
         await new Promise((resolve) => setTimeout(resolve, 500))
       } else {
         console.error(
+          '-------\n',
           'Failed to get block. Giving up.',
           blockHeight,
           '\n' + JSON.stringify(trace, null, 2) + '\n',
-          err instanceof Error ? err.message : err
+          err instanceof Error ? err.message : err,
+          '\n-------'
         )
         Sentry.captureException(err, {
           tags: {
