@@ -144,12 +144,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }
   }
 
-  await setUpWebSocketNewBlockListener({
-    rpc: 'http://localhost:26657',
-    onNewBlock: (block) => {
-      console.log('NEW BLOCK:\n', JSON.stringify(block, null, 2))
-    },
-  })
+  let wsConnected = false
 
   // Get new-block WebSocket.
   stateWebSocket = await setUpWebSocketNewBlockListener({
@@ -245,7 +240,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
         }
       }
     },
-    onProcessingStateChange: (processing) => {
+    onProcessingStateChange: async (processing) => {
       // Stop reading from FIFO if we're done processing and shutting down.
       if (!processing && shuttingDown) {
         closeTracer()
@@ -254,6 +249,17 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
       // Used to determine if we can kill the process immediately when SIGINT is
       // received.
       reading = processing
+
+      // Connect to local WebSocket after first processing finishes.
+      if (!process && !wsConnected) {
+        await setUpWebSocketNewBlockListener({
+          rpc: 'http://localhost:26657',
+          onNewBlock: (block) => {
+            console.log('NEW BLOCK:\n', JSON.stringify(block, null, 2))
+          },
+        })
+        wsConnected = true
+      }
     },
   })
 
