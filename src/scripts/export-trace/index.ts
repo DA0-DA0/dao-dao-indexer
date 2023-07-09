@@ -222,7 +222,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
   console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
 
   let buffer = ''
-  let lastBlockHeightSeen = 0
   fifoRs.on('data', (chunk) => {
     reading = true
     // Pause before processing this chunk.
@@ -312,14 +311,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
             ) {
               continue
             }
-
-            // On detect start of next block, flush all handlers. This is
-            // probably a read of the `baseapp/BlockParams` key.
-            if (tracedEvent.metadata.blockHeight > lastBlockHeightSeen) {
-              await flushAll()
-            }
-
-            lastBlockHeightSeen = tracedEvent.metadata.blockHeight
 
             // Only handle writes and deletes.
             if (

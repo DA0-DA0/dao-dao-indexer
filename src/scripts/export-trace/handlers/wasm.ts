@@ -90,6 +90,7 @@ export const wasm: HandlerMaker = async ({
   }
 
   let lastBlockHeightSeen = 0
+  let debouncedFlush: NodeJS.Timeout | undefined
 
   const handle: Handler['handle'] = async (trace) => {
     // ContractStorePrefix = 0x03
@@ -211,6 +212,12 @@ export const wasm: HandlerMaker = async ({
 
     pending.push(event)
     lastBlockHeightSeen = trace.metadata.blockHeight
+
+    // Debounce flush in 250ms.
+    if (debouncedFlush !== undefined) {
+      clearTimeout(debouncedFlush)
+    }
+    debouncedFlush = setTimeout(flush, 500)
 
     return true
   }
