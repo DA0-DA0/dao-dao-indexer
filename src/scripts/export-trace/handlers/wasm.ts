@@ -304,6 +304,14 @@ export const wasm: HandlerMaker = async ({
         codeIds[contractAddress] = codeId
         break
       } catch (err) {
+        if (
+          err instanceof Error &&
+          err.message.includes('not found: invalid request')
+        ) {
+          codeIds[contractAddress] = -1
+          break
+        }
+
         tries--
 
         if (tries > 0) {
@@ -337,8 +345,8 @@ export const wasm: HandlerMaker = async ({
             },
           })
 
-          // Set to 0 on failure so we can continue.
-          codeIds[contractAddress] = 0
+          // Set to -1 on failure so we can continue.
+          codeIds[contractAddress] = -1
         }
       }
     }
