@@ -144,6 +144,13 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }
   }
 
+  await setUpWebSocketNewBlockListener({
+    rpc: 'http://localhost:26657',
+    onNewBlock: (block) => {
+      console.log('NEW BLOCK:\n', JSON.stringify(block, null, 2))
+    },
+  })
+
   // Get new-block WebSocket.
   stateWebSocket = await setUpWebSocketNewBlockListener({
     rpc: config.rpc,
