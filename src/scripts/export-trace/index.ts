@@ -403,6 +403,10 @@ main().catch((err) => {
 })
 
 process.on('SIGINT', () => {
+  if (stateWebSocket) {
+    stateWebSocket.close()
+  }
+
   if (!reading) {
     process.exit(0)
   }
