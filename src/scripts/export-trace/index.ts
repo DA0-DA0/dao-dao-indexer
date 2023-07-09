@@ -3,6 +3,7 @@ import path from 'path'
 
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import * as Sentry from '@sentry/node'
+import retry from 'async-await-retry'
 import { Command } from 'commander'
 import WebSocket from 'ws'
 
@@ -12,6 +13,7 @@ import { setupMeilisearch } from '@/ms'
 
 import { handlerMakers } from './handlers'
 import { TracedEvent } from './types'
+import { setUpFifoJsonTracer } from './utils'
 
 // Parse arguments.
 const program = new Command()
@@ -116,43 +118,28 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }))
   )
 
-  const fifoRs = fs.createReadStream(traceFile, {
-    encoding: 'utf-8',
-  })
-
   // Flush all handlers.
   const flushAll = async () => {
-    for (const { handler } of handlers) {
-      let tries = 3
-      while (tries > 0) {
-        try {
-          await handler.flush()
-          break
-        } catch (err) {
-          tries--
-
-          if (tries > 0) {
-            console.error(
-              '-------\n',
-              `Failed to flush. Trying ${tries} more time(s)...\n`,
-              err instanceof Error ? err.message : `${err}`,
-              '\n-------'
-            )
-          } else {
-            console.error(
-              '-------\n',
-              'Failed to flush. Giving up.\n',
-              err instanceof Error ? err.message : `${err}`,
-              '\n-------'
-            )
-            Sentry.captureException(err, {
-              tags: {
-                type: 'failed-flush',
-                script: 'export-trace',
-              },
-            })
-          }
-        }
+    for (const { name, handler } of handlers) {
+      try {
+        // Retry 3 times with exponential backoff starting at 100ms delay.
+        await retry(handler.flush, [], {
+          retriesMax: 3,
+          exponential: true,
+          interval: 100,
+        })
+      } catch (err) {
+        console.error('-------\nFailed to flush:\n', err, '\n-------')
+        Sentry.captureException(err, {
+          tags: {
+            type: 'failed-flush',
+            script: 'export-trace',
+          },
+          extra: {
+            handler: name,
+          },
+        })
+        throw err
       }
     }
   }
@@ -221,179 +208,91 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 
   console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
 
-  let buffer = ''
-  fifoRs.on('data', (chunk) => {
-    reading = true
-    // Pause before processing this chunk.
-    fifoRs.pause()
-    // Resume at the end of the chunk processing.
-    ;(async () => {
-      try {
-        if (!chunk || typeof chunk !== 'string') {
-          return
-        }
+  const { promise: tracer, close: closeTracer } = setUpFifoJsonTracer({
+    file: traceFile,
+    onData: async (data) => {
+      const tracedEvent = data as TracedEvent
+      // Ensure this is a traced write event.
+      if (
+        !objectMatchesStructure(tracedEvent, {
+          operation: {},
+          key: {},
+          value: {},
+          metadata: {
+            blockHeight: {},
+            txHash: {},
+          },
+        })
+      ) {
+        return
+      }
 
-        // Chunk ends in newline.
-        const lines = chunk.trimEnd().split('\n')
+      // Only handle writes and deletes.
+      if (
+        tracedEvent.operation !== 'write' &&
+        tracedEvent.operation !== 'delete'
+      ) {
+        return
+      }
 
-        for (const line of lines) {
-          // Ignore empty line.
-          if (!line) {
-            continue
+      // Try to handle with each module, and stop once handled.
+      for (const { name, handler } of handlers) {
+        try {
+          // Retry 3 times with exponential backoff starting at 100ms delay.
+          const handled = await retry(handler.handle, [tracedEvent], {
+            retriesMax: 3,
+            exponential: true,
+            interval: 100,
+          })
+
+          // If handled, don't try other handlers.
+          if (handled) {
+            break
           }
-
-          // Only begin buffer with a JSON object.
-          if (!buffer && !line.startsWith('{')) {
-            throw new Error(`Invalid line beginning: ${line}`)
-          }
-
-          buffer += line
-
-          // Check if buffer is a valid JSON object, and process if so.
-          let tracedEvent: TracedEvent | undefined
-          try {
-            tracedEvent = JSON.parse(buffer)
-          } catch (err) {
-            // If invalid but begins correctly, continue buffering.
-            if (
-              err instanceof SyntaxError &&
-              err.message.includes('Unexpected end of JSON input')
-            ) {
-              continue
-            }
-
-            // Capture other unexpected errors and ignore.
-            console.error(
-              '-------\n',
-              'Failed to parse JSON\n',
-              err,
-              '\n' +
-                JSON.stringify(
-                  {
-                    buffer,
-                    line,
-                  },
-                  null,
-                  2
-                ),
+        } catch (err) {
+          console.error(
+            '-------\nFailed to handle:\n',
+            err,
+            '\nHandler: ' +
+              name +
+              '\nData: ' +
+              JSON.stringify(tracedEvent, null, 2) +
               '\n-------'
-            )
-            Sentry.captureException(err, {
-              tags: {
-                type: 'ignored-trace',
-                script: 'export-trace',
-              },
-              extra: {
-                chunk,
-                buffer,
-                line,
-              },
-            })
-
-            // Reset buffer after processing and ignore.
-            buffer = ''
-            continue
-          }
-
-          try {
-            // Ensure this is a traced write event. Otherwise, reset buffer.
-            if (
-              !tracedEvent ||
-              !objectMatchesStructure(tracedEvent, {
-                operation: {},
-                key: {},
-                value: {},
-                metadata: {
-                  blockHeight: {},
-                  txHash: {},
-                },
-              })
-            ) {
-              continue
-            }
-
-            // Only handle writes and deletes.
-            if (
-              tracedEvent.operation !== 'write' &&
-              tracedEvent.operation !== 'delete'
-            ) {
-              continue
-            }
-
-            // Try to handle with each module, and stop once handled.
-            for (const { name, handler } of handlers) {
-              let handled = false
-
-              let tries = 3
-              while (tries > 0) {
-                try {
-                  handled = await handler.handle(tracedEvent)
-                  break
-                } catch (err) {
-                  tries--
-
-                  if (tries > 0) {
-                    console.error(
-                      '-------\n',
-                      `[${name}] Failed to handle. Trying ${tries} more time(s)...`,
-                      '\n' + JSON.stringify(tracedEvent, null, 2) + '\n',
-                      err,
-                      '\n-------'
-                    )
-                  } else {
-                    console.error(
-                      '-------\n',
-                      `[${name}] Failed to handle. Giving up.`,
-                      '\n' + JSON.stringify(tracedEvent, null, 2) + '\n',
-                      err,
-                      '\n-------'
-                    )
-                    Sentry.captureException(err, {
-                      tags: {
-                        type: 'failed-handle',
-                        script: 'export-trace',
-                      },
-                      extra: {
-                        handler: name,
-                        tracedEvent,
-                      },
-                    })
-                  }
-                }
-              }
-
-              // If handled, stop trying other handlers.
-              if (handled) {
-                break
-              }
-            }
-          } finally {
-            // Reset buffer after processing.
-            buffer = ''
-          }
-        }
-      } finally {
-        // If shutting down, close the stream.
-        if (shuttingDown) {
-          fifoRs.close()
-        } else {
-          // Other resume after processing this chunk.
-          fifoRs.resume()
-          reading = false
+          )
+          Sentry.captureException(err, {
+            tags: {
+              type: 'failed-handle',
+              script: 'export-trace',
+            },
+            extra: {
+              handler: name,
+              tracedEvent,
+            },
+          })
+          throw err
         }
       }
-    })()
+    },
+    onProcessingStateChange: (processing) => {
+      // Stop reading from FIFO if we're done processing and shutting down.
+      if (!processing && shuttingDown) {
+        closeTracer()
+      }
+
+      // Used to determine if we can kill the process immediately when SIGINT is
+      // received.
+      reading = processing
+    },
   })
 
-  // Wait for trace file to close.
-  await new Promise((resolve) => fifoRs.on('close', resolve))
+  // Wait for tracer to finish.
+  await tracer
 
   // Tell each handler to flush once the socket closes.
   await flushAll()
 
+  // Exit.
   console.log(`\n[${new Date().toISOString()}] Trace file closed.`)
-
-  // Exit after handlers finish.
   process.exit(0)
 }
 

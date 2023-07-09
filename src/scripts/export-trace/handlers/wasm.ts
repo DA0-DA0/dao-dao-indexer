@@ -2,6 +2,7 @@ import * as fs from 'fs'
 
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
 import * as Sentry from '@sentry/node'
+import retry from 'async-await-retry'
 import { ContractInfo } from 'cosmjs-types/cosmwasm/wasm/v1/types'
 import { LRUCache } from 'lru-cache'
 
@@ -55,38 +56,7 @@ export const wasm: HandlerMaker = async ({
     pending.length = 0
 
     // Export events.
-    let tries = 3
-    while (tries > 0) {
-      try {
-        await exporter(eventsToExport)
-
-        break
-      } catch (err) {
-        tries--
-
-        if (tries > 0) {
-          console.error(
-            '-------\n',
-            `[wasm] Failed to export pending. Trying ${tries} more time(s)...\n`,
-            err,
-            '\n-------'
-          )
-        } else {
-          console.error(
-            '-------\n',
-            'Failed to export pending. Giving up.\n',
-            err,
-            '\n-------'
-          )
-          Sentry.captureException(err, {
-            tags: {
-              type: 'wasm-failed-export-pending',
-              script: 'export-trace',
-            },
-          })
-        }
-      }
-    }
+    await exporter(eventsToExport)
   }
 
   let lastBlockHeightSeen = 0
@@ -305,66 +275,65 @@ export const wasm: HandlerMaker = async ({
       return codeIdCache.get(contractAddress) ?? -1
     }
 
-    let tries = 3
-    while (tries > 0) {
+    const loadIntoCache = async () => {
+      let codeId = -1
       try {
-        const { codeId } = await cosmWasmClient.getContract(contractAddress)
-        codeIdCache.set(contractAddress, codeId)
-        break
+        const contract = await cosmWasmClient.getContract(contractAddress)
+        codeId = contract.codeId
       } catch (err) {
         // Check if exists in database.
         const contract = await Contract.findByPk(contractAddress)
         if (contract) {
-          codeIdCache.set(contractAddress, contract.codeId)
-          break
+          codeId = contract.codeId
+          return
         }
 
-        // If contract not found, set to -1 and ignore.
+        // If contract not found, ignore, leaving as -1.
         if (
           err instanceof Error &&
           err.message.includes('not found: invalid request')
         ) {
-          codeIdCache.set(contractAddress, -1)
-          break
+          return
         }
 
-        tries--
-
-        if (tries > 0) {
-          console.error(
-            '-------\n',
-            `Failed to get code ID. Trying ${tries} more time(s)...`,
-            contractAddress,
-            '\n' + JSON.stringify(trace, null, 2) + '\n',
-            err instanceof Error ? err.message : err,
-            '\n-------'
-          )
-          // Wait 500ms before trying again.
-          await new Promise((resolve) => setTimeout(resolve, 500))
-        } else {
-          console.error(
-            '-------\n',
-            'Failed to get code ID. Giving up.',
-            contractAddress,
-            '\n' + JSON.stringify(trace, null, 2) + '\n',
-            err instanceof Error ? err.message : err,
-            '\n-------'
-          )
-          Sentry.captureException(err, {
-            tags: {
-              type: 'failed-get-code-id',
-              script: 'export-trace',
-            },
-            extra: {
-              chainId,
-              contractAddress,
-            },
-          })
-
-          // Set to -1 on failure so we can continue.
-          codeIdCache.set(contractAddress, -1)
-        }
+        throw err
       }
+
+      codeIdCache.set(contractAddress, codeId)
+    }
+
+    try {
+      // Retry 3 times with exponential backoff starting at 100ms delay.
+      await retry(loadIntoCache, [], {
+        retriesMax: 3,
+        exponential: true,
+        interval: 100,
+      })
+    } catch (err) {
+      console.error(
+        '-------\nFailed to get code ID:\n',
+        err,
+        '\nContract: ' +
+          contractAddress +
+          '\nData: ' +
+          JSON.stringify(trace, null, 2) +
+          '\n-------'
+      )
+      Sentry.captureException(err, {
+        tags: {
+          type: 'failed-get-code-id',
+          script: 'export-trace',
+          handler: 'wasm',
+          chainId,
+          contractAddress,
+        },
+        extra: {
+          trace,
+        },
+      })
+
+      // Set to -1 on failure so we can continue.
+      codeIdCache.set(contractAddress, -1)
     }
 
     return codeIdCache.get(contractAddress) ?? -1
@@ -381,53 +350,45 @@ export const wasm: HandlerMaker = async ({
       return blockTimesCache.get(blockHeight) ?? 0
     }
 
-    let tries = 3
-    while (tries > 0) {
-      try {
-        const {
-          header: { time },
-        } = await cosmWasmClient.getBlock(blockHeight)
-        blockTimesCache.set(blockHeight, Date.parse(time))
+    const loadIntoCache = async () => {
+      const {
+        header: { time },
+      } = await cosmWasmClient.getBlock(blockHeight)
+      blockTimesCache.set(blockHeight, Date.parse(time))
+    }
 
-        break
-      } catch (err) {
-        tries--
+    try {
+      // Retry 3 times with exponential backoff starting at 100ms delay.
+      await retry(loadIntoCache, [], {
+        retriesMax: 3,
+        exponential: true,
+        interval: 100,
+      })
+    } catch (err) {
+      console.error(
+        '-------\nFailed to get block:\n',
+        err,
+        '\nBlock height: ' +
+          BigInt(blockHeight).toLocaleString() +
+          '\nData: ' +
+          JSON.stringify(trace, null, 2) +
+          '\n-------'
+      )
+      Sentry.captureException(err, {
+        tags: {
+          type: 'failed-get-block',
+          script: 'export-trace',
+          handler: 'wasm',
+          chainId,
+        },
+        extra: {
+          trace,
+          blockHeight,
+        },
+      })
 
-        if (tries > 0) {
-          console.error(
-            '-------\n',
-            `Failed to get block. Trying ${tries} more time(s)...`,
-            blockHeight,
-            '\n' + JSON.stringify(trace, null, 2) + '\n',
-            err instanceof Error ? err.message : err,
-            '\n-------'
-          )
-          // Wait 500ms before trying again.
-          await new Promise((resolve) => setTimeout(resolve, 500))
-        } else {
-          console.error(
-            '-------\n',
-            'Failed to get block. Giving up.',
-            blockHeight,
-            '\n' + JSON.stringify(trace, null, 2) + '\n',
-            err instanceof Error ? err.message : err,
-            '\n-------'
-          )
-          Sentry.captureException(err, {
-            tags: {
-              type: 'failed-get-block',
-              script: 'export-trace',
-            },
-            extra: {
-              chainId,
-              blockHeight,
-            },
-          })
-
-          // Set to 0 on failure so we can continue.
-          blockTimesCache.set(blockHeight, 0)
-        }
-      }
+      // Set to 0 on failure so we can continue.
+      blockTimesCache.set(blockHeight, 0)
     }
 
     return blockTimesCache.get(blockHeight) ?? 0

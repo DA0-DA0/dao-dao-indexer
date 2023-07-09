@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import path from 'path'
 
 import * as Sentry from '@sentry/node'
+import retry from 'async-await-retry'
 import { Command } from 'commander'
 import { Sequelize } from 'sequelize-typescript'
 
@@ -19,6 +20,7 @@ import {
 import { setupMeilisearch, updateIndexesForContracts } from '@/ms'
 
 import { UpdateMessage } from './types'
+import { setUpFifoJsonTracer } from './utils'
 
 // Parse arguments.
 const program = new Command()
@@ -98,223 +100,164 @@ let shuttingDown = false
 let reading = false
 
 const run = async () => {
-  const fifoRs = fs.createReadStream(updateFile, {
-    encoding: 'utf-8',
-  })
-
   console.log(`\n[${new Date().toISOString()}] Updating...`)
 
-  let buffer = ''
-  fifoRs.on('data', (chunk) => {
-    reading = true
-    // Pause before processing this chunk.
-    fifoRs.pause()
-    // Resume at the end of the chunk processing.
-    ;(async () => {
-      try {
-        if (!chunk || typeof chunk !== 'string') {
-          return
-        }
+  const { promise: tracer, close: closeTracer } = setUpFifoJsonTracer({
+    file: updateFile,
+    onData: async (data) => {
+      const updateMessage = data as UpdateMessage
 
-        // Chunk ends in newline.
-        const lines = chunk.trimEnd().split('\n')
-
-        for (const line of lines) {
-          // Ignore empty line.
-          if (!line) {
-            continue
-          }
-
-          // Only begin buffer with a JSON object.
-          if (!buffer && !line.startsWith('{')) {
-            throw new Error(`Invalid line beginning: ${line}`)
-          }
-
-          buffer += line
-
-          // Check if buffer is a valid JSON object, and process if so.
-          let update: UpdateMessage | undefined
-          try {
-            update = JSON.parse(buffer)
-          } catch (err) {
-            // If invalid but begins correctly, continue buffering.
-            if (
-              err instanceof SyntaxError &&
-              err.message.includes('Unexpected end of JSON input')
-            ) {
-              continue
-            }
-
-            // Capture other unexpected errors and ignore.
-            console.error(
-              '-------\n',
-              'Failed to parse JSON\n',
-              err,
-              '\n' +
-                JSON.stringify(
-                  {
-                    buffer,
-                    line,
-                  },
-                  null,
-                  2
-                ),
-              '\n-------'
-            )
-            Sentry.captureException(err, {
-              tags: {
-                type: 'ignored-update',
-                script: 'export-trace',
-              },
-              extra: {
-                chunk,
-                buffer,
-                line,
-              },
-            })
-
-            // Reset buffer after processing and ignore.
-            buffer = ''
-            continue
-          }
-
-          try {
-            // Ensure this is an update event. Otherwise, reset buffer.
-            if (
-              !update ||
-              !objectMatchesStructure(update, {
-                type: {},
-                eventIds: {},
-                transformationIds: {},
-              })
-            ) {
-              continue
-            }
-
-            const state = await State.getSingleton()
-            if (!state) {
-              throw new Error('State not found while updating.')
-            }
-
-            const events = await WasmStateEvent.findAll({
-              where: {
-                id: update.eventIds,
-              },
-              order: [['blockHeight', 'ASC']],
-              include: Contract,
-            })
-            const transformations = await WasmStateEventTransformation.findAll({
-              where: {
-                id: update.transformationIds,
-              },
-              order: [['blockHeight', 'ASC']],
-              include: Contract,
-            })
-
-            let computationsUpdated = 0
-            let computationsDestroyed = 0
-            if (!dontUpdateComputations) {
-              const computationUpdates =
-                await updateComputationValidityDependentOnChanges([
-                  ...events,
-                  ...transformations,
-                ])
-              computationsUpdated = computationUpdates.updated
-              computationsDestroyed = computationUpdates.destroyed
-            }
-
-            // Queue webhooks as needed.
-            const webhooksQueued =
-              dontSendWebhooks || events.length === 0
-                ? 0
-                : (await PendingWebhook.queueWebhooks(state, events)) +
-                  (await AccountWebhook.queueWebhooks(events))
-
-            // Store last block height exported, and update latest block
-            // height/time if the last export is newer.
-            const lastBlockHeightExported =
-              events[events.length - 1].blockHeight
-            const lastBlockTimeUnixMsExported =
-              events[events.length - 1].blockTimeUnixMs
-            await State.update(
-              {
-                lastWasmBlockHeightExported: Sequelize.fn(
-                  'GREATEST',
-                  Sequelize.col('lastWasmBlockHeightExported'),
-                  lastBlockHeightExported
-                ),
-
-                latestBlockHeight: Sequelize.fn(
-                  'GREATEST',
-                  Sequelize.col('latestBlockHeight'),
-                  lastBlockHeightExported
-                ),
-                latestBlockTimeUnixMs: Sequelize.fn(
-                  'GREATEST',
-                  Sequelize.col('latestBlockTimeUnixMs'),
-                  lastBlockTimeUnixMsExported
-                ),
-              },
-              {
-                where: {
-                  singleton: true,
-                },
-              }
-            )
-
-            const uniqueContractAddresses = new Set(
-              events.map((event) => event.contractAddress)
-            )
-            const contracts = Array.from(uniqueContractAddresses).map(
-              (address) => {
-                const event = events.find(
-                  (event) => event.contractAddress === address
-                )
-                if (!event) {
-                  throw new Error(
-                    `Event not found for contract address: ${address}`
-                  )
-                }
-                return event.contract
-              }
-            )
-
-            // Update meilisearch indexes. This must happen after the state is
-            // updated since it uses the latest block.
-            await updateIndexesForContracts({
-              contracts,
-            })
-
-            // Log.
-            console.log(
-              `[wasm] Exported: ${events.length.toLocaleString()}. Block: ${BigInt(
-                lastBlockHeightExported
-              ).toLocaleString()}. Transformed: ${transformations.length.toLocaleString()}. Webhooks Q'd: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
-            )
-          } finally {
-            // Reset buffer after processing.
-            buffer = ''
-          }
-        }
-      } finally {
-        // If shutting down, close the stream.
-        if (shuttingDown) {
-          fifoRs.close()
-        } else {
-          // Other resume after processing this chunk.
-          fifoRs.resume()
-          reading = false
-        }
+      // Ensure this is an update event. Otherwise, reset buffer.
+      if (
+        !objectMatchesStructure(updateMessage, {
+          type: {},
+          eventIds: {},
+          transformationIds: {},
+        })
+      ) {
+        return
       }
-    })()
+
+      const update = async () => {
+        const state = await State.getSingleton()
+        if (!state) {
+          throw new Error('State not found while updating.')
+        }
+
+        const events = await WasmStateEvent.findAll({
+          where: {
+            id: updateMessage.eventIds,
+          },
+          order: [['blockHeight', 'ASC']],
+          include: Contract,
+        })
+        const transformations = await WasmStateEventTransformation.findAll({
+          where: {
+            id: updateMessage.transformationIds,
+          },
+          order: [['blockHeight', 'ASC']],
+          include: Contract,
+        })
+
+        let computationsUpdated = 0
+        let computationsDestroyed = 0
+        if (!dontUpdateComputations) {
+          const computationUpdates =
+            await updateComputationValidityDependentOnChanges([
+              ...events,
+              ...transformations,
+            ])
+          computationsUpdated = computationUpdates.updated
+          computationsDestroyed = computationUpdates.destroyed
+        }
+
+        // Queue webhooks as needed.
+        const webhooksQueued =
+          dontSendWebhooks || events.length === 0
+            ? 0
+            : (await PendingWebhook.queueWebhooks(state, events)) +
+              (await AccountWebhook.queueWebhooks(events))
+
+        // Store last block height exported, and update latest block
+        // height/time if the last export is newer.
+        const lastBlockHeightExported = events[events.length - 1].blockHeight
+        const lastBlockTimeUnixMsExported =
+          events[events.length - 1].blockTimeUnixMs
+        await State.update(
+          {
+            lastWasmBlockHeightExported: Sequelize.fn(
+              'GREATEST',
+              Sequelize.col('lastWasmBlockHeightExported'),
+              lastBlockHeightExported
+            ),
+
+            latestBlockHeight: Sequelize.fn(
+              'GREATEST',
+              Sequelize.col('latestBlockHeight'),
+              lastBlockHeightExported
+            ),
+            latestBlockTimeUnixMs: Sequelize.fn(
+              'GREATEST',
+              Sequelize.col('latestBlockTimeUnixMs'),
+              lastBlockTimeUnixMsExported
+            ),
+          },
+          {
+            where: {
+              singleton: true,
+            },
+          }
+        )
+
+        const uniqueContractAddresses = new Set(
+          events.map((event) => event.contractAddress)
+        )
+        const contracts = Array.from(uniqueContractAddresses).map((address) => {
+          const event = events.find(
+            (event) => event.contractAddress === address
+          )
+          if (!event) {
+            throw new Error(`Event not found for contract address: ${address}`)
+          }
+          return event.contract
+        })
+
+        // Update meilisearch indexes. This must happen after the state is
+        // updated since it uses the latest block.
+        await updateIndexesForContracts({
+          contracts,
+        })
+
+        // Log.
+        console.log(
+          `[wasm] Exported: ${events.length.toLocaleString()}. Block: ${BigInt(
+            lastBlockHeightExported
+          ).toLocaleString()}. Transformed: ${transformations.length.toLocaleString()}. Webhooks Q'd: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
+        )
+      }
+
+      try {
+        // Retry 3 times with exponential backoff starting at 100ms delay.
+        await retry(update, undefined, {
+          retriesMax: 3,
+          exponential: true,
+          interval: 100,
+        })
+      } catch (err) {
+        console.error(
+          '-------\nFailed to update:\n',
+          err,
+          '\nData: ' + JSON.stringify(data, null, 2) + '\n-------'
+        )
+        Sentry.captureException(err, {
+          tags: {
+            type: 'failed-update',
+            script: 'export-trace/update',
+          },
+          extra: {
+            data,
+          },
+        })
+        throw err
+      }
+    },
+    onProcessingStateChange: (processing) => {
+      // Stop reading from FIFO if we're done processing and shutting down.
+      if (!processing && shuttingDown) {
+        closeTracer()
+      }
+
+      // Used to determine if we can kill the process immediately when SIGINT is
+      // received.
+      reading = processing
+    },
   })
 
-  // Wait for update file to close.
-  await new Promise((resolve) => fifoRs.on('close', resolve))
-
-  console.log(`\n[${new Date().toISOString()}] Update file closed.`)
+  // Wait for tracer to finish.
+  await tracer
 
   // Exit.
+  console.log(`\n[${new Date().toISOString()}] Update file closed.`)
   process.exit(0)
 }
 
