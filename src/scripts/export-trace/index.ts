@@ -5,6 +5,7 @@ import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import * as Sentry from '@sentry/node'
 import retry from 'async-await-retry'
 import { Command } from 'commander'
+import { LRUCache } from 'lru-cache'
 import waitPort from 'wait-port'
 import WebSocket from 'ws'
 
@@ -107,10 +108,14 @@ let reading = false
 
 const trace = async (cosmWasmClient: CosmWasmClient) => {
   // Setup handlers.
+  const blockHeightToTimeCache = new LRUCache<number, number>({
+    max: 100,
+  })
   const handlers = await Promise.all(
     Object.entries(handlerMakers).map(async ([name, handlerMaker]) => ({
       name,
       handler: await handlerMaker({
+        blockHeightToTimeCache,
         cosmWasmClient,
         config,
         batch,
@@ -145,51 +150,45 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }
   }
 
-  // Get new-block WebSocket.
-  stateWebSocket = await setUpWebSocketNewBlockListener({
-    rpc: config.rpc,
-    onNewBlock: async (block) => {
-      const { chain_id, height, time } = (block as any).header
-      const latestBlockHeight = Number(height)
-      const latestBlockTimeUnixMs = Date.parse(time)
-
-      // Update state singleton with latest information.
-      await State.update(
-        {
-          chainId: chain_id,
-          latestBlockHeight,
-          latestBlockTimeUnixMs,
-        },
-        {
-          where: {
-            singleton: true,
-          },
-        }
-      )
-
-      // Flush all handlers.
-      await flushAll()
-    },
-  })
-
-  // Connect to localhost WebSocket once ready.
+  // Connect to local RPC WebSocket once ready.
   waitPort({
     host: 'localhost',
     port: 26657,
   }).then(({ open }) => {
     if (open) {
-      try {
-        setUpWebSocketNewBlockListener({
-          rpc: 'http://localhost:26657',
-          onNewBlock: (block) => {
-            console.log('NEW BLOCK:\n', (block as any).header.height)
-          },
-        })
-      } catch (err) {
-        console.error('Local Web Socket failed.\n', err)
-      }
+      // Get new-block WebSocket.
+      stateWebSocket = setUpWebSocketNewBlockListener({
+        rpc: 'http://localhost:26657',
+        onNewBlock: async (block) => {
+          const { chain_id, height, time } = (block as any).header
+          const latestBlockHeight = Number(height)
+          const latestBlockTimeUnixMs = Date.parse(time)
+
+          // Cache block time for block height in cache used by state.
+          blockHeightToTimeCache.set(latestBlockHeight, latestBlockTimeUnixMs)
+
+          // Update state singleton with latest information.
+          await State.update(
+            {
+              chainId: chain_id,
+              latestBlockHeight,
+              latestBlockTimeUnixMs,
+            },
+            {
+              where: {
+                singleton: true,
+              },
+            }
+          )
+
+          // Flush all handlers.
+          await flushAll()
+        },
+      })
     } else {
-      console.error('Failed to wait for localhost RPC.')
+      console.error(
+        'Failed to connect to local RPC WebSocket. Queries may be slower as block times will be fetched from a remote RPC.'
+      )
     }
   })
 

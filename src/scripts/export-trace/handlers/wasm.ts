@@ -23,6 +23,7 @@ export const wasm: HandlerMaker = async ({
   config,
   batch,
   updateFile,
+  blockHeightToTimeCache,
 }) => {
   const chainId = await cosmWasmClient.getChainId()
   const pending: ParsedWasmStateEvent[] = []
@@ -339,30 +340,27 @@ export const wasm: HandlerMaker = async ({
     return codeIdCache.get(contractAddress) ?? -1
   }
 
-  // Get block time for block, cached in memory.
-  const blockTimesCache = new LRUCache<number, number>({
-    max: 1000,
-  })
+  // Get block time for height, cached in memory.
   const getBlockTimeUnixMs = async (trace: TracedEvent): Promise<number> => {
     const blockHeight = trace.metadata.blockHeight
 
-    if (blockTimesCache.has(blockHeight)) {
-      return blockTimesCache.get(blockHeight) ?? 0
+    if (blockHeightToTimeCache.has(blockHeight)) {
+      return blockHeightToTimeCache.get(blockHeight) ?? 0
     }
 
     const loadIntoCache = async () => {
       const {
         header: { time },
       } = await cosmWasmClient.getBlock(blockHeight)
-      blockTimesCache.set(blockHeight, Date.parse(time))
+      blockHeightToTimeCache.set(blockHeight, Date.parse(time))
     }
 
     try {
-      // Retry 3 times with exponential backoff starting at 100ms delay.
+      // Retry 3 times with exponential backoff starting at 150ms delay.
       await retry(loadIntoCache, [], {
         retriesMax: 3,
         exponential: true,
-        interval: 100,
+        interval: 150,
       })
     } catch (err) {
       console.error(
@@ -388,10 +386,10 @@ export const wasm: HandlerMaker = async ({
       })
 
       // Set to 0 on failure so we can continue.
-      blockTimesCache.set(blockHeight, 0)
+      blockHeightToTimeCache.set(blockHeight, 0)
     }
 
-    return blockTimesCache.get(blockHeight) ?? 0
+    return blockHeightToTimeCache.get(blockHeight) ?? 0
   }
 
   return {

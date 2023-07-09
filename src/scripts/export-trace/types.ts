@@ -1,4 +1,5 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
+import { LRUCache } from 'lru-cache'
 
 import { Config } from '@/core'
 
@@ -15,6 +16,9 @@ export type HandlerMakerOptions = {
   config: Config
   batch: number
   updateFile: string
+  // Map block height to time. Populated with block heights from WebSocket's
+  // NewBlock event as soon as it occurs, which is before any state writes.
+  blockHeightToTimeCache: LRUCache<number, number>
 }
 
 export type HandlerMaker = (options: HandlerMakerOptions) => Promise<Handler>
