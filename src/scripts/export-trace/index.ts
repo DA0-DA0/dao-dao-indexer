@@ -24,12 +24,6 @@ program.option(
   1000
 )
 program.option(
-  '-f, --flush <seconds>',
-  'flush at least every n seconds',
-  (value) => parseInt(value, 10),
-  2
-)
-program.option(
   // Adds inverted `update` boolean to the options object.
   '--no-update',
   "don't update computation validity based on new events or transformations"
@@ -48,7 +42,6 @@ program.parse()
 const {
   config: _config,
   batch,
-  flush,
   update,
   webhooks,
   modules: _modules,
@@ -186,12 +179,10 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }
   }
 
-  // Flush every n seconds.
-  setInterval(flushAll, flush * 1000).unref()
-
   console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
 
   let buffer = ''
+  let lastBlockHeightSeen = 0
   fifoRs.on('data', (chunk) => {
     // Pause before processing this chunk.
     fifoRs.pause()
@@ -289,9 +280,23 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
                   blockHeight: {},
                   txHash: {},
                 },
-              }) ||
-              (tracedEvent.operation !== 'write' &&
-                tracedEvent.operation !== 'delete')
+              })
+            ) {
+              continue
+            }
+
+            // On detect start of next block, flush all handlers. This is
+            // probably a read of the `baseapp/BlockParams` key.
+            if (tracedEvent.metadata.blockHeight > lastBlockHeightSeen) {
+              await flushAll()
+            }
+
+            lastBlockHeightSeen = tracedEvent.metadata.blockHeight
+
+            // Only handle writes and deletes.
+            if (
+              tracedEvent.operation !== 'write' &&
+              tracedEvent.operation !== 'delete'
             ) {
               continue
             }
@@ -365,10 +370,6 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 
   // Tell each handler to flush once the socket closes.
   await flushAll()
-
-  if (!fifoRs.closed) {
-    fifoRs.close()
-  }
 
   console.log(`\n[${new Date().toISOString()}] Trace file closed.`)
 

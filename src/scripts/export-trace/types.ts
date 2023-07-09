@@ -21,7 +21,7 @@ export type HandlerMakerOptions = {
 export type HandlerMaker = (options: HandlerMakerOptions) => Promise<Handler>
 
 export type TracedEvent = {
-  operation: 'write' | 'delete'
+  operation: 'read' | 'write' | 'delete'
   key: string
   value: string
   metadata: {
