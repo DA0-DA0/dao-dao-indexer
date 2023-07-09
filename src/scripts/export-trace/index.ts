@@ -251,7 +251,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
       reading = processing
 
       // Connect to local WebSocket after first processing finishes.
-      if (!process && !wsConnected) {
+      if (!processing && !wsConnected) {
         setUpWebSocketNewBlockListener({
           rpc: 'http://localhost:26657',
           onNewBlock: (block) => {
