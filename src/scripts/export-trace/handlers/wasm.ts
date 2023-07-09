@@ -15,10 +15,8 @@ import {
 } from '@/db'
 
 import { Handler, HandlerMaker, TracedEvent, UpdateMessage } from '../types'
-import { setUpWebSocketNewBlockListener } from '../utils'
 
 const CONTRACT_BYTE_LENGTH = 32
-let wsConnected = false
 
 export const wasm: HandlerMaker = async ({
   cosmWasmClient,
@@ -59,21 +57,6 @@ export const wasm: HandlerMaker = async ({
 
     // Export events.
     await exporter(eventsToExport)
-
-    // Connect to local WebSocket after first flush.
-    if (!wsConnected) {
-      try {
-        setUpWebSocketNewBlockListener({
-          rpc: 'http://localhost:26657',
-          onNewBlock: (block) => {
-            console.log('NEW BLOCK:\n', JSON.stringify(block, null, 2))
-          },
-        })
-        wsConnected = true
-      } catch (err) {
-        console.error('Local Web Socket failed.\n', err)
-      }
-    }
   }
 
   let lastBlockHeightSeen = 0

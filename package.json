@@ -105,6 +105,7 @@
     "sequelize": "^6.26.0",
     "sequelize-typescript": "^2.1.5",
     "supertest": "^6.3.3",
+    "wait-port": "^1.0.4",
     "ws": "^8.13.0"
   }
 }

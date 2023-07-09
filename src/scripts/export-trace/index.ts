@@ -5,6 +5,7 @@ import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import * as Sentry from '@sentry/node'
 import retry from 'async-await-retry'
 import { Command } from 'commander'
+import waitPort from 'wait-port'
 import WebSocket from 'ws'
 
 import { DbType, loadConfig, objectMatchesStructure } from '@/core'
@@ -169,6 +170,27 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
       // Flush all handlers.
       await flushAll()
     },
+  })
+
+  // Connect to localhost WebSocket once ready.
+  waitPort({
+    host: 'localhost',
+    port: 26657,
+  }).then(({ open }) => {
+    if (open) {
+      try {
+        setUpWebSocketNewBlockListener({
+          rpc: 'http://localhost:26657',
+          onNewBlock: (block) => {
+            console.log('NEW BLOCK:\n', (block as any).header.height)
+          },
+        })
+      } catch (err) {
+        console.error('Local Web Socket failed.\n', err)
+      }
+    } else {
+      console.error('Failed to wait for localhost RPC.')
+    }
   })
 
   console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
