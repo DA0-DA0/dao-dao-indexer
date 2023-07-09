@@ -150,10 +150,12 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }
   }
 
-  // Connect to local RPC WebSocket once ready.
+  // Connect to local RPC WebSocket once ready. Don't await since we need to
+  // start reading from the trace FIFO before the RPC starts.
   waitPort({
     host: 'localhost',
     port: 26657,
+    output: 'silent',
   }).then(({ open }) => {
     if (open) {
       // Get new-block WebSocket.
