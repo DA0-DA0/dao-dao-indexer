@@ -183,11 +183,11 @@ export const wasm: HandlerMaker = async ({
     pending.push(event)
     lastBlockHeightSeen = trace.metadata.blockHeight
 
-    // Debounce flush in 250ms.
+    // Debounce flush in 200ms.
     if (debouncedFlush !== undefined) {
       clearTimeout(debouncedFlush)
     }
-    debouncedFlush = setTimeout(flush, 500)
+    debouncedFlush = setTimeout(flush, 200)
 
     return true
   }
