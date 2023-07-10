@@ -21,7 +21,7 @@
     "clear-cache": "node dist/scripts/clearCache.js",
     "export": "node dist/scripts/export/index.js",
     "export:dev": "docker-compose -f compose.dev.yml up --exit-code-from export",
-    "export:prod": "npm install && npm run build && pm2 stop exporter exporter-updater webhooks && npm run db:migrate:data && pm2 start ecosystem.config.js --only exporter,webhooks",
+    "export:prod": "npm install && npm run build && pm2 delete all && npm run db:migrate:data && pm2 start ecosystem.config.js --only exporter,webhooks",
     "webhooks": "node dist/scripts/webhooks.js",
     "accountWebhooks": "node dist/scripts/accountWebhooks.js",
     "transform": "node dist/scripts/transform.js",
