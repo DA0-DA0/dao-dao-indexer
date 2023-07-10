@@ -208,8 +208,6 @@ export const wasm: HandlerMaker = async ({
       contracts,
       events,
       transformations,
-      lastBlockHeightExported,
-      webhooksQueued,
       computationsUpdated,
       computationsDestroyed,
     } = await (
@@ -294,54 +292,52 @@ export const wasm: HandlerMaker = async ({
         computationsDestroyed = computationUpdates.destroyed
       }
 
-      // Queue webhooks as needed.
-      const webhooksQueued =
-        dontSendWebhooks || events.length === 0
-          ? 0
-          : (await PendingWebhook.queueWebhooks(state, events)) +
-            (await AccountWebhook.queueWebhooks(events))
-
-      // Store last block height exported, and update latest block
-      // height/time if the last export is newer.
-      const lastBlockHeightExported = events[events.length - 1].blockHeight
-      const lastBlockTimeUnixMsExported =
-        events[events.length - 1].blockTimeUnixMs
-      await State.update(
-        {
-          lastWasmBlockHeightExported: Sequelize.fn(
-            'GREATEST',
-            Sequelize.col('lastWasmBlockHeightExported'),
-            lastBlockHeightExported
-          ),
-
-          latestBlockHeight: Sequelize.fn(
-            'GREATEST',
-            Sequelize.col('latestBlockHeight'),
-            lastBlockHeightExported
-          ),
-          latestBlockTimeUnixMs: Sequelize.fn(
-            'GREATEST',
-            Sequelize.col('latestBlockTimeUnixMs'),
-            lastBlockTimeUnixMsExported
-          ),
-        },
-        {
-          where: {
-            singleton: true,
-          },
-        }
-      )
-
       return {
         contracts,
         events,
         transformations,
-        lastBlockHeightExported,
-        webhooksQueued,
         computationsUpdated,
         computationsDestroyed,
       }
     })
+
+    // Queue webhooks as needed.
+    const webhooksQueued =
+      dontSendWebhooks || events.length === 0
+        ? 0
+        : (await PendingWebhook.queueWebhooks(state, events)) +
+          (await AccountWebhook.queueWebhooks(events))
+
+    // Store last block height exported, and update latest block
+    // height/time if the last export is newer.
+    const lastBlockHeightExported = events[events.length - 1].blockHeight
+    const lastBlockTimeUnixMsExported =
+      events[events.length - 1].blockTimeUnixMs
+    await State.update(
+      {
+        lastWasmBlockHeightExported: Sequelize.fn(
+          'GREATEST',
+          Sequelize.col('lastWasmBlockHeightExported'),
+          lastBlockHeightExported
+        ),
+
+        latestBlockHeight: Sequelize.fn(
+          'GREATEST',
+          Sequelize.col('latestBlockHeight'),
+          lastBlockHeightExported
+        ),
+        latestBlockTimeUnixMs: Sequelize.fn(
+          'GREATEST',
+          Sequelize.col('latestBlockTimeUnixMs'),
+          lastBlockTimeUnixMsExported
+        ),
+      },
+      {
+        where: {
+          singleton: true,
+        },
+      }
+    )
 
     // Update meilisearch indexes. This must happen after the state is
     // updated since it uses the latest block.
