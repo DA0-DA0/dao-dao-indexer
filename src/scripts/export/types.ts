@@ -14,7 +14,6 @@ export type Handler = {
 export type HandlerMakerOptions = {
   cosmWasmClient: CosmWasmClient
   config: Config
-  batch: number
   // Map block height to time. Populated with block heights from WebSocket's
   // NewBlock event as soon as it occurs, which is before any state writes.
   blockHeightToTimeCache: LRUCache<number, number>
@@ -36,7 +35,6 @@ export type TracedEvent = {
 
 export type WorkerInitData = {
   config: Config
-  batch: number
   update: boolean
   webhooks: boolean
 }

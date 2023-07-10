@@ -25,7 +25,6 @@ const CONTRACT_BYTE_LENGTH = 32
 export const wasm: HandlerMaker = async ({
   cosmWasmClient,
   config,
-  batch,
   blockHeightToTimeCache,
   dontUpdateComputations,
   dontSendWebhooks,
@@ -92,13 +91,10 @@ export const wasm: HandlerMaker = async ({
     )
     const key = keyData.slice(CONTRACT_BYTE_LENGTH + 1)
 
-    // If we have enough events and reached the first event of the next block,
-    // flush the previous events to the DB. This ensures we batch all events
-    // from the same block together.
-    if (
-      pending.length >= batch &&
-      trace.metadata.blockHeight > lastBlockHeightSeen
-    ) {
+    // If we reached the first event of the next block, flush the previous
+    // events to the DB. This ensures we batch all events from the same block
+    // together.
+    if (trace.metadata.blockHeight > lastBlockHeightSeen) {
       await flush()
     }
 

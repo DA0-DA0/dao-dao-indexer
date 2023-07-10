@@ -25,12 +25,6 @@ program.option(
   'path to config file, falling back to config.json'
 )
 program.option(
-  '-b, --batch <size>',
-  'batch size',
-  (value) => parseInt(value, 10),
-  1000
-)
-program.option(
   // Adds inverted `update` boolean to the options object.
   '--no-update',
   "don't update computation validity based on new events or transformations"
@@ -41,7 +35,7 @@ program.option(
   "don't send webhooks"
 )
 program.parse()
-const { config: _config, batch, update, webhooks } = program.opts()
+const { config: _config, update, webhooks } = program.opts()
 
 // Load config with config option.
 const config = loadConfig(_config)
@@ -86,7 +80,6 @@ let reading = false
 const trace = async () => {
   const workerData: WorkerInitData = {
     config,
-    batch,
     update: !!update,
     webhooks: !!webhooks,
   }

@@ -19,7 +19,7 @@ const main = async () => {
     throw new Error('Must be run as a Worker')
   }
 
-  const { config, batch, update, webhooks } = workerData as WorkerInitData
+  const { config, update, webhooks } = workerData as WorkerInitData
 
   // Add Sentry error reporting.
   if (config.sentryDsn) {
@@ -56,7 +56,6 @@ const main = async () => {
         blockHeightToTimeCache,
         cosmWasmClient,
         config,
-        batch,
         dontUpdateComputations: !update,
         dontSendWebhooks: !webhooks,
       }),
