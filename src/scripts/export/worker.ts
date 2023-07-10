@@ -114,12 +114,6 @@ const main = async () => {
           // Cache block time for block height in cache used by state.
           blockHeightToTimeCache.set(latestBlockHeight, latestBlockTimeUnixMs)
 
-          // Wait for queue to finish.
-          await queueHandler
-
-          // Flush all handlers.
-          await flushAll()
-
           // Update state singleton with latest information.
           await State.update(
             {

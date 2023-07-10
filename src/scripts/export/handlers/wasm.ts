@@ -110,7 +110,7 @@ export const wasm: HandlerMaker = async ({
 
     // If contract key, save contract info.
     if (trace.operation === 'write' && keyData[0] === 0x02) {
-      // Protobuf value:
+      // Parse as protobuf to get code ID.
       const protobufContractInfo = fromBase64(trace.value)
       let contractInfo
       try {
@@ -267,7 +267,7 @@ export const wasm: HandlerMaker = async ({
             }
           )
 
-          // Add new contracts to list of contracts.
+          // Replace updated contracts in list of contracts.
           updatedContracts.forEach((updatedContract) => {
             contracts.splice(
               contracts.findIndex((c) => c.address === updatedContract.address),

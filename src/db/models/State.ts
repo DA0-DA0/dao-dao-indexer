@@ -62,10 +62,10 @@ export class State extends Model {
   // If singleton does not exist after a sync (which is how the DB initially
   // gets set up), create it.
   @AfterSync
-  static async createSingletonIfMissing(): Promise<void> {
-    // Initialize state.
-    if (!(await State.getSingleton())) {
-      await State.create({
+  static async createSingletonIfMissing(): Promise<State> {
+    let state = await State.getSingleton()
+    if (!state) {
+      state = await State.create({
         singleton: true,
         chainId: '',
         latestBlockHeight: 0n,
@@ -74,5 +74,7 @@ export class State extends Model {
         lastWasmBlockHeightExported: 0n,
       })
     }
+
+    return state
   }
 }
