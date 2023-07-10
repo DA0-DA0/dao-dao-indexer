@@ -1,21 +1,24 @@
-import * as fs from 'fs'
-
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
 import * as Sentry from '@sentry/node'
 import retry from 'async-await-retry'
 import { ContractInfo } from 'cosmjs-types/cosmwasm/wasm/v1/types'
 import { LRUCache } from 'lru-cache'
+import { Sequelize } from 'sequelize'
 
 import { ParsedWasmStateEvent } from '@/core'
 import {
+  AccountWebhook,
   Contract,
+  PendingWebhook,
   State,
   WasmStateEvent,
   WasmStateEventTransformation,
   loadDb,
+  updateComputationValidityDependentOnChanges,
 } from '@/db'
+import { updateIndexesForContracts } from '@/ms'
 
-import { Handler, HandlerMaker, TracedEvent, UpdateMessage } from '../types'
+import { Handler, HandlerMaker, TracedEvent } from '../types'
 
 const CONTRACT_BYTE_LENGTH = 32
 
@@ -23,15 +26,12 @@ export const wasm: HandlerMaker = async ({
   cosmWasmClient,
   config,
   batch,
-  updateFile,
   blockHeightToTimeCache,
+  dontUpdateComputations,
+  dontSendWebhooks,
 }) => {
   const chainId = await cosmWasmClient.getChainId()
   const pending: ParsedWasmStateEvent[] = []
-
-  const fifoWs = fs.createWriteStream(updateFile, {
-    encoding: 'utf-8',
-  })
 
   const flush = async () => {
     if (pending.length === 0) {
@@ -204,11 +204,19 @@ export const wasm: HandlerMaker = async ({
       ...new Set(parsedEvents.map((event) => event.contractAddress)),
     ]
 
-    const events = await (
+    const {
+      contracts,
+      events,
+      transformations,
+      lastBlockHeightExported,
+      webhooksQueued,
+      computationsUpdated,
+      computationsDestroyed,
+    } = await (
       await loadDb()
     ).transaction(async () => {
       // Ensure contract exists before creating events. `address` is unique.
-      await Contract.bulkCreate(
+      const contracts = await Contract.bulkCreate(
         uniqueContracts.map((address) => {
           const event = parsedEvents.find(
             (event) => event.contractAddress === address
@@ -250,25 +258,103 @@ export const wasm: HandlerMaker = async ({
             })
           : []
 
-      return events
-    })
+      // Add contract to events.
+      for (const event of events) {
+        event.contract = contracts.find(
+          (contract) => contract.address === event.contractAddress
+        )!
+      }
 
-    // Transform events as needed.
-    const transformations =
-      await WasmStateEventTransformation.transformParsedStateEvents(
-        parsedEvents
+      // Transform events as needed.
+      const transformations =
+        await WasmStateEventTransformation.transformParsedStateEvents(
+          parsedEvents
+        )
+
+      // Send to update FIFO.
+      // const updateMessage: UpdateMessage = {
+      //   type: 'wasm',
+      //   eventIds: events.map((event) => event.id),
+      //   transformationIds: transformations.map(
+      //     (transformation) => transformation.id
+      //   ),
+      // }
+
+      // fifoWs.write(JSON.stringify(updateMessage) + '\n')
+
+      let computationsUpdated = 0
+      let computationsDestroyed = 0
+      if (!dontUpdateComputations) {
+        const computationUpdates =
+          await updateComputationValidityDependentOnChanges([
+            ...events,
+            ...transformations,
+          ])
+        computationsUpdated = computationUpdates.updated
+        computationsDestroyed = computationUpdates.destroyed
+      }
+
+      // Queue webhooks as needed.
+      const webhooksQueued =
+        dontSendWebhooks || events.length === 0
+          ? 0
+          : (await PendingWebhook.queueWebhooks(state, events)) +
+            (await AccountWebhook.queueWebhooks(events))
+
+      // Store last block height exported, and update latest block
+      // height/time if the last export is newer.
+      const lastBlockHeightExported = events[events.length - 1].blockHeight
+      const lastBlockTimeUnixMsExported =
+        events[events.length - 1].blockTimeUnixMs
+      await State.update(
+        {
+          lastWasmBlockHeightExported: Sequelize.fn(
+            'GREATEST',
+            Sequelize.col('lastWasmBlockHeightExported'),
+            lastBlockHeightExported
+          ),
+
+          latestBlockHeight: Sequelize.fn(
+            'GREATEST',
+            Sequelize.col('latestBlockHeight'),
+            lastBlockHeightExported
+          ),
+          latestBlockTimeUnixMs: Sequelize.fn(
+            'GREATEST',
+            Sequelize.col('latestBlockTimeUnixMs'),
+            lastBlockTimeUnixMsExported
+          ),
+        },
+        {
+          where: {
+            singleton: true,
+          },
+        }
       )
 
-    // Send to update FIFO.
-    const updateMessage: UpdateMessage = {
-      type: 'wasm',
-      eventIds: events.map((event) => event.id),
-      transformationIds: transformations.map(
-        (transformation) => transformation.id
-      ),
-    }
+      return {
+        contracts,
+        events,
+        transformations,
+        lastBlockHeightExported,
+        webhooksQueued,
+        computationsUpdated,
+        computationsDestroyed,
+      }
+    })
 
-    fifoWs.write(JSON.stringify(updateMessage) + '\n')
+    // Update meilisearch indexes. This must happen after the state is
+    // updated since it uses the latest block.
+    await updateIndexesForContracts({
+      contracts,
+    })
+
+    // Log.
+    console.log(
+      `[wasm] Exported: ${events.length.toLocaleString()}. Block: ${BigInt(
+        lastBlockHeightExported
+      ).toLocaleString()}. Transformed: ${transformations.length.toLocaleString()}. Webhooks: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
+    )
   }
 
   // Get code ID for contract, cached in memory.

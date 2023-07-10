@@ -15,10 +15,11 @@ export type HandlerMakerOptions = {
   cosmWasmClient: CosmWasmClient
   config: Config
   batch: number
-  updateFile: string
   // Map block height to time. Populated with block heights from WebSocket's
   // NewBlock event as soon as it occurs, which is before any state writes.
   blockHeightToTimeCache: LRUCache<number, number>
+  dontUpdateComputations: boolean
+  dontSendWebhooks: boolean
 }
 
 export type HandlerMaker = (options: HandlerMakerOptions) => Promise<Handler>

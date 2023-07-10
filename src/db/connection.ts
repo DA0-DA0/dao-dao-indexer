@@ -1,3 +1,4 @@
+import cls from 'cls-hooked'
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
 import { loadConfig } from '@/core/config'
@@ -23,6 +24,9 @@ import {
   WasmStateEventTransformation,
   WasmTxEvent,
 } from './models'
+
+// Create a CLS namespace for Sequelize to use so we can use transactions.
+Sequelize.useCLS(cls.createNamespace('sequelize-transaction'))
 
 const sequelizeInstances: Partial<Record<DbType, Sequelize>> = {}
 

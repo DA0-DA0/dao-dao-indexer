@@ -35,8 +35,24 @@ program.option(
   'comma-separated list of modules to export, falling back to all modules',
   (value) => value.split(',')
 )
+program.option(
+  // Adds inverted `update` boolean to the options object.
+  '--no-update',
+  "don't update computation validity based on new events or transformations"
+)
+program.option(
+  // Adds inverted `webhooks` boolean to the options object.
+  '--no-webhooks',
+  "don't send webhooks"
+)
 program.parse()
-const { config: _config, batch, modules: _modules } = program.opts()
+const {
+  config: _config,
+  batch,
+  modules: _modules,
+  update,
+  webhooks,
+} = program.opts()
 
 // Load config with config option.
 const config = loadConfig(_config)
@@ -53,7 +69,6 @@ if (config.sentryDsn) {
 }
 
 const traceFile = path.join(config.home, 'trace.pipe')
-const updateFile = path.join(config.home, 'update.pipe')
 
 const main = async () => {
   // Load DB on start.
@@ -75,20 +90,11 @@ const main = async () => {
       `Trace file not found: ${traceFile}. Create it with "mkfifo ${traceFile}".`
     )
   }
-  if (!fs.existsSync(updateFile)) {
-    throw new Error(
-      `Update file not found: ${updateFile}. Create it with "mkfifo ${updateFile}".`
-    )
-  }
 
   // Verify trace and update files are FIFOs.
   const stat = fs.statSync(traceFile)
   if (!stat.isFIFO()) {
     throw new Error(`Trace file is not a FIFO: ${traceFile}.`)
-  }
-  const stat2 = fs.statSync(updateFile)
-  if (!stat2.isFIFO()) {
-    throw new Error(`Update file is not a FIFO: ${updateFile}.`)
   }
 
   const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
@@ -118,7 +124,8 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
         cosmWasmClient,
         config,
         batch,
-        updateFile,
+        dontUpdateComputations: !update,
+        dontSendWebhooks: !webhooks,
       }),
     }))
   )
