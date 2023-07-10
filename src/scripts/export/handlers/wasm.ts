@@ -13,7 +13,6 @@ import {
   State,
   WasmStateEvent,
   WasmStateEventTransformation,
-  loadDb,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
 import { updateIndexesForContracts } from '@/ms'
@@ -204,91 +203,91 @@ export const wasm: HandlerMaker = async ({
       ...new Set(parsedEvents.map((event) => event.contractAddress)),
     ]
 
-    const {
-      contracts,
-      events,
-      transformations,
-      computationsUpdated,
-      computationsDestroyed,
-    } = await (
-      await loadDb()
-    ).transaction(async () => {
-      // Ensure contract exists before creating events. `address` is unique.
-      const contracts = await Contract.bulkCreate(
-        uniqueContracts.map((address) => {
-          const event = parsedEvents.find(
-            (event) => event.contractAddress === address
-          )
-          // Should never happen since `uniqueContracts` is derived from
-          // `parsedEvents`.
-          if (!event) {
-            throw new Error('Event not found when creating contract.')
-          }
-
-          return {
-            address,
-            codeId: event.codeId,
-            // Set the contract instantiation block to the first event found in
-            // the list of parsed events. Events are sorted in ascending order
-            // by creation block. These won't get updated if the contract
-            // already exists, so it's safe to always attempt creation with the
-            // first event's block. Only `codeId` gets updated below when a
-            // duplicate is found.
-            instantiatedAtBlockHeight: event.blockHeight,
-            instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
-            instantiatedAtBlockTimestamp: event.blockTimestamp,
-          }
-        }),
-        // When contract is migrated, codeId changes.
-        {
-          updateOnDuplicate: ['codeId'],
+    // const {
+    //   contracts,
+    //   events,
+    //   transformations,
+    //   computationsUpdated,
+    //   computationsDestroyed,
+    // } = await (
+    //   await loadDb()
+    // ).transaction(async () => {
+    // Ensure contract exists before creating events. `address` is unique.
+    const contracts = await Contract.bulkCreate(
+      uniqueContracts.map((address) => {
+        const event = parsedEvents.find(
+          (event) => event.contractAddress === address
+        )
+        // Should never happen since `uniqueContracts` is derived from
+        // `parsedEvents`.
+        if (!event) {
+          throw new Error('Event not found when creating contract.')
         }
+
+        return {
+          address,
+          codeId: event.codeId,
+          // Set the contract instantiation block to the first event found in
+          // the list of parsed events. Events are sorted in ascending order
+          // by creation block. These won't get updated if the contract
+          // already exists, so it's safe to always attempt creation with the
+          // first event's block. Only `codeId` gets updated below when a
+          // duplicate is found.
+          instantiatedAtBlockHeight: event.blockHeight,
+          instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
+          instantiatedAtBlockTimestamp: event.blockTimestamp,
+        }
+      }),
+      // When contract is migrated, codeId changes.
+      {
+        updateOnDuplicate: ['codeId'],
+      }
+    )
+
+    // Unique index on [blockHeight, contractAddress, key] ensures that we
+    // don't insert duplicate events. If we encounter a duplicate, we update
+    // the `value`, `valueJson`, and `delete` fields in case event processing
+    // for a block was batched separately.
+    const events =
+      parsedEvents.length > 0
+        ? await WasmStateEvent.bulkCreate(parsedEvents, {
+            updateOnDuplicate: ['value', 'valueJson', 'delete'],
+          })
+        : []
+
+    // Add contract to events.
+    for (const event of events) {
+      event.contract = contracts.find(
+        (contract) => contract.address === event.contractAddress
+      )!
+    }
+
+    // Transform events as needed.
+    const transformations =
+      await WasmStateEventTransformation.transformParsedStateEvents(
+        parsedEvents
       )
 
-      // Unique index on [blockHeight, contractAddress, key] ensures that we
-      // don't insert duplicate events. If we encounter a duplicate, we update
-      // the `value`, `valueJson`, and `delete` fields in case event processing
-      // for a block was batched separately.
-      const events =
-        parsedEvents.length > 0
-          ? await WasmStateEvent.bulkCreate(parsedEvents, {
-              updateOnDuplicate: ['value', 'valueJson', 'delete'],
-            })
-          : []
+    let computationsUpdated = 0
+    let computationsDestroyed = 0
+    if (!dontUpdateComputations) {
+      const computationUpdates =
+        await updateComputationValidityDependentOnChanges([
+          ...events,
+          ...transformations,
+        ])
+      computationsUpdated = computationUpdates.updated
+      computationsDestroyed = computationUpdates.destroyed
+    }
 
-      // Add contract to events.
-      for (const event of events) {
-        event.contract = contracts.find(
-          (contract) => contract.address === event.contractAddress
-        )!
-      }
-
-      // Transform events as needed.
-      const transformations =
-        await WasmStateEventTransformation.transformParsedStateEvents(
-          parsedEvents
-        )
-
-      let computationsUpdated = 0
-      let computationsDestroyed = 0
-      if (!dontUpdateComputations) {
-        const computationUpdates =
-          await updateComputationValidityDependentOnChanges([
-            ...events,
-            ...transformations,
-          ])
-        computationsUpdated = computationUpdates.updated
-        computationsDestroyed = computationUpdates.destroyed
-      }
-
-      return {
-        contracts,
-        events,
-        transformations,
-        computationsUpdated,
-        computationsDestroyed,
-      }
-    })
+    //   return {
+    //     contracts,
+    //     events,
+    //     transformations,
+    //     computationsUpdated,
+    //     computationsDestroyed,
+    //   }
+    // })
 
     // Queue webhooks as needed.
     const webhooksQueued =
