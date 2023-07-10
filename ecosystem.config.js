@@ -2,14 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'exporter',
-      script: 'dist/scripts/export-trace/index.js',
-      wait_ready: true,
-      listen_timeout: 10000,
-      kill_timeout: 10000,
-    },
-    {
-      name: 'exporter-updater',
-      script: 'dist/scripts/export-trace/update.js',
+      script: 'dist/scripts/export/index.js',
       wait_ready: true,
       listen_timeout: 10000,
       kill_timeout: 10000,

@@ -77,7 +77,7 @@ const main = async () => {
         Sentry.captureException(err, {
           tags: {
             type: 'failed-flush',
-            script: 'export-trace',
+            script: 'export',
           },
           extra: {
             handler: name,
@@ -179,7 +179,7 @@ const main = async () => {
             Sentry.captureException(err, {
               tags: {
                 type: 'failed-handle',
-                script: 'export-trace',
+                script: 'export',
               },
               extra: {
                 handler: name,

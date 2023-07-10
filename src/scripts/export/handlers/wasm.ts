@@ -401,7 +401,7 @@ export const wasm: HandlerMaker = async ({
       Sentry.captureException(err, {
         tags: {
           type: 'failed-get-code-id',
-          script: 'export-trace',
+          script: 'export',
           handler: 'wasm',
           chainId,
           contractAddress,
@@ -453,7 +453,7 @@ export const wasm: HandlerMaker = async ({
       Sentry.captureException(err, {
         tags: {
           type: 'failed-get-block',
-          script: 'export-trace',
+          script: 'export',
           handler: 'wasm',
           chainId,
         },
