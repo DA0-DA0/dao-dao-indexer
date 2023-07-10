@@ -255,12 +255,15 @@ export const wasm: HandlerMaker = async ({
           )
 
           await Contract.bulkCreate(
-            contractsToGetCodeId.map((contract, index) => ({
-              ...contract.toJSON(),
-              codeId: codeIds[index],
-            })),
+            contractsToGetCodeId
+              .map((contract, index) => ({
+                ...contract.toJSON(),
+                codeId: codeIds[index],
+              }))
+              .filter(({ codeId }) => codeId !== -1),
             {
               updateOnDuplicate: ['codeId'],
+              transaction,
             }
           )
         }
