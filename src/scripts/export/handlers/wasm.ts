@@ -233,9 +233,9 @@ export const wasm: HandlerMaker = async ({
               instantiatedAtBlockTimestamp: event.blockTimestamp,
             }
           }),
-          // When contract is migrated, codeId changes.
+          // Do nothing if contract already exists.
           {
-            updateOnDuplicate: ['codeId'],
+            ignoreDuplicates: true,
             transaction,
           }
         )
