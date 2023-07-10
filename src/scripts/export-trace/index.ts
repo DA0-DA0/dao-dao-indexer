@@ -17,6 +17,8 @@ import { handlerMakers } from './handlers'
 import { TracedEvent } from './types'
 import { setUpFifoJsonTracer, setUpWebSocketNewBlockListener } from './utils'
 
+const MAX_QUEUE_SIZE = 2000
+
 // Parse arguments.
 const program = new Command()
 program.option(
@@ -53,8 +55,6 @@ if (config.sentryDsn) {
 
 const traceFile = path.join(config.home, 'trace.pipe')
 const updateFile = path.join(config.home, 'update.pipe')
-
-let stateWebSocket: WebSocket | undefined
 
 const main = async () => {
   // Load DB on start.
@@ -163,7 +163,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
   }).then(({ open }) => {
     if (open) {
       // Get new-block WebSocket.
-      stateWebSocket = setUpWebSocketNewBlockListener({
+      setUpWebSocketNewBlockListener({
         rpc: 'http://localhost:26657',
         onNewBlock: async (block) => {
           const { chain_id, height, time } = (block as any).header
@@ -200,6 +200,9 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 
   console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
 
+  const queue: TracedEvent[] = []
+  let queueHandler: Promise<void> | undefined
+
   const { promise: tracer, close: closeTracer } = setUpFifoJsonTracer({
     file: traceFile,
     onData: async (data) => {
@@ -227,60 +230,101 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
         return
       }
 
-      // Try to handle with each module, and stop once handled.
-      for (const { name, handler } of handlers) {
-        try {
-          // Retry 3 times with exponential backoff starting at 100ms delay.
-          const handled = await retry(handler.handle, [tracedEvent], {
-            retriesMax: 3,
-            exponential: true,
-            interval: 100,
-          })
+      queue.push(tracedEvent)
 
-          // If handled, don't try other handlers.
-          if (handled) {
-            break
-          }
-        } catch (err) {
-          console.error(
-            '-------\nFailed to handle:\n',
-            err instanceof Error ? err.message : err,
-            '\nHandler: ' +
-              name +
-              '\nData: ' +
-              JSON.stringify(tracedEvent, null, 2) +
-              '\n-------'
-          )
-          Sentry.captureException(err, {
-            tags: {
-              type: 'failed-handle',
-              script: 'export-trace',
-            },
-            extra: {
-              handler: name,
-              tracedEvent,
-            },
-          })
-          throw err
-        }
+      // If queue fills up, wait for it to drain halfway.
+      if (queue.length >= MAX_QUEUE_SIZE) {
+        console.log('Queue full, waiting for it to drain...')
+        await new Promise<void>((resolve) => {
+          const interval = setInterval(() => {
+            if (queue.length < MAX_QUEUE_SIZE / 2) {
+              console.log('Queue drained.')
+              clearInterval(interval)
+              resolve()
+            }
+          }, 100)
+        })
       }
+
+      // Handle next event in queue after previous event is handled.
+      queueHandler = (queueHandler || Promise.resolve()).then(async () => {
+        // Get next event from beginning of queue.
+        const nextEvent = queue.shift()
+
+        // Try to handle with each module, and stop once handled.
+        for (const { name, handler } of handlers) {
+          try {
+            // Retry 3 times with exponential backoff starting at 100ms delay.
+            const handled = await retry(handler.handle, [nextEvent], {
+              retriesMax: 3,
+              exponential: true,
+              interval: 100,
+            })
+
+            // If handled, don't try other handlers.
+            if (handled) {
+              break
+            }
+          } catch (err) {
+            console.error(
+              '-------\nFailed to handle:\n',
+              err instanceof Error ? err.message : err,
+              '\nHandler: ' +
+                name +
+                '\nData: ' +
+                JSON.stringify(nextEvent, null, 2) +
+                '\n-------'
+            )
+            Sentry.captureException(err, {
+              tags: {
+                type: 'failed-handle',
+                script: 'export-trace',
+              },
+              extra: {
+                handler: name,
+                nextEvent,
+              },
+            })
+          }
+        }
+      })
     },
     onProcessingStateChange: async (processing) => {
+      // Used to determine if we can kill the process immediately when SIGINT is
+      // received.
+      reading = processing
+
       // Stop reading from FIFO if we're done processing and shutting down.
       if (!processing && shuttingDown) {
         closeTracer()
       }
-
-      // Used to determine if we can kill the process immediately when SIGINT is
-      // received.
-      reading = processing
     },
+  })
+
+  // Add shutdown signal handler.
+  process.on('SIGINT', () => {
+    // If already shutting down, exit immediately.
+    if (shuttingDown) {
+      process.exit(1)
+    }
+
+    shuttingDown = true
+    console.log('Shutting down after handlers finish...')
+
+    // If not currently tracing, stop tracer so this function finishes the
+    // queue, flushes, and exits.
+    if (!reading) {
+      closeTracer()
+    }
   })
 
   // Wait for tracer to finish.
   await tracer
 
-  // Tell each handler to flush once the socket closes.
+  // Wait for queue to finish.
+  await queueHandler
+
+  // Tell each handler to flush once all events are processed.
   await flushAll()
 
   // Exit.
@@ -291,22 +335,4 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
 main().catch((err) => {
   console.error(err)
   process.exit(1)
-})
-
-process.on('SIGINT', () => {
-  if (stateWebSocket) {
-    stateWebSocket.close()
-  }
-
-  if (!reading) {
-    process.exit(0)
-  }
-
-  // If already shutting down, exit immediately.
-  if (shuttingDown) {
-    process.exit(1)
-  }
-
-  shuttingDown = true
-  console.log('Shutting down after handlers finish...')
 })
