@@ -253,10 +253,6 @@ export const wasm: HandlerMaker = async ({
           const codeIds = await Promise.all(
             contractsToGetCodeId.map((contract) => getCodeId(contract.address))
           )
-          console.log(
-            'Fetching code IDs for contracts',
-            contractsToGetCodeId.length
-          )
 
           const updatedContracts = await Contract.bulkCreate(
             contractsToGetCodeId
