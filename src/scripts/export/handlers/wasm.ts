@@ -307,6 +307,12 @@ export const wasm: HandlerMaker = async ({
         (contract) => contract.address === event.contractAddress
       )!
     }
+    // Set codeId since we have it now.
+    for (const event of parsedEvents) {
+      event.codeId = contracts.find(
+        (contract) => contract.address === event.contractAddress
+      )!.codeId
+    }
 
     // Transform events as needed.
     // Retry 3 times with exponential backoff starting at 100ms delay.
