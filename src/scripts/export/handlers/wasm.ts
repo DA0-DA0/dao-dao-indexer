@@ -206,8 +206,8 @@ export const wasm: HandlerMaker = async ({
       ...new Set(parsedEvents.map((event) => event.contractAddress)),
     ]
 
-    const { contracts, events } = await sequelize.transaction(
-      async (transaction) => {
+    const exportContractsAndEvents = async () =>
+      sequelize.transaction(async (transaction) => {
         // Ensure contract exists before creating events. `address` is unique.
         const contracts = await Contract.bulkCreate(
           uniqueContracts.map((address) => {
@@ -243,8 +243,8 @@ export const wasm: HandlerMaker = async ({
 
         // Unique index on [blockHeight, contractAddress, key] ensures that we
         // don't insert duplicate events. If we encounter a duplicate, we update
-        // the `value`, `valueJson`, and `delete` fields in case event processing
-        // for a block was batched separately.
+        // the `value`, `valueJson`, and `delete` fields in case event
+        // processing for a block was batched separately.
         const events =
           parsedEvents.length > 0
             ? await WasmStateEvent.bulkCreate(parsedEvents, {
@@ -257,8 +257,17 @@ export const wasm: HandlerMaker = async ({
           contracts,
           events,
         }
-      }
-    )
+      })
+
+    // Retry 3 times with exponential backoff starting at 100ms delay.
+    const { contracts, events } = (await retry(exportContractsAndEvents, [], {
+      retriesMax: 3,
+      exponential: true,
+      interval: 100,
+    })) as {
+      contracts: Contract[]
+      events: WasmStateEvent[]
+    }
 
     // Add contract to events.
     for (const event of events) {
@@ -268,10 +277,16 @@ export const wasm: HandlerMaker = async ({
     }
 
     // Transform events as needed.
-    const transformations =
-      await WasmStateEventTransformation.transformParsedStateEvents(
-        parsedEvents
-      )
+    // Retry 3 times with exponential backoff starting at 100ms delay.
+    const transformations = (await retry(
+      WasmStateEventTransformation.transformParsedStateEvents,
+      [parsedEvents],
+      {
+        retriesMax: 3,
+        exponential: true,
+        interval: 100,
+      }
+    )) as WasmStateEventTransformation[]
 
     let computationsUpdated = 0
     let computationsDestroyed = 0
