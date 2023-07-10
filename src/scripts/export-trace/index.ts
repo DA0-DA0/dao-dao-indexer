@@ -7,7 +7,6 @@ import retry from 'async-await-retry'
 import { Command } from 'commander'
 import { LRUCache } from 'lru-cache'
 import waitPort from 'wait-port'
-import WebSocket from 'ws'
 
 import { DbType, loadConfig, objectMatchesStructure } from '@/core'
 import { State, loadDb } from '@/db'
@@ -17,7 +16,7 @@ import { handlerMakers } from './handlers'
 import { TracedEvent } from './types'
 import { setUpFifoJsonTracer, setUpWebSocketNewBlockListener } from './utils'
 
-const MAX_QUEUE_SIZE = 2000
+const MAX_QUEUE_SIZE = 5000
 
 // Parse arguments.
 const program = new Command()

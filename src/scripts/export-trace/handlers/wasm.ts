@@ -12,6 +12,7 @@ import {
   State,
   WasmStateEvent,
   WasmStateEventTransformation,
+  loadDb,
 } from '@/db'
 
 import { Handler, HandlerMaker, TracedEvent, UpdateMessage } from '../types'
@@ -203,48 +204,54 @@ export const wasm: HandlerMaker = async ({
       ...new Set(parsedEvents.map((event) => event.contractAddress)),
     ]
 
-    // Ensure contract exists before creating events. `address` is unique.
-    await Contract.bulkCreate(
-      uniqueContracts.map((address) => {
-        const event = parsedEvents.find(
-          (event) => event.contractAddress === address
-        )
-        // Should never happen since `uniqueContracts` is derived from
-        // `parsedEvents`.
-        if (!event) {
-          throw new Error('Event not found when creating contract.')
-        }
+    const events = await (
+      await loadDb()
+    ).transaction(async () => {
+      // Ensure contract exists before creating events. `address` is unique.
+      await Contract.bulkCreate(
+        uniqueContracts.map((address) => {
+          const event = parsedEvents.find(
+            (event) => event.contractAddress === address
+          )
+          // Should never happen since `uniqueContracts` is derived from
+          // `parsedEvents`.
+          if (!event) {
+            throw new Error('Event not found when creating contract.')
+          }
 
-        return {
-          address,
-          codeId: event.codeId,
-          // Set the contract instantiation block to the first event found in
-          // the list of parsed events. Events are sorted in ascending order
-          // by creation block. These won't get updated if the contract
-          // already exists, so it's safe to always attempt creation with the
-          // first event's block. Only `codeId` gets updated below when a
-          // duplicate is found.
-          instantiatedAtBlockHeight: event.blockHeight,
-          instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
-          instantiatedAtBlockTimestamp: event.blockTimestamp,
+          return {
+            address,
+            codeId: event.codeId,
+            // Set the contract instantiation block to the first event found in
+            // the list of parsed events. Events are sorted in ascending order
+            // by creation block. These won't get updated if the contract
+            // already exists, so it's safe to always attempt creation with the
+            // first event's block. Only `codeId` gets updated below when a
+            // duplicate is found.
+            instantiatedAtBlockHeight: event.blockHeight,
+            instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
+            instantiatedAtBlockTimestamp: event.blockTimestamp,
+          }
+        }),
+        // When contract is migrated, codeId changes.
+        {
+          updateOnDuplicate: ['codeId'],
         }
-      }),
-      // When contract is migrated, codeId changes.
-      {
-        updateOnDuplicate: ['codeId'],
-      }
-    )
+      )
 
-    // Unique index on [blockHeight, contractAddress, key] ensures that we don't
-    // insert duplicate events. If we encounter a duplicate, we update the
-    // `value`, `valueJson`, and `delete` fields in case event processing for a
-    // block was batched separately.
-    const events =
-      parsedEvents.length > 0
-        ? await WasmStateEvent.bulkCreate(parsedEvents, {
-            updateOnDuplicate: ['value', 'valueJson', 'delete'],
-          })
-        : []
+      // Unique index on [blockHeight, contractAddress, key] ensures that we
+      // don't insert duplicate events. If we encounter a duplicate, we update
+      // the `value`, `valueJson`, and `delete` fields in case event processing
+      // for a block was batched separately.
+      const events =
+        parsedEvents.length > 0
+          ? await WasmStateEvent.bulkCreate(parsedEvents, {
+              updateOnDuplicate: ['value', 'valueJson', 'delete'],
+            })
+          : []
+
+      return events
+    })
 
     // Transform events as needed.
     const transformations =
