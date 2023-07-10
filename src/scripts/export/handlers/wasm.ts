@@ -258,7 +258,7 @@ export const wasm: HandlerMaker = async ({
             contractsToGetCodeId.length
           )
 
-          await Contract.bulkCreate(
+          const updatedContracts = await Contract.bulkCreate(
             contractsToGetCodeId
               .map((contract, index) => ({
                 ...contract.toJSON(),
@@ -270,6 +270,15 @@ export const wasm: HandlerMaker = async ({
               transaction,
             }
           )
+
+          // Add new contracts to list of contracts.
+          updatedContracts.forEach((updatedContract) => {
+            contracts.splice(
+              contracts.findIndex((c) => c.address === updatedContract.address),
+              1,
+              updatedContract
+            )
+          })
         }
 
         // Unique index on [blockHeight, contractAddress, key] ensures that we

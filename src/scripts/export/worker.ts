@@ -1,6 +1,7 @@
 import { parentPort, workerData } from 'worker_threads'
 
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
+import { HttpBatchClient, Tendermint34Client } from '@cosmjs/tendermint-rpc'
 import * as Sentry from '@sentry/node'
 import retry from 'async-await-retry'
 import { LRUCache } from 'lru-cache'
@@ -38,7 +39,11 @@ const main = async () => {
   // Initialize state.
   await State.createSingletonIfMissing()
 
-  const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
+  // Create CosmWasm client that batches requests.
+  const httpClient = new HttpBatchClient(config.rpc)
+  const tmClient = await Tendermint34Client.create(httpClient)
+  // @ts-ignore
+  const cosmWasmClient = new CosmWasmClient(tmClient)
 
   // Setup handlers.
   const blockHeightToTimeCache = new LRUCache<number, number>({

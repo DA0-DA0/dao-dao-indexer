@@ -81,6 +81,7 @@
     "@cosmjs/crypto": "^0.29.5",
     "@cosmjs/encoding": "^0.29.5",
     "@cosmjs/stargate": "^0.30.1",
+    "@cosmjs/tendermint-rpc": "^0.31.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "@sentry/node": "^7.31.0",
