@@ -378,9 +378,7 @@ export const wasm: HandlerMaker = async ({
     console.log(
       `[wasm] Exported: ${events.length.toLocaleString()}. Block: ${BigInt(
         lastBlockHeightExported
-      ).toLocaleString()}. Transformed: ${transformations.length.toLocaleString()}. Webhooks: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Duration: ${(
-        duration / 1000
-      ).toLocaleString()}s.`
+      ).toLocaleString()}. Transformed: ${transformations.length.toLocaleString()}. Webhooks: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Duration: ${duration.toLocaleString()}ms.`
     )
   }
 
