@@ -144,6 +144,9 @@ const main = async () => {
       type: 'processed',
       count: processed,
     } as FromWorkerMessage)
+
+    // Reset processed count.
+    processed = 0
   }, 100).unref()
 
   parentPort.on('message', async (message: ToWorkerMessage) => {
