@@ -35,6 +35,9 @@ const main = async () => {
     type: DbType.Accounts,
   })
 
+  // Initialize state.
+  await State.createSingletonIfMissing()
+
   const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
 
   // Setup handlers.
@@ -201,6 +204,7 @@ const main = async () => {
     }
   })
 
+  // Tell parent we're ready to process traces.
   parentPort.postMessage({
     type: 'ready',
   })

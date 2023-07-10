@@ -6,7 +6,6 @@ import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
 import { loadConfig, objectMatchesStructure } from '@/core'
-import { State } from '@/db'
 import { setupMeilisearch } from '@/ms'
 
 import {
@@ -63,9 +62,6 @@ const traceFile = path.join(config.home, 'trace.pipe')
 const main = async () => {
   // Setup meilisearch.
   await setupMeilisearch()
-
-  // Initialize state.
-  await State.createSingletonIfMissing()
 
   // Ensure trace and update files exist.
   if (!fs.existsSync(traceFile)) {
