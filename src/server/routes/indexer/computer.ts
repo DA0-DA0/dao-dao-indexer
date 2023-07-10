@@ -701,6 +701,8 @@ export const computer: Router.Middleware = async (ctx) => {
     }
 
     ctx.set('Content-Type', 'application/json')
+    // Cache for 5 seconds, about 1 block.
+    ctx.set('Cache-Control', 'public, max-age=5')
   } catch (err) {
     console.error(err)
 
