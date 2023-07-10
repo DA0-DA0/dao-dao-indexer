@@ -168,10 +168,10 @@ export const wasm: HandlerMaker = async ({
       }
     }
 
-    const codeId = await getCodeId(contractAddress, trace)
+    // TODO: Get code ID from contract KV store directly???
     const event: ParsedWasmStateEvent = {
       type: 'state',
-      codeId,
+      codeId: -1,
       contractAddress,
       blockHeight,
       blockTimeUnixMs,
@@ -197,6 +197,8 @@ export const wasm: HandlerMaker = async ({
   }
 
   const exporter = async (parsedEvents: ParsedWasmStateEvent[]) => {
+    const start = Date.now()
+
     const state = await State.getSingleton()
     if (!state) {
       throw new Error('State not found while exporting.')
@@ -222,13 +224,14 @@ export const wasm: HandlerMaker = async ({
 
             return {
               address,
-              codeId: event.codeId,
-              // Set the contract instantiation block to the first event found in
-              // the list of parsed events. Events are sorted in ascending order
-              // by creation block. These won't get updated if the contract
-              // already exists, so it's safe to always attempt creation with the
-              // first event's block. Only `codeId` gets updated below when a
-              // duplicate is found.
+              // Set the code ID to -1 since we don't know it yet.
+              codeId: -1,
+              // Set the contract instantiation block to the first event found
+              // in the list of parsed events. Events are sorted in ascending
+              // order by creation block. These won't get updated if the
+              // contract already exists, so it's safe to always attempt
+              // creation with the first event's block. Only `codeId` gets
+              // updated below when a duplicate is found.
               instantiatedAtBlockHeight: event.blockHeight,
               instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
               instantiatedAtBlockTimestamp: event.blockTimestamp,
@@ -240,6 +243,27 @@ export const wasm: HandlerMaker = async ({
             transaction,
           }
         )
+
+        // Try to retrieve code IDs for contracts with -1 code IDs.
+        const contractsToGetCodeId = contracts.filter(
+          (contract) => contract.codeId === -1
+        )
+        // Update code IDs for contracts with -1 code IDs.
+        if (contractsToGetCodeId.length > 0) {
+          const codeIds = await Promise.all(
+            contractsToGetCodeId.map((contract) => getCodeId(contract.address))
+          )
+
+          await Contract.bulkCreate(
+            contractsToGetCodeId.map((contract, index) => ({
+              ...contract.toJSON(),
+              codeId: codeIds[index],
+            })),
+            {
+              updateOnDuplicate: ['codeId'],
+            }
+          )
+        }
 
         // Unique index on [blockHeight, contractAddress, key] ensures that we
         // don't insert duplicate events. If we encounter a duplicate, we update
@@ -344,11 +368,16 @@ export const wasm: HandlerMaker = async ({
       contracts,
     })
 
+    const end = Date.now()
+    const duration = end - start
+
     // Log.
     console.log(
       `[wasm] Exported: ${events.length.toLocaleString()}. Block: ${BigInt(
         lastBlockHeightExported
-      ).toLocaleString()}. Transformed: ${transformations.length.toLocaleString()}. Webhooks: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}.`
+      ).toLocaleString()}. Transformed: ${transformations.length.toLocaleString()}. Webhooks: ${webhooksQueued.toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Duration: ${(
+        duration / 1000
+      ).toLocaleString()}s.`
     )
   }
 
@@ -356,10 +385,7 @@ export const wasm: HandlerMaker = async ({
   const codeIdCache = new LRUCache<string, number>({
     max: 1000,
   })
-  const getCodeId = async (
-    contractAddress: string,
-    trace: TracedEvent
-  ): Promise<number> => {
+  const getCodeId = async (contractAddress: string): Promise<number> => {
     if (codeIdCache.has(contractAddress)) {
       return codeIdCache.get(contractAddress) ?? -1
     }
@@ -370,22 +396,13 @@ export const wasm: HandlerMaker = async ({
         const contract = await cosmWasmClient.getContract(contractAddress)
         codeId = contract.codeId
       } catch (err) {
-        // Check if exists in database.
-        const contract = await Contract.findByPk(contractAddress)
-        if (contract) {
-          codeId = contract.codeId
-          return
-        }
-
-        // If contract not found, ignore, leaving as -1.
+        // If contract not found, ignore, leaving as -1. Otherwise, throw err.
         if (
-          err instanceof Error &&
-          err.message.includes('not found: invalid request')
+          !(err instanceof Error) ||
+          !err.message.includes('not found: invalid request')
         ) {
-          return
+          throw err
         }
-
-        throw err
       }
 
       codeIdCache.set(contractAddress, codeId)
@@ -402,11 +419,7 @@ export const wasm: HandlerMaker = async ({
       console.error(
         '-------\nFailed to get code ID:\n',
         err instanceof Error ? err.message : err,
-        '\nContract: ' +
-          contractAddress +
-          '\nData: ' +
-          JSON.stringify(trace, null, 2) +
-          '\n-------'
+        '\nContract: ' + contractAddress + '\n-------'
       )
       Sentry.captureException(err, {
         tags: {
@@ -415,9 +428,6 @@ export const wasm: HandlerMaker = async ({
           handler: 'wasm',
           chainId,
           contractAddress,
-        },
-        extra: {
-          trace,
         },
       })
 
