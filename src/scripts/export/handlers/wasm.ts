@@ -64,6 +64,8 @@ export const wasm: HandlerMaker = async ({
   let lastBlockHeightSeen = 0
   let debouncedFlush: NodeJS.Timeout | undefined
 
+  const sequelize = await loadDb()
+
   const handle: Handler['handle'] = async (trace) => {
     // ContractStorePrefix = 0x03
     // wasm keys are formatted as:
@@ -204,15 +206,7 @@ export const wasm: HandlerMaker = async ({
       ...new Set(parsedEvents.map((event) => event.contractAddress)),
     ]
 
-    const {
-      contracts,
-      events,
-      transformations,
-      computationsUpdated,
-      computationsDestroyed,
-    } = await (
-      await loadDb()
-    ).transaction(async () => {
+    const { contracts, events } = await sequelize.transaction(async () => {
       // Ensure contract exists before creating events. `address` is unique.
       const contracts = await Contract.bulkCreate(
         uniqueContracts.map((address) => {
@@ -256,39 +250,36 @@ export const wasm: HandlerMaker = async ({
             })
           : []
 
-      // Add contract to events.
-      for (const event of events) {
-        event.contract = contracts.find(
-          (contract) => contract.address === event.contractAddress
-        )!
-      }
-
-      // Transform events as needed.
-      const transformations =
-        await WasmStateEventTransformation.transformParsedStateEvents(
-          parsedEvents
-        )
-
-      let computationsUpdated = 0
-      let computationsDestroyed = 0
-      if (!dontUpdateComputations) {
-        const computationUpdates =
-          await updateComputationValidityDependentOnChanges([
-            ...events,
-            ...transformations,
-          ])
-        computationsUpdated = computationUpdates.updated
-        computationsDestroyed = computationUpdates.destroyed
-      }
-
       return {
         contracts,
         events,
-        transformations,
-        computationsUpdated,
-        computationsDestroyed,
       }
     })
+
+    // Add contract to events.
+    for (const event of events) {
+      event.contract = contracts.find(
+        (contract) => contract.address === event.contractAddress
+      )!
+    }
+
+    // Transform events as needed.
+    const transformations =
+      await WasmStateEventTransformation.transformParsedStateEvents(
+        parsedEvents
+      )
+
+    let computationsUpdated = 0
+    let computationsDestroyed = 0
+    if (!dontUpdateComputations) {
+      const computationUpdates =
+        await updateComputationValidityDependentOnChanges([
+          ...events,
+          ...transformations,
+        ])
+      computationsUpdated = computationUpdates.updated
+      computationsDestroyed = computationUpdates.destroyed
+    }
 
     // Queue webhooks as needed.
     const webhooksQueued =
