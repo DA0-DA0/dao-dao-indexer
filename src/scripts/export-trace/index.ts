@@ -160,6 +160,10 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }
   }
 
+  console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
+
+  let queueHandler: Promise<void> | undefined
+
   // Connect to local RPC WebSocket once ready. Don't await since we need to
   // start reading from the trace FIFO before the RPC starts.
   waitPort({
@@ -193,6 +197,9 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
             }
           )
 
+          // Wait for queue to finish.
+          await queueHandler
+
           // Flush all handlers.
           await flushAll()
         },
@@ -204,10 +211,7 @@ const trace = async (cosmWasmClient: CosmWasmClient) => {
     }
   })
 
-  console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
-
   const queue: TracedEvent[] = []
-  let queueHandler: Promise<void> | undefined
 
   const { promise: tracer, close: closeTracer } = setUpFifoJsonTracer({
     file: traceFile,
