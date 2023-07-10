@@ -1,20 +1,21 @@
 import * as fs from 'fs'
 import path from 'path'
+import { Worker } from 'worker_threads'
 
-import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import * as Sentry from '@sentry/node'
-import retry from 'async-await-retry'
 import { Command } from 'commander'
-import { LRUCache } from 'lru-cache'
-import waitPort from 'wait-port'
 
-import { DbType, loadConfig, objectMatchesStructure } from '@/core'
-import { State, loadDb } from '@/db'
+import { loadConfig, objectMatchesStructure } from '@/core'
+import { State } from '@/db'
 import { setupMeilisearch } from '@/ms'
 
-import { handlerMakers } from './handlers'
-import { TracedEvent } from './types'
-import { setUpFifoJsonTracer, setUpWebSocketNewBlockListener } from './utils'
+import {
+  FromWorkerMessage,
+  ToWorkerMessage,
+  TracedEvent,
+  WorkerInitData,
+} from './types'
+import { setUpFifoJsonTracer } from './utils'
 
 const MAX_QUEUE_SIZE = 5000
 
@@ -31,11 +32,6 @@ program.option(
   1000
 )
 program.option(
-  '-m, --modules <modules>',
-  'comma-separated list of modules to export, falling back to all modules',
-  (value) => value.split(',')
-)
-program.option(
   // Adds inverted `update` boolean to the options object.
   '--no-update',
   "don't update computation validity based on new events or transformations"
@@ -46,13 +42,7 @@ program.option(
   "don't send webhooks"
 )
 program.parse()
-const {
-  config: _config,
-  batch,
-  modules: _modules,
-  update,
-  webhooks,
-} = program.opts()
+const { config: _config, batch, update, webhooks } = program.opts()
 
 // Load config with config option.
 const config = loadConfig(_config)
@@ -71,13 +61,6 @@ if (config.sentryDsn) {
 const traceFile = path.join(config.home, 'trace.pipe')
 
 const main = async () => {
-  // Load DB on start.
-  await loadDb({
-    type: DbType.Data,
-  })
-  await loadDb({
-    type: DbType.Accounts,
-  })
   // Setup meilisearch.
   await setupMeilisearch()
 
@@ -97,249 +80,131 @@ const main = async () => {
     throw new Error(`Trace file is not a FIFO: ${traceFile}.`)
   }
 
-  const cosmWasmClient = await CosmWasmClient.connect(config.rpc)
-
-  // Tell pm2 we're ready right before we start reading.
-  if (process.send) {
-    process.send('ready')
-  }
-
   // Read from trace file.
-  await trace(cosmWasmClient)
+  await trace()
 }
 
 let shuttingDown = false
 let reading = false
 
-const trace = async (cosmWasmClient: CosmWasmClient) => {
-  // Setup handlers.
-  const blockHeightToTimeCache = new LRUCache<number, number>({
-    max: 100,
-  })
-  const handlers = await Promise.all(
-    Object.entries(handlerMakers).map(async ([name, handlerMaker]) => ({
-      name,
-      handler: await handlerMaker({
-        blockHeightToTimeCache,
-        cosmWasmClient,
-        config,
-        batch,
-        dontUpdateComputations: !update,
-        dontSendWebhooks: !webhooks,
-      }),
-    }))
-  )
-
-  // Flush all handlers.
-  const flushAll = async () => {
-    for (const { name, handler } of handlers) {
-      try {
-        // Retry 3 times with exponential backoff starting at 100ms delay.
-        await retry(handler.flush, [], {
-          retriesMax: 3,
-          exponential: true,
-          interval: 100,
-        })
-      } catch (err) {
-        console.error(
-          '-------\nFailed to flush:\n',
-          err instanceof Error ? err.message : err,
-          '\n-------'
-        )
-        Sentry.captureException(err, {
-          tags: {
-            type: 'failed-flush',
-            script: 'export-trace',
-          },
-          extra: {
-            handler: name,
-          },
-        })
-        throw err
-      }
-    }
+const trace = async () => {
+  const workerData: WorkerInitData = {
+    config,
+    batch,
+    update: !!update,
+    webhooks: !!webhooks,
   }
-
-  console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
-
-  let queueHandler: Promise<void> | undefined
-
-  // Connect to local RPC WebSocket once ready. Don't await since we need to
-  // start reading from the trace FIFO before the RPC starts.
-  waitPort({
-    host: 'localhost',
-    port: 26657,
-    output: 'silent',
-  }).then(({ open }) => {
-    if (open) {
-      // Get new-block WebSocket.
-      setUpWebSocketNewBlockListener({
-        rpc: 'http://localhost:26657',
-        onNewBlock: async (block) => {
-          const { chain_id, height, time } = (block as any).header
-          const latestBlockHeight = Number(height)
-          const latestBlockTimeUnixMs = Date.parse(time)
-
-          // Cache block time for block height in cache used by state.
-          blockHeightToTimeCache.set(latestBlockHeight, latestBlockTimeUnixMs)
-
-          // Update state singleton with latest information.
-          await State.update(
-            {
-              chainId: chain_id,
-              latestBlockHeight,
-              latestBlockTimeUnixMs,
-            },
-            {
-              where: {
-                singleton: true,
-              },
-            }
-          )
-
-          // Wait for queue to finish.
-          await queueHandler
-
-          // Flush all handlers.
-          await flushAll()
-        },
-      })
-    } else {
-      console.error(
-        'Failed to connect to local RPC WebSocket. Queries may be slower as block times will be fetched from a remote RPC.'
-      )
-    }
+  const worker = new Worker(path.join(__dirname, 'worker.js'), {
+    workerData,
   })
 
-  const queue: TracedEvent[] = []
+  let queued = 0
+  // Listen for worker processing queue.
+  worker.on('message', async (data: FromWorkerMessage) => {
+    if (data.type === 'ready') {
+      console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
 
-  const { promise: tracer, close: closeTracer } = setUpFifoJsonTracer({
-    file: traceFile,
-    onData: async (data) => {
-      const tracedEvent = data as TracedEvent
-      // Ensure this is a traced write event.
-      if (
-        !objectMatchesStructure(tracedEvent, {
-          operation: {},
-          key: {},
-          value: {},
-          metadata: {
-            blockHeight: {},
-            txHash: {},
-          },
-        })
-      ) {
-        return
+      // Tell pm2 we're ready right before we start reading.
+      if (process.send) {
+        process.send('ready')
       }
 
-      // Only handle writes and deletes.
-      if (
-        tracedEvent.operation !== 'write' &&
-        tracedEvent.operation !== 'delete'
-      ) {
-        return
-      }
-
-      queue.push(tracedEvent)
-
-      // If queue fills up, wait for it to drain halfway.
-      if (queue.length >= MAX_QUEUE_SIZE) {
-        console.log('Queue full, waiting for it to drain...')
-        await new Promise<void>((resolve) => {
-          const interval = setInterval(() => {
-            if (queue.length < MAX_QUEUE_SIZE / 2) {
-              console.log('Queue drained.')
-              clearInterval(interval)
-              resolve()
-            }
-          }, 100)
-        })
-      }
-
-      // Handle next event in queue after previous event is handled.
-      queueHandler = (queueHandler || Promise.resolve()).then(async () => {
-        // Get next event from beginning of queue.
-        const nextEvent = queue.shift()
-
-        // Try to handle with each module, and stop once handled.
-        for (const { name, handler } of handlers) {
-          try {
-            // Retry 3 times with exponential backoff starting at 100ms delay.
-            const handled = await retry(handler.handle, [nextEvent], {
-              retriesMax: 3,
-              exponential: true,
-              interval: 100,
+      const { promise: tracer, close: closeTracer } = setUpFifoJsonTracer({
+        file: traceFile,
+        onData: async (data) => {
+          const tracedEvent = data as TracedEvent
+          // Ensure this is a traced write event.
+          if (
+            !objectMatchesStructure(tracedEvent, {
+              operation: {},
+              key: {},
+              value: {},
+              metadata: {
+                blockHeight: {},
+                txHash: {},
+              },
             })
+          ) {
+            return
+          }
 
-            // If handled, don't try other handlers.
-            if (handled) {
-              break
-            }
-          } catch (err) {
-            console.error(
-              '-------\nFailed to handle:\n',
-              err instanceof Error ? err.message : err,
-              '\nHandler: ' +
-                name +
-                '\nData: ' +
-                JSON.stringify(nextEvent, null, 2) +
-                '\n-------'
-            )
-            Sentry.captureException(err, {
-              tags: {
-                type: 'failed-handle',
-                script: 'export-trace',
-              },
-              extra: {
-                handler: name,
-                nextEvent,
-              },
+          // Only handle writes and deletes.
+          if (
+            tracedEvent.operation !== 'write' &&
+            tracedEvent.operation !== 'delete'
+          ) {
+            return
+          }
+
+          worker.postMessage({
+            type: 'trace',
+            event: tracedEvent,
+          } as ToWorkerMessage)
+          queued += 1
+
+          // If queue fills up, wait for it to drain halfway.
+          if (queued >= MAX_QUEUE_SIZE) {
+            console.log('Queue full, waiting for it to drain...')
+            await new Promise<void>((resolve) => {
+              const interval = setInterval(() => {
+                if (queued < MAX_QUEUE_SIZE / 2) {
+                  console.log('Queue drained.')
+                  clearInterval(interval)
+                  resolve()
+                }
+              }, 50)
             })
           }
+        },
+        onProcessingStateChange: async (processing) => {
+          // Used to determine if we can kill the process immediately when
+          // SIGINT is received.
+          reading = processing
+
+          // Stop reading from FIFO if we're done processing and shutting down.
+          if (!processing && shuttingDown) {
+            closeTracer()
+          }
+        },
+      })
+
+      // Add worker exit handler.
+      worker.on('exit', (code) => {
+        if (code !== 0) {
+          console.error(`Worker stopped with exit code ${code}`)
+        }
+
+        // Exit with worker's exit code.
+        process.exit(code)
+      })
+
+      // Add shutdown signal handler.
+      process.on('SIGINT', () => {
+        // If already shutting down, exit immediately.
+        if (shuttingDown) {
+          process.exit(1)
+        }
+
+        shuttingDown = true
+        console.log('Shutting down after handlers finish...')
+
+        // If not currently tracing, stop tracer and tell worker to shutdown.
+        if (!reading) {
+          closeTracer()
         }
       })
-    },
-    onProcessingStateChange: async (processing) => {
-      // Used to determine if we can kill the process immediately when SIGINT is
-      // received.
-      reading = processing
 
-      // Stop reading from FIFO if we're done processing and shutting down.
-      if (!processing && shuttingDown) {
-        closeTracer()
-      }
-    },
-  })
+      // Wait for tracer to close.
+      await tracer
 
-  // Add shutdown signal handler.
-  process.on('SIGINT', () => {
-    // If already shutting down, exit immediately.
-    if (shuttingDown) {
-      process.exit(1)
-    }
-
-    shuttingDown = true
-    console.log('Shutting down after handlers finish...')
-
-    // If not currently tracing, stop tracer so this function finishes the
-    // queue, flushes, and exits.
-    if (!reading) {
-      closeTracer()
+      // Tell worker to shutdown.
+      worker.postMessage({
+        type: 'shutdown',
+      } as ToWorkerMessage)
+    } else if (data.type === 'processed') {
+      queued -= data.count
     }
   })
-
-  // Wait for tracer to finish.
-  await tracer
-
-  // Wait for queue to finish.
-  await queueHandler
-
-  // Tell each handler to flush once all events are processed.
-  await flushAll()
-
-  // Exit.
-  console.log(`\n[${new Date().toISOString()}] Trace file closed.`)
-  process.exit(0)
 }
 
 main().catch((err) => {

@@ -34,8 +34,27 @@ export type TracedEvent = {
   }
 }
 
-export type UpdateMessage = {
-  type: 'wasm'
-  eventIds: number[]
-  transformationIds: number[]
+export type WorkerInitData = {
+  config: Config
+  batch: number
+  update: boolean
+  webhooks: boolean
 }
+
+export type ToWorkerMessage =
+  | {
+      type: 'trace'
+      event: TracedEvent
+    }
+  | {
+      type: 'shutdown'
+    }
+
+export type FromWorkerMessage =
+  | {
+      type: 'ready'
+    }
+  | {
+      type: 'processed'
+      count: number
+    }

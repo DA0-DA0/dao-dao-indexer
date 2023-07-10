@@ -269,17 +269,6 @@ export const wasm: HandlerMaker = async ({
           parsedEvents
         )
 
-      // Send to update FIFO.
-      // const updateMessage: UpdateMessage = {
-      //   type: 'wasm',
-      //   eventIds: events.map((event) => event.id),
-      //   transformationIds: transformations.map(
-      //     (transformation) => transformation.id
-      //   ),
-      // }
-
-      // fifoWs.write(JSON.stringify(updateMessage) + '\n')
-
       let computationsUpdated = 0
       let computationsDestroyed = 0
       if (!dontUpdateComputations) {
