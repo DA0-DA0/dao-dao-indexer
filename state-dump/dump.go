@@ -26,9 +26,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	wasmKey := types.NewKVStoreKey("wasm")
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	store := ms.GetKVStore(types.NewKVStoreKey("wasm"))
-
+	ms.MountStoreWithDB(wasmKey, types.StoreTypeIAVL, db)
+	store := ms.GetKVStore(wasmKey)
 	iter := store.Iterator(nil, nil)
 
 	for ; iter.Valid(); iter.Next() {

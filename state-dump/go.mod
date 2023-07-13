@@ -1,15 +1,15 @@
 module state_dump
 
-go 1.19
+go 1.20
 
 require (
+	cosmossdk.io/log v1.1.0
 	cosmossdk.io/store v1.0.0-alpha.1
 	github.com/cosmos/cosmos-db v1.0.0
 )
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/log v1.1.0 // indirect
 	cosmossdk.io/math v1.0.1 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
