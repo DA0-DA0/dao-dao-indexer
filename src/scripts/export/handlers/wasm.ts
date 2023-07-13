@@ -204,92 +204,88 @@ export const wasm: HandlerMaker = async ({
       ...new Set(parsedEvents.map((event) => event.contractAddress)),
     ]
 
-    const exportContractsAndEvents = async () =>
-      sequelize.transaction(async (transaction) => {
-        // Ensure contract exists before creating events. `address` is unique.
-        const contracts = await Contract.bulkCreate(
-          uniqueContracts.map((address) => {
-            const event = parsedEvents.find(
-              (event) => event.contractAddress === address
-            )
-            // Should never happen since `uniqueContracts` is derived from
-            // `parsedEvents`.
-            if (!event) {
-              throw new Error('Event not found when creating contract.')
-            }
+    const exportContractsAndEvents = async () => {
+      // Ensure contract exists before creating events. `address` is unique.
+      const contracts = await Contract.bulkCreate(
+        uniqueContracts.map((address) => {
+          const event = parsedEvents.find(
+            (event) => event.contractAddress === address
+          )
+          // Should never happen since `uniqueContracts` is derived from
+          // `parsedEvents`.
+          if (!event) {
+            throw new Error('Event not found when creating contract.')
+          }
 
-            return {
-              address,
-              // Set the code ID to -1 since we don't know it yet.
-              codeId: -1,
-              // Set the contract instantiation block to the first event found
-              // in the list of parsed events. Events are sorted in ascending
-              // order by creation block. These won't get updated if the
-              // contract already exists, so it's safe to always attempt
-              // creation with the first event's block. Only `codeId` gets
-              // updated below when a duplicate is found.
-              instantiatedAtBlockHeight: event.blockHeight,
-              instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
-              instantiatedAtBlockTimestamp: event.blockTimestamp,
-            }
-          }),
-          // Do nothing if contract already exists.
+          return {
+            address,
+            // Set the code ID to -1 since we don't know it yet.
+            codeId: -1,
+            // Set the contract instantiation block to the first event found
+            // in the list of parsed events. Events are sorted in ascending
+            // order by creation block. These won't get updated if the
+            // contract already exists, so it's safe to always attempt
+            // creation with the first event's block. Only `codeId` gets
+            // updated below when a duplicate is found.
+            instantiatedAtBlockHeight: event.blockHeight,
+            instantiatedAtBlockTimeUnixMs: event.blockTimeUnixMs,
+            instantiatedAtBlockTimestamp: event.blockTimestamp,
+          }
+        }),
+        // Do nothing if contract already exists.
+        {
+          ignoreDuplicates: true,
+        }
+      )
+
+      // Try to retrieve code IDs for contracts with -1 code IDs.
+      const contractsToGetCodeId = contracts.filter(
+        (contract) => contract.codeId === -1
+      )
+      // Update code IDs for contracts with -1 code IDs.
+      if (contractsToGetCodeId.length > 0) {
+        const codeIds = await Promise.all(
+          contractsToGetCodeId.map((contract) => getCodeId(contract.address))
+        )
+
+        const updatedContracts = await Contract.bulkCreate(
+          contractsToGetCodeId
+            .map((contract, index) => ({
+              ...contract.toJSON(),
+              codeId: codeIds[index],
+            }))
+            .filter(({ codeId }) => codeId !== -1),
           {
-            ignoreDuplicates: true,
-            transaction,
+            updateOnDuplicate: ['codeId'],
           }
         )
 
-        // Try to retrieve code IDs for contracts with -1 code IDs.
-        const contractsToGetCodeId = contracts.filter(
-          (contract) => contract.codeId === -1
-        )
-        // Update code IDs for contracts with -1 code IDs.
-        if (contractsToGetCodeId.length > 0) {
-          const codeIds = await Promise.all(
-            contractsToGetCodeId.map((contract) => getCodeId(contract.address))
+        // Replace updated contracts in list of contracts.
+        updatedContracts.forEach((updatedContract) => {
+          contracts.splice(
+            contracts.findIndex((c) => c.address === updatedContract.address),
+            1,
+            updatedContract
           )
+        })
+      }
 
-          const updatedContracts = await Contract.bulkCreate(
-            contractsToGetCodeId
-              .map((contract, index) => ({
-                ...contract.toJSON(),
-                codeId: codeIds[index],
-              }))
-              .filter(({ codeId }) => codeId !== -1),
-            {
-              updateOnDuplicate: ['codeId'],
-              transaction,
-            }
-          )
+      // Unique index on [blockHeight, contractAddress, key] ensures that we
+      // don't insert duplicate events. If we encounter a duplicate, we update
+      // the `value`, `valueJson`, and `delete` fields in case event
+      // processing for a block was batched separately.
+      const events =
+        parsedEvents.length > 0
+          ? await WasmStateEvent.bulkCreate(parsedEvents, {
+              updateOnDuplicate: ['value', 'valueJson', 'delete'],
+            })
+          : []
 
-          // Replace updated contracts in list of contracts.
-          updatedContracts.forEach((updatedContract) => {
-            contracts.splice(
-              contracts.findIndex((c) => c.address === updatedContract.address),
-              1,
-              updatedContract
-            )
-          })
-        }
-
-        // Unique index on [blockHeight, contractAddress, key] ensures that we
-        // don't insert duplicate events. If we encounter a duplicate, we update
-        // the `value`, `valueJson`, and `delete` fields in case event
-        // processing for a block was batched separately.
-        const events =
-          parsedEvents.length > 0
-            ? await WasmStateEvent.bulkCreate(parsedEvents, {
-                updateOnDuplicate: ['value', 'valueJson', 'delete'],
-                transaction,
-              })
-            : []
-
-        return {
-          contracts,
-          events,
-        }
-      })
+      return {
+        contracts,
+        events,
+      }
+    }
 
     // Retry 3 times with exponential backoff starting at 100ms delay.
     const { contracts, events } = (await retry(exportContractsAndEvents, [], {
@@ -303,15 +299,21 @@ export const wasm: HandlerMaker = async ({
 
     // Add contract to events.
     for (const event of events) {
-      event.contract = contracts.find(
+      const contract = contracts.find(
         (contract) => contract.address === event.contractAddress
-      )!
+      )
+      if (contract) {
+        event.contract = contract
+      }
     }
     // Set codeId since we have it now.
     for (const event of parsedEvents) {
-      event.codeId = contracts.find(
+      const contract = contracts.find(
         (contract) => contract.address === event.contractAddress
-      )!.codeId
+      )
+      if (contract) {
+        event.codeId = contract.codeId
+      }
     }
 
     // Transform events as needed.
