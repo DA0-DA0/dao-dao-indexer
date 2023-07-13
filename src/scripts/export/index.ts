@@ -16,7 +16,7 @@ import {
 } from './types'
 import { setUpFifoJsonTracer } from './utils'
 
-const MAX_QUEUE_SIZE = 5000
+const MAX_QUEUE_SIZE = 1000
 
 // Parse arguments.
 const program = new Command()
