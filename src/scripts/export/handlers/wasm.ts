@@ -13,7 +13,6 @@ import {
   State,
   WasmStateEvent,
   WasmStateEventTransformation,
-  loadDb,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
 import { updateIndexesForContracts } from '@/ms'
@@ -62,8 +61,6 @@ export const wasm: HandlerMaker = async ({
 
   let lastBlockHeightSeen = 0
   let debouncedFlush: NodeJS.Timeout | undefined
-
-  const sequelize = await loadDb()
 
   const handle: Handler['handle'] = async (trace) => {
     // ContractStorePrefix = 0x03
