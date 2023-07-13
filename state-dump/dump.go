@@ -26,6 +26,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	latestHeight := rootmulti.GetLatestVersion(db)
+	fmt.Printf("Latest height: %d\n", latestHeight)
+
 	wasmKey := types.NewKVStoreKey("wasm")
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	ms.MountStoreWithDB(wasmKey, types.StoreTypeIAVL, db)
