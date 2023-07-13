@@ -32,7 +32,7 @@ func main() {
 	wasmKey := types.NewKVStoreKey("wasm")
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	ms.MountStoreWithDB(wasmKey, types.StoreTypeIAVL, db)
-	store := ms.GetKVStore(wasmKey)
+	store := ms.GetCommitKVStore(wasmKey)
 	iter := store.Iterator(nil, nil)
 
 	for ; iter.Valid(); iter.Next() {
