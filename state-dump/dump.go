@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/types"
@@ -25,12 +26,13 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	defer db.Close()
 
 	latestHeight := rootmulti.GetLatestVersion(db)
 	fmt.Printf("Latest height: %d\n", latestHeight)
 
 	wasmKey := types.NewKVStoreKey("wasm")
-	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	ms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	ms.MountStoreWithDB(wasmKey, types.StoreTypeIAVL, db)
 
 	err = ms.LoadLatestVersion()
