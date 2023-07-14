@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,18 +14,46 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 )
 
+type (
+	Metadata struct {
+		BlockHeight int64  `json:"blockHeight"`
+		TxHash      string `json:"txHash"`
+	}
+
+	// traceOperation implements a traced KVStore operation
+	TraceOperation struct {
+		Operation string   `json:"operation"`
+		Key       string   `json:"key"`
+		Value     string   `json:"value"`
+		Metadata  Metadata `json:"metadata"`
+	}
+)
+
+var (
+	ContractKeyPrefix   = []byte{0x02}
+	ContractStorePrefix = []byte{0x03}
+)
+
 func main() {
 	args := os.Args
 	if len(args) != 3 {
-		fmt.Println("Usage: dump <backend_type> <home_dir>")
+		fmt.Println("Usage: dump <home_dir> <output>")
 		os.Exit(1)
 	}
 
-	dataDir := filepath.Join(args[2], "data")
-	db, err := dbm.NewDB("application", dbm.BackendType(args[1]), dataDir)
+	home_dir := args[1]
+	output := args[2]
+
+	out, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
+	}
+	defer out.Close()
+
+	dataDir := filepath.Join(home_dir, "data")
+	db, err := dbm.NewDB("application", dbm.GoLevelDBBackend, dataDir)
+	if err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -36,19 +66,46 @@ func main() {
 
 	err = ms.LoadLatestVersion()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
 
 	store := ms.GetCommitKVStore(wasmKey)
 	if store == nil {
-		fmt.Println("Store is nil")
-		os.Exit(1)
+		panic("Store is nil")
 	}
 
 	iter := store.Iterator(nil, nil)
 
+	// Dump all keys as write operations.
 	for ; iter.Valid(); iter.Next() {
-		fmt.Printf("%s: %s\n", iter.Key(), iter.Value())
+		key := iter.Key()
+		// Only write contract keys.
+		if key[0] != ContractKeyPrefix[0] && key[0] != ContractStorePrefix[0] {
+			continue
+		}
+
+		value := iter.Value()
+		trace := TraceOperation{
+			Operation: "write",
+			Key:       base64.StdEncoding.EncodeToString(key),
+			Value:     base64.StdEncoding.EncodeToString(value),
+			Metadata: Metadata{
+				BlockHeight: latestHeight,
+				TxHash:      "",
+			},
+		}
+
+		raw, err := json.Marshal(trace)
+		if err != nil {
+			panic(err)
+		}
+
+		if _, err := out.Write(raw); err != nil {
+			panic(err)
+		}
+
+		if _, err := out.WriteString("\n"); err != nil {
+			panic(err)
+		}
 	}
 }
