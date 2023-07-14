@@ -227,5 +227,10 @@ export const setUpWebSocketNewBlockListener = ({
     }
   })
 
+  // Log error and ignore.
+  webSocket.on('error', (error) => {
+    console.error('WebSocket error', error)
+  })
+
   return webSocket
 }
