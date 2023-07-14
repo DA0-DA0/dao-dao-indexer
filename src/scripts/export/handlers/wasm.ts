@@ -98,9 +98,12 @@ export const wasm: HandlerMaker = async ({
 
     // Get code ID and block timestamp from chain.
     const blockHeight = BigInt(trace.metadata.blockHeight).toString()
-    const blockTimeUnixMsNum = await getBlockTimeUnixMs(trace)
-    const blockTimeUnixMs = BigInt(blockTimeUnixMsNum).toString()
-    const blockTimestamp = new Date(blockTimeUnixMsNum)
+    let blockTimeUnixMsNum = await getBlockTimeUnixMs(
+      trace.metadata.blockHeight,
+      trace
+    )
+    let blockTimeUnixMs = BigInt(blockTimeUnixMsNum).toString()
+    let blockTimestamp = new Date(blockTimeUnixMsNum)
 
     // If contract key, save contract info.
     if (trace.operation === 'write' && keyData[0] === 0x02) {
@@ -119,6 +122,18 @@ export const wasm: HandlerMaker = async ({
         return false
       }
 
+      const blockHeightFromContractInfo =
+        contractInfo.created?.blockHeight.toInt() ?? Number(blockHeight)
+      if (blockHeightFromContractInfo !== Number(blockHeight)) {
+        // If different, refetch block time.
+        blockTimeUnixMsNum = await getBlockTimeUnixMs(
+          blockHeightFromContractInfo,
+          trace
+        )
+        blockTimeUnixMs = BigInt(blockTimeUnixMsNum).toString()
+        blockTimestamp = new Date(blockTimeUnixMsNum)
+      }
+
       const codeId = contractInfo.codeId.toInt()
       const [contract, created] = await Contract.findOrCreate({
         where: {
@@ -127,7 +142,7 @@ export const wasm: HandlerMaker = async ({
         defaults: {
           address: contractAddress,
           codeId,
-          instantiatedAtBlockHeight: blockHeight,
+          instantiatedAtBlockHeight: blockHeightFromContractInfo,
           instantiatedAtBlockTimeUnixMs: blockTimeUnixMs,
           instantiatedAtBlockTimestamp: blockTimestamp,
         },
@@ -482,9 +497,10 @@ export const wasm: HandlerMaker = async ({
   }
 
   // Get block time for height, cached in memory.
-  const getBlockTimeUnixMs = async (trace: TracedEvent): Promise<number> => {
-    const blockHeight = trace.metadata.blockHeight
-
+  const getBlockTimeUnixMs = async (
+    blockHeight: number,
+    trace: TracedEvent
+  ): Promise<number> => {
     if (blockHeightToTimeCache.has(blockHeight)) {
       return blockHeightToTimeCache.get(blockHeight) ?? 0
     }
