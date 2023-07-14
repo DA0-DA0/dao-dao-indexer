@@ -74,9 +74,6 @@ const main = async () => {
   await trace()
 }
 
-let shuttingDown = false
-let reading = false
-
 const trace = async () => {
   const workerData: WorkerInitData = {
     config,
@@ -145,16 +142,6 @@ const trace = async () => {
             })
           }
         },
-        onProcessingStateChange: async (processing) => {
-          // Used to determine if we can kill the process immediately when
-          // SIGINT is received.
-          reading = processing
-
-          // Stop reading from FIFO if we're done processing and shutting down.
-          if (!processing && shuttingDown) {
-            closeTracer()
-          }
-        },
       })
 
       // Add worker exit handler.
@@ -169,18 +156,10 @@ const trace = async () => {
 
       // Add shutdown signal handler.
       process.on('SIGINT', () => {
-        // If already shutting down, exit immediately.
-        if (shuttingDown) {
-          process.exit(1)
-        }
-
-        shuttingDown = true
+        // Tell tracer to close. The rest of the data in the buffer will finish
+        // processing.
+        closeTracer()
         console.log('Shutting down after handlers finish...')
-
-        // If not currently tracing, stop tracer and tell worker to shutdown.
-        if (!reading) {
-          closeTracer()
-        }
       })
 
       // Wait for tracer to close.

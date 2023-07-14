@@ -10,8 +10,6 @@ type FifoJsonTracerOptions = {
   // If provided, this callback will be called when a JSON object cannot be
   // parsed from the line.
   onError?: (line: string, error: unknown) => void | Promise<void>
-  // If provided, this function will be called when processing a chunk of data.
-  onProcessingStateChange?: (processing: boolean) => void | Promise<void>
 }
 
 type FifoJsonTracer = {
@@ -66,7 +64,6 @@ export const setUpFifoJsonTracer = ({
   file,
   onData,
   onError,
-  onProcessingStateChange,
 }: FifoJsonTracerOptions): FifoJsonTracer => {
   const fifoRs = fs.createReadStream(file, {
     // Parse chunks as UTF-8 strings.
@@ -78,94 +75,94 @@ export const setUpFifoJsonTracer = ({
   // object.
   let buffer = ''
 
-  fifoRs.on('data', (chunk) => {
-    // Pause before processing this chunk.
-    fifoRs.pause()
-
-    // Resume at the end of the chunk processing.
+  const dataListener = (chunk: string | Buffer) => {
+    // Don't read from the FIFO while executing the callback.
+    fifoRs.off('data', dataListener)
     ;(async () => {
-      try {
-        // Call the processing state change callback if provided.
-        await onProcessingStateChange?.(true)
+      // Type-check chunk. It should be a string due to `encoding` set above.
+      if (!chunk || typeof chunk !== 'string') {
+        return
+      }
 
-        // Type-check chunk. It should be a string due to `encoding` set above.
-        if (!chunk || typeof chunk !== 'string') {
-          return
+      // All complete lines that should be JSON objects end with a newline, so
+      // the last item in this array will be an empty string if the last line
+      // is complete. The last line may not be complete if the data being sent
+      // exceeds the chunk buffer size. If this is the case, use the buffer
+      // across chunks to build the incomplete line.
+      const lines = chunk.split('\n')
+
+      if (lines.length === 0) {
+        return
+      }
+
+      // If the previous chunk left an incomplete line in the buffer, prepend
+      // it to the first line of this chunk.
+      if (buffer) {
+        lines[0] = buffer + lines[0]
+      }
+
+      // If the last line is not empty, it is incomplete, so buffer it for the
+      // next chunk.
+      if (lines[lines.length - 1]) {
+        buffer = lines.pop()!
+      }
+
+      for (const line of lines) {
+        // Ignore empty line.
+        if (!line) {
+          continue
         }
 
-        // All complete lines that should be JSON objects end with a newline, so
-        // the last item in this array will be an empty string if the last line
-        // is complete. The last line may not be complete if the data being sent
-        // exceeds the chunk buffer size. If this is the case, use the buffer
-        // across chunks to build the incomplete line.
-        const lines = chunk.split('\n')
-
-        if (lines.length === 0) {
-          return
+        let data: unknown | undefined
+        try {
+          data = JSON.parse(line)
+        } catch (error) {
+          // If we cannot parse the buffer as a JSON object, call the error
+          // callback if provided.
+          await onError?.(line, error)
+          continue
         }
 
-        // If the previous chunk left an incomplete line in the buffer, prepend
-        // it to the first line of this chunk.
-        if (buffer) {
-          lines[0] = buffer + lines[0]
+        // Execute callback with parsed JSON.
+        try {
+          await onData(data)
+        } catch (error) {
+          // If the callback throws an error, close the FIFO and throw the
+          // error.
+          fifoRs.destroy(
+            error
+              ? error instanceof Error
+                ? error
+                : new Error(`${error}`)
+              : new Error('onData callback threw error')
+          )
         }
-
-        // If the last line is not empty, it is incomplete, so buffer it for the
-        // next chunk.
-        if (lines[lines.length - 1]) {
-          buffer = lines.pop()!
-        }
-
-        for (const line of lines) {
-          // Ignore empty line.
-          if (!line) {
-            continue
-          }
-
-          let data: unknown | undefined
-          try {
-            data = JSON.parse(line)
-          } catch (error) {
-            // If we cannot parse the buffer as a JSON object, call the error
-            // callback if provided.
-            await onError?.(line, error)
-            continue
-          }
-
-          // Execute callback with parsed JSON.
-          try {
-            await onData(data)
-          } catch (error) {
-            // If the callback throws an error, close the FIFO and throw the
-            // error.
-            fifoRs.destroy(
-              error
-                ? error instanceof Error
-                  ? error
-                  : new Error(`${error}`)
-                : new Error('onData callback threw error')
-            )
-          }
-        }
-      } finally {
-        // Resume reading from FIFO.
-        fifoRs.resume()
-        // Call the processing state change callback if provided.
-        await onProcessingStateChange?.(false)
       }
     })()
-  })
 
-  // Wait for FIFO to error or close.
+    // Resume reading from the FIFO.
+    fifoRs.on('data', dataListener)
+  }
+
+  // Start reading from the FIFO.
+  fifoRs.on('data', dataListener)
+
+  // Wait for FIFO to error or end.
   const promise = new Promise<void>((resolve, reject) => {
     fifoRs.on('error', (error) => {
-      fifoRs.off('close', resolve)
+      fifoRs.off('end', resolve)
+      // Reject once the FIFO ends.
+      fifoRs.on('end', () => {
+        reject(error)
+      })
+      // Close the FIFO if it is not already closed, so it ends.
       if (!fifoRs.closed) {
         fifoRs.close()
       }
-      reject(error)
     })
-    fifoRs.on('close', resolve)
+
+    // Once data ends, resolve.
+    fifoRs.on('end', resolve)
   })
 
   return {
