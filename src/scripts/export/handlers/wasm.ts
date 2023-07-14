@@ -164,7 +164,7 @@ export const wasm: HandlerMaker = async ({
     // TODO: Get code ID from contract KV store directly???
     const event: ParsedWasmStateEvent = {
       type: 'state',
-      codeId: -1,
+      codeId: 0,
       contractAddress,
       blockHeight,
       blockTimeUnixMs,
@@ -216,8 +216,8 @@ export const wasm: HandlerMaker = async ({
 
           return {
             address,
-            // Set the code ID to -1 since we don't know it yet.
-            codeId: -1,
+            // Set the code ID to 0 since we don't know it yet.
+            codeId: 0,
             // Set the contract instantiation block to the first event found
             // in the list of parsed events. Events are sorted in ascending
             // order by creation block. These won't get updated if the
@@ -235,11 +235,11 @@ export const wasm: HandlerMaker = async ({
         }
       )
 
-      // Try to retrieve code IDs for contracts with -1 code IDs.
+      // Try to retrieve code IDs for contracts with 0 or -1 code IDs.
       const contractsToGetCodeId = contracts.filter(
-        (contract) => contract.codeId === -1
+        (contract) => contract.codeId <= 0
       )
-      // Update code IDs for contracts with -1 code IDs.
+      // Update code IDs for contracts with missing code IDs.
       if (contractsToGetCodeId.length > 0) {
         const codeIds = await Promise.all(
           contractsToGetCodeId.map((contract) => getCodeId(contract.address))
@@ -251,7 +251,7 @@ export const wasm: HandlerMaker = async ({
               ...contract.toJSON(),
               codeId: codeIds[index],
             }))
-            .filter(({ codeId }) => codeId !== -1),
+            .filter(({ codeId }) => codeId > 0),
           {
             updateOnDuplicate: ['codeId'],
           }
@@ -321,7 +321,7 @@ export const wasm: HandlerMaker = async ({
 
     // Remove events that don't have a contract or code ID.
     events = events.filter((event) => event.contract !== undefined)
-    parsedEvents = parsedEvents.filter((event) => event.codeId !== -1)
+    parsedEvents = parsedEvents.filter((event) => event.codeId > 0)
 
     // Transform events as needed.
     // Retry 3 times with exponential backoff starting at 100ms delay.
@@ -408,16 +408,16 @@ export const wasm: HandlerMaker = async ({
   })
   const getCodeId = async (contractAddress: string): Promise<number> => {
     if (codeIdCache.has(contractAddress)) {
-      return codeIdCache.get(contractAddress) ?? -1
+      return codeIdCache.get(contractAddress) ?? 0
     }
 
     const loadIntoCache = async () => {
-      let codeId = -1
+      let codeId = 0
       try {
         const contract = await cosmWasmClient.getContract(contractAddress)
         codeId = contract.codeId
       } catch (err) {
-        // If contract not found, ignore, leaving as -1. Otherwise, throw err.
+        // If contract not found, ignore, leaving as 0. Otherwise, throw err.
         if (
           !(err instanceof Error) ||
           !err.message.includes('not found: invalid request')
@@ -452,11 +452,11 @@ export const wasm: HandlerMaker = async ({
         },
       })
 
-      // Set to -1 on failure so we can continue.
-      codeIdCache.set(contractAddress, -1)
+      // Set to 0 on failure so we can continue.
+      codeIdCache.set(contractAddress, 0)
     }
 
-    return codeIdCache.get(contractAddress) ?? -1
+    return codeIdCache.get(contractAddress) ?? 0
   }
 
   // Get block time for height, cached in memory.
