@@ -33,7 +33,7 @@ func main() {
 
 	wasmKey := types.NewKVStoreKey("wasm")
 	ms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	ms.MountStoreWithDB(wasmKey, types.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(wasmKey, types.StoreTypeIAVL, nil)
 
 	err = ms.LoadLatestVersion()
 	if err != nil {
