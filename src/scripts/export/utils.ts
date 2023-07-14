@@ -100,6 +100,7 @@ export const setUpFifoJsonTracer = ({
     // it to the first line of this chunk.
     if (buffer) {
       lines[0] = buffer + lines[0]
+      buffer = ''
     }
 
     // If the last line is not empty, it is incomplete, so buffer it for the
