@@ -203,7 +203,7 @@ export const wasm: HandlerMaker = async ({
 
     const exportContractsAndEvents = async () => {
       // Ensure contract exists before creating events. `address` is unique.
-      const contracts = await Contract.bulkCreate(
+      await Contract.bulkCreate(
         uniqueContracts.map((address) => {
           const event = parsedEvents.find(
             (event) => event.contractAddress === address
@@ -235,6 +235,12 @@ export const wasm: HandlerMaker = async ({
         }
       )
 
+      let contracts = await Contract.findAll({
+        where: {
+          address: uniqueContracts,
+        },
+      })
+
       // Try to retrieve code IDs for contracts with 0 or -1 code IDs.
       const contractsToGetCodeId = contracts.filter(
         (contract) => contract.codeId <= 0
@@ -245,7 +251,7 @@ export const wasm: HandlerMaker = async ({
           contractsToGetCodeId.map((contract) => getCodeId(contract.address))
         )
 
-        const updatedContracts = await Contract.bulkCreate(
+        await Contract.bulkCreate(
           contractsToGetCodeId
             .map((contract, index) => ({
               ...contract.toJSON(),
@@ -257,13 +263,11 @@ export const wasm: HandlerMaker = async ({
           }
         )
 
-        // Replace updated contracts in list of contracts.
-        updatedContracts.forEach((updatedContract) => {
-          contracts.splice(
-            contracts.findIndex((c) => c.address === updatedContract.address),
-            1,
-            updatedContract
-          )
+        // Get updated contracts.
+        contracts = await Contract.findAll({
+          where: {
+            address: uniqueContracts,
+          },
         })
       }
 
