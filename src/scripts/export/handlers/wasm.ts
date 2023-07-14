@@ -298,30 +298,39 @@ export const wasm: HandlerMaker = async ({
       events: WasmStateEvent[]
     }
 
-    // Add contract and code ID to events.
+    // Add contract to events.
     await Promise.all(
       events.map(async (event) => {
         let contract = contracts.find(
           (contract) => contract.address === event.contractAddress
         )
         // Fetch contract if it wasn't found.
+        let missingContract = false
         if (!contract) {
           contract = (await event.$get('contract')) ?? undefined
+          missingContract = true
         }
 
         if (contract) {
-          event.contract = contract
-          // Set codeId since we have it now.
-          const parsedEvent = parsedEvents.find(
-            (parsedEvent) =>
-              parsedEvent.contractAddress === event.contract.address
-          )
-          if (parsedEvent) {
-            parsedEvent.codeId = contract.codeId
+          if (missingContract) {
+            // Save for other events.
+            contracts.push(contract)
           }
+
+          event.contract = contract
         }
       })
     )
+
+    // Add code ID to parsed events.
+    parsedEvents.forEach((parsedEvent) => {
+      const contract = contracts.find(
+        (contract) => contract.address === parsedEvent.contractAddress
+      )
+      if (contract) {
+        parsedEvent.codeId = contract.codeId
+      }
+    })
 
     // Remove events that don't have a contract or code ID.
     events = events.filter((event) => event.contract !== undefined)
