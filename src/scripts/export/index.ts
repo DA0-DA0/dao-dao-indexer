@@ -85,6 +85,7 @@ const trace = async () => {
   })
 
   let queued = 0
+  let paused = false
   // Listen for worker processing queue.
   worker.on('message', async (data: FromWorkerMessage) => {
     if (data.type === 'ready') {
@@ -95,9 +96,14 @@ const trace = async () => {
         process.send('ready')
       }
 
-      const { promise: tracer, close: closeTracer } = setUpFifoJsonTracer({
+      const {
+        promise: tracer,
+        close: closeTracer,
+        pause,
+        resume,
+      } = setUpFifoJsonTracer({
         file: traceFile,
-        onData: async (data) => {
+        onData: (data) => {
           const tracedEvent = data as TracedEvent
           // Ensure this is a traced write event.
           if (
@@ -128,18 +134,23 @@ const trace = async () => {
           } as ToWorkerMessage)
           queued += 1
 
-          // If queue fills up, wait for it to drain halfway.
-          if (queued >= MAX_QUEUE_SIZE) {
+          // If queue fills up, wait for it to drain halfway. If already paused,
+          // don't pause again.
+          if (queued >= MAX_QUEUE_SIZE && !paused) {
             console.log('Queue full, waiting for it to drain...')
-            await new Promise<void>((resolve) => {
-              const interval = setInterval(() => {
-                if (queued < MAX_QUEUE_SIZE / 2) {
-                  console.log('Queue drained.')
-                  clearInterval(interval)
-                  resolve()
-                }
-              }, 50)
-            })
+
+            paused = true
+            pause()
+
+            // Start interval to check if queue has drained and resume after.
+            const interval = setInterval(() => {
+              if (queued < MAX_QUEUE_SIZE / 2) {
+                console.log('Queue drained.')
+                clearInterval(interval)
+                paused = false
+                resume()
+              }
+            }, 50)
           }
         },
       })
