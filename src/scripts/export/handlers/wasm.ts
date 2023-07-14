@@ -285,7 +285,7 @@ export const wasm: HandlerMaker = async ({
     }
 
     // Retry 3 times with exponential backoff starting at 100ms delay.
-    const { contracts, events } = (await retry(exportContractsAndEvents, [], {
+    let { contracts, events } = (await retry(exportContractsAndEvents, [], {
       retriesMax: 3,
       exponential: true,
       interval: 100,
@@ -294,24 +294,34 @@ export const wasm: HandlerMaker = async ({
       events: WasmStateEvent[]
     }
 
-    // Add contract to events.
-    for (const event of events) {
-      const contract = contracts.find(
-        (contract) => contract.address === event.contractAddress
-      )
-      if (contract) {
-        event.contract = contract
-      }
-    }
-    // Set codeId since we have it now.
-    for (const event of parsedEvents) {
-      const contract = contracts.find(
-        (contract) => contract.address === event.contractAddress
-      )
-      if (contract) {
-        event.codeId = contract.codeId
-      }
-    }
+    // Add contract and code ID to events.
+    await Promise.all(
+      events.map(async (event) => {
+        let contract = contracts.find(
+          (contract) => contract.address === event.contractAddress
+        )
+        // Fetch contract if it wasn't found.
+        if (!contract) {
+          contract = (await event.$get('contract')) ?? undefined
+        }
+
+        if (contract) {
+          event.contract = contract
+          // Set codeId since we have it now.
+          const parsedEvent = parsedEvents.find(
+            (parsedEvent) =>
+              parsedEvent.contractAddress === event.contract.address
+          )
+          if (parsedEvent) {
+            parsedEvent.codeId = contract.codeId
+          }
+        }
+      })
+    )
+
+    // Remove events that don't have a contract or code ID.
+    events = events.filter((event) => event.contract !== undefined)
+    parsedEvents = parsedEvents.filter((event) => event.codeId !== -1)
 
     // Transform events as needed.
     // Retry 3 times with exponential backoff starting at 100ms delay.
