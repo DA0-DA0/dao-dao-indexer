@@ -19,6 +19,7 @@ import { updateIndexesForContracts } from '@/ms'
 
 import { Handler, HandlerMaker, TracedEvent } from '../types'
 
+const MAX_BATCH_SIZE = 1000
 const CONTRACT_BYTE_LENGTH = 32
 
 export const wasm: HandlerMaker = async ({
@@ -184,7 +185,15 @@ export const wasm: HandlerMaker = async ({
     if (debouncedFlush !== undefined) {
       clearTimeout(debouncedFlush)
     }
-    debouncedFlush = setTimeout(flush, 200)
+
+    // If batch size reached, flush immediately.
+    if (pending.length >= MAX_BATCH_SIZE) {
+      debouncedFlush = undefined
+      await flush()
+      return true
+    } else {
+      debouncedFlush = setTimeout(flush, 200)
+    }
 
     return true
   }
