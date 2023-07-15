@@ -4,11 +4,23 @@ export const remoteAddress: ContractFormula<
   string | undefined,
   { address: string }
 > = {
-  compute: async ({ contractAddress, get, args: { address } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    get,
+    args: { address },
+  }) => {
     if (!address) {
       throw new Error('Missing address')
     }
 
-    return await get<string>(contractAddress, 'polytone-l2r', address)
+    return (
+      (
+        await getTransformationMatch<string>(
+          contractAddress,
+          `remoteAddress:${contractAddress}`
+        )
+      )?.value ?? (await get<string>(contractAddress, 'polytone-l2r', address))
+    )
   },
 }

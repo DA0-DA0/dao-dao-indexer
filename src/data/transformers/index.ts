@@ -8,6 +8,7 @@ import {
 import common from './common'
 import dao from './dao'
 import external from './external'
+import polytone from './polytone'
 import proposal from './proposal'
 import staking from './staking'
 import voting from './voting'
@@ -26,6 +27,7 @@ export const getProcessedTransformers = (
       ...common,
       ...dao,
       ...external,
+      ...polytone,
       ...proposal,
       ...staking,
       ...voting,

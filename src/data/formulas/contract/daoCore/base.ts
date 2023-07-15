@@ -64,6 +64,8 @@ export type DumpState = {
     registeredSubDao?: boolean
   } | null
   proposalCount?: number
+  // Map polytone note address to remote address.
+  polytoneProxies?: Record<string, string>
 }
 
 export type Cw20Balance = {
@@ -195,6 +197,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       totalProposalModuleCount,
       createdAt,
       proposalCountResponse,
+      polytoneProxiesResponse,
     ] = await Promise.all([
       admin.compute(env),
       config.compute(env),
@@ -241,6 +244,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       // Extra.
       instantiatedAt.compute(env),
       proposalCount.compute(env),
+      polytoneProxies.compute(env),
     ])
 
     // If no config, this must not be a DAO core contract.
@@ -312,6 +316,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
         registeredSubDao: adminRegisteredSubDao,
       },
       proposalCount: proposalCountResponse,
+      polytoneProxies: polytoneProxiesResponse,
     }
   },
 }
@@ -550,6 +555,26 @@ export const potentialSubDaos: ContractFormula<
       contractAddress,
       info: infos[index],
     }))
+  },
+}
+
+// Map polytone note contract to the proxy contract for this DAO.
+export const polytoneProxies: ContractFormula<Record<string, string>> = {
+  compute: async (env) => {
+    const { contractAddress, getTransformationMatches } = env
+    const notesWithRemoteAddress =
+      (await getTransformationMatches(
+        undefined,
+        `remoteAddress:${contractAddress}`
+      )) ?? []
+
+    return notesWithRemoteAddress.reduce(
+      (acc, { contractAddress, value }) => ({
+        ...acc,
+        [contractAddress]: value as string,
+      }),
+      {} as Record<string, string>
+    )
   },
 }
 
