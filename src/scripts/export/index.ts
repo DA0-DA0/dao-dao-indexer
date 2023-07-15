@@ -99,20 +99,11 @@ const trace = async () => {
 
       // Process queue.
       const processQueue = () => {
-        while (queue.length > 0) {
-          if (paused) {
-            // Resume once queue drains.
-            const interval = setInterval(() => {
-              if (queued < MAX_QUEUE_SIZE / 5) {
-                console.log('Queue drained.')
-                clearInterval(interval)
-                paused = false
-                processQueue()
-              }
-            }, 50)
-            break
-          }
+        if (paused) {
+          return
+        }
 
+        while (queue.length > 0) {
           const event = queue.shift()
           if (!event) {
             continue
@@ -123,6 +114,25 @@ const trace = async () => {
             type: 'trace',
             event,
           } as ToWorkerMessage)
+          queued += 1
+
+          // If queue fills up, pause sending to worker. Process queue will be
+          // called again when the queue drains.
+          if (queued >= MAX_QUEUE_SIZE) {
+            paused = true
+            console.log('Queue full, waiting for it to drain...')
+
+            // Resume once queue drains.
+            const interval = setInterval(() => {
+              if (queued < MAX_QUEUE_SIZE / 5) {
+                paused = false
+                console.log('Queue drained.')
+                clearInterval(interval)
+                processQueue()
+              }
+            }, 50)
+            break
+          }
         }
       }
 
@@ -154,18 +164,7 @@ const trace = async () => {
           }
 
           queue.push(tracedEvent)
-          queued++
-
-          if (!paused) {
-            // If queue fills up, pause sending to worker. Process queue will be
-            // called again when the queue drains.
-            if (queued >= MAX_QUEUE_SIZE) {
-              console.log('Queue full, waiting for it to drain...')
-              paused = true
-            } else {
-              processQueue()
-            }
-          }
+          processQueue()
         },
       })
 
