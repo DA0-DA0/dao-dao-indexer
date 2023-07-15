@@ -80,6 +80,11 @@ func main() {
 	count := 0
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
+		// Only write contract keys.
+		if key[0] != ContractKeyPrefix[0] && key[0] != ContractStorePrefix[0] {
+			continue
+		}
+
 		count++
 
 		value := iter.Value()
