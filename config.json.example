@@ -55,7 +55,8 @@
     "dao-voting-cw721-staked": [174],
     "dao-voting-native-staked": [175],
     "cw4-group": [178],
-    "polytone-note": []
+    "polytone-note": [],
+    "polytone-voice": []
   },
   "daoDaoBase": "https://testnet.daodao.zone",
   "discordNotifierApiKey": "key",
