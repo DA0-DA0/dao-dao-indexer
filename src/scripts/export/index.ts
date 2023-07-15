@@ -134,24 +134,24 @@ const trace = async () => {
           } as ToWorkerMessage)
           queued += 1
 
-          // // If queue fills up, wait for it to drain halfway. If already paused,
-          // // don't pause again.
-          // if (queued >= MAX_QUEUE_SIZE && !paused) {
-          //   console.log('Queue full, waiting for it to drain...')
+          // If queue fills up, wait for it to drain halfway. If already paused,
+          // don't pause again.
+          if (queued >= MAX_QUEUE_SIZE && !paused) {
+            console.log('Queue full, waiting for it to drain...')
 
-          //   paused = true
-          //   pause()
+            paused = true
+            pause()
 
-          //   // Start interval to check if queue has drained and resume after.
-          //   const interval = setInterval(() => {
-          //     if (queued < MAX_QUEUE_SIZE / 5) {
-          //       console.log('Queue drained.')
-          //       clearInterval(interval)
-          //       paused = false
-          //       resume()
-          //     }
-          //   }, 50)
-          // }
+            // Start interval to check if queue has drained and resume after.
+            const interval = setInterval(() => {
+              if (queued < MAX_QUEUE_SIZE / 5) {
+                console.log('Queue drained.')
+                clearInterval(interval)
+                paused = false
+                resume()
+              }
+            }, 50)
+          }
         },
       })
 
