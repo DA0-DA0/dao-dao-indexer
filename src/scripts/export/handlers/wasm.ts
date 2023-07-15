@@ -19,7 +19,7 @@ import { updateIndexesForContracts } from '@/ms'
 
 import { Handler, HandlerMaker, TracedEvent } from '../types'
 
-const MAX_BATCH_SIZE = 2000
+const MAX_BATCH_SIZE = 5000
 const CONTRACT_BYTE_LENGTH = 32
 
 export const wasm: HandlerMaker = async ({
