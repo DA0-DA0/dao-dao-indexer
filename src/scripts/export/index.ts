@@ -16,7 +16,7 @@ import {
 } from './types'
 import { setUpFifoJsonTracer } from './utils'
 
-const MAX_QUEUE_SIZE = 2000
+const MAX_QUEUE_SIZE = 5000
 
 // Parse arguments.
 const program = new Command()
@@ -120,13 +120,11 @@ const trace = async () => {
           // called again when the queue drains.
           if (queued >= MAX_QUEUE_SIZE) {
             paused = true
-            console.log('Queue full, waiting for it to drain...')
 
             // Resume once queue drains.
             const interval = setInterval(() => {
               if (queued < MAX_QUEUE_SIZE / 5) {
                 paused = false
-                console.log('Queue drained.')
                 clearInterval(interval)
                 processQueue()
               }
