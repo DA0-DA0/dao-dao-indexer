@@ -18,10 +18,6 @@ type FifoJsonTracer = {
   promise: Promise<void>
   // Close the FIFO and resolve the promise.
   close: () => void
-  // Pause reading from the FIFO.
-  pause: () => void
-  // Resume reading from the FIFO.
-  resume: () => void
 }
 
 // Trace a FIFO (see `mkfifo`) that transmits JSON objects on each line, and
@@ -130,11 +126,8 @@ export const setUpFifoJsonTracer = ({
     }
   }
 
-  const pause = () => fifoRs.off('data', dataListener)
-  const resume = () => fifoRs.on('data', dataListener)
-
   // Start reading from the FIFO.
-  resume()
+  fifoRs.on('data', dataListener)
 
   // Wait for FIFO to error or end.
   const promise = new Promise<void>((resolve, reject) => {
@@ -157,8 +150,6 @@ export const setUpFifoJsonTracer = ({
   return {
     promise,
     close: () => fifoRs.close(),
-    pause,
-    resume,
   }
 }
 

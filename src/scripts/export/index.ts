@@ -86,6 +86,7 @@ const trace = async () => {
 
   let queued = 0
   let paused = false
+  const queue: TracedEvent[] = []
   // Listen for worker processing queue.
   worker.on('message', async (data: FromWorkerMessage) => {
     if (data.type === 'ready') {
@@ -96,12 +97,36 @@ const trace = async () => {
         process.send('ready')
       }
 
-      const {
-        promise: tracer,
-        close: closeTracer,
-        pause,
-        resume,
-      } = setUpFifoJsonTracer({
+      // Process queue.
+      const processQueue = () => {
+        while (queue.length > 0) {
+          if (paused) {
+            // Resume once queue drains.
+            const interval = setInterval(() => {
+              if (queued < MAX_QUEUE_SIZE / 5) {
+                console.log('Queue drained.')
+                clearInterval(interval)
+                paused = false
+                processQueue()
+              }
+            }, 50)
+            break
+          }
+
+          const event = queue.shift()
+          if (!event) {
+            continue
+          }
+
+          // Process event.
+          worker.postMessage({
+            type: 'trace',
+            event,
+          } as ToWorkerMessage)
+        }
+      }
+
+      const { promise: tracer, close: closeTracer } = setUpFifoJsonTracer({
         file: traceFile,
         onData: (data) => {
           const tracedEvent = data as TracedEvent
@@ -128,29 +153,18 @@ const trace = async () => {
             return
           }
 
-          worker.postMessage({
-            type: 'trace',
-            event: tracedEvent,
-          } as ToWorkerMessage)
-          queued += 1
+          queue.push(tracedEvent)
+          queued++
 
-          // If queue fills up, wait for it to drain halfway. If already paused,
-          // don't pause again.
-          if (queued >= MAX_QUEUE_SIZE && !paused) {
-            console.log('Queue full, waiting for it to drain...')
-
-            paused = true
-            pause()
-
-            // Start interval to check if queue has drained and resume after.
-            const interval = setInterval(() => {
-              if (queued < MAX_QUEUE_SIZE / 5) {
-                console.log('Queue drained.')
-                clearInterval(interval)
-                paused = false
-                resume()
-              }
-            }, 50)
+          if (!paused) {
+            // If queue fills up, pause sending to worker. Process queue will be
+            // called again when the queue drains.
+            if (queued >= MAX_QUEUE_SIZE) {
+              console.log('Queue full, waiting for it to drain...')
+              paused = true
+            } else {
+              processQueue()
+            }
           }
         },
       })
