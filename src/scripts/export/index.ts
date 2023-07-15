@@ -144,7 +144,7 @@ const trace = async () => {
 
             // Start interval to check if queue has drained and resume after.
             const interval = setInterval(() => {
-              if (queued < MAX_QUEUE_SIZE / 2) {
+              if (queued < MAX_QUEUE_SIZE / 5) {
                 console.log('Queue drained.')
                 clearInterval(interval)
                 paused = false
