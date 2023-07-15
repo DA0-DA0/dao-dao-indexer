@@ -29,7 +29,7 @@ module.exports = {
     {
       name: 'server_juno-testnet',
       script: 'dist/server/serve.js',
-      args: ['-p', '3430', '-c', 'config.testnet.json'],
+      args: ['-p', '3430', '-c', 'config.juno-testnet.json'],
       instances: 2,
       wait_ready: true,
       listen_timeout: 10000,
@@ -37,7 +37,7 @@ module.exports = {
     {
       name: 'server_juno-mainnet',
       script: 'dist/server/serve.js',
-      args: ['-p', '3431', '-c', 'config.mainnet.json'],
+      args: ['-p', '3431', '-c', 'config.juno-mainnet.json'],
       instances: 2,
       wait_ready: true,
       listen_timeout: 10000,
