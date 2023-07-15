@@ -20,7 +20,7 @@ export const remoteAddress: ContractFormula<
           contractAddress,
           `remoteAddress:${contractAddress}`
         )
-      )?.value ?? (await get<string>(contractAddress, 'polytone-l2r', address))
+      )?.value ?? (await get<string>(contractAddress, 'polytone-account-map', address))
     )
   },
 }

@@ -5,7 +5,7 @@ const CODE_IDS_KEYS = ['polytone-note']
 const remoteAddress = makeTransformerForMap(
   CODE_IDS_KEYS,
   'remoteAddress',
-  'polytone-l2r'
+  'polytone-account-map'
 )
 
 export default [remoteAddress]
