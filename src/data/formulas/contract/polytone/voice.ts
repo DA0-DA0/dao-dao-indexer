@@ -16,7 +16,7 @@ export const remoteController: ContractFormula<
     return (
       await getTransformationMatch<string>(
         contractAddress,
-        `remoteController:${contractAddress}`
+        `remoteController:${address}`
       )
     )?.value
   },
