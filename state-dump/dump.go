@@ -85,8 +85,6 @@ func main() {
 			continue
 		}
 
-		count++
-
 		value := iter.Value()
 		trace := TraceOperation{
 			Operation: "write",
@@ -109,6 +107,11 @@ func main() {
 
 		if _, err := out.WriteString("\n"); err != nil {
 			panic(err)
+		}
+
+		count++
+		if count%5000 == 0 {
+			fmt.Println("Exported", count, "keys")
 		}
 	}
 
