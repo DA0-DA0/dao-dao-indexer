@@ -4,13 +4,13 @@ module.exports = {
       name: 'exporter',
       script: 'dist/scripts/export/index.js',
       wait_ready: true,
-      listen_timeout: 10000,
-      kill_timeout: 10000,
+      listen_timeout: 30000,
+      kill_timeout: 30000,
     },
     {
       name: 'webhooks',
       script: 'dist/scripts/webhooks.js',
-      kill_timeout: 10000,
+      kill_timeout: 30000,
     },
     {
       name: 'account-webhooks',
