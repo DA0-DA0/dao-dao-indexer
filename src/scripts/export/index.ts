@@ -190,7 +190,7 @@ const trace = async () => {
       // Wait for queue to finish processing.
       await new Promise<void>((resolve) => {
         console.log(
-          `Waiting for ${queue.length} events to finish processing...`
+          `Waiting for ${queue.length.toLocaleString()} events to finish processing...`
         )
 
         const interval = setInterval(() => {
