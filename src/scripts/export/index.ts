@@ -189,7 +189,9 @@ const trace = async () => {
 
       // Wait for queue to finish processing.
       await new Promise<void>((resolve) => {
-        console.log(`Waiting for ${queued} events to finish processing...`)
+        console.log(
+          `Waiting for ${queue.length} events to finish processing...`
+        )
 
         const interval = setInterval(() => {
           if (queued === 0) {
