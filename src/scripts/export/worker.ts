@@ -147,7 +147,7 @@ const main = async () => {
     processed = 0
   }, 100).unref()
 
-  parentPort.on('message', async (message: ToWorkerMessage) => {
+  parentPort.on('message', (message: ToWorkerMessage) => {
     if (message.type === 'trace') {
       const tracedEvent = message.event
 
@@ -194,14 +194,16 @@ const main = async () => {
         processed++
       })
     } else if (message.type === 'shutdown') {
-      // Wait for queue to finish.
-      await queueHandler
+      ;(async () => {
+        // Wait for queue to finish.
+        await queueHandler
 
-      // Flush all handlers.
-      await flushAll()
+        // Flush all handlers.
+        await flushAll()
 
-      // Exit worker process.
-      process.exit(0)
+        // Exit worker process.
+        process.exit(0)
+      })()
     }
   })
 
