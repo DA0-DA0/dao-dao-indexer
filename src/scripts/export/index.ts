@@ -194,7 +194,7 @@ const trace = async () => {
         )
 
         const interval = setInterval(() => {
-          if (queued === 0) {
+          if (queued === 0 && queue.length === 0) {
             clearInterval(interval)
             resolve()
           }
