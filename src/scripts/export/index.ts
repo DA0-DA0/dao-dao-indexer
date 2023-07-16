@@ -187,6 +187,21 @@ const trace = async () => {
       // Wait for tracer to close.
       await tracer
 
+      // Wait for queue to finish processing.
+      await new Promise<void>((resolve) => {
+        console.log(`Waiting for ${queued} events to finish processing...`)
+
+        const interval = setInterval(() => {
+          if (queued === 0) {
+            clearInterval(interval)
+            resolve()
+          }
+        }, 50)
+      })
+
+      // Give a little time for the worker to queue.
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+
       // Tell worker to shutdown.
       worker.postMessage({
         type: 'shutdown',
