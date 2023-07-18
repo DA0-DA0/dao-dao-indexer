@@ -80,8 +80,19 @@ const trace = async () => {
     update: !!update,
     webhooks: !!webhooks,
   }
+
   const worker = new Worker(path.join(__dirname, 'worker.js'), {
     workerData,
+  })
+
+  // Add worker exit handler.
+  worker.on('exit', (code) => {
+    if (code !== 0) {
+      console.error(`Worker stopped with exit code ${code}`)
+    }
+
+    // Exit with worker's exit code.
+    process.exit(code)
   })
 
   let queued = 0
@@ -164,16 +175,6 @@ const trace = async () => {
           queue.push(tracedEvent)
           processQueue()
         },
-      })
-
-      // Add worker exit handler.
-      worker.on('exit', (code) => {
-        if (code !== 0) {
-          console.error(`Worker stopped with exit code ${code}`)
-        }
-
-        // Exit with worker's exit code.
-        process.exit(code)
       })
 
       // Add shutdown signal handler.
