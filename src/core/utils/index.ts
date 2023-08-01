@@ -7,6 +7,9 @@ import { DependentKeyNamespace } from '@/db'
 
 import { Block, FormulaType, SerializedBlock } from '../types'
 
+export * from './chain'
+export * from './objectMatchesStructure'
+
 // Convert base64 string to comma-separated list of bytes. See explanation in
 // `Event` model for the key attribute for more information.
 export const base64KeyToEventKey = (key: string): string =>
@@ -119,8 +122,6 @@ export const validateBlockString = (block: string, subject: string): Block => {
 export const FormulaTypeValues = Object.values(FormulaType)
 export const typeIsFormulaType = (type: string): type is FormulaType =>
   FormulaTypeValues.includes(type as FormulaType)
-
-export * from './objectMatchesStructure'
 
 // BigInt min and max functions.
 export const bigIntMax = (...args: bigint[]) =>
