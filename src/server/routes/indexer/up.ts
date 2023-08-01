@@ -1,35 +1,45 @@
 import Router from '@koa/router'
-import axios from 'axios'
 import { DefaultContext, DefaultState } from 'koa'
 
-import { loadConfig } from '@/core/config'
+import { getStargateClient } from '@/core/utils/chain'
+import { State } from '@/db'
 
-export const up: Router.Middleware<DefaultState, DefaultContext> = async (
-  ctx
-) => {
-  const { rpc } = loadConfig()
-  if (!rpc) {
-    ctx.status = 400
-    ctx.body = 'rpc not configured'
+type UpResponse =
+  | {
+      chainHeight: number
+      indexerHeight: number
+      caughtUp: boolean
+    }
+  | {
+      error: string
+    }
+
+export const up: Router.Middleware<
+  DefaultState,
+  DefaultContext,
+  UpResponse
+> = async (ctx) => {
+  const state = await State.getSingleton()
+  if (!state) {
+    ctx.status = 500
+    ctx.body = {
+      error: 'State not found.',
+    }
     return
   }
 
-  try {
-    const response = await axios.get(rpc + '/status', {
-      // https://stackoverflow.com/a/74735197
-      headers: { 'Accept-Encoding': 'gzip,deflate,compress' },
-    })
+  const stargateClient = await getStargateClient()
 
-    if (response.status === 200) {
-      ctx.status = 200
-      ctx.body = 'up'
-      return
-    }
-  } catch (err) {
-    console.error(err)
+  const chainHeight = await stargateClient.getHeight()
+  const indexerHeight = Number(state.latestBlockHeight)
+
+  // If indexer is within 5 blocks of chain, consider it caught up.
+  const caughtUp = indexerHeight > chainHeight - 5
+
+  ctx.status = caughtUp ? 200 : 412
+  ctx.body = {
+    chainHeight,
+    indexerHeight,
+    caughtUp,
   }
-
-  // If request fails or the status is not 200, return 503.
-  ctx.status = 503
-  ctx.body = 'down'
 }
