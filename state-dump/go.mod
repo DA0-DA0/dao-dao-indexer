@@ -21,6 +21,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230525220056-bb4fc9527b3b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cometbft/cometbft v0.38.0-rc2 // indirect
+	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/gogoproto v1.4.10 // indirect
 	github.com/cosmos/iavl v1.0.0-beta.2 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect

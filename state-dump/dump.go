@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"github.com/btcsuite/btcutil/bech32"
+	"github.com/cosmos/btcutil/bech32"
 )
 
 type (
@@ -47,13 +47,13 @@ func main() {
 	home_dir := args[1]
 	output := args[2]
 
-	var addressBech32 []byte
+	var addressBech32Data []byte
 	if len(args) > 3 {
-		_, bech32Data, err := bech32.Decode(args[3])
+		_, bech32Data, err := bech32.DecodeToBase256(args[3])
 		if err != nil {
 			panic(err)
 		}
-		addressBech32 = bech32Data
+		addressBech32Data = bech32Data
 	}
 
 	out, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
@@ -98,9 +98,8 @@ func main() {
 		}
 
 		// Make sure key is for the given address.
-		if len(addressBech32) > 0 {
-			keyWithoutTypeByte := key[1:]
-			if !bytes.HasPrefix(keyWithoutTypeByte, addressBech32) {
+		if len(addressBech32Data) > 0 {
+			if !bytes.HasPrefix(key[1:], addressBech32Data) {
 				continue
 			}
 		}
