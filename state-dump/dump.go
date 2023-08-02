@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -36,13 +37,18 @@ var (
 
 func main() {
 	args := os.Args
-	if len(args) != 3 {
-		fmt.Println("Usage: dump <home_dir> <output>")
+	if len(args) < 3 {
+		fmt.Println("Usage: dump <home_dir> <output> [address]")
 		os.Exit(1)
 	}
 
 	home_dir := args[1]
 	output := args[2]
+
+	var address string
+	if len(args) > 3 {
+		address = args[3]
+	}
 
 	out, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -83,6 +89,15 @@ func main() {
 		// Only write contract keys.
 		if key[0] != ContractKeyPrefix[0] && key[0] != ContractStorePrefix[0] {
 			continue
+		}
+
+		// Make sure key is for the given address.
+		if len(address) > 0 {
+			addressBytes := []byte(address)
+			keyWithoutTypeByte := key[1:]
+			if !bytes.HasPrefix(keyWithoutTypeByte, addressBytes) {
+				continue
+			}
 		}
 
 		value := iter.Value()
