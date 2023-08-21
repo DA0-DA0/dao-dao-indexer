@@ -15,7 +15,7 @@ export const setup = async (sequelize: Sequelize, force = true) => {
   const migrations = fs.readdirSync(path.join(__dirname, 'migrations'))
   for (const migration of migrations) {
     await sequelize.query(
-      `INSERT INTO "SequelizeMeta" ("name") VALUES ('${migration}');`
+      `INSERT INTO "SequelizeMeta" ("name") VALUES ('${migration}') ON CONFLICT ("name") DO NOTHING;`
     )
   }
 }
