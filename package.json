@@ -33,7 +33,7 @@
     "serve:dev:accounts": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/serve.js -a\"",
     "serve:dev:testnet": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/serve.js -c config.testnet.json\"",
     "serve:dev:mainnet": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/serve.js -c config.mainnet.json\"",
-    "serve:prod": "npm install && npm run build && pm2 reload ecosystem.config.js --only server_accounts,account-webhooks,server_juno-testnet,server_juno-mainnet,server_osmosis-mainnet,server_osmosis-testnet && pm2 save",
+    "serve:prod": "npm install && npm run build && pm2 reload ecosystem.config.js --only server_accounts,account-webhooks,server_juno-testnet,server_juno-mainnet,server_osmosis-mainnet,server_osmosis-testnet,server_stargaze-testnet && pm2 save",
     "serve:prod:accounts": "npm run build && pm2 reload ecosystem.config.js --only server_accounts",
     "deploy:server": "./scripts/deploy_server.sh",
     "deploy:server:accounts": "./scripts/deploy_server_accounts.sh",
