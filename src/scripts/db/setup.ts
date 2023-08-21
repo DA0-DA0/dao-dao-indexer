@@ -36,7 +36,8 @@ export const main = async () => {
   const setup = async () => {
     try {
       await setupDb(dataSequelize, destroy)
-      await setupDb(accountsSequelize, destroy)
+      // Do not destroy accounts tables.
+      await setupDb(accountsSequelize, false)
 
       console.log(
         `\n${destroy ? 'Dropped and recreated' : 'Synced'} all tables.`
