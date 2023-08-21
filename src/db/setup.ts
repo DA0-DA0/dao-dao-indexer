@@ -1,3 +1,6 @@
+import * as fs from 'fs'
+import path from 'path'
+
 import { Sequelize } from 'sequelize'
 
 export const setup = async (sequelize: Sequelize, force = true) => {
@@ -7,4 +10,12 @@ export const setup = async (sequelize: Sequelize, force = true) => {
 
   // Drop all tables and recreate them.
   await sequelize.sync({ force })
+
+  // Add migrations to database.
+  const migrations = fs.readdirSync(path.join(__dirname, 'migrations'))
+  for (const migration of migrations) {
+    await sequelize.query(
+      `INSERT INTO "SequelizeMeta" ("name") VALUES ('${migration}');`
+    )
+  }
 }
