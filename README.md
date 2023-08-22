@@ -29,6 +29,20 @@ x/wasm.
    npm run db:setup
    ```
 
+5. Run the exporter or server.
+
+   ```bash
+   npm run export:prod
+   # OR
+   npm run serve:prod
+   ```
+
+6. Tell pm2 to run on startup.
+
+   ```bash
+   pm2 startup
+   ```
+
 ## Usage
 
 Test the indexer:
