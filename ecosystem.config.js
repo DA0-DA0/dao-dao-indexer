@@ -66,5 +66,13 @@ module.exports = {
       wait_ready: true,
       listen_timeout: 10000,
     },
+    {
+      name: 'server_stargaze-mainnet',
+      script: 'dist/server/serve.js',
+      args: ['-p', '3435', '-c', 'config.stargaze-mainnet.json'],
+      instances: 2,
+      wait_ready: true,
+      listen_timeout: 10000,
+    },
   ],
 }
