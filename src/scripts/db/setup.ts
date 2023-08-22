@@ -1,3 +1,5 @@
+import * as fs from 'fs'
+import path from 'path'
 import * as readline from 'readline'
 
 import { Command } from 'commander'
@@ -38,6 +40,14 @@ export const main = async () => {
       await setupDb(dataSequelize, destroy)
       // Do not destroy accounts tables.
       await setupDb(accountsSequelize, false)
+
+      // Add migrations to data database.
+      const migrations = fs.readdirSync(path.join(__dirname, 'migrations'))
+      for (const migration of migrations) {
+        await dataSequelize.query(
+          `INSERT INTO "SequelizeMeta" ("name") VALUES ('${migration}') ON CONFLICT ("name") DO NOTHING;`
+        )
+      }
 
       console.log(
         `\n${destroy ? 'Dropped and recreated' : 'Synced'} all tables.`

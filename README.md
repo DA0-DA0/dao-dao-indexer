@@ -22,6 +22,10 @@ x/wasm.
 4. Setup the database.
 
    ```bash
+   # try migrating to generate the migrations table
+   # this should FAIL, but that is ok
+   npm run db:migrate:data
+
    npm run db:setup
    ```
 
