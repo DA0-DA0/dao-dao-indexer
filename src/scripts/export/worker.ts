@@ -104,11 +104,12 @@ const main = async () => {
     // server to start up.
 
     // Wait for WebSocket to be ready.
-    setInterval(() => {
+    const interval = setInterval(() => {
       if (webSocketConnected) {
+        clearInterval(interval)
         resolve()
       }
-    })
+    }, 1000)
   })
 
   // Connect to local RPC WebSocket once ready. Don't await since we need to
@@ -127,8 +128,6 @@ const main = async () => {
             const { chain_id, height, time } = (block as any).header
             const latestBlockHeight = Number(height)
             const latestBlockTimeUnixMs = Date.parse(time)
-
-            console.log('New block', latestBlockHeight)
 
             // Cache block time for block height in cache used by state.
             blockHeightToTimeCache.set(latestBlockHeight, latestBlockTimeUnixMs)
@@ -190,7 +189,7 @@ const main = async () => {
       const tracedEvent = message.event
 
       // Handle event after previous event is handled.
-      queueHandler = (queueHandler || Promise.resolve()).then(async () => {
+      queueHandler = queueHandler.then(async () => {
         // Try to handle with each module, and stop once handled.
         for (const { name, handler } of handlers) {
           try {
