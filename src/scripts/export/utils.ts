@@ -156,11 +156,15 @@ export const setUpFifoJsonTracer = ({
 type WebSocketNewBlockListenerOptions = {
   rpc: string
   onNewBlock: (block: unknown) => void | Promise<void>
+  onConnect?: () => void
+  onError?: (error: Error) => void
 }
 
 export const setUpWebSocketNewBlockListener = ({
   rpc,
   onNewBlock,
+  onConnect,
+  onError,
 }: WebSocketNewBlockListenerOptions): WebSocket => {
   // Get new-block WebSocket.
   const webSocket = new WebSocket(rpc.replace('http', 'ws') + '/websocket')
@@ -175,6 +179,7 @@ export const setUpWebSocketNewBlockListener = ({
         params: ["tm.event = 'NewBlock'"],
       })
     )
+    onConnect?.()
   })
 
   // Listen for new blocks.
@@ -209,6 +214,7 @@ export const setUpWebSocketNewBlockListener = ({
   // Log error and ignore.
   webSocket.on('error', (error) => {
     console.error('WebSocket error', error)
+    onError?.(error)
   })
 
   return webSocket

@@ -92,7 +92,24 @@ const main = async () => {
     }
   }
 
-  let queueHandler: Promise<void> | undefined
+  let webSocketConnected = false
+  let queueHandler: Promise<void> = new Promise<void>((resolve) => {
+    // Wait for WebSocket to be ready.
+    //
+    // We need to read from the trace as the server is starting but not start
+    // processing the queue until the WebSocket block listener has connected.
+    // This is because the trace blocks the server from starting, but we can
+    // only listen for new blocks once the WebSocket is connected at some point
+    // after the server has started. We have to read from the trace to allow the
+    // server to start up.
+
+    // Wait for WebSocket to be ready.
+    setInterval(() => {
+      if (webSocketConnected) {
+        resolve()
+      }
+    })
+  })
 
   // Connect to local RPC WebSocket once ready. Don't await since we need to
   // start reading from the trace FIFO before the RPC starts.
@@ -102,34 +119,51 @@ const main = async () => {
     output: 'silent',
   }).then(({ open }) => {
     if (open) {
-      // Get new-block WebSocket.
-      setUpWebSocketNewBlockListener({
-        rpc: 'http://localhost:26657',
-        onNewBlock: async (block) => {
-          const { chain_id, height, time } = (block as any).header
-          const latestBlockHeight = Number(height)
-          const latestBlockTimeUnixMs = Date.parse(time)
+      const setUpWebSocket = () => {
+        // Get new-block WebSocket.
+        const webSocket = setUpWebSocketNewBlockListener({
+          rpc: 'http://localhost:26657',
+          onNewBlock: async (block) => {
+            const { chain_id, height, time } = (block as any).header
+            const latestBlockHeight = Number(height)
+            const latestBlockTimeUnixMs = Date.parse(time)
 
-          console.log('New block', latestBlockHeight)
+            console.log('New block', latestBlockHeight)
 
-          // Cache block time for block height in cache used by state.
-          blockHeightToTimeCache.set(latestBlockHeight, latestBlockTimeUnixMs)
+            // Cache block time for block height in cache used by state.
+            blockHeightToTimeCache.set(latestBlockHeight, latestBlockTimeUnixMs)
 
-          // Update state singleton with latest information.
-          await State.update(
-            {
-              chainId: chain_id,
-              latestBlockHeight,
-              latestBlockTimeUnixMs,
-            },
-            {
-              where: {
-                singleton: true,
+            // Update state singleton with latest information.
+            await State.update(
+              {
+                chainId: chain_id,
+                latestBlockHeight,
+                latestBlockTimeUnixMs,
               },
+              {
+                where: {
+                  singleton: true,
+                },
+              }
+            )
+          },
+          onConnect: () => {
+            webSocketConnected = true
+            console.log('WebSocket connected.')
+          },
+          onError: (error) => {
+            // If fails to connect, retry after three seconds.
+            if (error.message.includes('ECONNREFUSED')) {
+              console.error('Failed to connect to WebSocket.')
+              webSocket.terminate()
+
+              setTimeout(setUpWebSocket, 3000)
             }
-          )
-        },
-      })
+          },
+        })
+      }
+
+      setUpWebSocket()
     } else {
       console.error(
         'Failed to connect to local RPC WebSocket. Queries may be slower as block times will be fetched from a remote RPC.'
