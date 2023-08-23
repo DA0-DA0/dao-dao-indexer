@@ -110,6 +110,8 @@ const main = async () => {
           const latestBlockHeight = Number(height)
           const latestBlockTimeUnixMs = Date.parse(time)
 
+          console.log('New block', latestBlockHeight)
+
           // Cache block time for block height in cache used by state.
           blockHeightToTimeCache.set(latestBlockHeight, latestBlockTimeUnixMs)
 
