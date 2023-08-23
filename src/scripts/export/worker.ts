@@ -122,7 +122,7 @@ const main = async () => {
       const setUpWebSocket = () => {
         // Get new-block WebSocket.
         const webSocket = setUpWebSocketNewBlockListener({
-          rpc: 'http://localhost:26657',
+          rpc: 'http://127.0.0.1:26657',
           onNewBlock: async (block) => {
             const { chain_id, height, time } = (block as any).header
             const latestBlockHeight = Number(height)
@@ -154,10 +154,12 @@ const main = async () => {
           onError: (error) => {
             // If fails to connect, retry after three seconds.
             if (error.message.includes('ECONNREFUSED')) {
-              console.error('Failed to connect to WebSocket.')
+              console.error('Failed to connect to WebSocket.', error)
               webSocket.terminate()
 
               setTimeout(setUpWebSocket, 3000)
+            } else {
+              console.error('WebSocket error', error)
             }
           },
         })
