@@ -25,7 +25,8 @@
         "filterableAttributes": [
           "value.config.name",
           "value.config.description",
-          "value.proposalCount"
+          "value.proposalCount",
+          "value.polytoneProxies"
         ],
         "sortableAttributes": ["value.proposalCount"],
         "formula": "daoCore/dumpState",
