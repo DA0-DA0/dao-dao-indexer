@@ -34,8 +34,13 @@ program.option(
   '--no-webhooks',
   "don't send webhooks"
 )
+program.option(
+  // Adds inverted `ws` boolean to the options object.
+  '--no-ws',
+  "don't connect to websocket"
+)
 program.parse()
-const { config: _config, update, webhooks } = program.opts()
+const { config: _config, update, webhooks, ws } = program.opts()
 
 // Load config with config option.
 const config = loadConfig(_config)
@@ -79,6 +84,7 @@ const trace = async () => {
     config,
     update: !!update,
     webhooks: !!webhooks,
+    websocket: !!ws,
   }
 
   const worker = new Worker(path.join(__dirname, 'worker.js'), {

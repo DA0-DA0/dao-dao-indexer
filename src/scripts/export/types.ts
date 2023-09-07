@@ -37,6 +37,7 @@ export type WorkerInitData = {
   config: Config
   update: boolean
   webhooks: boolean
+  websocket: boolean
 }
 
 export type ToWorkerMessage =
