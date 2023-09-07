@@ -340,10 +340,15 @@ export const paused: ContractFormula<PausedResponse> = {
 }
 
 export const admin: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch, get }) =>
-    (await getTransformationMatch<string>(contractAddress, 'admin'))?.value ??
-    // Fallback to events.
-    (await get<string>(contractAddress, 'admin')),
+  compute: async ({ contractAddress, getTransformationMatch, get }) => {
+    return (
+      (await getTransformationMatch<string>(contractAddress, 'admin'))?.value ??
+      // Fallback to events.
+      (await get<string>(contractAddress, 'admin')) ??
+      // Fallback to Neutron modified config main_dao field.
+      (await get<any>(contractAddress, 'config_v2'))?.main_dao
+    )
+  },
 }
 
 export const adminNomination: ContractFormula<string | undefined> = {
