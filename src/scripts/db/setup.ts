@@ -42,7 +42,9 @@ export const main = async () => {
       await setupDb(accountsSequelize, false)
 
       // Add migrations to data database.
-      const migrations = fs.readdirSync(path.join(__dirname, 'migrations'))
+      const migrations = fs.readdirSync(
+        path.join(__dirname, '../../db/migrations')
+      )
       for (const migration of migrations) {
         await dataSequelize.query(
           `INSERT INTO "SequelizeMeta" ("name") VALUES ('${migration}') ON CONFLICT ("name") DO NOTHING;`
