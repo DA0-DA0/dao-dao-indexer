@@ -74,5 +74,13 @@ module.exports = {
       wait_ready: true,
       listen_timeout: 10000,
     },
+    {
+      name: 'server_neutron-mainnet',
+      script: 'dist/server/serve.js',
+      args: ['-p', '3436', '-c', 'config.neutron-mainnet.json'],
+      instances: 2,
+      wait_ready: true,
+      listen_timeout: 10000,
+    },
   ],
 }
