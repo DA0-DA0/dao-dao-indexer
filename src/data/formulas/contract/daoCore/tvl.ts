@@ -33,15 +33,18 @@ export const tvl: ContractFormula<
       )
     ).reduce((acc, price) => acc + price, 0)
 
-    const staked = await stargateClient.getBalanceStaked(env.contractAddress)
-    totalTvl += staked
-      ? await getTokenUsdPrice(
-          env,
-          'native',
-          staked.denom,
-          Number(staked.amount)
-        )
-      : 0
+    // Neutron does not support staking.
+    try {
+      const staked = await stargateClient.getBalanceStaked(env.contractAddress)
+      totalTvl += staked
+        ? await getTokenUsdPrice(
+            env,
+            'native',
+            staked.denom,
+            Number(staked.amount)
+          )
+        : 0
+    } catch {}
 
     // const cw20s = await cw20Balances.compute({
     //   ...env,
