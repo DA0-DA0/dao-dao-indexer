@@ -56,14 +56,21 @@ export const bank: HandlerMaker = async ({
     // BalancesPrefix || len(addressBytes) || addressBytes || denomBytes
 
     const keyData = fromBase64(trace.key)
-    if (keyData[0] !== 0x02) {
+    if (keyData[0] !== 0x02 || keyData.length < 3) {
       return
     }
 
     const length = keyData[1]
 
-    const address = toBech32(config.bech32Prefix, keyData.slice(2, 2 + length))
-    const denom = fromUtf8(keyData.slice(2 + length))
+    let address
+    let denom
+    try {
+      address = toBech32(config.bech32Prefix, keyData.slice(2, 2 + length))
+      denom = fromUtf8(keyData.slice(2 + length))
+    } catch {
+      // Ignore decoding errors.
+      return
+    }
 
     // If we reached the first event of the next block, flush the previous
     // events to the DB. This ensures we batch all events from the same block
