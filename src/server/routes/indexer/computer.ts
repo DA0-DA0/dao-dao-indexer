@@ -369,9 +369,14 @@ export const computer: Router.Middleware = async (ctx) => {
             order: [['blockTimeUnixMs', 'DESC']],
           })
         )?.block ??
-        // Use first block if no event exists before start time.
+        // Use first block with a time set if no event exists before start time.
         (
           await WasmStateEvent.findOne({
+            where: {
+              blockTimeUnixMs: {
+                [Op.gt]: 0,
+              },
+            },
             order: [['blockTimeUnixMs', 'ASC']],
           })
         )?.block
