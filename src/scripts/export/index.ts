@@ -170,20 +170,6 @@ const trace = async () => {
             return
           }
 
-          if (!tracedEvent.metadata.store_name) {
-            console.error('Found trace event missing store name.')
-            Sentry.captureMessage('Found trace event missing store name', {
-              tags: {
-                type: 'trace-missing-store-name',
-                script: 'export',
-              },
-              extra: {
-                trace: tracedEvent,
-              },
-            })
-            return
-          }
-
           // Only handle writes and deletes.
           if (
             tracedEvent.operation !== 'write' &&

@@ -259,8 +259,12 @@ const main = async () => {
           name,
           handler: { storeName, handle },
         } of handlers) {
-          // Filter by handler store.
-          if (storeName !== tracedEvent.metadata.store_name) {
+          // Filter by handler store if present. Otherwise just try to handle.
+          // Osmosis, for example, does not emit store_name in metadata.
+          if (
+            tracedEvent.metadata.store_name &&
+            storeName !== tracedEvent.metadata.store_name
+          ) {
             continue
           }
 
