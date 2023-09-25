@@ -11,7 +11,12 @@ import { DbType } from '@/core'
 import { State, loadDb } from '@/db'
 
 import { handlerMakers } from './handlers'
-import { FromWorkerMessage, ToWorkerMessage, WorkerInitData } from './types'
+import {
+  FromWorkerMessage,
+  ToWorkerMessage,
+  TracedEvent,
+  WorkerInitData,
+} from './types'
 import { setUpWebSocketNewBlockListener } from './utils'
 
 const main = async () => {
@@ -45,19 +50,71 @@ const main = async () => {
   // @ts-ignore
   const cosmWasmClient = new CosmWasmClient(tmClient)
 
-  // Setup handlers.
+  // Helper function that gets block time for height, cached in memory, which is
+  // filled in by the NewBlock WebSocket listener.
   const blockHeightToTimeCache = new LRUCache<number, number>({
     max: 100,
   })
+  const getBlockTimeUnixMs = async (
+    blockHeight: number,
+    trace: TracedEvent
+  ): Promise<number> => {
+    if (blockHeightToTimeCache.has(blockHeight)) {
+      return blockHeightToTimeCache.get(blockHeight) ?? 0
+    }
+
+    const loadIntoCache = async () => {
+      const {
+        header: { time },
+      } = await cosmWasmClient.getBlock(blockHeight)
+      blockHeightToTimeCache.set(blockHeight, Date.parse(time))
+    }
+
+    try {
+      // Retry 3 times with exponential backoff starting at 150ms delay.
+      await retry(loadIntoCache, [], {
+        retriesMax: 3,
+        exponential: true,
+        interval: 150,
+      })
+    } catch (err) {
+      console.error(
+        '-------\nFailed to get block:\n',
+        err instanceof Error ? err.message : err,
+        '\nBlock height: ' +
+          BigInt(blockHeight).toLocaleString() +
+          '\nData: ' +
+          JSON.stringify(trace, null, 2) +
+          '\n-------'
+      )
+      Sentry.captureException(err, {
+        tags: {
+          type: 'failed-get-block',
+          script: 'export',
+        },
+        extra: {
+          trace,
+          blockHeight,
+        },
+      })
+
+      // Set to 0 on failure so we can continue.
+      blockHeightToTimeCache.set(blockHeight, 0)
+    }
+
+    return blockHeightToTimeCache.get(blockHeight) ?? 0
+  }
+
+  // Setup handlers.
   const handlers = await Promise.all(
     Object.entries(handlerMakers).map(async ([name, handlerMaker]) => ({
       name,
       handler: await handlerMaker({
-        blockHeightToTimeCache,
-        cosmWasmClient,
         config,
         dontUpdateComputations: !update,
         dontSendWebhooks: !webhooks,
+        cosmWasmClient,
+        getBlockTimeUnixMs,
       }),
     }))
   )
@@ -197,20 +254,23 @@ const main = async () => {
 
       // Handle event after previous event is handled.
       queueHandler = queueHandler.then(async () => {
-        // Try to handle with each module, and stop once handled.
-        for (const { name, handler } of handlers) {
+        // Try to handle with each module.
+        for (const {
+          name,
+          handler: { storeName, handle },
+        } of handlers) {
+          // Filter by handler store.
+          if (storeName !== tracedEvent.metadata.store_name) {
+            continue
+          }
+
           try {
             // Retry 3 times with exponential backoff starting at 100ms delay.
-            const handled = await retry(handler.handle, [tracedEvent], {
+            await retry(handle, [tracedEvent], {
               retriesMax: 3,
               exponential: true,
               interval: 100,
             })
-
-            // If handled, don't try other handlers.
-            if (handled) {
-              break
-            }
           } catch (err) {
             console.error(
               '-------\nFailed to handle:\n',

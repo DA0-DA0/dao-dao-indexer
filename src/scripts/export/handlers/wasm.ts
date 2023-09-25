@@ -17,17 +17,18 @@ import {
 } from '@/db'
 import { updateIndexesForContracts } from '@/ms'
 
-import { Handler, HandlerMaker, TracedEvent } from '../types'
+import { Handler, HandlerMaker } from '../types'
 
+const STORE_NAME = 'wasm'
 const MAX_BATCH_SIZE = 5000
 const CONTRACT_BYTE_LENGTH = 32
 
 export const wasm: HandlerMaker = async ({
-  cosmWasmClient,
   config,
-  blockHeightToTimeCache,
   dontUpdateComputations,
   dontSendWebhooks,
+  cosmWasmClient,
+  getBlockTimeUnixMs,
 }) => {
   const chainId = await cosmWasmClient.getChainId()
   const pending: ParsedWasmStateEvent[] = []
@@ -74,13 +75,13 @@ export const wasm: HandlerMaker = async ({
 
     const keyData = fromBase64(trace.key)
     if (keyData[0] !== 0x02 && keyData[0] !== 0x03) {
-      return false
+      return
     }
 
     // Ignore keys that are too short to be a wasm key. Needs at least one more
     // than the contract byte length for the prefix.
     if (keyData.length < CONTRACT_BYTE_LENGTH + 1) {
-      return false
+      return
     }
 
     const contractAddress = toBech32(
@@ -114,12 +115,12 @@ export const wasm: HandlerMaker = async ({
         contractInfo = ContractInfo.decode(protobufContractInfo)
       } catch {
         // If failed to decode, not contract info.
-        return false
+        return
       }
 
       if (!contractInfo.codeId) {
         // If no code ID found in JSON, ignore.
-        return false
+        return
       }
 
       const blockHeightFromContractInfo =
@@ -154,7 +155,7 @@ export const wasm: HandlerMaker = async ({
         })
       }
 
-      return true
+      return
     }
 
     // Otherwise, save state event.
@@ -205,12 +206,12 @@ export const wasm: HandlerMaker = async ({
     if (pending.length >= MAX_BATCH_SIZE) {
       debouncedFlush = undefined
       await flush()
-      return true
+      return
     } else {
       debouncedFlush = setTimeout(flush, 200)
     }
 
-    return true
+    return
   }
 
   const exporter = async (parsedEvents: ParsedWasmStateEvent[]) => {
@@ -496,60 +497,8 @@ export const wasm: HandlerMaker = async ({
     return codeIdCache.get(contractAddress) ?? 0
   }
 
-  // Get block time for height, cached in memory.
-  const getBlockTimeUnixMs = async (
-    blockHeight: number,
-    trace: TracedEvent
-  ): Promise<number> => {
-    if (blockHeightToTimeCache.has(blockHeight)) {
-      return blockHeightToTimeCache.get(blockHeight) ?? 0
-    }
-
-    const loadIntoCache = async () => {
-      const {
-        header: { time },
-      } = await cosmWasmClient.getBlock(blockHeight)
-      blockHeightToTimeCache.set(blockHeight, Date.parse(time))
-    }
-
-    try {
-      // Retry 3 times with exponential backoff starting at 150ms delay.
-      await retry(loadIntoCache, [], {
-        retriesMax: 3,
-        exponential: true,
-        interval: 150,
-      })
-    } catch (err) {
-      console.error(
-        '-------\nFailed to get block:\n',
-        err instanceof Error ? err.message : err,
-        '\nBlock height: ' +
-          BigInt(blockHeight).toLocaleString() +
-          '\nData: ' +
-          JSON.stringify(trace, null, 2) +
-          '\n-------'
-      )
-      Sentry.captureException(err, {
-        tags: {
-          type: 'failed-get-block',
-          script: 'export',
-          handler: 'wasm',
-          chainId,
-        },
-        extra: {
-          trace,
-          blockHeight,
-        },
-      })
-
-      // Set to 0 on failure so we can continue.
-      blockHeightToTimeCache.set(blockHeight, 0)
-    }
-
-    return blockHeightToTimeCache.get(blockHeight) ?? 0
-  }
-
   return {
+    storeName: STORE_NAME,
     handle,
     flush,
   }

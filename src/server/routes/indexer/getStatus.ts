@@ -10,6 +10,7 @@ type GetStatusResponse =
       latestBlock: SerializedBlock
       lastStakingBlockHeightExported: string | null
       lastWasmBlockHeightExported: string | null
+      lastBankBlockHeightExported: string | null
     }
   | {
       error: string
@@ -36,5 +37,7 @@ export const getStatus: Router.Middleware<
       state.lastStakingBlockHeightExported?.toString() || null,
     lastWasmBlockHeightExported:
       state.lastWasmBlockHeightExported?.toString() || null,
+    lastBankBlockHeightExported:
+      state.lastBankBlockHeightExported?.toString() || null,
   }
 }

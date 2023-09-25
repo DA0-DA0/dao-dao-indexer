@@ -12,6 +12,7 @@ import {
   AccountWebhookCodeIdSet,
   AccountWebhookEvent,
   AccountWebhookEventAttempt,
+  BankStateEvent,
   Computation,
   ComputationDependency,
   Contract,
@@ -36,6 +37,7 @@ type LoadDbOptions = {
 const getModelsForType = (type: DbType): SequelizeOptions['models'] =>
   type === DbType.Data
     ? [
+        BankStateEvent,
         Computation,
         ComputationDependency,
         Contract,

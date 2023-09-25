@@ -227,6 +227,15 @@ export type FormulaTxEventsGetter = (
   | undefined
 >
 
+export type FormulaBalanceGetter = (
+  address: string,
+  denom: string
+) => Promise<bigint | undefined>
+
+export type FormulaBalancesGetter = (
+  address: string
+) => Promise<Record<string, bigint> | undefined>
+
 export type Env<Args extends Record<string, string> = {}> = {
   chainId: string
   block: Block
@@ -253,6 +262,8 @@ export type Env<Args extends Record<string, string> = {}> = {
   getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
   getSlashEvents: FormulaSlashEventsGetter
   getTxEvents: FormulaTxEventsGetter
+  getBalance: FormulaBalanceGetter
+  getBalances: FormulaBalancesGetter
 }
 
 export interface EnvOptions {
@@ -438,6 +449,15 @@ export type ParsedWasmTxEvent = {
 }
 
 export type ParsedWasmEvent = ParsedWasmStateEvent | ParsedWasmTxEvent
+
+export type ParsedBankStateEvent = {
+  address: string
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  denom: string
+  balance: string
+}
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,

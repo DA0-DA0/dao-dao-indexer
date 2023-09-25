@@ -20,6 +20,8 @@ describe('GET /status', () => {
           state!.lastStakingBlockHeightExported?.toString() || null,
         lastWasmBlockHeightExported:
           state!.lastWasmBlockHeightExported?.toString() || null,
+        lastBankBlockHeightExported:
+          state!.lastBankBlockHeightExported?.toString() || null,
       })
   })
 })

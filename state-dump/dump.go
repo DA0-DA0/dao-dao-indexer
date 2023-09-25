@@ -21,6 +21,9 @@ type (
 	Metadata struct {
 		BlockHeight int64  `json:"blockHeight"`
 		TxHash      string `json:"txHash"`
+		// Snake case matches `storeNameCtxKey` in `store/cachemulti/store.go` in
+		// the Cosmos SDK.
+		StoreName string `json:"store_name"`
 	}
 
 	// traceOperation implements a traced KVStore operation
@@ -33,23 +36,25 @@ type (
 )
 
 var (
+	BalancesPrefix      = []byte{0x02}
 	ContractKeyPrefix   = []byte{0x02}
 	ContractStorePrefix = []byte{0x03}
 )
 
 func main() {
 	args := os.Args
-	if len(args) < 3 {
-		fmt.Println("Usage: dump <home_dir> <output> [address]")
+	if len(args) < 4 {
+		fmt.Println("Usage: dump <home_dir> <output> <store_name> [address]")
 		os.Exit(1)
 	}
 
 	home_dir := args[1]
 	output := args[2]
+	storeName := args[3]
 
 	var addressBech32Data []byte
-	if len(args) > 3 {
-		_, bech32Data, err := bech32.DecodeToBase256(args[3])
+	if len(args) > 4 {
+		_, bech32Data, err := bech32.DecodeToBase256(args[4])
 		if err != nil {
 			panic(err)
 		}
@@ -72,16 +77,16 @@ func main() {
 	latestHeight := rootmulti.GetLatestVersion(db)
 	fmt.Printf("Latest height: %d\n", latestHeight)
 
-	wasmKey := types.NewKVStoreKey("wasm")
+	storeKey := types.NewKVStoreKey(storeName)
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	ms.MountStoreWithDB(wasmKey, types.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(storeKey, types.StoreTypeIAVL, nil)
 
 	err = ms.LoadLatestVersion()
 	if err != nil {
 		panic(err)
 	}
 
-	store := ms.GetCommitKVStore(wasmKey)
+	store := ms.GetCommitKVStore(storeKey)
 	if store == nil {
 		panic("Store is nil")
 	}
@@ -112,6 +117,7 @@ func main() {
 			Metadata: Metadata{
 				BlockHeight: latestHeight,
 				TxHash:      "",
+				StoreName:   storeName,
 			},
 		}
 

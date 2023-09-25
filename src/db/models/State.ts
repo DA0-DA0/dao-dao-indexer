@@ -44,6 +44,10 @@ export class State extends Model {
   @Column(DataType.BIGINT)
   lastWasmBlockHeightExported!: string | null
 
+  @AllowNull
+  @Column(DataType.BIGINT)
+  lastBankBlockHeightExported!: string | null
+
   get latestBlock(): Block {
     return {
       height: BigInt(this.latestBlockHeight),
@@ -72,6 +76,7 @@ export class State extends Model {
         latestBlockTimeUnixMs: 0n,
         lastStakingBlockHeightExported: 0n,
         lastWasmBlockHeightExported: 0n,
+        lastBankBlockHeightExported: 0n,
       })
     }
 
