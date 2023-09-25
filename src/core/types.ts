@@ -227,6 +227,15 @@ export type FormulaTxEventsGetter = (
   | undefined
 >
 
+export type FormulaBalanceGetter = (
+  address: string,
+  denom: string
+) => Promise<bigint | undefined>
+
+export type FormulaBalancesGetter = (
+  address: string
+) => Promise<Record<string, bigint> | undefined>
+
 export type Env<Args extends Record<string, string> = {}> = {
   chainId: string
   block: Block
@@ -253,6 +262,8 @@ export type Env<Args extends Record<string, string> = {}> = {
   getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
   getSlashEvents: FormulaSlashEventsGetter
   getTxEvents: FormulaTxEventsGetter
+  getBalance: FormulaBalanceGetter
+  getBalances: FormulaBalancesGetter
 }
 
 export interface EnvOptions {

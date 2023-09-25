@@ -1,6 +1,7 @@
 import { Op, Sequelize } from 'sequelize'
 
 import {
+  BankStateEvent,
   Contract,
   StakingSlashEvent,
   WasmStateEvent,
@@ -13,6 +14,8 @@ import {
   Cache,
   Env,
   EnvOptions,
+  FormulaBalanceGetter,
+  FormulaBalancesGetter,
   FormulaCodeIdKeyForContractGetter,
   FormulaCodeIdsForKeysGetter,
   FormulaContractGetter,
@@ -967,6 +970,129 @@ export const getEnv = ({
     return txEvents.map((txEvent) => txEvent.toJSON())
   }
 
+  const getBalance: FormulaBalanceGetter = async (address, denom) => {
+    const dependentKey = getDependentKey(
+      BankStateEvent.dependentKeyNamespace,
+      address,
+      denom
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: false,
+    })
+
+    // Check cache.
+    const cachedEvent = cache.events[dependentKey]
+    const event =
+      // If undefined, we haven't tried to fetch it yet. If not undefined,
+      // either it exists or it doesn't (null).
+      cachedEvent !== undefined
+        ? cachedEvent?.[0]
+        : await BankStateEvent.findOne({
+            where: {
+              address,
+              denom,
+              blockHeight: blockHeightFilter,
+            },
+            order: [['blockHeight', 'DESC']],
+          })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (event && !(event instanceof BankStateEvent)) {
+      throw new Error('Incorrect event type.')
+    }
+
+    // Cache event, null if nonexistent.
+    if (cachedEvent === undefined) {
+      cache.events[dependentKey] = event ? [event] : null
+    }
+
+    // If no event found, return undefined.
+    if (!event) {
+      return
+    }
+
+    // Call hook.
+    await onFetch?.([event])
+
+    return BigInt(event.balance)
+  }
+
+  const getBalances: FormulaBalancesGetter = async (address) => {
+    const dependentKey = getDependentKey(
+      BankStateEvent.dependentKeyNamespace,
+      address,
+      undefined
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: true,
+    })
+
+    // Check cache.
+    const cachedEvents = cache.events[dependentKey]
+
+    const events =
+      // If undefined, we haven't tried to fetch them yet. If not undefined,
+      // either they exist or they don't (null).
+      cachedEvents !== undefined
+        ? ((cachedEvents ?? []) as BankStateEvent[])
+        : await BankStateEvent.findAll({
+            attributes: [
+              // DISTINCT ON is not directly supported by Sequelize, so we need
+              // to cast to unknown and back to string to insert this at the
+              // beginning of the query. This ensures we use the most recent
+              // version of each denom.
+              Sequelize.literal(
+                'DISTINCT ON("denom") \'\''
+              ) as unknown as string,
+              'denom',
+              'address',
+              'blockHeight',
+              'blockTimeUnixMs',
+              'balance',
+            ],
+            where: {
+              address,
+              blockHeight: blockHeightFilter,
+            },
+            order: [
+              // Needs to be first so we can use DISTINCT ON.
+              ['denom', 'ASC'],
+              ['blockHeight', 'DESC'],
+            ],
+          })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (events.some((event) => !(event instanceof BankStateEvent))) {
+      throw new Error('Incorrect event type.')
+    }
+
+    // Cache events, null if nonexistent.
+    if (cachedEvents === undefined) {
+      cache.events[dependentKey] = events.length ? events : null
+    }
+
+    // If no events found, return undefined.
+    if (!events.length) {
+      return
+    }
+
+    // Call hook.
+    await onFetch?.(events)
+
+    // Create denom balance map.
+    return events.reduce(
+      (acc, { denom, balance }) => ({
+        ...acc,
+        [denom]: BigInt(balance),
+      }),
+      {} as Record<string, bigint>
+    )
+  }
+
   return {
     chainId,
     block,
@@ -993,5 +1119,8 @@ export const getEnv = ({
     getSlashEvents,
 
     getTxEvents,
+
+    getBalance,
+    getBalances,
   }
 }
