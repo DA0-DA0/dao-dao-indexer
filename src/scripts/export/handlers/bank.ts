@@ -12,8 +12,6 @@ import {
 import { Handler, HandlerMaker } from '../types'
 
 const STORE_NAME = 'bank'
-// Maximum allowed length in bytes for an address. Same as `MaxAddrLen` in
-// `types/address/store_key.go` in the Cosmos SDK.
 const MAX_BATCH_SIZE = 5000
 
 export const bank: HandlerMaker = async ({
