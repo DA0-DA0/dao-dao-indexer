@@ -30,8 +30,8 @@ export type TracedEvent = {
   value: string
   metadata: {
     blockHeight: number
-    txHash: string
-    store_name: string
+    txHash?: string
+    store_name?: string
   }
 }
 

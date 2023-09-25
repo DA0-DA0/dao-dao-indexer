@@ -155,7 +155,7 @@ const trace = async () => {
         file: traceFile,
         onData: (data) => {
           const tracedEvent = data as TracedEvent
-          // Ensure this is a traced write event.
+          // Ensure this is a traced write or delete event.
           if (
             !objectMatchesStructure(tracedEvent, {
               operation: {},
@@ -163,7 +163,6 @@ const trace = async () => {
               value: {},
               metadata: {
                 blockHeight: {},
-                txHash: {},
               },
             })
           ) {
