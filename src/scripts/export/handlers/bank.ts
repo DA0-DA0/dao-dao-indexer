@@ -1,8 +1,9 @@
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
 import retry from 'async-await-retry'
+import { Coin } from 'cosmjs-types/cosmos/base/v1beta1/coin'
 import { Sequelize } from 'sequelize'
 
-import { ParsedBankStateEvent, objectMatchesStructure } from '@/core'
+import { ParsedBankStateEvent } from '@/core'
 import {
   BankStateEvent,
   State,
@@ -91,33 +92,41 @@ export const bank: HandlerMaker = async ({
     // Mimics behavior of `UnmarshalBalanceCompat` in `x/bank/keeper/view.go` to
     // decode balance.
 
-    let balance = '0'
+    let balance: string | undefined
     // If write operation, balance is updated. Otherwise (delete), balance is 0.
     if (trace.operation === 'write') {
-      let value
-      // Decode base64-encoded JSON.
+      let valueData
       try {
-        value = trace.value && JSON.parse(fromUtf8(fromBase64(trace.value)))
+        valueData = trace.value && fromBase64(trace.value)
       } catch {
         // Ignore decoding errors.
+      }
+
+      // If no data, ignore.
+      if (!valueData) {
         return
       }
 
-      // If legacy format, extract balance.
-      if (
-        objectMatchesStructure(value, {
-          denom: {},
-          amount: {},
-        })
-      ) {
-        balance = BigInt(value.amount).toString()
-        // Otherwise it should be a number.
-      } else if (typeof value === 'number') {
-        balance = BigInt(value).toString()
-      } else {
-        // This should never happen.
-        return
+      // Try to decode as JSON-encoded number.
+      try {
+        balance = BigInt(JSON.parse(fromUtf8(valueData))).toString()
+      } catch {
+        // Ignore decoding errors.
       }
+
+      // Try to decode as legacy Coin protobuf.
+      try {
+        balance = Coin.decode(valueData).amount
+      } catch {
+        // Ignore decoding errors.
+      }
+    } else if (trace.operation === 'delete') {
+      balance = '0'
+    }
+
+    // If could not find balance, ignore.
+    if (!balance) {
+      return
     }
 
     pending.push({
