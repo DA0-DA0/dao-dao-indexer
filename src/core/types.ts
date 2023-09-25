@@ -439,6 +439,15 @@ export type ParsedWasmTxEvent = {
 
 export type ParsedWasmEvent = ParsedWasmStateEvent | ParsedWasmTxEvent
 
+export type ParsedBankStateEvent = {
+  address: string
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  denom: string
+  balance: string
+}
+
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
   Exclude<keyof T, Keys>

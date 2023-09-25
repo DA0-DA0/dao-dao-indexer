@@ -164,10 +164,15 @@ const trace = async () => {
               metadata: {
                 blockHeight: {},
                 txHash: {},
+                store_name: {},
               },
             })
           ) {
             return
+          }
+
+          if (!tracedEvent.metadata.store_name) {
+            console.error('Found trace event missing store name.')
           }
 
           // Only handle writes and deletes.

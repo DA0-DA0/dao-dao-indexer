@@ -1,24 +1,25 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
-import { LRUCache } from 'lru-cache'
 
 import { Config } from '@/core'
 
 export type Handler = {
-  // The function that will be called for each trace in the trace file. If the
-  // trace was successfully handled, return true. Otherwise, return false.
-  handle: (trace: TracedEvent) => Promise<boolean>
+  // What store name to filter by for events to handle.
+  storeName: string
+  // The function that will be called for each trace in the trace file.
+  handle: (trace: TracedEvent) => Promise<void>
   // The function that will be called after reading the entire trace file.
   flush: () => Promise<void>
 }
 
 export type HandlerMakerOptions = {
-  cosmWasmClient: CosmWasmClient
   config: Config
-  // Map block height to time. Populated with block heights from WebSocket's
-  // NewBlock event as soon as it occurs, which is before any state writes.
-  blockHeightToTimeCache: LRUCache<number, number>
   dontUpdateComputations: boolean
   dontSendWebhooks: boolean
+  cosmWasmClient: CosmWasmClient
+  getBlockTimeUnixMs: (
+    blockHeight: number,
+    trace: TracedEvent
+  ) => Promise<number>
 }
 
 export type HandlerMaker = (options: HandlerMakerOptions) => Promise<Handler>
@@ -30,6 +31,7 @@ export type TracedEvent = {
   metadata: {
     blockHeight: number
     txHash: string
+    store_name: string
   }
 }
 

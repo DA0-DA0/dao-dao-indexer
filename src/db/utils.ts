@@ -5,6 +5,7 @@ import { bigIntMax, bigIntMin } from '@/core/utils'
 
 import { loadDb } from './connection'
 import {
+  BankStateEvent,
   Computation,
   ComputationDependency,
   StakingSlashEvent,
@@ -259,6 +260,7 @@ export const getDependableEventModels =
     WasmStateEventTransformation,
     WasmTxEvent,
     StakingSlashEvent,
+    BankStateEvent,
   ]
 
 // Get the dependable event model for a given key based on its namespace.
