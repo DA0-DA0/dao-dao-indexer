@@ -90,23 +90,9 @@ export const bank: HandlerMaker = async ({
     // If write operation, balance is updated. Otherwise (delete), balance is 0.
     if (trace.operation === 'write') {
       let value
-      // Decode base64.
+      // Decode base64-encoded JSON.
       try {
-        value = trace.value && fromBase64(trace.value)
-      } catch {
-        // Ignore decoding errors.
-        return
-      }
-
-      // `value` should never be empty when writing, but just in case.
-      if (!value) {
-        return
-      }
-
-      // Decode JSON.
-      let valueJson
-      try {
-        valueJson = JSON.parse(fromUtf8(value))
+        value = trace.value && JSON.parse(fromUtf8(fromBase64(trace.value)))
       } catch {
         // Ignore decoding errors.
         return
@@ -114,20 +100,23 @@ export const bank: HandlerMaker = async ({
 
       // If legacy format, extract balance.
       if (
-        objectMatchesStructure(valueJson, {
+        objectMatchesStructure(value, {
           denom: {},
           amount: {},
         })
       ) {
-        balance = BigInt(valueJson.amount).toString()
-      } else if (typeof valueJson === 'string') {
-        // Otherwise it should be a string containing a number.
+        balance = BigInt(value.amount).toString()
+        // Otherwise it should be a number.
+      } else if (typeof value === 'number') {
         try {
-          balance = BigInt(valueJson).toString()
+          balance = BigInt(value).toString()
         } catch {
           // Ignore decoding errors.
           return
         }
+      } else {
+        // This should never happen.
+        return
       }
     }
 
