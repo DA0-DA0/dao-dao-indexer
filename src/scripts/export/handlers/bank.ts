@@ -106,12 +106,7 @@ export const bank: HandlerMaker = async ({
         balance = BigInt(value.amount).toString()
         // Otherwise it should be a number.
       } else if (typeof value === 'number') {
-        try {
-          balance = BigInt(value).toString()
-        } catch {
-          // Ignore decoding errors.
-          return
-        }
+        balance = BigInt(value).toString()
       } else {
         // This should never happen.
         return
