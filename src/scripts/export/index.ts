@@ -164,7 +164,6 @@ const trace = async () => {
               metadata: {
                 blockHeight: {},
                 txHash: {},
-                store_name: {},
               },
             })
           ) {
