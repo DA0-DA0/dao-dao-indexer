@@ -113,16 +113,14 @@ export const bank: HandlerMaker = async ({
       }
     }
 
-    const event: ParsedBankStateEvent = {
+    pending.push({
       address,
       blockHeight,
       blockTimeUnixMs,
       blockTimestamp,
       denom,
       balance,
-    }
-
-    pending.push(event)
+    })
     lastBlockHeightSeen = trace.metadata.blockHeight
 
     // Debounce flush in 200ms.
