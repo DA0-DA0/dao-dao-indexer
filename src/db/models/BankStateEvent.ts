@@ -144,7 +144,7 @@ export class BankStateEvent extends DependendableEventModel {
           ...(address && { address }),
           // Related logic in `makeComputationDependencyWhere` in
           // `src/db/utils.ts`.
-          key: {
+          denom: {
             [Op.or]: [
               // Exact matches.
               ...(exactKeys.length > 0 ? [{ [Op.in]: exactKeys }] : []),
