@@ -1020,10 +1020,8 @@ export const getEnv = ({
   }
 
   const getBalances: FormulaBalancesGetter = async (address) => {
-    const dependentKey = getDependentKey(
-      BankStateEvent.dependentKeyNamespace,
-      address
-    )
+    const dependentKey =
+      getDependentKey(BankStateEvent.dependentKeyNamespace, address) + ':'
     dependentKeys?.push({
       key: dependentKey,
       prefix: true,
