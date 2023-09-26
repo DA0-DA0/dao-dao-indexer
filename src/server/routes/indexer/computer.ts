@@ -7,6 +7,8 @@ import {
   FormulaTypeValues,
   compute,
   computeRange,
+  getBlockForTime,
+  getFirstBlock,
   loadConfig,
   typeIsFormulaType,
   validateBlockString,
@@ -19,7 +21,6 @@ import {
   Contract,
   State,
   Validator,
-  WasmStateEvent,
 } from '@/db'
 
 import { captureSentryException } from '../../sentry'
@@ -208,9 +209,9 @@ export const computer: Router.Middleware = async (ctx) => {
 
   // TODO: Calculate start and end block with times some other way. Or don't use
   // start and end blocks at all and use block or time depending on which is
-  // passed? Right now, the block is retrieved by checking `WasmEvent`s, but
-  // there are many times of events now and any formula can use any event type.
-  // This needs a better solution.
+  // passed? Right now, the block is retrieved by checking `WasmStateEvent`s,
+  // but there are many times of events now and any formula can use any event
+  // type. This needs a better solution.
 
   // If times passed, validate that it's a range with either a start or a
   // start/end pair.
@@ -336,17 +337,7 @@ export const computer: Router.Middleware = async (ctx) => {
         time += BigInt(state.latestBlockTimeUnixMs)
       }
 
-      block = (
-        await WasmStateEvent.findOne({
-          where: {
-            blockTimeUnixMs: {
-              [Op.gt]: 0,
-              [Op.lte]: time,
-            },
-          },
-          order: [['blockTimeUnixMs', 'DESC']],
-        })
-      )?.block
+      block = await getBlockForTime(time)
     }
 
     // If times passed, compute blocks that correlate with those times.
@@ -360,41 +351,12 @@ export const computer: Router.Middleware = async (ctx) => {
       }
 
       const startBlock =
-        (
-          await WasmStateEvent.findOne({
-            where: {
-              blockTimeUnixMs: {
-                [Op.gt]: 0,
-                [Op.lte]: times[0],
-              },
-            },
-            order: [['blockTimeUnixMs', 'DESC']],
-          })
-        )?.block ??
+        (await getBlockForTime(times[0])) ??
         // Use first block if no event exists before start time.
-        (
-          await WasmStateEvent.findOne({
-            where: {
-              blockTimeUnixMs: {
-                [Op.gt]: 0,
-              },
-            },
-            order: [['blockTimeUnixMs', 'ASC']],
-          })
-        )?.block
+        (await getFirstBlock())
       // Use latest block if no end time exists.
       const endBlock = times[1]
-        ? (
-            await WasmStateEvent.findOne({
-              where: {
-                blockTimeUnixMs: {
-                  [Op.gt]: 0,
-                  [Op.lte]: times[1],
-                },
-              },
-              order: [['blockTimeUnixMs', 'DESC']],
-            })
-          )?.block
+        ? await getBlockForTime(times[1])
         : state.latestBlock
 
       if (startBlock && endBlock) {

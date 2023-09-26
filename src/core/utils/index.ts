@@ -7,6 +7,7 @@ import { DependentKeyNamespace } from '@/db'
 
 import { Block, FormulaType, SerializedBlock } from '../types'
 
+export * from './block'
 export * from './chain'
 export * from './objectMatchesStructure'
 
