@@ -548,7 +548,7 @@ export const computer: Router.Middleware = async (ctx) => {
         for (
           let blockHeight = blocks[0].height;
           // Make sure to include the last computation.
-          blockHeight <= blocks[1].height + blockStep - 1n;
+          blockHeight < blocks[1].height + blockStep;
           blockHeight += blockStep
         ) {
           // Sorted ascending by block, so find first computation with block
@@ -576,7 +576,7 @@ export const computer: Router.Middleware = async (ctx) => {
         for (
           let blockTime = blocks[0].timeUnixMs;
           // Make sure to include the last computation.
-          blockTime <= blocks[1].timeUnixMs + timeStep - 1n;
+          blockTime < blocks[1].timeUnixMs + timeStep;
           blockTime += timeStep
         ) {
           // Sorted ascending by block, so find first computation with block
