@@ -553,8 +553,12 @@ export const computer: Router.Middleware = async (ctx) => {
         ) {
           // Sorted ascending by block, so find first computation with block
           // height greater than desired block height and use the previous to
-          // get the latest value at the target block height.
-          const index = outputs.findIndex((c) => c.blockHeight > blockHeight)
+          // get the latest value at the target block height. If not found, use
+          // the last one.
+          let index = outputs.findIndex((c) => c.blockHeight > blockHeight)
+          if (index === -1) {
+            index = outputs.length
+          }
           if (index > 0) {
             const output = outputs[index - 1]
             response.push({
@@ -577,8 +581,12 @@ export const computer: Router.Middleware = async (ctx) => {
         ) {
           // Sorted ascending by block, so find first computation with block
           // time greater than desired block time and use the previous to get
-          // the latest value at the target block time.
-          const index = outputs.findIndex((c) => c.blockTimeUnixMs > blockTime)
+          // the latest value at the target block time. If not found, use the
+          // last one.
+          let index = outputs.findIndex((c) => c.blockTimeUnixMs > blockTime)
+          if (index === -1) {
+            index = outputs.length
+          }
           if (index > 0) {
             const output = outputs[index - 1]
             response.push({
