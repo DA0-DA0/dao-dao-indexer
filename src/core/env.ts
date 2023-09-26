@@ -1022,12 +1022,11 @@ export const getEnv = ({
   const getBalances: FormulaBalancesGetter = async (address) => {
     const dependentKey = getDependentKey(
       BankStateEvent.dependentKeyNamespace,
-      address,
-      undefined
+      address
     )
     dependentKeys?.push({
       key: dependentKey,
-      prefix: false,
+      prefix: true,
     })
 
     // Check cache.
