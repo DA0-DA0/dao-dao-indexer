@@ -580,16 +580,17 @@ export const computer: Router.Middleware = async (ctx) => {
           }
         }
       } else if (times && timeStep) {
+        const endTimeUnixMs = times[1] ?? blocks[1].timeUnixMs
         for (
-          let blockTime = blocks[0].timeUnixMs;
-          blockTime <= blocks[1].timeUnixMs;
+          let blockTime = times[0];
+          blockTime <= endTimeUnixMs;
           blockTime =
             // Prevent infinite loop.
-            blockTime === blocks[1].timeUnixMs
+            blockTime === endTimeUnixMs
               ? blockTime + 1n
               : // Make sure to include the last block.
-              blockTime + timeStep > blocks[1].timeUnixMs
-              ? blocks[1].timeUnixMs
+              blockTime + timeStep > endTimeUnixMs
+              ? endTimeUnixMs
               : // Increment normally.
                 blockTime + timeStep
         ) {
