@@ -547,9 +547,12 @@ export const computer: Router.Middleware = async (ctx) => {
       } else if (blockStep) {
         for (
           let blockHeight = blocks[0].height;
-          // Make sure to include the last computation.
-          blockHeight < blocks[1].height + blockStep;
-          blockHeight += blockStep
+          blockHeight <= blocks[1].height;
+          // Make sure to include the last block.
+          blockHeight =
+            blockHeight + blockStep > blocks[1].height
+              ? blocks[1].height
+              : blockHeight + blockStep
         ) {
           // Sorted ascending by block, so find first computation with block
           // height greater than desired block height and use the previous to
@@ -575,9 +578,12 @@ export const computer: Router.Middleware = async (ctx) => {
       } else if (times && timeStep) {
         for (
           let blockTime = blocks[0].timeUnixMs;
-          // Make sure to include the last computation.
-          blockTime < blocks[1].timeUnixMs + timeStep;
-          blockTime += timeStep
+          blockTime <= blocks[1].timeUnixMs;
+          // Make sure to include the last block.
+          blockTime =
+            blockTime + timeStep > blocks[1].timeUnixMs
+              ? blocks[1].timeUnixMs
+              : blockTime + timeStep
         ) {
           // Sorted ascending by block, so find first computation with block
           // time greater than desired block time and use the previous to get
