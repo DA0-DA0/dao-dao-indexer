@@ -359,7 +359,7 @@ const addToCache = (
   }
 
   for (const { key: prefixKey } of prefixes) {
-    const contractKeyEventEntries = Object.entries(allEvents).filter(([key]) =>
+    const prefixedKeyEventEntries = Object.entries(allEvents).filter(([key]) =>
       key.startsWith(prefixKey)
     )
 
@@ -367,7 +367,7 @@ const addToCache = (
     // each unique key before or at the current block height by finding the
     // index of the first event for each that is after the current block height
     // and subtracting 1.
-    const currentIndexes = contractKeyEventEntries.map(([, events]) => {
+    const currentIndexes = prefixedKeyEventEntries.map(([, events]) => {
       if (!events) {
         return undefined
       }
@@ -376,16 +376,15 @@ const addToCache = (
         (event) => event.block.height > block.height
       )
 
-      // If the next event index is undefined or is the first event, there is no
-      // current event.
-      return nextIndex === undefined || nextIndex === 0
+      // If the next event index is the first event, there is no current event.
+      return nextIndex === 0
         ? undefined
         : // If the next event index is greater than 0, the current event is the most recent event before this one, so subtract one.
         nextIndex > 0
         ? nextIndex - 1
-        : // If the next event index is -1, meaning no events matched the predicate, and there is only one event, the current event is the only event.
-        events.length === 1
-        ? 0
+        : // If the next event index is -1, meaning no events matched the predicate, and events exist, the current event is the last event.
+        events.length > 0
+        ? events.length - 1
         : // Otherwise there are no events before the current block height.
           undefined
     })
@@ -393,7 +392,7 @@ const addToCache = (
     cache[prefixKey] = currentIndexes
       .map((currentEventIndex, entryIndex) =>
         currentEventIndex !== undefined
-          ? contractKeyEventEntries[entryIndex][1]![currentEventIndex]
+          ? prefixedKeyEventEntries[entryIndex][1]![currentEventIndex]
           : null
       )
       .filter((event): event is DependendableEventModel => event !== null)
@@ -403,8 +402,8 @@ const addToCache = (
     // case it's used in the future.
     currentIndexes.forEach((currentEventIndex, index) => {
       if (currentEventIndex !== undefined) {
-        allEvents[contractKeyEventEntries[index][0]] =
-          allEvents[contractKeyEventEntries[index][0]]?.slice(currentEventIndex)
+        allEvents[prefixedKeyEventEntries[index][0]] =
+          allEvents[prefixedKeyEventEntries[index][0]]?.slice(currentEventIndex)
       }
     })
   }
@@ -441,8 +440,8 @@ export const getNextPotentialBlock = (
   }
 
   for (const { key: prefixKey } of prefixes) {
-    // Sorted ascending by block height, so we can find the next event for for
-    // each unique key after the current block height by finding the first one.
+    // Sorted ascending by block height so we can find the next event for each
+    // unique key after the current block height by finding the first one.
     const matchingEvents = Object.entries(allEvents)
       .filter(([key]) => key.startsWith(prefixKey))
       .map(([, events]) =>
