@@ -141,6 +141,18 @@ export const makeInboxProposalExecuted: WebhookMaker = (config, state) => ({
     const proposal: SingleChoiceProposal | MultipleChoiceProposal =
       event.valueJson
 
+    // Include winning option if multiple choice proposal.
+    let winningOption: string | undefined
+    if ('choices' in proposal && 'votes' in proposal) {
+      // Pick choice with largest voting weight.
+      const winningChoice = proposal.choices.reduce((curr, choice) => {
+        const currentWeight = BigInt(proposal.votes.vote_weights[curr.index])
+        const weight = BigInt(proposal.votes.vote_weights[choice.index])
+        return currentWeight > weight ? curr : choice
+      })
+      winningOption = winningChoice?.title
+    }
+
     return {
       type: 'proposal_executed',
       data: {
@@ -151,6 +163,7 @@ export const makeInboxProposalExecuted: WebhookMaker = (config, state) => ({
         proposalId,
         proposalTitle: proposal.title,
         failed: event.valueJson.status === Status.ExecutionFailed,
+        winningOption,
       },
     }
   },
