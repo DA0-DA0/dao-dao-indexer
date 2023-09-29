@@ -69,6 +69,7 @@ export const makeInboxProposalCreated: WebhookMaker = (config, state) => ({
       event.valueJson
 
     return {
+      chainId: state.chainId,
       type: 'proposal_created',
       data: {
         chainId: state.chainId,
@@ -154,6 +155,7 @@ export const makeInboxProposalExecuted: WebhookMaker = (config, state) => ({
     }
 
     return {
+      chainId: state.chainId,
       type: 'proposal_executed',
       data: {
         chainId: state.chainId,
@@ -224,6 +226,7 @@ export const makeInboxProposalClosed: WebhookMaker = (config, state) => ({
       event.valueJson
 
     return {
+      chainId: state.chainId,
       type: 'proposal_closed',
       data: {
         chainId: state.chainId,
