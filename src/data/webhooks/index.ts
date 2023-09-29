@@ -4,7 +4,11 @@ import { State } from '@/db'
 import { makeProposalCreated } from './discordNotifier'
 import { makeIndexerCwReceiptPaid } from './indexerCwReceipt'
 import { makeInboxJoinedDao } from './notify/dao'
-import { makeInboxProposalCreated } from './notify/proposal'
+import {
+  makeInboxProposalClosed,
+  makeInboxProposalCreated,
+  makeInboxProposalExecuted,
+} from './notify/proposal'
 import { makeBroadcastVoteCast, makeProposalStatusChanged } from './websockets'
 
 let processedWebhooks: ProcessedWebhook[] | undefined
@@ -18,6 +22,8 @@ export const getProcessedWebhooks = (
       makeProposalCreated,
       makeInboxJoinedDao,
       makeInboxProposalCreated,
+      makeInboxProposalExecuted,
+      makeInboxProposalClosed,
       makeIndexerCwReceiptPaid,
       makeBroadcastVoteCast,
       makeProposalStatusChanged,
