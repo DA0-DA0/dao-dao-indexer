@@ -42,7 +42,7 @@ const main = async () => {
   })
 
   // Initialize state.
-  const state = await State.createSingletonIfMissing()
+  await State.createSingletonIfMissing()
 
   // Create CosmWasm client that batches requests.
   const httpClient = new HttpBatchClient(config.rpc)
@@ -101,7 +101,7 @@ const main = async () => {
             script: 'export',
           },
           extra: {
-            chainId: state.chainId,
+            chainId: (await State.getSingleton())?.chainId ?? 'unknown',
             trace,
             blockHeight,
           },
