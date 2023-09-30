@@ -81,6 +81,8 @@ export type Config = {
   soketi?: PusherOptions
   // Accounts server JWT secret.
   accountsJwtSecret?: string
+  // Indexer exporter dashboard password.
+  exporterDashboardPassword?: string
 
   // Other config options.
   [key: string]: any
