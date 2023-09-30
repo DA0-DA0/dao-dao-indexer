@@ -67,6 +67,7 @@ app.use(async (ctx, next) => {
 
 // Add routes.
 setupRouter(app, {
+  config,
   accounts,
 })
 

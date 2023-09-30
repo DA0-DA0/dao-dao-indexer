@@ -1,15 +1,21 @@
 import Router from '@koa/router'
 import Koa from 'koa'
 
+import { Config } from '@/core/types'
+
 import { accountRouter } from './account'
-import { indexerRouter } from './indexer'
+import { makeIndexerRouter } from './indexer'
 
 export type SetupRouterOptions = {
+  config: Config
   // Whether to run the account server. If false, runs indexer server.
   accounts: boolean
 }
 
-export const setupRouter = (app: Koa, { accounts }: SetupRouterOptions) => {
+export const setupRouter = (
+  app: Koa,
+  { config, accounts }: SetupRouterOptions
+) => {
   const router = new Router()
 
   // Ping.
@@ -23,6 +29,7 @@ export const setupRouter = (app: Koa, { accounts }: SetupRouterOptions) => {
     router.use(accountRouter.routes(), accountRouter.allowedMethods())
   } else {
     // Indexer API.
+    const indexerRouter = makeIndexerRouter(config)
     router.use(indexerRouter.routes(), indexerRouter.allowedMethods())
   }
 
