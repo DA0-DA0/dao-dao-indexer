@@ -6,17 +6,11 @@ export const balance: WalletFormula<string | undefined, { denom: string }> = {
       throw new Error('missing `denom`')
     }
 
-    return (await getBalance(walletAddress, denom))?.toString()
+    return await getBalance(walletAddress, denom)
   },
 }
 
 export const balances: WalletFormula<Record<string, string>> = {
   compute: async ({ walletAddress, getBalances }) =>
-    Object.entries((await getBalances(walletAddress)) || {}).reduce(
-      (acc, [denom, balance]) => ({
-        ...acc,
-        [denom]: balance.toString(),
-      }),
-      {} as Record<string, string>
-    ),
+    (await getBalances(walletAddress)) || {},
 }
