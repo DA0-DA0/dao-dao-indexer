@@ -20,7 +20,7 @@ export const getBullQueue = <T extends unknown>(name: string) =>
     connection: getBullConnection(),
   })
 
-export const WorkerQueue = <T extends unknown>(
+export const getBullWorker = <T extends unknown>(
   name: string,
   processor: Processor<T>
 ) =>

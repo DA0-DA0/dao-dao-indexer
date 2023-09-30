@@ -3,7 +3,7 @@ import retry from 'async-await-retry'
 import { Worker } from 'bullmq'
 import { Command } from 'commander'
 
-import { DbType, EXPORT_QUEUE_NAME, loadConfig } from '@/core'
+import { DbType, EXPORT_QUEUE_NAME, getBullWorker, loadConfig } from '@/core'
 import { State, loadDb } from '@/db'
 
 import { handlerMakers } from './handlers'
@@ -67,7 +67,7 @@ const main = async () => {
   )
 
   // Create queue worker.
-  const worker = new Worker<{ data: ExportQueueData[] }>(
+  const worker = getBullWorker<{ data: ExportQueueData[] }>(
     EXPORT_QUEUE_NAME,
     async (job) => {
       const { data } = job.data
