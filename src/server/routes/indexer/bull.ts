@@ -4,11 +4,13 @@ import { KoaAdapter } from '@bull-board/koa'
 
 import { EXPORT_QUEUE_NAME, getBullQueue } from '@/core'
 
-const serverAdapter = new KoaAdapter().setBasePath('/jobs')
+export const makeBullBoardJobsMiddleware = () => {
+  const serverAdapter = new KoaAdapter().setBasePath('/jobs')
 
-createBullBoard({
-  queues: [new BullMQAdapter(getBullQueue(EXPORT_QUEUE_NAME))],
-  serverAdapter,
-})
+  createBullBoard({
+    queues: [new BullMQAdapter(getBullQueue(EXPORT_QUEUE_NAME))],
+    serverAdapter,
+  })
 
-export const bullBoardJobsMiddleware = serverAdapter.registerPlugin()
+  return serverAdapter.registerPlugin()
+}

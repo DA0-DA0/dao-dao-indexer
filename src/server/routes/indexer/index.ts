@@ -3,7 +3,7 @@ import auth from 'koa-basic-auth'
 
 import { Config } from '@/core'
 
-import { bullBoardJobsMiddleware } from './bull'
+import { makeBullBoardJobsMiddleware } from './bull'
 import { computer } from './computer'
 import { getStatus } from './getStatus'
 import { up } from './up'
@@ -26,7 +26,7 @@ export const makeIndexerRouter = ({
       name: 'exporter',
       pass: exporterDashboardPassword,
     }),
-    bullBoardJobsMiddleware
+    makeBullBoardJobsMiddleware()
   )
 
   // Formula computer. This must be the last route since it's a catch-all.
