@@ -20,8 +20,8 @@ export const makeIndexerRouter = ({
   indexerRouter.get('/up', up)
 
   // Bull board (background worker dashboard)
-  // Route: /jobs (defined in ./bull.ts)
   indexerRouter.use(
+    '/jobs',
     auth({
       name: 'exporter',
       pass: exporterDashboardPassword,
