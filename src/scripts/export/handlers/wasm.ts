@@ -178,9 +178,10 @@ export const wasm: HandlerMaker = async ({
       }
     }
 
-    // TODO: Get code ID from contract KV store directly???
     const event: ParsedWasmStateEvent = {
       type: 'state',
+      // Initialize the code ID to 0 since we don't know it yet. It will be
+      // retrieved below.
       codeId: 0,
       contractAddress,
       blockHeight,
@@ -241,7 +242,8 @@ export const wasm: HandlerMaker = async ({
 
           return {
             address,
-            // Set the code ID to 0 since we don't know it yet.
+            // Initialize the code ID to 0 since we don't know it yet. It will
+            // be retrieved below.
             codeId: 0,
             // Set the contract instantiation block to the first event found
             // in the list of parsed events. Events are sorted in ascending

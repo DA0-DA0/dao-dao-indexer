@@ -116,9 +116,9 @@ export const bank: HandlerMaker = async ({
 
       // Try to decode as legacy Coin protobuf, and ensure amount can be parsed
       // as a bigint. Otherwise, ignore. The protobuf will decode (and not
-      // error) if the value is another protobuf, but `amount` will likely
-      // contain other data instead of a number. There's no way to ensure it's
-      // actually a coin protobuf, so this is the best we can do.
+      // error) if the value is another protobuf, but amount will likely contain
+      // other data instead of a number. There's no way to ensure it's actually
+      // a coin protobuf, so this is the best we can do.
       try {
         balance = BigInt(Coin.decode(valueData).amount).toString()
       } catch {
