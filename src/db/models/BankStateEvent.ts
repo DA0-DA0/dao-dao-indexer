@@ -52,7 +52,7 @@ export class BankStateEvent extends DependendableEventModel {
   denom!: string
 
   @AllowNull(false)
-  @Column(DataType.BIGINT)
+  @Column(DataType.TEXT)
   balance!: string
 
   get block(): Block {

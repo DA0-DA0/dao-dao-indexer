@@ -230,11 +230,11 @@ export type FormulaTxEventsGetter = (
 export type FormulaBalanceGetter = (
   address: string,
   denom: string
-) => Promise<bigint | undefined>
+) => Promise<string | undefined>
 
 export type FormulaBalancesGetter = (
   address: string
-) => Promise<Record<string, bigint> | undefined>
+) => Promise<Record<string, string> | undefined>
 
 export type Env<Args extends Record<string, string> = {}> = {
   chainId: string

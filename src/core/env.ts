@@ -1016,7 +1016,7 @@ export const getEnv = ({
     // Call hook.
     await onFetch?.([event])
 
-    return BigInt(event.balance)
+    return event.balance
   }
 
   const getBalances: FormulaBalancesGetter = async (address) => {
@@ -1084,9 +1084,9 @@ export const getEnv = ({
     return events.reduce(
       (acc, { denom, balance }) => ({
         ...acc,
-        [denom]: BigInt(balance),
+        [denom]: balance,
       }),
-      {} as Record<string, bigint>
+      {} as Record<string, string>
     )
   }
 
