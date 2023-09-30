@@ -1,5 +1,11 @@
 import * as fs from 'fs'
 
+import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
+import {
+  HttpBatchClient,
+  Tendermint34Client,
+  Tendermint37Client,
+} from '@cosmjs/tendermint-rpc'
 import { WebSocket } from 'ws'
 
 import { objectMatchesStructure } from '@/core'
@@ -217,4 +223,34 @@ export const setUpWebSocketNewBlockListener = ({
   })
 
   return webSocket
+}
+
+// Create CosmWasm client that batches requests.
+export const getCosmWasmClient = async (
+  rpc: string
+): Promise<CosmWasmClient> => {
+  const httpClient = new HttpBatchClient(rpc)
+  const tmClient = await (
+    (
+      await connectTendermintClient(rpc)
+    ).constructor as typeof Tendermint34Client | typeof Tendermint37Client
+  ).create(httpClient)
+  // @ts-ignore
+  return new CosmWasmClient(tmClient)
+}
+
+// Connect the correct tendermint client based on the node's version.
+export const connectTendermintClient = async (endpoint: string) => {
+  // Tendermint/CometBFT 0.34/0.37 auto-detection. Starting with 0.37 we seem to
+  // get reliable versions again 🎉 Using 0.34 as the fallback.
+  let tmClient
+  const tm37Client = await Tendermint37Client.connect(endpoint)
+  const version = (await tm37Client.status()).nodeInfo.version
+  if (version.startsWith('0.37.')) {
+    tmClient = tm37Client
+  } else {
+    tm37Client.disconnect()
+    tmClient = await Tendermint34Client.connect(endpoint)
+  }
+  return tmClient
 }

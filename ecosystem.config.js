@@ -1,8 +1,15 @@
 module.exports = {
   apps: [
     {
-      name: 'exporter',
-      script: 'dist/scripts/export/index.js',
+      name: 'export-tracer',
+      script: 'dist/scripts/export/trace.js',
+      wait_ready: true,
+      listen_timeout: 30000,
+      kill_timeout: 30000,
+    },
+    {
+      name: 'export-processor',
+      script: 'dist/scripts/export/process.js',
       wait_ready: true,
       listen_timeout: 30000,
       kill_timeout: 30000,

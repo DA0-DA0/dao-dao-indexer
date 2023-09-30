@@ -37,6 +37,11 @@ export type Config = {
     data: DB
     accounts: DB
   }
+  redis?: {
+    host?: string
+    port?: number
+    password: string
+  }
   meilisearch?: {
     host: string
     apiKey?: string

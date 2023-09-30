@@ -13,45 +13,12 @@ import {
 import { Handler, HandlerMaker } from '../types'
 
 const STORE_NAME = 'bank'
-const MAX_BATCH_SIZE = 5000
 
-export const bank: HandlerMaker = async ({
-  config,
-  dontUpdateComputations,
-  getBlockTimeUnixMs,
+export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
+  config: { bech32Prefix },
+  updateComputations,
 }) => {
-  const pending: ParsedBankStateEvent[] = []
-
-  const flush = async () => {
-    if (pending.length === 0) {
-      return
-    }
-
-    // For state events with the same blockHeight, address, and denom, only keep
-    // the last event. This is because the indexer guarantees that events are
-    // emitted in order, and the last event is the most up-to-date. Multiple
-    // events may occur if the value is updated multiple times across different
-    // messages. The indexer can only maintain uniqueness within a message and
-    // its submessages, but different messages in the same block can write to
-    // the same key, and the indexer emits all the messages.
-    const uniqueIndexerEvents = pending.reduce((acc, event) => {
-      const key = event.blockHeight + event.address + event.denom
-      acc[key] = event
-      return acc
-    }, {} as Record<string, ParsedBankStateEvent>)
-    const eventsToExport = Object.values(uniqueIndexerEvents)
-
-    // Clear queue.
-    pending.length = 0
-
-    // Export events.
-    await exporter(eventsToExport)
-  }
-
-  let lastBlockHeightSeen = 0
-  let debouncedFlush: NodeJS.Timeout | undefined
-
-  const handle: Handler['handle'] = async (trace) => {
+  const match: Handler<ParsedBankStateEvent>['match'] = (trace) => {
     // BalancesPrefix = 0x02
     // bank keys are formatted as:
     // BalancesPrefix || len(addressBytes) || addressBytes || denomBytes
@@ -66,28 +33,18 @@ export const bank: HandlerMaker = async ({
     let address
     let denom
     try {
-      address = toBech32(config.bech32Prefix, keyData.slice(2, 2 + length))
+      address = toBech32(bech32Prefix, keyData.slice(2, 2 + length))
       denom = fromUtf8(keyData.slice(2 + length))
     } catch {
       // Ignore decoding errors.
       return
     }
 
-    // If we reached the first event of the next block, flush the previous
-    // events to the DB. This ensures we batch all events from the same block
-    // together.
-    if (trace.metadata.blockHeight > lastBlockHeightSeen) {
-      await flush()
-    }
-
     // Get code ID and block timestamp from chain.
     const blockHeight = BigInt(trace.metadata.blockHeight).toString()
-    const blockTimeUnixMsNum = await getBlockTimeUnixMs(
-      trace.metadata.blockHeight,
-      trace
-    )
-    const blockTimeUnixMs = BigInt(blockTimeUnixMsNum).toString()
-    const blockTimestamp = new Date(blockTimeUnixMsNum)
+
+    const blockTimeUnixMs = BigInt(trace.blockTimeUnixMs).toString()
+    const blockTimestamp = new Date(trace.blockTimeUnixMs)
 
     // Mimics behavior of `UnmarshalBalanceCompat` in `x/bank/keeper/view.go` to
     // decode balance.
@@ -145,68 +102,46 @@ export const bank: HandlerMaker = async ({
       return
     }
 
-    pending.push({
+    return {
+      id: [blockHeight, address, denom].join(':'),
       address,
       blockHeight,
       blockTimeUnixMs,
       blockTimestamp,
       denom,
       balance,
-    })
-    lastBlockHeightSeen = trace.metadata.blockHeight
-
-    // Debounce flush in 200ms.
-    if (debouncedFlush !== undefined) {
-      clearTimeout(debouncedFlush)
     }
-
-    // If batch size reached, flush immediately.
-    if (pending.length >= MAX_BATCH_SIZE) {
-      debouncedFlush = undefined
-      await flush()
-      return
-    } else {
-      debouncedFlush = setTimeout(flush, 200)
-    }
-
-    return
   }
 
-  const exporter = async (parsedEvents: ParsedBankStateEvent[]) => {
-    const start = Date.now()
-
+  const process: Handler<ParsedBankStateEvent>['process'] = async (events) => {
     const exportEvents = async () =>
       // Unique index on [blockHeight, address, denom] ensures that we don't
       // insert duplicate events. If we encounter a duplicate, we update the
       // `balance` field in case event processing for a block was batched
       // separately.
-      parsedEvents.length > 0
-        ? await BankStateEvent.bulkCreate(parsedEvents, {
+      events.length > 0
+        ? await BankStateEvent.bulkCreate(events, {
             updateOnDuplicate: ['balance'],
           })
         : []
 
     // Retry 3 times with exponential backoff starting at 100ms delay.
-    const events = (await retry(exportEvents, [], {
+    const exportedEvents = (await retry(exportEvents, [], {
       retriesMax: 3,
       exponential: true,
       interval: 100,
     })) as BankStateEvent[]
 
-    let computationsUpdated = 0
-    let computationsDestroyed = 0
-    if (!dontUpdateComputations) {
-      const computationUpdates =
-        await updateComputationValidityDependentOnChanges(events)
-      computationsUpdated = computationUpdates.updated
-      computationsDestroyed = computationUpdates.destroyed
+    if (updateComputations) {
+      await updateComputationValidityDependentOnChanges(exportedEvents)
     }
 
     // Store last block height exported, and update latest block
     // height/time if the last export is newer.
-    const lastBlockHeightExported = events[events.length - 1].blockHeight
+    const lastBlockHeightExported =
+      exportedEvents[exportedEvents.length - 1].blockHeight
     const lastBlockTimeUnixMsExported =
-      events[events.length - 1].blockTimeUnixMs
+      exportedEvents[exportedEvents.length - 1].blockTimeUnixMs
     await State.update(
       {
         lastBankBlockHeightExported: Sequelize.fn(
@@ -232,21 +167,11 @@ export const bank: HandlerMaker = async ({
         },
       }
     )
-
-    const end = Date.now()
-    const duration = end - start
-
-    // Log.
-    console.log(
-      `[bank] Exported: ${events.length.toLocaleString()}. Block: ${BigInt(
-        lastBlockHeightExported
-      ).toLocaleString()}. Computations updated/destroyed: ${computationsUpdated.toLocaleString()}/${computationsDestroyed.toLocaleString()}. Duration: ${duration.toLocaleString()}ms.`
-    )
   }
 
   return {
     storeName: STORE_NAME,
-    handle,
-    flush,
+    match,
+    process,
   }
 }

@@ -2,27 +2,33 @@ import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 
 import { Config } from '@/core'
 
-export type Handler = {
+export type Handler<Data extends unknown = unknown> = {
   // What store name to filter by for events to handle.
   storeName: string
-  // The function that will be called for each trace in the trace file.
-  handle: (trace: TracedEvent) => Promise<void>
-  // The function that will be called after reading the entire trace file.
-  flush: () => Promise<void>
+  // The function that will be called for each trace which determines if it will
+  // be queued for export. If returns an object, it will be queued. If returns
+  // undefined, it will not be queued.
+  match: (trace: TracedEventWithBlockTime) =>
+    | (Data & {
+        // ID that uniquely represents this object. Likely a combination of
+        // block height and some key or keys.
+        id: string
+      })
+    | undefined
+  // The function that will be called with queued objects.
+  process: (data: Data[]) => Promise<void>
 }
 
 export type HandlerMakerOptions = {
   config: Config
-  dontUpdateComputations: boolean
-  dontSendWebhooks: boolean
+  updateComputations: boolean
+  sendWebhooks: boolean
   cosmWasmClient: CosmWasmClient
-  getBlockTimeUnixMs: (
-    blockHeight: number,
-    trace: TracedEvent
-  ) => Promise<number>
 }
 
-export type HandlerMaker = (options: HandlerMakerOptions) => Promise<Handler>
+export type HandlerMaker<Data extends unknown = unknown> = (
+  options: HandlerMakerOptions
+) => Promise<Handler<Data>>
 
 export type TracedEvent = {
   operation: 'read' | 'write' | 'delete'
@@ -35,6 +41,10 @@ export type TracedEvent = {
   }
 }
 
+export type TracedEventWithBlockTime = TracedEvent & {
+  blockTimeUnixMs: number
+}
+
 export type WorkerInitData = {
   config: Config
   update: boolean
@@ -42,20 +52,7 @@ export type WorkerInitData = {
   websocket: boolean
 }
 
-export type ToWorkerMessage =
-  | {
-      type: 'trace'
-      event: TracedEvent
-    }
-  | {
-      type: 'shutdown'
-    }
-
-export type FromWorkerMessage =
-  | {
-      type: 'ready'
-    }
-  | {
-      type: 'processed'
-      count: number
-    }
+export type ExportQueueData = {
+  handler: string
+  data: unknown
+}
