@@ -63,6 +63,8 @@ const main = async () => {
       return blockHeightToTimeCache.get(blockHeight) ?? 0
     }
 
+    // This may fail if the RPC does not have the block info at this height
+    // anymore (i.e. if it's too old and the RPC pruned it)
     const loadIntoCache = async () => {
       const {
         header: { time },
@@ -87,16 +89,23 @@ const main = async () => {
           JSON.stringify(trace, null, 2) +
           '\n-------'
       )
-      Sentry.captureException(err, {
-        tags: {
-          type: 'failed-get-block',
-          script: 'export',
-        },
-        extra: {
-          trace,
-          blockHeight,
-        },
-      })
+
+      // Only log to Sentry if not block height unavailable error.
+      if (
+        !(err instanceof Error) ||
+        !err.message.includes('must be less than or equal to the current')
+      ) {
+        Sentry.captureException(err, {
+          tags: {
+            type: 'failed-get-block',
+            script: 'export',
+          },
+          extra: {
+            trace,
+            blockHeight,
+          },
+        })
+      }
 
       // Set to 0 on failure so we can continue.
       blockHeightToTimeCache.set(blockHeight, 0)
