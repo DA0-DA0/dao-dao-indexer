@@ -96,11 +96,7 @@ const main = async () => {
             interval: 100,
           })
         } catch (err) {
-          console.error(
-            '-------\nFailed to process:\n',
-            err instanceof Error ? err.message : err,
-            '\n-------'
-          )
+          console.error('-------\nFailed to process:\n', err, '\n-------')
           Sentry.captureException(err, {
             tags: {
               type: 'failed-flush',

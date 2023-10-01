@@ -194,19 +194,45 @@ const trace = async () => {
     }
 
     if (exportBatch.length) {
-      exportQueue.add(
-        BigInt(
-          exportBatch[exportBatch.length - 1].trace.metadata.blockHeight
-        ).toString(),
-        {
-          data: exportBatch.map(
-            ({ handler, data }): ExportQueueData => ({
-              handler,
-              data,
-            })
-          ),
-        }
+      // For state events with the same ID, only keep the last event. This is
+      // because the indexer guarantees that events are emitted in order, and
+      // the last event is the most up-to-date. Multiple events may occur if a
+      // state key is updated multiple times across different messages within
+      // the same block.
+      const uniqueBatchData = Object.values(
+        exportBatch.reduce(
+          (acc, data, index) => ({
+            ...acc,
+            [data.handler + ':' + data.data.id]: {
+              ...data,
+              index,
+            },
+          }),
+          {} as Record<string, typeof exportBatch[number] & { index: number }>
+        )
       )
+      // Ensure order is preserved.
+      uniqueBatchData.sort((a, b) => a.index - b.index)
+
+      if (uniqueBatchData.length) {
+        exportQueue.add(
+          BigInt(
+            uniqueBatchData[uniqueBatchData.length - 1].trace.metadata
+              .blockHeight
+          ).toString(),
+          {
+            data: uniqueBatchData.map(({ handler, data }): ExportQueueData => {
+              // Remove ID since it's no longer relevant.
+              delete data.id
+
+              return {
+                handler,
+                data,
+              }
+            }),
+          }
+        )
+      }
       exportBatch = []
     }
   }
