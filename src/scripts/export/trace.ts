@@ -421,6 +421,10 @@ const trace = async () => {
                 latestBlockTimeUnixMs
               )
 
+              console.log(
+                `Got new block height ${latestBlockHeight.toLocaleString()} time: ${latestBlockTimeUnixMs.toLocaleString()}.`
+              )
+
               // Update state singleton with latest information.
               await State.update(
                 {
