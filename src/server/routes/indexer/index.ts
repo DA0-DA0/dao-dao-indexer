@@ -1,5 +1,7 @@
 import Router from '@koa/router'
+import Koa from 'koa'
 import auth from 'koa-basic-auth'
+import mount from 'koa-mount'
 
 import { Config } from '@/core'
 
@@ -20,14 +22,15 @@ export const makeIndexerRouter = ({
   indexerRouter.get('/up', up)
 
   // Bull board (background worker dashboard)
-  indexerRouter.all(
-    '/jobs',
+  const jobsApp = new Koa()
+  jobsApp.use(
     auth({
       name: 'exporter',
       pass: exporterDashboardPassword,
-    }),
-    makeBullBoardJobsMiddleware()
+    })
   )
+  jobsApp.use(makeBullBoardJobsMiddleware())
+  indexerRouter.use(mount('/jobs', jobsApp))
 
   // Formula computer. This must be the last route since it's a catch-all.
   indexerRouter.get('/(.+)', computer)
