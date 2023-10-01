@@ -475,7 +475,7 @@ const trace = async () => {
   // Wait for queue to finish processing.
   await new Promise<void>((resolve) => {
     console.log(
-      `Shutting down after the queue drains ${traceQueue.length.toLocaleString()} events and ${exporting.toLocaleString()} others finish processing...`
+      `Shutting down after the queue drains ${traceQueue.length.toLocaleString()} traces and ${exporting.toLocaleString()} finish exporting...`
     )
 
     const interval = setInterval(() => {
