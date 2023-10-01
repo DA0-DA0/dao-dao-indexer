@@ -8,7 +8,9 @@ export const makeBullBoardJobsMiddleware = (basePath: string) => {
   const serverAdapter = new KoaAdapter().setBasePath(basePath)
 
   createBullBoard({
-    queues: [new BullMQAdapter(getBullQueue(QueueName.Export))],
+    queues: Object.values(QueueName).map(
+      (name) => new BullMQAdapter(getBullQueue(name))
+    ),
     serverAdapter,
   })
 
