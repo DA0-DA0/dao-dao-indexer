@@ -5,12 +5,15 @@ import { KoaAdapter } from '@bull-board/koa'
 import { EXPORT_QUEUE_NAME, getBullQueue } from '@/core'
 
 export const makeBullBoardJobsMiddleware = () => {
-  const serverAdapter = new KoaAdapter()
+  const serverAdapter = new KoaAdapter().setBasePath('/bull')
 
   createBullBoard({
     queues: [new BullMQAdapter(getBullQueue(EXPORT_QUEUE_NAME))],
     serverAdapter,
   })
 
-  return serverAdapter.registerPlugin()
+  return serverAdapter.registerPlugin({
+    // Mount on root since we wrap this in our own app with auth.
+    mount: '/',
+  })
 }
