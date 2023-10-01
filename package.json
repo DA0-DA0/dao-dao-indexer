@@ -98,6 +98,7 @@
     "commander": "^9.4.1",
     "cosmjs-types": "^0.8.0",
     "crypto-js": "^4.1.1",
+    "ejs": "^3.1.9",
     "jsonwebtoken": "^9.0.0",
     "koa": "^2.13.4",
     "koa-basic-auth": "^4.0.0",
