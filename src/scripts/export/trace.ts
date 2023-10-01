@@ -102,6 +102,26 @@ const trace = async () => {
   const getBlockTimeUnixMs = async (trace: TracedEvent): Promise<number> => {
     const { blockHeight } = trace.metadata
 
+    // If not in cache but WebSocket is connected, wait for up to 1 second for
+    // it to be added to the cache. We might be just a moment ahead of the new
+    // block event.
+    if (!blockHeightToTimeCache.has(blockHeight) && webSocketConnected) {
+      await new Promise<void>((resolve) => {
+        const interval = setInterval(() => {
+          if (blockHeightToTimeCache.has(blockHeight)) {
+            clearInterval(interval)
+            clearTimeout(timeout)
+            resolve()
+          }
+        }, 50)
+
+        const timeout = setTimeout(() => {
+          clearInterval(interval)
+          resolve()
+        }, 1000)
+      })
+    }
+
     if (blockHeightToTimeCache.has(blockHeight)) {
       return blockHeightToTimeCache.get(blockHeight) ?? 0
     }
@@ -175,6 +195,7 @@ const trace = async () => {
   console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
 
   let webSocketReady = false
+  let webSocketConnected = false
   const traceQueue: TracedEvent[] = []
   let traceExportPaused = false
   let traceExporter = Promise.resolve()
@@ -421,10 +442,6 @@ const trace = async () => {
                 latestBlockTimeUnixMs
               )
 
-              console.log(
-                `Got new block height ${latestBlockHeight.toLocaleString()} time: ${latestBlockTimeUnixMs.toLocaleString()}.`
-              )
-
               // Update state singleton with latest information.
               await State.update(
                 {
@@ -442,6 +459,7 @@ const trace = async () => {
             onConnect: () => {
               console.log('WebSocket connected.')
               webSocketReady = true
+              webSocketConnected = true
               processTraceQueue()
             },
             onError: async (error) => {
