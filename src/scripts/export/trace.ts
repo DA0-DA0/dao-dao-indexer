@@ -165,23 +165,17 @@ const trace = async () => {
           '\n-------'
       )
 
-      // Only log to Sentry if not block height unavailable error.
-      if (
-        !(err instanceof Error) ||
-        !err.message.includes('must be less than or equal to the current')
-      ) {
-        Sentry.captureException(err, {
-          tags: {
-            type: 'failed-get-block',
-            script: 'export',
-            chainId: (await State.getSingleton())?.chainId ?? 'unknown',
-          },
-          extra: {
-            trace,
-            blockHeight,
-          },
-        })
-      }
+      Sentry.captureException(err, {
+        tags: {
+          type: 'failed-get-block',
+          script: 'export',
+          chainId: (await State.getSingleton())?.chainId ?? 'unknown',
+        },
+        extra: {
+          trace,
+          blockHeight,
+        },
+      })
 
       // Set to 0 on failure so we can continue.
       blockHeightToTimeCache.set(blockHeight, 0)
