@@ -232,9 +232,7 @@ const trace = async () => {
       }
 
       console.log(
-        `\n[${new Date().toISOString()}] Exported ${
-          exportBatch.length
-        } events for block ${blockHeight.toLocaleString()}.`
+        `\n[${new Date().toISOString()}] Exported ${exportBatch.length.toLocaleString()} events for block ${blockHeight.toLocaleString()}.`
       )
 
       exportBatch = []
