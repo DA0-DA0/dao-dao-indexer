@@ -136,26 +136,51 @@ export const setUpFifoJsonTracer = ({
   fifoRs.on('data', dataListener)
 
   // Wait for FIFO to error or end.
-  const promise = new Promise<void>((resolve, reject) => {
+  const promise = new Promise<void>((_resolve, reject) => {
+    let done = false
+    const resolve = () => {
+      if (!done) {
+        done = true
+        _resolve()
+      }
+    }
+    const resolveDelayed = () => setTimeout(resolve, 5000)
+
     fifoRs.on('error', (error) => {
       fifoRs.off('end', resolve)
+      fifoRs.off('close', resolveDelayed)
       // Reject once the FIFO ends.
       fifoRs.on('end', () => {
-        reject(error)
+        if (!done) {
+          done = true
+          reject(error)
+        }
+      })
+      // If closed and promise not done after 5 seconds, reject.
+      fifoRs.on('close', () => {
+        setTimeout(() => {
+          if (!done) {
+            done = true
+            reject(error)
+          }
+        }, 5000)
       })
       // Close the FIFO if it is not already closed, so it ends.
       if (!fifoRs.closed) {
-        fifoRs.close()
+        fifoRs.destroy()
       }
     })
 
     // Once data ends, resolve.
     fifoRs.on('end', resolve)
+
+    // If closed and promise not done after 5 seconds, resolve.
+    fifoRs.on('close', resolveDelayed)
   })
 
   return {
     promise,
-    close: () => fifoRs.close(),
+    close: () => fifoRs.destroy(),
   }
 }
 
