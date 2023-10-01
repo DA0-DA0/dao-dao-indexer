@@ -38,8 +38,8 @@ export const setupRouter = (
         pass: exporterDashboardPassword || 'exporter',
       })
     )
-    bullApp.use(makeBullBoardJobsMiddleware())
-    app.use(mount('/bull', bullApp))
+    bullApp.use(makeBullBoardJobsMiddleware('/jobs'))
+    app.use(mount('/jobs', bullApp))
 
     // Indexer API.
     router.use(indexerRouter.routes(), indexerRouter.allowedMethods())
