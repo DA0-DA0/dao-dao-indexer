@@ -20,15 +20,14 @@ export const makeIndexerRouter = ({
   indexerRouter.get('/up', up)
 
   // Bull board (background worker dashboard)
-  const router = new Router()
-  router.use(
+  indexerRouter.all(
+    '/jobs',
     auth({
       name: 'exporter',
       pass: exporterDashboardPassword,
     }),
     makeBullBoardJobsMiddleware()
   )
-  indexerRouter.use('/jobs', router.routes(), router.allowedMethods())
 
   // Formula computer. This must be the last route since it's a catch-all.
   indexerRouter.get('/(.+)', computer)
