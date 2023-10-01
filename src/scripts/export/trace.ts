@@ -491,6 +491,8 @@ const trace = async () => {
 
   // Close queue.
   await exportQueue.close()
+
+  process.exit(0)
 }
 
 main().catch((err) => {
