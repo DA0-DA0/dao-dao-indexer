@@ -12,5 +12,5 @@ export const makeBullBoardJobsMiddleware = () => {
     serverAdapter,
   })
 
-  return serverAdapter.registerPlugin({ mount: '/jobs' })
+  return serverAdapter.registerPlugin()
 }

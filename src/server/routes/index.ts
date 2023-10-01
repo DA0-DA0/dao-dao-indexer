@@ -1,10 +1,13 @@
 import Router from '@koa/router'
 import Koa from 'koa'
+import auth from 'koa-basic-auth'
+import mount from 'koa-mount'
 
 import { Config } from '@/core/types'
 
 import { accountRouter } from './account'
-import { makeIndexerRouter } from './indexer'
+import { indexerRouter } from './indexer'
+import { makeBullBoardJobsMiddleware } from './indexer/bull'
 
 export type SetupRouterOptions = {
   config: Config
@@ -14,7 +17,7 @@ export type SetupRouterOptions = {
 
 export const setupRouter = (
   app: Koa,
-  { config, accounts }: SetupRouterOptions
+  { config: { exporterDashboardPassword }, accounts }: SetupRouterOptions
 ) => {
   const router = new Router()
 
@@ -28,8 +31,17 @@ export const setupRouter = (
     // Account API.
     router.use(accountRouter.routes(), accountRouter.allowedMethods())
   } else {
+    const bullApp = new Koa()
+    bullApp.use(
+      auth({
+        name: 'exporter',
+        pass: exporterDashboardPassword || 'exporter',
+      })
+    )
+    bullApp.use(makeBullBoardJobsMiddleware())
+    app.use(mount('/bull', bullApp))
+
     // Indexer API.
-    const indexerRouter = makeIndexerRouter(config)
     router.use(indexerRouter.routes(), indexerRouter.allowedMethods())
   }
 
