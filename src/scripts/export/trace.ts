@@ -99,13 +99,23 @@ const trace = async () => {
   const blockHeightToTimeCache = new LRUCache<number, number>({
     max: 100,
   })
+  // Store whether or not we've already tried to buffer and wait for WebSocket
+  // to load a block. If so, don't wait again. Use cache to prevent memory
+  // buildup.
+  const waitedForBlockCache = new LRUCache<number, boolean>({
+    max: 100,
+  })
   const getBlockTimeUnixMs = async (trace: TracedEvent): Promise<number> => {
     const { blockHeight } = trace.metadata
 
     // If not in cache but WebSocket is connected, wait for up to 1 second for
     // it to be added to the cache. We might be just a moment ahead of the new
-    // block event.
-    if (!blockHeightToTimeCache.has(blockHeight) && webSocketConnected) {
+    // block event. If we've already waited for it before, don't wait again.
+    if (
+      !blockHeightToTimeCache.has(blockHeight) &&
+      webSocketConnected &&
+      !waitedForBlockCache.get(blockHeight)
+    ) {
       await new Promise<void>((resolve) => {
         const interval = setInterval(() => {
           if (blockHeightToTimeCache.has(blockHeight)) {
@@ -120,6 +130,8 @@ const trace = async () => {
           resolve()
         }, 1000)
       })
+
+      waitedForBlockCache.set(blockHeight, true)
     }
 
     if (blockHeightToTimeCache.has(blockHeight)) {
