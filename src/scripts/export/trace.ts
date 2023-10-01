@@ -230,13 +230,14 @@ const trace = async () => {
           }),
         })
       }
-      exportBatch = []
 
       console.log(
         `\n[${new Date().toISOString()}] Exported ${
           exportBatch.length
-        } events for block ${blockHeight.toLocaleString()}...`
+        } events for block ${blockHeight.toLocaleString()}.`
       )
+
+      exportBatch = []
     }
   }
 
