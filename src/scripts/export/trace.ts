@@ -214,26 +214,29 @@ const trace = async () => {
       // Ensure order is preserved.
       uniqueBatchData.sort((a, b) => a.index - b.index)
 
+      const blockHeight = BigInt(
+        exportBatch[exportBatch.length - 1].trace.metadata.blockHeight
+      )
       if (uniqueBatchData.length) {
-        exportQueue.add(
-          BigInt(
-            uniqueBatchData[uniqueBatchData.length - 1].trace.metadata
-              .blockHeight
-          ).toString(),
-          {
-            data: uniqueBatchData.map(({ handler, data }): ExportQueueData => {
-              // Remove ID since it's no longer relevant.
-              delete data.id
+        exportQueue.add(blockHeight.toString(), {
+          data: uniqueBatchData.map(({ handler, data }): ExportQueueData => {
+            // Remove ID since it's no longer relevant.
+            delete data.id
 
-              return {
-                handler,
-                data,
-              }
-            }),
-          }
-        )
+            return {
+              handler,
+              data,
+            }
+          }),
+        })
       }
       exportBatch = []
+
+      console.log(
+        `\n[${new Date().toISOString()}] Exported ${
+          exportBatch.length
+        } events for block ${blockHeight.toLocaleString()}...`
+      )
     }
   }
 
