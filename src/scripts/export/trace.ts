@@ -90,6 +90,17 @@ const trace = async () => {
   const exportQueue = getBullQueue<{ data: ExportQueueData[] }>(
     EXPORT_QUEUE_NAME
   )
+  exportQueue.on('error', async (err) => {
+    console.error('Queue errored', err)
+
+    Sentry.captureException(err, {
+      tags: {
+        type: 'export-queue-error',
+        script: 'export:trace',
+        chainId: (await State.getSingleton())?.chainId ?? 'unknown',
+      },
+    })
+  })
 
   // Create CosmWasm client that batches requests.
   const cosmWasmClient = await getCosmWasmClient(config.rpc)
