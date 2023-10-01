@@ -113,6 +113,18 @@ const main = async () => {
     }
   )
 
+  worker.on('error', async (err) => {
+    console.error('Worker errored', err)
+
+    Sentry.captureException(err, {
+      tags: {
+        type: 'export-worker-error',
+        script: 'export:process',
+        chainId: (await State.getSingleton())?.chainId ?? 'unknown',
+      },
+    })
+  })
+
   // Add shutdown signal handler.
   process.on('SIGINT', () => {
     if (worker.closing) {

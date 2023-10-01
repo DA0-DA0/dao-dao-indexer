@@ -18,6 +18,13 @@ const getBullConnection = (): ConnectionOptions | undefined => {
 export const getBullQueue = <T extends unknown>(name: string) =>
   new Queue<T>(name, {
     connection: getBullConnection(),
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 300,
+      },
+    },
   })
 
 export const getBullWorker = <T extends unknown>(
@@ -27,11 +34,8 @@ export const getBullWorker = <T extends unknown>(
   new Worker<T>(name, processor, {
     connection: getBullConnection(),
     removeOnComplete: {
-      // Keep last 1 day of successful jobs.
-      age: 1 * 24 * 60 * 60,
-    },
-    removeOnFail: {
-      // Keep last 3 days of failed jobs.
+      // Keep last 3 days of successful jobs.
       age: 3 * 24 * 60 * 60,
     },
+    // Keep all failed jobs.
   })
