@@ -1,8 +1,7 @@
 import { ConnectionOptions, Processor, Queue, Worker } from 'bullmq'
 
 import { loadConfig } from './config'
-
-export const EXPORT_QUEUE_NAME = 'export'
+import { QueueName } from './types'
 
 const getBullConnection = (): ConnectionOptions | undefined => {
   const { redis } = loadConfig()
@@ -15,7 +14,7 @@ const getBullConnection = (): ConnectionOptions | undefined => {
   )
 }
 
-export const getBullQueue = <T extends unknown>(name: string) =>
+export const getBullQueue = <T extends unknown>(name: QueueName) =>
   new Queue<T>(name, {
     connection: getBullConnection(),
     defaultJobOptions: {
@@ -28,7 +27,7 @@ export const getBullQueue = <T extends unknown>(name: string) =>
   })
 
 export const getBullWorker = <T extends unknown>(
-  name: string,
+  name: QueueName,
   processor: Processor<T>
 ) =>
   new Worker<T>(name, processor, {

@@ -1,14 +1,10 @@
 import * as Sentry from '@sentry/node'
-import retry from 'async-await-retry'
-import { Worker } from 'bullmq'
 import { Command } from 'commander'
 
-import { DbType, EXPORT_QUEUE_NAME, getBullWorker, loadConfig } from '@/core'
+import { DbType, getBullWorker, loadConfig } from '@/core'
 import { State, loadDb } from '@/db'
 
-import { handlerMakers } from './handlers'
-import { ExportQueueData } from './types'
-import { getCosmWasmClient } from './utils'
+import { workerMakers } from './workers'
 
 // Parse arguments.
 const program = new Command()
@@ -51,88 +47,44 @@ const main = async () => {
   // Initialize state.
   await State.createSingletonIfMissing()
 
-  const cosmWasmClient = await getCosmWasmClient(config.rpc)
-
-  // Setup handlers.
-  const handlers = await Promise.all(
-    Object.entries(handlerMakers).map(async ([name, handlerMaker]) => ({
-      name,
-      handler: await handlerMaker({
+  // Create queue workers.
+  const madeWorkers = await Promise.all(
+    workerMakers.map((makeWorker) =>
+      makeWorker({
         config,
         updateComputations: !!update,
         sendWebhooks: !!webhooks,
-        cosmWasmClient,
-      }),
-    }))
+      })
+    )
   )
 
-  // Create queue worker.
-  const worker = getBullWorker<{ data: ExportQueueData[] }>(
-    EXPORT_QUEUE_NAME,
-    async (job) => {
-      const { data } = job.data
+  const workers = madeWorkers.map(({ queueName, processor }) => {
+    const worker = getBullWorker(queueName, processor)
 
-      // Group data by handler.
-      const groupedData = data.reduce(
-        (acc, { handler, data }) => ({
-          ...acc,
-          [handler]: (acc[handler] || []).concat(data),
-        }),
-        {} as Record<string, any[]>
-      )
+    worker.on('error', async (err) => {
+      console.error('Worker errored', err)
 
-      // Process data.
-      for (const { name, handler } of handlers) {
-        const events = groupedData[name]
-        if (!events?.length) {
-          continue
-        }
-
-        try {
-          // Retry 3 times with exponential backoff starting at 100ms delay.
-          await retry(handler.process, [events], {
-            retriesMax: 3,
-            exponential: true,
-            interval: 100,
-          })
-        } catch (err) {
-          console.error('-------\nFailed to process:\n', err, '\n-------')
-          Sentry.captureException(err, {
-            tags: {
-              type: 'failed-flush',
-              script: 'export',
-            },
-            extra: {
-              handler: name,
-            },
-          })
-
-          throw err
-        }
-      }
-    }
-  )
-
-  worker.on('error', async (err) => {
-    console.error('Worker errored', err)
-
-    Sentry.captureException(err, {
-      tags: {
-        type: 'export-worker-error',
-        script: 'export:process',
-        chainId: (await State.getSingleton())?.chainId ?? 'unknown',
-      },
+      Sentry.captureException(err, {
+        tags: {
+          type: 'worker-error',
+          script: 'export:process',
+          chainId: (await State.getSingleton())?.chainId ?? 'unknown',
+          queueName,
+        },
+      })
     })
+
+    return worker
   })
 
   // Add shutdown signal handler.
   process.on('SIGINT', () => {
-    if (worker.closing) {
+    if (workers.every((w) => w.closing)) {
       console.log('Already shutting down.')
     } else {
-      console.log('Shutting down after worker jobs finish...')
-      // Exit once worker closes.
-      worker.close().then(async () => {
+      console.log('Shutting down after current worker jobs complete...')
+      // Exit once all workers close.
+      Promise.all(workers.map((worker) => worker.close())).then(async () => {
         await dataSequelize.close()
         await accountsSequelize.close()
         process.exit(0)

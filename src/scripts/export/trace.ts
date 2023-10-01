@@ -9,7 +9,7 @@ import waitPort from 'wait-port'
 
 import {
   DbType,
-  EXPORT_QUEUE_NAME,
+  QueueName,
   getBullQueue,
   loadConfig,
   objectMatchesStructure,
@@ -88,10 +88,10 @@ const trace = async () => {
   await State.createSingletonIfMissing()
 
   const exportQueue = getBullQueue<{ data: ExportQueueData[] }>(
-    EXPORT_QUEUE_NAME
+    QueueName.Export
   )
   exportQueue.on('error', async (err) => {
-    console.error('Queue errored', err)
+    console.error('Export queue errored', err)
 
     Sentry.captureException(err, {
       tags: {

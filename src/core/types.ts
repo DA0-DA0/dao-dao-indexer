@@ -552,6 +552,7 @@ export type ProcessedWebhook<V = any> = Omit<Webhook<V>, 'filter'> & {
 }
 
 export type PendingWebhook = {
+  wasmEventId: number
   endpoint: WebhookEndpoint
   value: any
 }
@@ -559,4 +560,9 @@ export type PendingWebhook = {
 export enum DbType {
   Accounts = 'accounts',
   Data = 'data',
+}
+
+export enum QueueName {
+  Export = 'export',
+  Webhooks = 'webhooks',
 }

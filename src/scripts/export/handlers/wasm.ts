@@ -9,7 +9,6 @@ import { ParsedWasmStateEvent } from '@/core'
 import {
   AccountWebhook,
   Contract,
-  PendingWebhook,
   State,
   WasmStateEvent,
   WasmStateEventTransformation,
@@ -18,6 +17,7 @@ import {
 import { updateIndexesForContracts } from '@/ms'
 
 import { Handler, HandlerMaker } from '../types'
+import { queueWebhooks } from '../webhooks'
 
 const STORE_NAME = 'wasm'
 const CONTRACT_BYTE_LENGTH = 32
@@ -410,7 +410,7 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
 
     // Queue webhooks as needed.
     if (sendWebhooks && exportedEvents.length > 0) {
-      await PendingWebhook.queueWebhooks(state, exportedEvents)
+      await queueWebhooks(state, exportedEvents)
       await AccountWebhook.queueWebhooks(exportedEvents)
     }
 

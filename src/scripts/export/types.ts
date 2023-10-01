@@ -1,6 +1,7 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
+import { Processor } from 'bullmq'
 
-import { Config } from '@/core'
+import { Config, QueueName } from '@/core/types'
 
 export type Handler<Data extends unknown = unknown> = {
   // What store name to filter by for events to handle.
@@ -56,3 +57,17 @@ export type ExportQueueData = {
   handler: string
   data: unknown
 }
+
+export type ExportWorker<Data extends unknown = unknown> = {
+  queueName: QueueName
+  processor: Processor<Data>
+}
+
+export type ExportWorkerMakerOptions = Omit<
+  HandlerMakerOptions,
+  'cosmWasmClient'
+>
+
+export type ExportWorkerMaker<Data extends unknown = unknown> = (
+  options: ExportWorkerMakerOptions
+) => Promise<ExportWorker<Data>>
