@@ -8,12 +8,13 @@ import { LRUCache } from 'lru-cache'
 import waitPort from 'wait-port'
 
 import {
+  DbType,
   EXPORT_QUEUE_NAME,
   getBullQueue,
   loadConfig,
   objectMatchesStructure,
 } from '@/core'
-import { State } from '@/db'
+import { State, loadDb } from '@/db'
 import { setupMeilisearch } from '@/ms'
 
 import { handlerMakers } from './handlers'
@@ -74,14 +75,18 @@ const main = async () => {
     throw new Error(`Trace file is not a FIFO: ${traceFile}.`)
   }
 
-  // Initialize state.
-  await State.createSingletonIfMissing()
-
   // Read from trace file.
   await trace()
 }
 
 const trace = async () => {
+  const dataSequelize = await loadDb({
+    type: DbType.Data,
+  })
+
+  // Initialize state.
+  await State.createSingletonIfMissing()
+
   const exportQueue = getBullQueue<{ data: ExportQueueData[] }>(
     EXPORT_QUEUE_NAME
   )
@@ -481,8 +486,11 @@ const trace = async () => {
     }, 50)
   })
 
-  // Give a little time for the worker to queue.
-  await new Promise((resolve) => setTimeout(resolve, 5000))
+  // Close database connection.
+  await dataSequelize.close()
+
+  // Close queue.
+  await exportQueue.close()
 }
 
 main().catch((err) => {
