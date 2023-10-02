@@ -539,6 +539,11 @@ const trace = async () => {
 
   // Wait for queue to finish processing.
   await new Promise<void>((resolve) => {
+    if (exporting === 0 && traceQueue.length === 0) {
+      resolve()
+      return
+    }
+
     console.log(
       `Shutting down after the queue drains ${traceQueue.length.toLocaleString()} traces and ${exporting.toLocaleString()} finish exporting...`
     )
