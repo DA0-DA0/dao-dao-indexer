@@ -156,14 +156,14 @@ export const setUpFifoJsonTracer = ({
           reject(error)
         }
       })
-      // If closed and promise not done after 5 seconds, reject.
+      // If closed and promise not done after 2 seconds, reject.
       fifoRs.on('close', () => {
         setTimeout(() => {
           if (!done) {
             done = true
             reject(error)
           }
-        }, 5000)
+        }, 2000)
       })
       // Close the FIFO if it is not already closed, so it ends.
       if (!fifoRs.closed) {
