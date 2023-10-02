@@ -22,7 +22,7 @@
     "export:trace": "node dist/scripts/export/trace.js",
     "export:process": "node dist/scripts/export/process.js",
     "export:dev": "docker-compose -f compose.dev.yml up --exit-code-from export",
-    "export:prod": "npm install && npm run build && pm2 delete all && npm run db:migrate:data && pm2 start ecosystem.config.js --only export-tracer,export-processor && pm2 save",
+    "export:prod": "npm install && npm run build && pm2 delete all && npm run db:migrate:data && pm2 start ecosystem.config.js --only tracer,processor && pm2 save",
     "accountWebhooks": "node dist/scripts/accountWebhooks.js",
     "transform": "node dist/scripts/transform.js",
     "pre-compute": "node dist/scripts/preCompute.js",

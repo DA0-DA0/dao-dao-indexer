@@ -339,7 +339,7 @@ const trace = async () => {
       Sentry.captureException(err, {
         tags: {
           type: 'failed-export-trace',
-          script: 'export',
+          script: 'export:trace',
           chainId: (await State.getSingleton())?.chainId ?? 'unknown',
         },
         extra: {
