@@ -327,7 +327,7 @@ const trace = async () => {
         if (exportTraceBatchDebounce !== null) {
           clearTimeout(exportTraceBatchDebounce)
         }
-        exportTraceBatchDebounce = setTimeout(exportTraceBatch, 200)
+        exportTraceBatchDebounce = setTimeout(exportTraceBatch, 500)
       }
     } catch (err) {
       console.error(
