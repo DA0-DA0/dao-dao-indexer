@@ -108,15 +108,19 @@ const trace = async () => {
   // Helper function that gets block time for height, cached in memory, which is
   // filled in by the NewBlock WebSocket listener.
   const blockHeightToTimeCache = new LRUCache<number, number>({
-    max: 10000,
+    max: 5000,
   })
   const getBlockTimeUnixMs = async (trace: TracedEvent): Promise<number> => {
     const { blockHeight } = trace.metadata
 
-    // If not in cache but WebSocket is connected, wait for up to 5 seconds for
-    // it to be added to the cache. We might be just a moment ahead of the new
-    // block event.
-    if (!blockHeightToTimeCache.has(blockHeight) && webSocketConnected) {
+    // If not in cache but WebSocket is connected and every block is less than
+    // the current one, wait for up to 5 seconds for it to be added to the
+    // cache. We might be just a moment ahead of the new block event.
+    if (
+      !blockHeightToTimeCache.has(blockHeight) &&
+      webSocketConnected &&
+      blockHeightToTimeCache.dump().every(([key]) => key < blockHeight)
+    ) {
       const time = await new Promise<number | undefined>((resolve) => {
         const interval = setInterval(() => {
           if (blockHeightToTimeCache.has(blockHeight)) {
