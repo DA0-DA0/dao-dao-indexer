@@ -1,4 +1,7 @@
 {
+  "redis": {
+    "host": "redis"
+  },
   "db": {
     "data": {
       "dialect": "postgres",

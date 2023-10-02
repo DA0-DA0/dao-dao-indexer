@@ -2,6 +2,9 @@
   "home": "./fake",
   "rpc": "https://uni-rpc.reece.sh",
   "bech32Prefix": "juno",
+  "redis": {
+    "host": "redis"
+  },
   "db": {
     "data": {
       "dialect": "postgres",

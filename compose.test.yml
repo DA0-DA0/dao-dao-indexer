@@ -12,9 +12,11 @@ services:
       NODE_ENV: test
       # contains db connection info that matches db service setup below
       CONFIG_FILE: config-test.json
-    # waits for db to start
+    # waits for db and redis to start
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     # colorizes output
     tty: true
@@ -28,6 +30,14 @@ services:
       POSTGRES_PASSWORD: test
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
       interval: 1s
       timeout: 3s
       retries: 5
