@@ -108,7 +108,7 @@ const trace = async () => {
   // Helper function that gets block time for height, cached in memory, which is
   // filled in by the NewBlock WebSocket listener.
   const blockHeightToTimeCache = new LRUCache<number, number>({
-    max: 100,
+    max: 10000,
   })
   const getBlockTimeUnixMs = async (trace: TracedEvent): Promise<number> => {
     const { blockHeight } = trace.metadata
