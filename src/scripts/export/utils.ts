@@ -1,5 +1,11 @@
 import * as fs from 'fs'
 
+import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
+import {
+  HttpBatchClient,
+  Tendermint34Client,
+  Tendermint37Client,
+} from '@cosmjs/tendermint-rpc'
 import { WebSocket } from 'ws'
 
 import { objectMatchesStructure } from '@/core'
@@ -130,26 +136,51 @@ export const setUpFifoJsonTracer = ({
   fifoRs.on('data', dataListener)
 
   // Wait for FIFO to error or end.
-  const promise = new Promise<void>((resolve, reject) => {
+  const promise = new Promise<void>((_resolve, reject) => {
+    let done = false
+    const resolve = () => {
+      if (!done) {
+        done = true
+        _resolve()
+      }
+    }
+    const resolveDelayed = () => setTimeout(resolve, 5000)
+
     fifoRs.on('error', (error) => {
       fifoRs.off('end', resolve)
+      fifoRs.off('close', resolveDelayed)
       // Reject once the FIFO ends.
       fifoRs.on('end', () => {
-        reject(error)
+        if (!done) {
+          done = true
+          reject(error)
+        }
+      })
+      // If closed and promise not done after 5 seconds, reject.
+      fifoRs.on('close', () => {
+        setTimeout(() => {
+          if (!done) {
+            done = true
+            reject(error)
+          }
+        }, 5000)
       })
       // Close the FIFO if it is not already closed, so it ends.
       if (!fifoRs.closed) {
-        fifoRs.close()
+        fifoRs.destroy()
       }
     })
 
     // Once data ends, resolve.
     fifoRs.on('end', resolve)
+
+    // If closed and promise not done after 5 seconds, resolve.
+    fifoRs.on('close', resolveDelayed)
   })
 
   return {
     promise,
-    close: () => fifoRs.close(),
+    close: () => fifoRs.destroy(),
   }
 }
 
@@ -217,4 +248,34 @@ export const setUpWebSocketNewBlockListener = ({
   })
 
   return webSocket
+}
+
+// Create CosmWasm client that batches requests.
+export const getCosmWasmClient = async (
+  rpc: string
+): Promise<CosmWasmClient> => {
+  const httpClient = new HttpBatchClient(rpc)
+  const tmClient = await (
+    (
+      await connectTendermintClient(rpc)
+    ).constructor as typeof Tendermint34Client | typeof Tendermint37Client
+  ).create(httpClient)
+  // @ts-ignore
+  return new CosmWasmClient(tmClient)
+}
+
+// Connect the correct tendermint client based on the node's version.
+export const connectTendermintClient = async (endpoint: string) => {
+  // Tendermint/CometBFT 0.34/0.37 auto-detection. Starting with 0.37 we seem to
+  // get reliable versions again 🎉 Using 0.34 as the fallback.
+  let tmClient
+  const tm37Client = await Tendermint37Client.connect(endpoint)
+  const version = (await tm37Client.status()).nodeInfo.version
+  if (version.startsWith('0.37.')) {
+    tmClient = tm37Client
+  } else {
+    tm37Client.disconnect()
+    tmClient = await Tendermint34Client.connect(endpoint)
+  }
+  return tmClient
 }

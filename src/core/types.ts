@@ -37,6 +37,11 @@ export type Config = {
     data: DB
     accounts: DB
   }
+  redis?: {
+    host?: string
+    port?: number
+    password: string
+  }
   meilisearch?: {
     host: string
     apiKey?: string
@@ -76,6 +81,8 @@ export type Config = {
   soketi?: PusherOptions
   // Accounts server JWT secret.
   accountsJwtSecret?: string
+  // Indexer exporter dashboard password.
+  exporterDashboardPassword?: string
 
   // Other config options.
   [key: string]: any
@@ -545,6 +552,7 @@ export type ProcessedWebhook<V = any> = Omit<Webhook<V>, 'filter'> & {
 }
 
 export type PendingWebhook = {
+  wasmEventId: number
   endpoint: WebhookEndpoint
   value: any
 }
@@ -552,4 +560,9 @@ export type PendingWebhook = {
 export enum DbType {
   Accounts = 'accounts',
   Data = 'data',
+}
+
+export enum QueueName {
+  Export = 'export',
+  Webhooks = 'webhooks',
 }

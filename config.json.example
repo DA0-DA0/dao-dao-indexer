@@ -2,6 +2,10 @@
   "home": "/Users/noah/.juno/indexer",
   "rpc": "https://uni-rpc.reece.sh",
   "bech32Prefix": "juno",
+  "redis": {
+    "host": "127.0.0.1",
+    "password": ""
+  },
   "db": {
     "data": {
       "dialect": "postgres",
