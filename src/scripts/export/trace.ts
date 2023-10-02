@@ -560,6 +560,8 @@ const trace = async () => {
     }, 50)
   })
 
+  await traceExporter
+
   // Close database connection.
   await dataSequelize.close()
 
