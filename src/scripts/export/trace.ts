@@ -110,39 +110,31 @@ const trace = async () => {
   const blockHeightToTimeCache = new LRUCache<number, number>({
     max: 100,
   })
-  // Store whether or not we've already tried to buffer and wait for WebSocket
-  // to load a block. If so, don't wait again. Use cache to prevent memory
-  // buildup.
-  const waitedForBlockCache = new LRUCache<number, boolean>({
-    max: 100,
-  })
   const getBlockTimeUnixMs = async (trace: TracedEvent): Promise<number> => {
     const { blockHeight } = trace.metadata
 
-    // If not in cache but WebSocket is connected, wait for up to 1 second for
+    // If not in cache but WebSocket is connected, wait for up to 5 seconds for
     // it to be added to the cache. We might be just a moment ahead of the new
-    // block event. If we've already waited for it before, don't wait again.
-    if (
-      !blockHeightToTimeCache.has(blockHeight) &&
-      webSocketConnected &&
-      !waitedForBlockCache.get(blockHeight)
-    ) {
-      await new Promise<void>((resolve) => {
+    // block event.
+    if (!blockHeightToTimeCache.has(blockHeight) && webSocketConnected) {
+      const time = await new Promise<number | undefined>((resolve) => {
         const interval = setInterval(() => {
           if (blockHeightToTimeCache.has(blockHeight)) {
             clearInterval(interval)
             clearTimeout(timeout)
-            resolve()
+            resolve(blockHeightToTimeCache.get(blockHeight))
           }
         }, 50)
 
         const timeout = setTimeout(() => {
           clearInterval(interval)
-          resolve()
-        }, 1000)
+          resolve(undefined)
+        }, 5000)
       })
 
-      waitedForBlockCache.set(blockHeight, true)
+      if (time !== undefined) {
+        return time
+      }
     }
 
     if (blockHeightToTimeCache.has(blockHeight)) {
@@ -356,6 +348,12 @@ const trace = async () => {
       })
     } finally {
       exporting--
+
+      // If no more events being exported, reset trace exporter queue promise
+      // variable so that memory of the promises in the chain can be cleaned up.
+      if (exporting === 0) {
+        traceExporter = Promise.resolve()
+      }
     }
   }
 
