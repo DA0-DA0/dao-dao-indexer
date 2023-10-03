@@ -116,28 +116,37 @@ const trace = async () => {
     // If not in cache but WebSocket is connected and every block is less than
     // the current one, wait for up to 5 seconds for it to be added to the
     // cache. We might be just a moment ahead of the new block event.
-    if (
-      !blockHeightToTimeCache.has(blockHeight) &&
-      webSocketConnected &&
-      blockHeightToTimeCache.dump().every(([key]) => key < blockHeight)
-    ) {
-      const time = await new Promise<number | undefined>((resolve) => {
-        const interval = setInterval(() => {
-          if (blockHeightToTimeCache.has(blockHeight)) {
+    if (!blockHeightToTimeCache.has(blockHeight) && webSocketConnected) {
+      const blockHeights = blockHeightToTimeCache.dump().map(([key]) => key)
+      if (blockHeights.every((b) => b < blockHeight)) {
+        const earliestBlockHeight = blockHeights.reduce((acc, curr) =>
+          curr < acc ? curr : acc
+        )
+        const latestBlockHeight = blockHeights.reduce((acc, curr) =>
+          curr > acc ? curr : acc
+        )
+        console.log(
+          `Waiting for ${blockHeight.toLocaleString()}'s time... (${earliestBlockHeight.toLocaleString()} — ${latestBlockHeight.toLocaleString()})`
+        )
+
+        const time = await new Promise<number | undefined>((resolve) => {
+          const interval = setInterval(() => {
+            if (blockHeightToTimeCache.has(blockHeight)) {
+              clearInterval(interval)
+              clearTimeout(timeout)
+              resolve(blockHeightToTimeCache.get(blockHeight))
+            }
+          }, 50)
+
+          const timeout = setTimeout(() => {
             clearInterval(interval)
-            clearTimeout(timeout)
-            resolve(blockHeightToTimeCache.get(blockHeight))
-          }
-        }, 50)
+            resolve(undefined)
+          }, 5000)
+        })
 
-        const timeout = setTimeout(() => {
-          clearInterval(interval)
-          resolve(undefined)
-        }, 5000)
-      })
-
-      if (time !== undefined) {
-        return time
+        if (time !== undefined) {
+          return time
+        }
       }
     }
 
