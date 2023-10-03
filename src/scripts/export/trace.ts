@@ -119,11 +119,13 @@ const trace = async () => {
     if (!blockHeightToTimeCache.has(blockHeight) && webSocketConnected) {
       const blockHeights = blockHeightToTimeCache.dump().map(([key]) => key)
       if (blockHeights.every((b) => b < blockHeight)) {
-        const earliestBlockHeight = blockHeights.reduce((acc, curr) =>
-          curr < acc ? curr : acc
+        const earliestBlockHeight = blockHeights.reduce(
+          (acc, curr) => (curr < acc ? curr : acc),
+          Infinity
         )
-        const latestBlockHeight = blockHeights.reduce((acc, curr) =>
-          curr > acc ? curr : acc
+        const latestBlockHeight = blockHeights.reduce(
+          (acc, curr) => (curr > acc ? curr : acc),
+          -Infinity
         )
         console.log(
           `Waiting for ${blockHeight.toLocaleString()}'s time... (${earliestBlockHeight.toLocaleString()} — ${latestBlockHeight.toLocaleString()})`
