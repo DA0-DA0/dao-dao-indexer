@@ -523,6 +523,7 @@ const trace = async () => {
             },
             onClose: () => {
               // On close, reconnect.
+              console.error('WebSocket closed, reconnecting in 3 seconds...')
               webSocketConnected = false
               setTimeout(setUpWebSocket, 3000)
             },
