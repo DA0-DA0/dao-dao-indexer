@@ -128,7 +128,7 @@ const trace = async () => {
           -Infinity
         )
         console.log(
-          `Waiting for ${blockHeight.toLocaleString()}'s time... (${earliestBlockHeight.toLocaleString()} — ${latestBlockHeight.toLocaleString()})`
+          `[${new Date().toISOString()}] Waiting for ${blockHeight.toLocaleString()}'s time... (${earliestBlockHeight.toLocaleString()} — ${latestBlockHeight.toLocaleString()})`
         )
 
         const time = await new Promise<number | undefined>((resolve) => {
