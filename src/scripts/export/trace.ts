@@ -119,18 +119,6 @@ const trace = async () => {
     if (!blockHeightToTimeCache.has(blockHeight) && webSocketConnected) {
       const blockHeights = blockHeightToTimeCache.dump().map(([key]) => key)
       if (blockHeights.every((b) => b < blockHeight)) {
-        const earliestBlockHeight = blockHeights.reduce(
-          (acc, curr) => (curr < acc ? curr : acc),
-          Infinity
-        )
-        const latestBlockHeight = blockHeights.reduce(
-          (acc, curr) => (curr > acc ? curr : acc),
-          -Infinity
-        )
-        console.log(
-          `[${new Date().toISOString()}] Waiting for ${blockHeight.toLocaleString()}'s time... (${earliestBlockHeight.toLocaleString()} — ${latestBlockHeight.toLocaleString()})`
-        )
-
         const time = await new Promise<number | undefined>((resolve) => {
           const interval = setInterval(() => {
             if (blockHeightToTimeCache.has(blockHeight)) {
@@ -141,6 +129,21 @@ const trace = async () => {
           }, 50)
 
           const timeout = setTimeout(() => {
+            const blockHeights = blockHeightToTimeCache
+              .dump()
+              .map(([key]) => key)
+            const earliestBlockHeight = blockHeights.reduce(
+              (acc, curr) => (curr < acc ? curr : acc),
+              Infinity
+            )
+            const latestBlockHeight = blockHeights.reduce(
+              (acc, curr) => (curr > acc ? curr : acc),
+              -Infinity
+            )
+
+            console.log(
+              `[${new Date().toISOString()}] Timed out waiting for ${blockHeight.toLocaleString()}'s time... (${earliestBlockHeight.toLocaleString()} — ${latestBlockHeight.toLocaleString()})`
+            )
             clearInterval(interval)
             resolve(undefined)
           }, 3000)
