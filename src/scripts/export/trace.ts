@@ -500,7 +500,7 @@ const trace = async () => {
               )
             },
             onConnect: () => {
-              console.log('WebSocket connected.')
+              console.log(`[${new Date().toISOString()}] WebSocket connected.`)
               webSocketReady = true
               webSocketConnected = true
               processTraceQueue()
@@ -571,7 +571,9 @@ const trace = async () => {
     // Tell tracer to close. The rest of the data in the buffer will finish
     // processing.
     closeTracer()
-    console.log('Shutting down after handlers finish...')
+    console.log(
+      `[${new Date().toISOString()}] Shutting down after handlers finish...`
+    )
   })
 
   // Wait for tracer to close. Happens on FIFO closure or if `closeTracer` is
@@ -586,7 +588,7 @@ const trace = async () => {
     }
 
     console.log(
-      `Shutting down after the queue drains ${traceQueue.length.toLocaleString()} traces and ${exporting.toLocaleString()} finish exporting...`
+      `[${new Date().toISOString()}] Shutting down after the queue drains ${traceQueue.length.toLocaleString()} traces and ${exporting.toLocaleString()} finish exporting...`
     )
 
     const interval = setInterval(() => {
