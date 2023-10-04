@@ -291,6 +291,17 @@ const trace = async () => {
         return
       }
 
+      // If trace has `store_name` that does not exist in any of the handlers,
+      // ignore.
+      if (
+        trace.metadata.store_name &&
+        !handlers.some(
+          ({ handler }) => handler.storeName === trace.metadata.store_name
+        )
+      ) {
+        return
+      }
+
       // Fetch block time.
       const blockTimeUnixMs = await getBlockTimeUnixMs(trace)
       const eventWithBlockTime: TracedEventWithBlockTime = {

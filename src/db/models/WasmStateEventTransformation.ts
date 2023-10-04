@@ -109,8 +109,8 @@ export class WasmStateEventTransformation extends DependendableEventModel {
           ''
         )
 
-        // 2. Extract contract address from key.
-        // Dependent keys for any contract start with "*:".
+        // 2. Extract contract address from key. Dependent keys for any contract
+        //    start with "*:".
         const contractAddress = key.startsWith('*:') ? '' : key.split(':')[0]
 
         key = key
@@ -235,8 +235,8 @@ export class WasmStateEventTransformation extends DependendableEventModel {
           event.delete && !transformer.manuallyTransformDeletes
             ? null
             : await transformer.getValue(event, async () => {
-                // Find most recent transformation for this contract and name before
-                // this block.
+                // Find most recent transformation for this contract and name
+                // before this block.
 
                 // Check evaluated transformations in case the most recent
                 // transformation is in the current group of events.

@@ -227,9 +227,14 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
     }
 
     // Export state.
-    let stateEvents = events.flatMap((event) =>
-      event.type === 'state' ? event.data : []
-    )
+    let stateEvents = events
+      .flatMap((event) => (event.type === 'state' ? event.data : []))
+      .map(
+        (e): ParsedWasmStateEvent => ({
+          ...e,
+          blockTimestamp: new Date(Number(e.blockTimeUnixMs)),
+        })
+      )
     if (!stateEvents.length) {
       return
     }
@@ -319,15 +324,9 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
       // don't insert duplicate events. If we encounter a duplicate, we update
       // the `value`, `valueJson`, and `delete` fields in case event processing
       // for a block was batched separately.
-      const events = await WasmStateEvent.bulkCreate(
-        stateEvents.map((e) => ({
-          ...e,
-          blockTimestamp: new Date(Number(e.blockTimeUnixMs)),
-        })),
-        {
-          updateOnDuplicate: ['value', 'valueJson', 'delete'],
-        }
-      )
+      const events = await WasmStateEvent.bulkCreate(stateEvents, {
+        updateOnDuplicate: ['value', 'valueJson', 'delete'],
+      })
 
       return {
         contracts,
