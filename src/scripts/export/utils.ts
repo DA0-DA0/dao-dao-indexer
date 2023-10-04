@@ -188,6 +188,7 @@ type WebSocketNewBlockListenerOptions = {
   rpc: string
   onNewBlock: (block: unknown) => void | Promise<void>
   onConnect?: () => void
+  onClose?: () => void
   onError?: (error: Error) => void
 }
 
@@ -195,6 +196,7 @@ export const setUpWebSocketNewBlockListener = ({
   rpc,
   onNewBlock,
   onConnect,
+  onClose,
   onError,
 }: WebSocketNewBlockListenerOptions): WebSocket => {
   // Get new-block WebSocket.
@@ -245,6 +247,10 @@ export const setUpWebSocketNewBlockListener = ({
   // Log error and ignore.
   webSocket.on('error', (error) => {
     onError?.(error)
+  })
+
+  webSocket.on('close', () => {
+    onClose?.()
   })
 
   return webSocket

@@ -114,7 +114,7 @@ const trace = async () => {
     const { blockHeight } = trace.metadata
 
     // If not in cache but WebSocket is connected and every block is less than
-    // the current one, wait for up to 5 seconds for it to be added to the
+    // the current one, wait for up to 3 seconds for it to be added to the
     // cache. We might be just a moment ahead of the new block event.
     if (!blockHeightToTimeCache.has(blockHeight) && webSocketConnected) {
       const blockHeights = blockHeightToTimeCache.dump().map(([key]) => key)
@@ -143,7 +143,7 @@ const trace = async () => {
           const timeout = setTimeout(() => {
             clearInterval(interval)
             resolve(undefined)
-          }, 5000)
+          }, 3000)
         })
 
         if (time !== undefined) {
@@ -504,26 +504,27 @@ const trace = async () => {
               processTraceQueue()
             },
             onError: async (error) => {
-              // If fails to connect, retry after three seconds.
-              if (error.message.includes('ECONNREFUSED')) {
-                console.error(
-                  'Failed to connect to WebSocket. Retrying in 3 seconds...',
-                  error
-                )
-                webSocket.terminate()
+              // On error, reconnect.
+              console.error(
+                'WebSocket errored, reconnecting in 3 seconds...',
+                error
+              )
+              Sentry.captureException(error, {
+                tags: {
+                  type: 'websocket-error',
+                  script: 'export',
+                  chainId: (await State.getSingleton())?.chainId ?? 'unknown',
+                },
+              })
 
-                setTimeout(setUpWebSocket, 3000)
-              } else {
-                console.error('WebSocket error', error)
-
-                Sentry.captureException(error, {
-                  tags: {
-                    type: 'websocket-error',
-                    script: 'export',
-                    chainId: (await State.getSingleton())?.chainId ?? 'unknown',
-                  },
-                })
-              }
+              webSocketConnected = false
+              webSocket.terminate()
+              setTimeout(setUpWebSocket, 3000)
+            },
+            onClose: () => {
+              // On close, reconnect.
+              webSocketConnected = false
+              setTimeout(setUpWebSocket, 3000)
             },
           })
         }
