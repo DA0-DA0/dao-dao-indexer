@@ -423,6 +423,8 @@ const trace = async () => {
     process.send('ready')
   }
 
+  let shuttingDown = false
+
   const { promise: tracer, close: closeTracer } = setUpFifoJsonTracer({
     file: traceFile,
     onData: (data) => {
@@ -504,7 +506,14 @@ const trace = async () => {
               processTraceQueue()
             },
             onError: async (error) => {
-              // On error, reconnect.
+              webSocketConnected = false
+              webSocket.terminate()
+
+              if (shuttingDown) {
+                return
+              }
+
+              // On error and not shutting down, reconnect.
               console.error(
                 'WebSocket errored, reconnecting in 3 seconds...',
                 error
@@ -517,14 +526,17 @@ const trace = async () => {
                 },
               })
 
-              webSocketConnected = false
-              webSocket.terminate()
               setTimeout(setUpWebSocket, 3000)
             },
             onClose: () => {
-              // On close, reconnect.
-              console.error('WebSocket closed, reconnecting in 3 seconds...')
               webSocketConnected = false
+
+              if (shuttingDown) {
+                return
+              }
+
+              // On close and not shutting down, reconnect.
+              console.error('WebSocket closed, reconnecting in 3 seconds...')
               setTimeout(setUpWebSocket, 3000)
             },
           })
@@ -555,6 +567,7 @@ const trace = async () => {
 
   // Add shutdown signal handler.
   process.on('SIGINT', () => {
+    shuttingDown = true
     // Tell tracer to close. The rest of the data in the buffer will finish
     // processing.
     closeTracer()
