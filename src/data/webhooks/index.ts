@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/node'
+
 import { Config, ProcessedWebhook, Webhook, WebhookMaker } from '@/core'
 import { State } from '@/db'
 
@@ -63,10 +65,17 @@ export const getProcessedWebhooks = (
             try {
               match &&= filter.matches(event)
             } catch (error) {
-              // TODO: Store somewhere.
               console.error(
                 `Error matching webhook for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
               )
+              Sentry.captureException(error, {
+                tags: {
+                  type: 'failed-webhook-match',
+                },
+                extra: {
+                  event,
+                },
+              })
 
               // On error, do not match.
               match = false

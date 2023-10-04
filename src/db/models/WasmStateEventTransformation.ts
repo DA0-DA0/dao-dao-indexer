@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node'
 import { Op, Sequelize, WhereOptions } from 'sequelize'
 import {
   AllowNull,
@@ -20,6 +21,7 @@ import { getProcessedTransformers } from '@/data/transformers'
 
 import { DependendableEventModel, DependentKeyNamespace } from '../types'
 import { Contract } from './Contract'
+import { State } from './State'
 
 @Table({
   timestamps: true,
@@ -167,6 +169,7 @@ export class WasmStateEventTransformation extends DependendableEventModel {
   static async transformParsedStateEvents(
     events: ParsedWasmStateEvent[]
   ): Promise<WasmStateEventTransformation[]> {
+    const chainId = (await State.getSingleton())?.chainId || 'unknown'
     const transformers = getProcessedTransformers(loadConfig())
     if (transformers.length === 0) {
       return []
@@ -193,10 +196,18 @@ export class WasmStateEventTransformation extends DependendableEventModel {
                   ? transformer.name
                   : transformer.name(event)
             } catch (error) {
-              // TODO: Store somewhere.
               console.error(
                 `Error getting transformation name for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
               )
+              Sentry.captureException(error, {
+                tags: {
+                  type: 'failed-transform-get-name',
+                  chainId,
+                },
+                extra: {
+                  event,
+                },
+              })
               return undefined
             }
 
@@ -297,10 +308,19 @@ export class WasmStateEventTransformation extends DependendableEventModel {
           evaluatedTransformations.push(pendingTransformation)
         }
       } catch (error) {
-        // TODO: Store somewhere.
         console.error(
           `Error transforming event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
         )
+        Sentry.captureException(error, {
+          tags: {
+            type: 'failed-transform-get-value',
+            chainId,
+          },
+          extra: {
+            event,
+            pendingTransformation,
+          },
+        })
       }
     }
 

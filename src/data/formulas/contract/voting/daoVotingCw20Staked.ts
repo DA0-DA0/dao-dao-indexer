@@ -84,8 +84,6 @@ export const dao: ContractFormula<string | undefined> = {
     (await get<string>(contractAddress, 'dao')),
 }
 
-// TODO: isActive
-
 export const activeThreshold: ContractFormula = {
   compute: async ({ contractAddress, get }) =>
     await get(contractAddress, 'active_threshold'),

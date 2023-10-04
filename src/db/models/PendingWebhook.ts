@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node'
 import axios from 'axios'
 import Pusher from 'pusher'
 import {
@@ -166,10 +167,18 @@ export class PendingWebhook extends Model {
                 env
               )
             } catch (error) {
-              // TODO: Store somewhere.
               console.error(
                 `Error getting webhook value for event ${wasmEvent.blockHeight}/${wasmEvent.contractAddress}/${wasmEvent.key}: ${error}`
               )
+              Sentry.captureException(error, {
+                tags: {
+                  type: 'failed-webhook-get-value',
+                  chainId: state.chainId,
+                },
+                extra: {
+                  wasmEvent,
+                },
+              })
             }
 
             // Wrap in try/catch in case a webhook errors. Don't want to prevent
@@ -181,10 +190,18 @@ export class PendingWebhook extends Model {
                   ? await webhook.endpoint(wasmEvent, env)
                   : webhook.endpoint
             } catch (error) {
-              // TODO: Store somewhere.
               console.error(
                 `Error getting webhook endpoint for event ${wasmEvent.blockHeight}/${wasmEvent.contractAddress}/${wasmEvent.key}: ${error}`
               )
+              Sentry.captureException(error, {
+                tags: {
+                  type: 'failed-webhook-get-endpoint',
+                  chainId: state.chainId,
+                },
+                extra: {
+                  wasmEvent,
+                },
+              })
             }
 
             // If value or endpoint is undefined, one either errored or the

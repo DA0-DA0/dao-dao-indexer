@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/node'
+
 import {
   Config,
   ProcessedTransformer,
@@ -60,10 +62,17 @@ export const getProcessedTransformers = (
             try {
               match &&= filter.matches(event)
             } catch (error) {
-              // TODO: Store somewhere.
               console.error(
                 `Error matching transformer for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
               )
+              Sentry.captureException(error, {
+                tags: {
+                  type: 'failed-transformer-match',
+                },
+                extra: {
+                  event,
+                },
+              })
 
               // On error, do not match.
               match = false
