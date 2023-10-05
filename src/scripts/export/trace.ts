@@ -518,7 +518,7 @@ const trace = async () => {
 
               // On error and not shutting down, reconnect.
               console.error(
-                'WebSocket errored, reconnecting in 3 seconds...',
+                `[${new Date().toISOString()}] WebSocket errored, reconnecting in 3 seconds...`,
                 error
               )
               Sentry.captureException(error, {
@@ -532,6 +532,11 @@ const trace = async () => {
               setTimeout(setUpWebSocket, 3000)
             },
             onClose: () => {
+              // If already disconnected, from onError, do nothing.
+              if (!webSocketConnected) {
+                return
+              }
+
               webSocketConnected = false
 
               if (shuttingDown) {
@@ -539,7 +544,9 @@ const trace = async () => {
               }
 
               // On close and not shutting down, reconnect.
-              console.error('WebSocket closed, reconnecting in 3 seconds...')
+              console.error(
+                `[${new Date().toISOString()}] WebSocket closed, reconnecting in 3 seconds...`
+              )
               setTimeout(setUpWebSocket, 3000)
             },
           })
