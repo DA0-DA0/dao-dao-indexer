@@ -632,62 +632,63 @@ export const computer: Router.Middleware = async (ctx) => {
       if (block === undefined) {
         block = state.latestBlock
       }
-      // Get most recent computation if this formula does not change each block.
-      const existingComputation =
-        // TODO(computations): Re-enable computations when they are invalidated in the background.
-        typedFormula.formula.dynamic && false
-          ? null
-          : await Computation.findOne({
-              where: {
-                ...computationWhere,
-                blockHeight: {
-                  [Op.lte]: block.height,
-                },
-              },
-              order: [['blockHeight', 'DESC']],
-            })
 
-      // If found existing computation, check its validity.
-      const existingComputationValid =
-        existingComputation !== null &&
-        (await existingComputation.updateValidityUpToBlockHeight(block.height))
+      // TODO(computations): Re-enable computations when they are invalidated in the background.
+      // // Get most recent computation if this formula does not change each block.
+      // const existingComputation = typedFormula.formula.dynamic
+      //   ? null
+      //   : await Computation.findOne({
+      //       where: {
+      //         ...computationWhere,
+      //         blockHeight: {
+      //           [Op.lte]: block.height,
+      //         },
+      //       },
+      //       order: [['blockHeight', 'DESC']],
+      //     })
 
-      if (existingComputation && existingComputationValid) {
-        computation =
-          existingComputation.output && JSON.parse(existingComputation.output)
-      } else {
-        // Compute if did not find or use existing.
-        const computationOutput = await compute({
-          ...typedFormula,
-          chainId: state.chainId,
-          targetAddress: address,
-          args,
-          block,
-        })
+      // // If found existing computation, check its validity.
+      // const existingComputationValid =
+      //   existingComputation !== null &&
+      //   (await existingComputation.updateValidityUpToBlockHeight(block.height))
 
-        computation = computationOutput.value
+      // if (existingComputation && existingComputationValid) {
+      //   computation =
+      //     existingComputation.output && JSON.parse(existingComputation.output)
+      // } else {
+      // Compute if did not find or use existing.
+      const computationOutput = await compute({
+        ...typedFormula,
+        chainId: state.chainId,
+        targetAddress: address,
+        args,
+        block,
+      })
 
-        // Cache computation for future queries if this formula does not change
-        // each block and if it outputted a non-undefined/non-null value.
-        if (
-          !typedFormula.formula.dynamic &&
-          computationOutput.value !== undefined &&
-          computationOutput.value !== null
-        ) {
-          await Computation.createFromComputationOutputs(
-            address,
-            typedFormula,
-            args,
-            [
-              {
-                ...computationOutput,
-                // Valid up to the current block.
-                latestBlockHeightValid: block.height,
-              },
-            ]
-          )
-        }
-      }
+      computation = computationOutput.value
+
+      // TODO(computations): Re-enable computations when they are invalidated in the background.
+      // // Cache computation for future queries if this formula does not change
+      // // each block and if it outputted a non-undefined/non-null value.
+      // if (
+      //   !typedFormula.formula.dynamic &&
+      //   computationOutput.value !== undefined &&
+      //   computationOutput.value !== null
+      // ) {
+      //   await Computation.createFromComputationOutputs(
+      //     address,
+      //     typedFormula,
+      //     args,
+      //     [
+      //       {
+      //         ...computationOutput,
+      //         // Valid up to the current block.
+      //         latestBlockHeightValid: block.height,
+      //       },
+      //     ]
+      //   )
+      // }
+      // }
     }
 
     // If string, encode as JSON.
