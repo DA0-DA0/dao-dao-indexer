@@ -488,18 +488,10 @@ const trace = async () => {
                 latestBlockTimeUnixMs
               )
 
-              // Update state singleton with latest information.
+              // Update state singleton with chain ID.
               await State.update(
-                {
-                  chainId: chain_id,
-                  latestBlockHeight,
-                  latestBlockTimeUnixMs,
-                },
-                {
-                  where: {
-                    singleton: true,
-                  },
-                }
+                { chainId: chain_id },
+                { where: { singleton: true } }
               )
             },
             onConnect: () => {
