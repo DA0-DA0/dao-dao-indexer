@@ -12,7 +12,6 @@ import {
   State,
   WasmStateEvent,
   WasmStateEventTransformation,
-  updateComputationValidityDependentOnChanges,
 } from '@/db'
 import { updateIndexesForContracts } from '@/ms'
 
@@ -39,7 +38,7 @@ type WasmExportData =
 
 export const wasm: HandlerMaker<WasmExportData> = async ({
   config: { bech32Prefix },
-  updateComputations,
+  // updateComputations,
   sendWebhooks,
   cosmWasmClient,
 }) => {
@@ -390,7 +389,7 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
 
     // Transform events as needed.
     // Retry 3 times with exponential backoff starting at 100ms delay.
-    const transformations = (await retry(
+    const _transformations = (await retry(
       WasmStateEventTransformation.transformParsedStateEvents,
       [stateEvents],
       {
@@ -400,12 +399,13 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
       }
     )) as WasmStateEventTransformation[]
 
-    if (updateComputations) {
-      await updateComputationValidityDependentOnChanges([
-        ...exportedEvents,
-        ...transformations,
-      ])
-    }
+    // TODO(computations): Re-enable computations when they are invalidated in the background.
+    // if (updateComputations) {
+    //   await updateComputationValidityDependentOnChanges([
+    //     ...exportedEvents,
+    //     ...transformations,
+    //   ])
+    // }
 
     // Queue webhooks as needed.
     if (sendWebhooks && exportedEvents.length > 0) {

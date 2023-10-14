@@ -633,17 +633,19 @@ export const computer: Router.Middleware = async (ctx) => {
         block = state.latestBlock
       }
       // Get most recent computation if this formula does not change each block.
-      const existingComputation = typedFormula.formula.dynamic
-        ? null
-        : await Computation.findOne({
-            where: {
-              ...computationWhere,
-              blockHeight: {
-                [Op.lte]: block.height,
+      const existingComputation =
+        // TODO(computations): Re-enable computations when they are invalidated in the background.
+        typedFormula.formula.dynamic && false
+          ? null
+          : await Computation.findOne({
+              where: {
+                ...computationWhere,
+                blockHeight: {
+                  [Op.lte]: block.height,
+                },
               },
-            },
-            order: [['blockHeight', 'DESC']],
-          })
+              order: [['blockHeight', 'DESC']],
+            })
 
       // If found existing computation, check its validity.
       const existingComputationValid =
