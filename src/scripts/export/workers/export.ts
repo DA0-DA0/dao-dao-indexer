@@ -55,11 +55,20 @@ export const makeExportWorker: ExportWorkerMaker<{
               exponential: true,
               interval: 100,
             })
+
+            // If timed out, stop.
+            if (timeout === null) {
+              break
+            }
           }
 
-          resolve()
+          if (timeout !== null) {
+            resolve()
+          }
         } catch (err) {
-          reject(err)
+          if (timeout !== null) {
+            reject(err)
+          }
         } finally {
           if (timeout !== null) {
             clearTimeout(timeout)
