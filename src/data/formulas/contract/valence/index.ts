@@ -1,1 +1,1 @@
-export * as valence from './account'
+export * as account from './account'
