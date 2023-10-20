@@ -13,6 +13,7 @@ import external from './external'
 import polytone from './polytone'
 import proposal from './proposal'
 import staking from './staking'
+import valence from './valence'
 import voting from './voting'
 
 let processedTransformers: ProcessedTransformer[] | undefined
@@ -32,6 +33,7 @@ export const getProcessedTransformers = (
       ...polytone,
       ...proposal,
       ...staking,
+      ...valence,
       ...voting,
 
       // Makers.
