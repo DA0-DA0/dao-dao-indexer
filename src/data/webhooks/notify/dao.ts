@@ -7,8 +7,9 @@ const CW20_STAKE_CODE_IDS_KEY = 'cw20-stake'
 const DAO_VOTING_CW4_CODE_IDS_KEY = 'dao-voting-cw4'
 const DAO_VOTING_CW721_STAKED_CODE_IDS_KEY = 'dao-voting-cw721-staked'
 const DAO_VOTING_NATIVE_STAKED_CODE_IDS_KEY = 'dao-voting-native-staked'
+const DAO_VOTING_TOKEN_STAKED_CODE_IDS_KEY = 'dao-voting-token-staked'
 
-// cw20-stake and dao-voting-native-staked
+// cw20-stake, dao-voting-native-staked, and dao-voting-token-staked
 const KEY_PREFIX_STAKED_BALANCES = dbKeyForKeys('staked_balances', '')
 // dao-voting-cw4
 const KEY_PREFIX_USER_WEIGHTS = dbKeyForKeys('user_weights', '')
@@ -23,6 +24,7 @@ export const makeInboxJoinedDao: WebhookMaker = (config, state) => ({
       DAO_VOTING_CW4_CODE_IDS_KEY,
       DAO_VOTING_CW721_STAKED_CODE_IDS_KEY,
       DAO_VOTING_NATIVE_STAKED_CODE_IDS_KEY,
+      DAO_VOTING_TOKEN_STAKED_CODE_IDS_KEY,
     ],
     matches: (event) =>
       (event.key.startsWith(KEY_PREFIX_STAKED_BALANCES) ||
@@ -87,12 +89,14 @@ export const makeInboxJoinedDao: WebhookMaker = (config, state) => ({
 
       daoAddress = typeof dao === 'string' && !!dao ? dao : undefined
     }
-    // If dao-voting-cw721-staked or dao-voting-native-staked...
+    // If dao-voting-cw721-staked, dao-voting-native-staked, or
+    // dao-voting-token-staked...
     else if (
       env
         .getCodeIdsForKeys(
           DAO_VOTING_CW721_STAKED_CODE_IDS_KEY,
-          DAO_VOTING_NATIVE_STAKED_CODE_IDS_KEY
+          DAO_VOTING_NATIVE_STAKED_CODE_IDS_KEY,
+          DAO_VOTING_TOKEN_STAKED_CODE_IDS_KEY
         )
         .includes(event.contract.codeId)
     ) {
