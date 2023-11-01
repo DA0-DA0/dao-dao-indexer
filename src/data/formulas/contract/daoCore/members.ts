@@ -212,8 +212,13 @@ export const lastMembershipChange: ContractFormula<string | undefined> = {
       )
     }
 
+    const cw4Group = await groupContract.compute({
+      ...env,
+      contractAddress: votingModuleAddress,
+    })
+
     const lastChanged = (
-      await env.getTransformationMatches(votingModuleAddress, 'userWeight:*')
+      await env.getTransformationMatches(cw4Group, 'member:*')
     )
       ?.map(({ block }) => Number(block.timeUnixMs))
       .sort()

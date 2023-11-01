@@ -37,11 +37,21 @@ export const memberOf: WalletFormula<string[]> = {
       typeof match?.value === 'string' ? [match.value] : []
     )
 
-    // dao-voting-cw4 contracts where the address has a user weight.
-    const daoVotingCw4Contracts =
-      (await getTransformationMatches(undefined, `userWeight:${walletAddress}`))
+    // cw4-group contracts where the address has a user weight.
+    const cw4GroupContracts =
+      (await getTransformationMatches(undefined, `member:${walletAddress}`))
         ?.filter(({ value }) => !!value && value !== '0')
         .map(({ contractAddress }) => contractAddress) ?? []
+
+    // dao-voting-cw4 contracts that use any of these group contracts.
+    const daoVotingCw4Contracts =
+      (
+        await getTransformationMatches(
+          undefined,
+          'groupContract',
+          cw4GroupContracts
+        )
+      )?.map(({ contractAddress }) => contractAddress) ?? []
 
     // DAO addresses for the dao-voting-cw4 contracts.
     const cw4DaoAddresses = (

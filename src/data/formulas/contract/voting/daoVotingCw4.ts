@@ -1,5 +1,7 @@
 import { ContractFormula } from '@/core'
 
+import * as cw4Group from '../external/cw4Group'
+
 const CODE_IDS_KEYS = ['dao-voting-cw4']
 
 export const votingPower: ContractFormula<string, { address: string }> = {
@@ -7,24 +9,27 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
+  compute: async (env) => {
+    const {
+      contractAddress,
+      args: { address },
+    } = env
 
-  compute: async ({
-    contractAddress,
-    getTransformationMatch,
-    args: { address },
-  }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return (
-      (
-        await getTransformationMatch<string>(
-          contractAddress,
-          `userWeight:${address}`
-        )
-      )?.value || '0'
-    )
+    const cw4GroupContract = await groupContract.compute(env)
+    if (!cw4GroupContract) {
+      throw new Error(`No group contract for ${contractAddress}`)
+    }
+
+    return BigInt(
+      await cw4Group.member.compute({
+        ...env,
+        contractAddress: cw4GroupContract,
+      })
+    ).toString()
   },
 }
 
@@ -33,13 +38,19 @@ export const totalPower: ContractFormula<string> = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
+  compute: async (env) => {
+    const cw4GroupContract = await groupContract.compute(env)
+    if (!cw4GroupContract) {
+      throw new Error(`No group contract for ${env.contractAddress}`)
+    }
 
-  compute: async ({ contractAddress, getTransformationMatch, get }) =>
-    (await getTransformationMatch<string>(contractAddress, 'totalWeight'))
-      ?.value ||
-    // Fallback to events.
-    (await get<string>(contractAddress, 'total_weight')) ||
-    '0',
+    return BigInt(
+      await cw4Group.totalWeight.compute({
+        ...env,
+        contractAddress: cw4GroupContract,
+      })
+    ).toString()
+  },
 }
 
 export const groupContract: ContractFormula<string | undefined> = {
