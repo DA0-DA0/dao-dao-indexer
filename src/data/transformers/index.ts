@@ -11,6 +11,7 @@ import common from './common'
 import dao from './dao'
 import external from './external'
 import polytone from './polytone'
+import prePropose from './prePropose'
 import proposal from './proposal'
 import staking from './staking'
 import valence from './valence'
@@ -31,6 +32,7 @@ export const getProcessedTransformers = (
       ...dao,
       ...external,
       ...polytone,
+      ...prePropose,
       ...proposal,
       ...staking,
       ...valence,

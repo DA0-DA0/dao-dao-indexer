@@ -4,6 +4,7 @@ import { ContractInfo, Expiration, ProposalModule } from '../../../types'
 import { isExpirationExpired } from '../../utils'
 import { info, instantiatedAt } from '../common'
 import { balance } from '../external/cw20'
+import { dao as daoPreProposeBaseDao } from '../prePropose/daoPreProposeBase'
 import {
   totalPower as daoVotingCw20StakedTotalPower,
   votingPower as daoVotingCw20StakedVotingPower,
@@ -579,6 +580,51 @@ export const polytoneProxies: ContractFormula<Record<string, string>> = {
         [contractAddress]: value as string,
       }),
       {} as Record<string, string>
+    )
+  },
+}
+
+type ApprovalDao = {
+  dao: string
+  preProposeAddress: string
+}
+
+// Get all DAOs with dao-pre-propose-approval-single contracts that have this
+// DAO set as the approver.
+export const approvalDaos: ContractFormula<ApprovalDao[]> = {
+  compute: async (env) => {
+    const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
+
+    const codeIds = getCodeIdsForKeys('dao-pre-propose-approval-single')
+    if (!codeIds.length) {
+      throw new Error('missing dao-pre-propose-approval-single code IDs')
+    }
+
+    const daoPreProposeApprovalSingleContracts =
+      (await getTransformationMatches(
+        undefined,
+        `approver:${contractAddress}`,
+        true,
+        codeIds
+      )) ?? []
+
+    const daos = await Promise.all(
+      daoPreProposeApprovalSingleContracts.map(({ contractAddress }) =>
+        daoPreProposeBaseDao.compute({
+          ...env,
+          contractAddress,
+        })
+      )
+    )
+
+    return daos.flatMap((dao, index): ApprovalDao | [] =>
+      dao
+        ? {
+            dao,
+            preProposeAddress:
+              daoPreProposeApprovalSingleContracts[index].contractAddress,
+          }
+        : []
     )
   },
 }
