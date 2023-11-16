@@ -5,7 +5,7 @@ type AdminList = {
   mutable: boolean
 }
 
-export const admins: ContractFormula<string[]> = {
+export const adminList: ContractFormula<AdminList | undefined> = {
   compute: async ({ contractAddress, get }) =>
-    (await get<AdminList>(contractAddress, 'admin_list'))?.admins ?? [],
+    await get<AdminList>(contractAddress, 'admin_list'),
 }
