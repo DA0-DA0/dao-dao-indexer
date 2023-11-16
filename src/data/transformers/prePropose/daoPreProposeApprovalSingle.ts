@@ -59,12 +59,12 @@ const proposed: Transformer = {
       return
     }
 
-    // "pending_proposals"|"completed_proposals", proposalId
+    // "pending_proposals", proposalId
     const [, proposalId] = dbKeyToKeys(event.key, [false, true])
     return `proposed:${event.valueJson.proposer}:${proposalId}`
   },
   getValue: (event) => {
-    // "pending_proposals"|"completed_proposals", proposalId
+    // "pending_proposals", proposalId
     const [, proposalId] = dbKeyToKeys(event.key, [false, true])
     return { proposalId }
   },
