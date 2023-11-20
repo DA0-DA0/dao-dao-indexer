@@ -30,15 +30,15 @@ export const ownerOf: WalletFormula<string[]> = {
       await Promise.all([
         getTransformationMatches(
           undefined,
-          `owner:${walletAddress}`,
-          undefined,
+          'owner',
+          walletAddress,
           cwVestingCodeIds
         ),
         ...cw1WhitelistContracts.map(({ contractAddress }) =>
           getTransformationMatches(
             undefined,
-            `owner:${contractAddress}`,
-            undefined,
+            'owner',
+            contractAddress,
             cwVestingCodeIds
           )
         ),
