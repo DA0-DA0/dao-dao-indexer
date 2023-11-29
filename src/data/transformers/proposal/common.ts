@@ -9,6 +9,7 @@ const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
 const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
 const KEY_PREFIX_PROPOSALS_V2 = dbKeyForKeys('proposals_v2', '')
 const KEY_PREFIX_BALLOTS = dbKeyForKeys('ballots', '')
+const KEY_CONFIG_V2 = dbKeyForKeys('config_v2')
 
 const proposal: Transformer = {
   filter: {
@@ -76,4 +77,13 @@ const voteCast: Transformer = {
   },
 }
 
-export default [proposal, proposed, voteCast]
+const vetoer: Transformer = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+    matches: (event) => event.key === KEY_CONFIG_V2 && event.valueJson.veto,
+  },
+  name: (event) => `vetoer:${event.valueJson.veto.vetoer}`,
+  getValue: () => '',
+}
+
+export default [proposal, proposed, voteCast, vetoer]
