@@ -3,7 +3,7 @@ import { ContractFormula } from '@/core'
 import { dao } from '../proposal/daoProposalSingle'
 
 type VetoerOfDao = {
-  coreAddress: string
+  dao: string
   proposalModule: string
 }
 
@@ -25,10 +25,10 @@ export const vetoerOf: ContractFormula<VetoerOfDao[]> = {
       )
     )
 
-    return daos.flatMap((coreAddress, index): VetoerOfDao | [] =>
-      coreAddress
+    return daos.flatMap((dao, index): VetoerOfDao | [] =>
+      dao
         ? {
-            coreAddress,
+            dao,
             proposalModule: proposalModulesWithThisVetoer[index],
           }
         : []

@@ -7,7 +7,7 @@ import {
 } from '../../formulas/contract/daoCore/base'
 import { MultipleChoiceProposal } from '../../formulas/contract/proposal/daoProposalMultiple/types'
 import { SingleChoiceProposal } from '../../formulas/contract/proposal/daoProposalSingle/types'
-import { Status } from '../../formulas/contract/proposal/types'
+import { StatusEnum } from '../../formulas/contract/proposal/types'
 import { getDaoAddressForProposalModule } from '../utils'
 
 const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
@@ -23,7 +23,7 @@ export const makeInboxProposalCreated: WebhookMaker = (config, state) => ({
       // Starts with proposals or proposals_v2.
       (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
-      event.valueJson.status === Status.Open,
+      event.valueJson.status === StatusEnum.Open,
   },
   endpoint: {
     type: WebhookType.Url,
@@ -91,8 +91,8 @@ export const makeInboxProposalExecuted: WebhookMaker = (config, state) => ({
       // Starts with proposals or proposals_v2.
       (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
-      (event.valueJson.status === Status.Executed ||
-        event.valueJson.status === Status.ExecutionFailed),
+      (event.valueJson.status === StatusEnum.Executed ||
+        event.valueJson.status === StatusEnum.ExecutionFailed),
   },
   endpoint: {
     type: WebhookType.Url,
@@ -107,8 +107,8 @@ export const makeInboxProposalExecuted: WebhookMaker = (config, state) => ({
     const lastValue = await getLastValue()
     if (
       lastValue &&
-      (lastValue.status === Status.Executed ||
-        lastValue.status === Status.ExecutionFailed)
+      (lastValue.status === StatusEnum.Executed ||
+        lastValue.status === StatusEnum.ExecutionFailed)
     ) {
       return
     }
@@ -164,7 +164,7 @@ export const makeInboxProposalExecuted: WebhookMaker = (config, state) => ({
         imageUrl: daoConfig.image_url ?? undefined,
         proposalId,
         proposalTitle: proposal.title,
-        failed: event.valueJson.status === Status.ExecutionFailed,
+        failed: event.valueJson.status === StatusEnum.ExecutionFailed,
         winningOption,
       },
     }
@@ -179,7 +179,7 @@ export const makeInboxProposalClosed: WebhookMaker = (config, state) => ({
       // Starts with proposals or proposals_v2.
       (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
-      event.valueJson.status === Status.Closed,
+      event.valueJson.status === StatusEnum.Closed,
   },
   endpoint: {
     type: WebhookType.Url,
@@ -192,7 +192,7 @@ export const makeInboxProposalClosed: WebhookMaker = (config, state) => ({
   getValue: async (event, getLastValue, env) => {
     // Only fire the webhook if the last event was not closed.
     const lastValue = await getLastValue()
-    if (lastValue && lastValue.status === Status.Closed) {
+    if (lastValue && lastValue.status === StatusEnum.Closed) {
       return
     }
 

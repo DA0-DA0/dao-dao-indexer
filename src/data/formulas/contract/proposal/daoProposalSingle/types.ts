@@ -1,4 +1,4 @@
-import { Expiration } from '../../../../types'
+import { Duration, Expiration } from '../../../../types'
 import { PercentageThreshold, Status } from '../types'
 
 export interface Votes {
@@ -40,10 +40,18 @@ export interface SingleChoiceProposal {
   title: string
   total_power: string
   votes: Votes
+  veto?: Veto | null
 }
 
 export interface Ballot {
   power: string
   vote: string
   rationale?: string | null
+}
+
+export type Veto = {
+  delay: Duration
+  vetoer: string
+  early_execute: boolean
+  veto_before_passed: boolean
 }

@@ -3,8 +3,8 @@ import { Op } from 'sequelize'
 import { ContractEnv, ContractFormula } from '@/core'
 
 import { VoteCast, VoteInfo } from '../../../../types'
-import { isExpirationExpired } from '../../../utils'
-import { ListProposalFilter, ProposalResponse, Status } from '../types'
+import { expirationAfterBlock, isExpirationExpired } from '../../../utils'
+import { ListProposalFilter, ProposalResponse, StatusEnum } from '../types'
 import { isPassed, isRejected } from './status'
 import { Ballot, MultipleChoiceProposal } from './types'
 
@@ -101,9 +101,9 @@ export const listProposals: ContractFormula<
       )
     ).filter(({ proposal }) =>
       env.args.filter === 'passed'
-        ? proposal.status === Status.Passed ||
-          proposal.status === Status.Executed ||
-          proposal.status === Status.ExecutionFailed
+        ? proposal.status === StatusEnum.Passed ||
+          proposal.status === StatusEnum.Executed ||
+          proposal.status === StatusEnum.ExecutionFailed
         : true
     )
 
@@ -337,7 +337,7 @@ export const openProposals: ContractFormula<
         ...env,
         args: {},
       })
-    ).filter(({ proposal }) => proposal.status === Status.Open)
+    ).filter(({ proposal }) => proposal.status === StatusEnum.Open)
 
     // Get votes for the given address for each open proposal. If no address,
     // don't filter by vote.
@@ -377,14 +377,22 @@ const intoResponse = async (
   id: number
 ): Promise<ProposalResponse<MultipleChoiceProposal>> => {
   // Update status.
-  if (proposal.status === Status.Open) {
+  if (proposal.status === StatusEnum.Open) {
     if (isPassed(env, proposal)) {
-      proposal.status = Status.Passed
+      if (proposal.veto) {
+        proposal.status = {
+          veto_timelock: {
+            expiration: expirationAfterBlock(env.block, proposal.veto.delay),
+          },
+        }
+      } else {
+        proposal.status = StatusEnum.Passed
+      }
     } else if (
       isExpirationExpired(env, proposal.expiration) ||
       isRejected(env, proposal)
     ) {
-      proposal.status = Status.Rejected
+      proposal.status = StatusEnum.Rejected
     }
   }
 
@@ -397,8 +405,8 @@ const intoResponse = async (
 
   let executedAt: string | undefined
   if (
-    proposal.status === Status.Executed ||
-    proposal.status === Status.ExecutionFailed
+    proposal.status === StatusEnum.Executed ||
+    proposal.status === StatusEnum.ExecutionFailed
   ) {
     executedAt = (
       (await env.getDateFirstTransformed(
@@ -424,7 +432,7 @@ const intoResponse = async (
   }
 
   let closedAt: string | undefined
-  if (proposal.status === Status.Closed) {
+  if (proposal.status === StatusEnum.Closed) {
     closedAt = (
       (await env.getDateFirstTransformed(
         env.contractAddress,
@@ -445,7 +453,7 @@ const intoResponse = async (
   }
 
   let completedAt: string | undefined
-  if (proposal.status !== Status.Open) {
+  if (proposal.status !== StatusEnum.Open) {
     completedAt =
       executedAt ||
       closedAt ||

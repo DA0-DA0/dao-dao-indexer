@@ -1,7 +1,7 @@
 import { Transformer } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
-import { Status } from '../../formulas/contract/proposal/types'
+import { StatusEnum } from '../../formulas/contract/proposal/types'
 import { VoteCast } from '../../types'
 
 const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
@@ -35,7 +35,7 @@ const proposed: Transformer = {
       (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
       !!event.valueJson?.proposer &&
-      event.valueJson?.status === Status.Open,
+      event.valueJson?.status === StatusEnum.Open,
   },
   name: (event) => {
     // Ignore deletes. Can't transform if we can't access the proposer.

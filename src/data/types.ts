@@ -9,6 +9,14 @@ export type Expiration =
       never: {}
     }
 
+export type Duration =
+  | {
+      height: number
+    }
+  | {
+      time: number
+    }
+
 export interface ContractInfo {
   contract: string
   version: string

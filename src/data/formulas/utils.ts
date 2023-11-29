@@ -1,6 +1,6 @@
-import { Env } from '@/core'
+import { Block, Env } from '@/core'
 
-import { Expiration } from '../types'
+import { Duration, Expiration } from '../types'
 
 export const isExpirationExpired = (
   env: Env,
@@ -20,4 +20,25 @@ export const isExpirationExpired = (
   }
   // Never expires.
   return false
+}
+
+export const expirationAfterBlock = (
+  block: Block,
+  delay: Duration
+): Expiration => {
+  if ('height' in delay) {
+    return { at_height: Number(block.height) + delay.height }
+  } else if ('time' in delay) {
+    // Duration's `time` is in seconds and Expiration's `at_time` is in
+    // nanoseconds.
+    return {
+      at_time: (
+        block.timeUnixMs * BigInt(1e3) +
+        BigInt(delay.time) * BigInt(1e9)
+      ).toString(),
+    }
+  }
+
+  // Should never happen.
+  throw new Error('invalid delay')
 }
