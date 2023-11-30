@@ -4,44 +4,94 @@ import { WalletFormula } from '@/core'
 
 export const memberOf: WalletFormula<string[]> = {
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches, getTransformationMatch } =
-      env
+    const {
+      walletAddress,
+      getTransformationMatches,
+      getTransformationMatch,
+      getCodeIdsForKeys,
+    } = env
 
     // cw20-stake contracts where the address has a staked balance.
     const cw20StakeContracts =
       (
         await getTransformationMatches(
           undefined,
-          `stakedBalance:${walletAddress}`
+          `stakedBalance:${walletAddress}`,
+          {
+            [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '0' }],
+          },
+          getCodeIdsForKeys('cw20-stake')
         )
-      )
-        ?.filter(({ value }) => !!value && value !== '0')
-        .map(({ contractAddress }) => contractAddress) ?? []
+      )?.map(({ contractAddress }) => contractAddress) ?? []
 
     // dao-voting-cw20-staked contracts using one of the cw20-stake contracts.
     const daoVotingCw20StakedContracts =
       (
-        await getTransformationMatches(undefined, 'stakingContract', {
-          [Op.in]: cw20StakeContracts,
-        })
+        await getTransformationMatches(
+          undefined,
+          'stakingContract',
+          cw20StakeContracts,
+          getCodeIdsForKeys('dao-voting-cw20-staked')
+        )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
-    // DAO addresses for the dao-voting-cw20-staked contracts.
+    // dao-voting-cw721-staked contracts where the address has staked NFTs.
+    const daoVotingCw721StakedContracts =
+      (
+        await getTransformationMatches(
+          undefined,
+          `stakedCount:${walletAddress}`,
+          {
+            [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '0' }],
+          },
+          getCodeIdsForKeys('dao-voting-cw721-staked')
+        )
+      )?.map(({ contractAddress }) => contractAddress) ?? []
+
+    // dao-voting-native-staked and dao-voting-token-staked contracts where the
+    // address has a staked balance.
+    const daoVotingTokenStakedContracts =
+      (
+        await getTransformationMatches(
+          undefined,
+          `stakedBalance:${walletAddress}`,
+          {
+            [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '0' }],
+          },
+          getCodeIdsForKeys(
+            'dao-voting-native-staked',
+            'dao-voting-token-staked'
+          )
+        )
+      )?.map(({ contractAddress }) => contractAddress) ?? []
+
+    // DAO addresses for all the contracts above.
     const cw20StakedBalancesDaoAddresses = (
       await Promise.all(
-        daoVotingCw20StakedContracts.map((contractAddress) =>
+        [
+          ...daoVotingCw20StakedContracts,
+          ...daoVotingCw721StakedContracts,
+          ...daoVotingTokenStakedContracts,
+        ].map((contractAddress) =>
           getTransformationMatch(contractAddress, 'dao')
         )
       )
     )?.flatMap((match) =>
-      typeof match?.value === 'string' ? [match.value] : []
+      typeof match?.value === 'string' && match.value ? [match.value] : []
     )
 
     // cw4-group contracts where the address has a user weight.
     const cw4GroupContracts =
-      (await getTransformationMatches(undefined, `member:${walletAddress}`))
-        ?.filter(({ value }) => !!value && value !== '0')
-        .map(({ contractAddress }) => contractAddress) ?? []
+      (
+        await getTransformationMatches(
+          undefined,
+          `member:${walletAddress}`,
+          {
+            [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: 0 }],
+          },
+          getCodeIdsForKeys('cw4-group')
+        )
+      )?.map(({ contractAddress }) => contractAddress) ?? []
 
     // dao-voting-cw4 contracts that use any of these group contracts.
     const daoVotingCw4Contracts =
@@ -61,7 +111,7 @@ export const memberOf: WalletFormula<string[]> = {
         )
       )
     )?.flatMap((match) =>
-      typeof match?.value === 'string' ? [match.value] : []
+      typeof match?.value === 'string' && match.value ? [match.value] : []
     )
 
     return Array.from(
@@ -81,9 +131,7 @@ export const adminOf: WalletFormula<string[]> = {
       undefined,
       'admin',
       walletAddress,
-      {
-        [Op.in]: getCodeIdsForKeys('dao-core'),
-      }
+      getCodeIdsForKeys('dao-core')
     )
 
     return daoCoreContracts?.map(({ contractAddress }) => contractAddress) ?? []
