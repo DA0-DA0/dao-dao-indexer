@@ -2,7 +2,14 @@ import { Op } from 'sequelize'
 
 import { WalletFormula } from '@/core'
 
-export const memberOf: WalletFormula<string[]> = {
+import { config } from '../contract/daoCore/base'
+
+export const memberOf: WalletFormula<
+  {
+    dao: string
+    config: any
+  }[]
+> = {
   compute: async (env) => {
     const {
       walletAddress,
@@ -66,7 +73,7 @@ export const memberOf: WalletFormula<string[]> = {
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
     // DAO addresses for all the contracts above.
-    const cw20StakedBalancesDaoAddresses = (
+    const tokenStakedBalancesDaoAddresses = (
       await Promise.all(
         [
           ...daoVotingCw20StakedContracts,
@@ -114,8 +121,22 @@ export const memberOf: WalletFormula<string[]> = {
       typeof match?.value === 'string' && match.value ? [match.value] : []
     )
 
-    return Array.from(
-      new Set([...cw20StakedBalancesDaoAddresses, ...cw4DaoAddresses])
+    const daos = Array.from(
+      new Set([...tokenStakedBalancesDaoAddresses, ...cw4DaoAddresses])
+    )
+    const configs = await Promise.all(
+      daos.map((daoAddress) =>
+        config.compute({ ...env, contractAddress: daoAddress })
+      )
+    )
+
+    return configs.flatMap((config, index) =>
+      config
+        ? {
+            dao: daos[index],
+            config,
+          }
+        : []
     )
   },
 }
