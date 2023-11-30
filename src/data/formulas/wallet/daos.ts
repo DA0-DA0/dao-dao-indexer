@@ -3,11 +3,13 @@ import { Op } from 'sequelize'
 import { WalletFormula } from '@/core'
 
 import { config } from '../contract/daoCore/base'
+import { proposalCount } from '../contract/daoCore/proposals'
 
 export const memberOf: WalletFormula<
   {
     dao: string
     config: any
+    proposalCount: number
   }[]
 > = {
   compute: async (env) => {
@@ -129,12 +131,18 @@ export const memberOf: WalletFormula<
         config.compute({ ...env, contractAddress: daoAddress })
       )
     )
+    const proposalCounts = await Promise.all(
+      daos.map((daoAddress) =>
+        proposalCount.compute({ ...env, contractAddress: daoAddress })
+      )
+    )
 
     return configs.flatMap((config, index) =>
       config
         ? {
             dao: daos[index],
             config,
+            proposalCount: proposalCounts[index] || 0,
           }
         : []
     )
