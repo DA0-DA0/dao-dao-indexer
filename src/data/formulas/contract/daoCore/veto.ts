@@ -17,14 +17,14 @@ import {
 import { ProposalResponse, StatusEnum } from '../proposal/types'
 import { ProposalModuleWithInfo, activeProposalModules } from './base'
 
-type VetoableProposalModule = {
+type VetoableProposalsWithModule = {
   proposalModule: ProposalModuleWithInfo
   proposals: ProposalResponse<any>[]
 }
 
 type VetoableProposalDaos = {
   dao: string
-  proposalModules: VetoableProposalModule[]
+  proposalsWithModule: VetoableProposalsWithModule[]
 }
 
 export const vetoableProposals: ContractFormula<VetoableProposalDaos[]> = {
@@ -75,12 +75,12 @@ export const vetoableProposals: ContractFormula<VetoableProposalDaos[]> = {
       daos.map(
         async (dao, index): Promise<VetoableProposalDaos> => ({
           dao,
-          proposalModules: (
+          proposalsWithModule: (
             await Promise.all(
               daoActiveProposalModules[index].map(
                 async (
                   proposalModule
-                ): Promise<VetoableProposalModule | undefined> => {
+                ): Promise<VetoableProposalsWithModule | undefined> => {
                   const contractName =
                     proposalModule.info &&
                     proposalModule.info.contract.replace('crates.io:', '')
@@ -89,6 +89,7 @@ export const vetoableProposals: ContractFormula<VetoableProposalDaos[]> = {
                     contractName && PROPOSAL_MODULE_CONFIG_MAP[contractName]
                   const proposalFormula =
                     contractName && PROPOSAL_MAP[contractName]
+
                   if (!configFormula || !proposalFormula) {
                     return
                   }
@@ -136,7 +137,7 @@ export const vetoableProposals: ContractFormula<VetoableProposalDaos[]> = {
               )
             )
           ).filter(
-            (proposalModule): proposalModule is VetoableProposalModule =>
+            (proposalModule): proposalModule is VetoableProposalsWithModule =>
               !!proposalModule?.proposals.length
           ),
         })
