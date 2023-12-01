@@ -6,9 +6,9 @@ import { VoteCast, VoteInfo } from '../../../../types'
 import { expirationAfterBlock, isExpirationExpired } from '../../../utils'
 import { ListProposalFilter, ProposalResponse, StatusEnum } from '../types'
 import { isPassed, isRejected } from './status'
-import { Ballot, MultipleChoiceProposal } from './types'
+import { Ballot, Config, MultipleChoiceProposal } from './types'
 
-export const config: ContractFormula = {
+export const config: ContractFormula<Config | undefined> = {
   compute: async ({ contractAddress, get }) =>
     await get(contractAddress, 'config'),
 }

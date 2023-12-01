@@ -80,10 +80,28 @@ const voteCast: Transformer = {
 const vetoer: Transformer = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
-    matches: (event) => event.key === KEY_CONFIG_V2 && event.valueJson.veto,
+    matches: (event) => event.key === KEY_CONFIG_V2 && !!event.valueJson.veto,
   },
   name: (event) => `vetoer:${event.valueJson.veto.vetoer}`,
   getValue: () => '',
 }
 
-export default [proposal, proposed, voteCast, vetoer]
+// Map `proposalVetoer:<VETOER>` to proposal ID.
+const proposalVetoer: Transformer = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+    matches: (event) =>
+      // Starts with proposals or proposals_v2.
+      (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
+        event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
+      !!event.valueJson.veto,
+  },
+  name: (event) => `proposalVetoer:${event.valueJson.veto.vetoer}`,
+  getValue: (event) => {
+    // "proposals"|"proposals_v2", proposalId
+    const [, proposalId] = dbKeyToKeys(event.key, [false, true])
+    return proposalId
+  },
+}
+
+export default [proposal, proposed, voteCast, vetoer, proposalVetoer]

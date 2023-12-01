@@ -40,7 +40,7 @@ export interface SingleChoiceProposal {
   title: string
   total_power: string
   votes: Votes
-  veto?: Veto | null
+  veto?: VetoConfig | null
 }
 
 export interface Ballot {
@@ -49,9 +49,14 @@ export interface Ballot {
   rationale?: string | null
 }
 
-export type Veto = {
+export type VetoConfig = {
   delay: Duration
   vetoer: string
   early_execute: boolean
   veto_before_passed: boolean
+}
+
+export type Config = {
+  dao: string
+  veto?: VetoConfig | null
 }

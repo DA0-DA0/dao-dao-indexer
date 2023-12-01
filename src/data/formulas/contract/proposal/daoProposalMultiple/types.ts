@@ -48,7 +48,7 @@ export interface MultipleChoiceProposal {
   total_power: string
   votes: MultipleChoiceVotes
   voting_strategy: VotingStrategy
-  veto?: Veto | null
+  veto?: VetoConfig | null
 }
 
 export interface Ballot {
@@ -65,9 +65,14 @@ export type VoteResult =
       tie: {}
     }
 
-export type Veto = {
+export type VetoConfig = {
   delay: Duration
   vetoer: string
   early_execute: boolean
   veto_before_passed: boolean
+}
+
+export type Config = {
+  dao: string
+  veto?: VetoConfig | null
 }
