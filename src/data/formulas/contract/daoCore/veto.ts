@@ -1,6 +1,5 @@
 import { ContractFormula } from '@/core'
 
-import { isExpirationExpired } from '../../utils'
 import {
   config as multipleChoiceConfig,
   proposal as multipleChoiceProposal,
@@ -129,14 +128,9 @@ export const vetoableProposals: ContractFormula<VetoableProposalDaos[]> = {
                         // Only include open proposals if early execute enabled.
                         ((proposal.proposal.status === StatusEnum.Open &&
                           config.veto?.early_execute) ||
-                          // Include all veto timelock proposals that are not
-                          // expired.
+                          // Include all veto timelock proposals.
                           (typeof proposal.proposal.status === 'object' &&
-                            'veto_timelock' in proposal.proposal.status &&
-                            !isExpirationExpired(
-                              env,
-                              proposal.proposal.status.veto_timelock.expiration
-                            )))
+                            'veto_timelock' in proposal.proposal.status))
                     ),
                   }
                 }
