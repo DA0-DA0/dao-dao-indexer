@@ -1,4 +1,4 @@
-import { Block, Env } from '@/core'
+import { Env } from '@/core'
 
 import { Duration, Expiration } from '../types'
 
@@ -22,23 +22,16 @@ export const isExpirationExpired = (
   return false
 }
 
-export const expirationAfterBlock = (
-  block: Block,
-  delay: Duration
+export const expirationPlusDuration = (
+  expiration: Expiration,
+  duration: Duration
 ): Expiration => {
-  if ('height' in delay) {
-    return { at_height: Number(block.height) + delay.height }
-  } else if ('time' in delay) {
-    // Duration's `time` is in seconds and Expiration's `at_time` is in
-    // nanoseconds.
-    return {
-      at_time: (
-        block.timeUnixMs * BigInt(1e3) +
-        BigInt(delay.time) * BigInt(1e9)
-      ).toString(),
-    }
+  if ('at_height' in expiration && 'height' in duration) {
+    return { at_height: expiration.at_height + duration.height }
+  } else if ('at_time' in expiration && 'time' in duration) {
+    return { at_time: expiration.at_time + duration.time }
   }
 
   // Should never happen.
-  throw new Error('invalid delay')
+  throw new Error('expiration duration units mismatch')
 }

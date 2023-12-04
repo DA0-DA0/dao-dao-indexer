@@ -3,7 +3,7 @@ import { Op } from 'sequelize'
 import { ContractEnv, ContractFormula } from '@/core'
 
 import { VoteCast, VoteInfo } from '../../../../types'
-import { expirationAfterBlock, isExpirationExpired } from '../../../utils'
+import { expirationPlusDuration, isExpirationExpired } from '../../../utils'
 import { ListProposalFilter, ProposalResponse, StatusEnum } from '../types'
 import { isPassed, isRejected } from './status'
 import { Ballot, Config, SingleChoiceProposal } from './types'
@@ -438,10 +438,19 @@ const intoResponse = async (
   if (proposal.status === StatusEnum.Open) {
     if (isPassed(env, proposal)) {
       if (proposal.veto) {
-        proposal.status = {
-          veto_timelock: {
-            expiration: expirationAfterBlock(env.block, proposal.veto.delay),
-          },
+        const expiration = expirationPlusDuration(
+          proposal.expiration,
+          proposal.veto.delay
+        )
+
+        if (isExpirationExpired(env, expiration)) {
+          proposal.status = StatusEnum.Passed
+        } else {
+          proposal.status = {
+            veto_timelock: {
+              expiration,
+            },
+          }
         }
       } else {
         proposal.status = StatusEnum.Passed
