@@ -178,3 +178,49 @@ export const topStakers: ContractFormula<
     return stakers
   },
 }
+
+// Map NFT token ID to staker.
+export const ownersOfStakedNfts: ContractFormula<Record<string, string>> = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async (env) => {
+    const { contractAddress, getTransformationMap } = env
+
+    const stakedCountMap =
+      (await getTransformationMap<string, string>(
+        contractAddress,
+        'stakedCount'
+      )) ?? {}
+    const stakers = Object.entries(stakedCountMap)
+      // Remove zero counts.
+      .filter(([, stakedCount]) => Number(stakedCount) > 0)
+      .map(([address]) => address)
+
+    const stakedNftsPerStaker = await Promise.all(
+      stakers.map(async (address) => ({
+        address,
+        tokenIds: await stakedNfts.compute({
+          ...env,
+          args: {
+            address,
+          },
+        }),
+      }))
+    )
+
+    return stakedNftsPerStaker.reduce(
+      (acc, { address, tokenIds }) => ({
+        ...acc,
+        ...tokenIds.reduce(
+          (acc, tokenId) => ({
+            ...acc,
+            [tokenId]: address,
+          }),
+          {} as Record<string, string>
+        ),
+      }),
+      {} as Record<string, string>
+    )
+  },
+}
