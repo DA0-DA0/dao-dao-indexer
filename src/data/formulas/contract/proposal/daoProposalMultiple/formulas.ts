@@ -403,6 +403,13 @@ const intoResponse = async (
     ) {
       proposal.status = StatusEnum.Rejected
     }
+  } else if (
+    typeof proposal.status === 'object' &&
+    'veto_timelock' in proposal.status
+  ) {
+    if (isExpirationExpired(env, proposal.status.veto_timelock.expiration)) {
+      proposal.status = StatusEnum.Passed
+    }
   }
 
   const createdAt = await proposalCreatedAt.compute({
