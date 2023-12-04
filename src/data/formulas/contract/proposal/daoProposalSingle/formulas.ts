@@ -440,7 +440,7 @@ const intoResponse = async (
       if (proposal.veto) {
         const expiration = expirationPlusDuration(
           proposal.expiration,
-          proposal.veto.delay
+          proposal.veto.timelock_duration
         )
 
         if (isExpirationExpired(env, expiration)) {

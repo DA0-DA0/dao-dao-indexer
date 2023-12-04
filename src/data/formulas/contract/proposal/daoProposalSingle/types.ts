@@ -50,8 +50,8 @@ export interface Ballot {
 }
 
 export type VetoConfig = {
-  delay: Duration
   vetoer: string
+  timelock_duration: Duration
   early_execute: boolean
   veto_before_passed: boolean
 }
