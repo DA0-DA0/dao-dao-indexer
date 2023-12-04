@@ -71,78 +71,80 @@ export const vetoableProposals: ContractFormula<VetoableProposalDaos[]> = {
       )
     )
 
-    const vetoableProposalDaos = await Promise.all(
-      daos.map(
-        async (dao, index): Promise<VetoableProposalDaos> => ({
-          dao,
-          proposalsWithModule: (
-            await Promise.all(
-              daoActiveProposalModules[index].map(
-                async (
-                  proposalModule
-                ): Promise<VetoableProposalsWithModule | undefined> => {
-                  const contractName =
-                    proposalModule.info &&
-                    proposalModule.info.contract.replace('crates.io:', '')
+    const vetoableProposalDaos = (
+      await Promise.all(
+        daos.map(
+          async (dao, index): Promise<VetoableProposalDaos> => ({
+            dao,
+            proposalsWithModule: (
+              await Promise.all(
+                daoActiveProposalModules[index].map(
+                  async (
+                    proposalModule
+                  ): Promise<VetoableProposalsWithModule | undefined> => {
+                    const contractName =
+                      proposalModule.info &&
+                      proposalModule.info.contract.replace('crates.io:', '')
 
-                  const configFormula =
-                    contractName && PROPOSAL_MODULE_CONFIG_MAP[contractName]
-                  const proposalFormula =
-                    contractName && PROPOSAL_MAP[contractName]
+                    const configFormula =
+                      contractName && PROPOSAL_MODULE_CONFIG_MAP[contractName]
+                    const proposalFormula =
+                      contractName && PROPOSAL_MAP[contractName]
 
-                  if (!configFormula || !proposalFormula) {
-                    return
+                    if (!configFormula || !proposalFormula) {
+                      return
+                    }
+
+                    const config = await configFormula.compute({
+                      ...env,
+                      contractAddress: proposalModule.address,
+                    })
+
+                    if (!config?.veto) {
+                      return
+                    }
+
+                    return {
+                      proposalModule,
+                      proposals: (
+                        await Promise.all(
+                          proposalsWithThisVetoer
+                            .filter(
+                              ({ proposalModuleAddress }) =>
+                                proposalModule.address === proposalModuleAddress
+                            )
+                            .map(({ proposalId }) =>
+                              proposalFormula.compute({
+                                ...env,
+                                contractAddress: proposalModule.address,
+                                args: {
+                                  id: Number(proposalId).toString(),
+                                },
+                              })
+                            )
+                        )
+                      ).filter(
+                        (proposal): proposal is ProposalResponse<any> =>
+                          !!proposal &&
+                          // Only include open proposals if early execute enabled.
+                          ((proposal.proposal.status === StatusEnum.Open &&
+                            config.veto?.early_execute) ||
+                            // Include all veto timelock proposals.
+                            (typeof proposal.proposal.status === 'object' &&
+                              'veto_timelock' in proposal.proposal.status))
+                      ),
+                    }
                   }
-
-                  const config = await configFormula.compute({
-                    ...env,
-                    contractAddress: proposalModule.address,
-                  })
-
-                  if (!config?.veto) {
-                    return
-                  }
-
-                  return {
-                    proposalModule,
-                    proposals: (
-                      await Promise.all(
-                        proposalsWithThisVetoer
-                          .filter(
-                            ({ proposalModuleAddress }) =>
-                              proposalModule.address === proposalModuleAddress
-                          )
-                          .map(({ proposalId }) =>
-                            proposalFormula.compute({
-                              ...env,
-                              contractAddress: proposalModule.address,
-                              args: {
-                                id: Number(proposalId).toString(),
-                              },
-                            })
-                          )
-                      )
-                    ).filter(
-                      (proposal): proposal is ProposalResponse<any> =>
-                        !!proposal &&
-                        // Only include open proposals if early execute enabled.
-                        ((proposal.proposal.status === StatusEnum.Open &&
-                          config.veto?.early_execute) ||
-                          // Include all veto timelock proposals.
-                          (typeof proposal.proposal.status === 'object' &&
-                            'veto_timelock' in proposal.proposal.status))
-                    ),
-                  }
-                }
+                )
               )
-            )
-          ).filter(
-            (proposalModule): proposalModule is VetoableProposalsWithModule =>
-              !!proposalModule?.proposals.length
-          ),
-        })
+            ).filter(
+              (proposalModule): proposalModule is VetoableProposalsWithModule =>
+                !!proposalModule?.proposals.length
+            ),
+          })
+        )
       )
-    )
+    ).filter(({ proposalsWithModule }) => proposalsWithModule.length > 0)
 
     return vetoableProposalDaos
   },
