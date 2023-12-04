@@ -1,6 +1,6 @@
 import { Env } from '@/core'
 
-import { Expiration } from '../types'
+import { Duration, Expiration } from '../types'
 
 export const isExpirationExpired = (
   env: Env,
@@ -20,4 +20,18 @@ export const isExpirationExpired = (
   }
   // Never expires.
   return false
+}
+
+export const expirationPlusDuration = (
+  expiration: Expiration,
+  duration: Duration
+): Expiration => {
+  if ('at_height' in expiration && 'height' in duration) {
+    return { at_height: expiration.at_height + duration.height }
+  } else if ('at_time' in expiration && 'time' in duration) {
+    return { at_time: expiration.at_time + duration.time }
+  }
+
+  // Should never happen.
+  throw new Error('expiration duration units mismatch')
 }

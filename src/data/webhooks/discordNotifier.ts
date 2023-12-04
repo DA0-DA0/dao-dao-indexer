@@ -5,7 +5,7 @@ import {
   activeProposalModules,
   config as daoCoreConfig,
 } from '../formulas/contract/daoCore/base'
-import { Status } from '../formulas/contract/proposal/types'
+import { StatusEnum } from '../formulas/contract/proposal/types'
 import { getDaoAddressForProposalModule } from './utils'
 
 const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
@@ -21,7 +21,7 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
       // Starts with proposals or proposals_v2.
       (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
-      event.valueJson.status === Status.Open,
+      event.valueJson.status === StatusEnum.Open,
   },
   endpoint: async (_, env) => {
     const daoAddress = await getDaoAddressForProposalModule(env)

@@ -1,7 +1,7 @@
 import { Transformer } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
-import { Status } from '../../formulas/contract/proposal/types'
+import { StatusEnum } from '../../formulas/contract/proposal/types'
 import { VoteCast } from '../../types'
 
 const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
@@ -9,6 +9,7 @@ const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
 const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
 const KEY_PREFIX_PROPOSALS_V2 = dbKeyForKeys('proposals_v2', '')
 const KEY_PREFIX_BALLOTS = dbKeyForKeys('ballots', '')
+const KEY_CONFIG_V2 = dbKeyForKeys('config_v2')
 
 const proposal: Transformer = {
   filter: {
@@ -34,7 +35,7 @@ const proposed: Transformer = {
       (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
       !!event.valueJson?.proposer &&
-      event.valueJson?.status === Status.Open,
+      event.valueJson?.status === StatusEnum.Open,
   },
   name: (event) => {
     // Ignore deletes. Can't transform if we can't access the proposer.
@@ -76,4 +77,31 @@ const voteCast: Transformer = {
   },
 }
 
-export default [proposal, proposed, voteCast]
+const vetoer: Transformer = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+    matches: (event) => event.key === KEY_CONFIG_V2 && !!event.valueJson.veto,
+  },
+  name: (event) => `vetoer:${event.valueJson.veto.vetoer}`,
+  getValue: () => '',
+}
+
+// Map `proposalVetoer:<VETOER>` to proposal ID.
+const proposalVetoer: Transformer = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+    matches: (event) =>
+      // Starts with proposals or proposals_v2.
+      (event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
+        event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
+      !!event.valueJson.veto,
+  },
+  name: (event) => `proposalVetoer:${event.valueJson.veto.vetoer}`,
+  getValue: (event) => {
+    // "proposals"|"proposals_v2", proposalId
+    const [, proposalId] = dbKeyToKeys(event.key, [false, true])
+    return proposalId
+  },
+}
+
+export default [proposal, proposed, voteCast, vetoer, proposalVetoer]
