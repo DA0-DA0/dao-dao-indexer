@@ -2,6 +2,7 @@
 import './mocks'
 
 import { loadConfig } from '@/core/config'
+import { closeAllBullQueues } from '@/core/queues'
 import { DbType } from '@/core/types'
 import { closeDb, loadDb, setup } from '@/db'
 
@@ -23,5 +24,11 @@ beforeEach(async () => {
   await setup(accountsSequelize)
 })
 
-// Close connections after all tests.
-afterAll(closeDb)
+afterAll(() =>
+  Promise.all([
+    // Close DB connections after all tests.
+    closeDb(),
+    // Close bull queues after all tests.
+    closeAllBullQueues(),
+  ])
+)
