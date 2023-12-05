@@ -1,6 +1,6 @@
 import request from 'supertest'
 
-import { FormulaType, dbKeyForKeys } from '@/core'
+import { dbKeyForKeys } from '@/core'
 import { Computation, State, WasmStateEvent } from '@/db'
 
 import { app } from '../../app'
@@ -85,43 +85,45 @@ export const loadWasmTests = (options: ComputerTestOptions) => {
         .expect({ key3: 'value3' })
     })
 
-    it('caches computation and uses it in the future', async () => {
-      const initialComputations = await Computation.count()
+    // Computation caching is disabled, so this test does not currently apply.
 
-      const response = await request(app.callback())
-        .get('/contract/valid_contract/formula')
-        .set('x-api-key', options.apiKey)
-        .expect(200)
+    // it('caches computation and uses it in the future', async () => {
+    //   const initialComputations = await Computation.count()
 
-      expect(await Computation.count()).toBe(initialComputations + 1)
+    //   const response = await request(app.callback())
+    //     .get('/contract/valid_contract/formula')
+    //     .set('x-api-key', options.apiKey)
+    //     .expect(200)
 
-      // Computation should cache the returned result.
-      const computation = (await Computation.getLast())!
-      expect(computation.targetAddress).toBe('valid_contract')
-      expect(computation.blockHeight).toBe('3')
-      expect(computation.blockTimeUnixMs).toBe('3')
-      expect(computation.latestBlockHeightValid).toBe('3')
-      expect(computation.validityExtendable).toBe(true)
-      expect(computation.type).toBe(FormulaType.Contract)
-      expect(computation.formula).toBe('formula')
-      expect(computation.args).toBe('{}')
-      expect(computation.dependencies.length).toBe(1)
-      expect(computation.dependencies[0].key).toEqual(
-        `${WasmStateEvent.dependentKeyNamespace}:valid_contract:${dbKeyForKeys(
-          'some_state'
-        )}`
-      )
-      expect(computation.dependencies[0].prefix).toBe(false)
-      expect(computation.output).toEqual(JSON.stringify(response.body))
+    //   expect(await Computation.count()).toBe(initialComputations + 1)
 
-      // Repeating the same query should not create a new computation.
-      await request(app.callback())
-        .get('/contract/valid_contract/formula')
-        .set('x-api-key', options.apiKey)
-        .expect(200)
+    //   // Computation should cache the returned result.
+    //   const computation = (await Computation.getLast())!
+    //   expect(computation.targetAddress).toBe('valid_contract')
+    //   expect(computation.blockHeight).toBe('3')
+    //   expect(computation.blockTimeUnixMs).toBe('3')
+    //   expect(computation.latestBlockHeightValid).toBe('3')
+    //   expect(computation.validityExtendable).toBe(true)
+    //   expect(computation.type).toBe(FormulaType.Contract)
+    //   expect(computation.formula).toBe('formula')
+    //   expect(computation.args).toBe('{}')
+    //   expect(computation.dependencies.length).toBe(1)
+    //   expect(computation.dependencies[0].key).toEqual(
+    //     `${WasmStateEvent.dependentKeyNamespace}:valid_contract:${dbKeyForKeys(
+    //       'some_state'
+    //     )}`
+    //   )
+    //   expect(computation.dependencies[0].prefix).toBe(false)
+    //   expect(computation.output).toEqual(JSON.stringify(response.body))
 
-      expect(await Computation.count()).toBe(initialComputations + 1)
-    })
+    //   // Repeating the same query should not create a new computation.
+    //   await request(app.callback())
+    //     .get('/contract/valid_contract/formula')
+    //     .set('x-api-key', options.apiKey)
+    //     .expect(200)
+
+    //   expect(await Computation.count()).toBe(initialComputations + 1)
+    // })
 
     it('returns correct formula response for 3 blocks', async () => {
       await request(app.callback())
