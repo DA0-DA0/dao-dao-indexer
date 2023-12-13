@@ -24,11 +24,11 @@ beforeEach(async () => {
   await setup(accountsSequelize)
 })
 
-afterAll(() =>
-  Promise.all([
+afterAll(async () => {
+  await Promise.all([
     // Close DB connections after all tests.
     closeDb(),
     // Close bull queues after all tests.
     closeAllBullQueues(),
   ])
-)
+})

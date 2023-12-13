@@ -5,6 +5,7 @@ import { Contract } from '@/db'
 
 import { app } from '../../app'
 import { ComputerTestOptions } from '../types'
+import { loadBankTests } from './bank'
 import { loadStakingTests } from './staking'
 import { loadWasmTests } from './wasm'
 
@@ -14,6 +15,7 @@ export const loadFormulasTests = (options: ComputerTestOptions) => {
       await Contract.create({ address: 'valid_contract', codeId: 1 })
     })
 
+    loadBankTests(options)
     loadStakingTests(options)
     loadWasmTests(options)
 
