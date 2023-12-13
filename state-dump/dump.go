@@ -102,10 +102,17 @@ func main() {
 			continue
 		}
 
-		// Make sure key is for the given address.
+		// Make sure key is for the given address. Different stores have the address
+		// in a different position.
 		if len(addressBech32Data) > 0 {
-			if !bytes.HasPrefix(key[1:], addressBech32Data) {
-				continue
+			if storeName == "wasm" {
+				if !bytes.HasPrefix(key[1:], addressBech32Data) {
+					continue
+				}
+			} else if storeName == "bank" {
+				if !bytes.HasPrefix(key[2:], addressBech32Data) {
+					continue
+				}
 			}
 		}
 
