@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "type": "node",
+      "name": "docker-jest",
+      "request": "attach",
+      "address": "0.0.0.0",
+      "port": 9227,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/usr/src/app",
+      "skipFiles": [
+        "<node_internals>/**/*.js",
+        "${workspaceFolder}/node_modules/**/*.js"
+      ],
+      "internalConsoleOptions": "neverOpen",
+      "presentation": {
+        "reveal": "silent"
+      }
+    }
+  ]
+}

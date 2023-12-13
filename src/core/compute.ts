@@ -226,6 +226,21 @@ export const computeRange = async ({
       })
     }
 
+    // Load events used into cache if they don't already exist. They may have
+    // been added in a previous future events fetch, so don't double-add.
+    result.eventsUsed
+      // Sort ascending.
+      .sort((a, b) => Number(a.block.height - b.block.height))
+      .forEach((event) => {
+        if (event.dependentKey in allEvents) {
+          if (!allEvents[event.dependentKey]!.includes(event)) {
+            allEvents[event.dependentKey]!.push(event)
+          }
+        } else {
+          allEvents[event.dependentKey] = [event]
+        }
+      })
+
     // Preload all events for new dependent keys seen until the end.
     const newDependentKeys = result.dependentKeys.filter(
       (a) => !allDependentKeys.some((b) => dependentKeyMatches(a, b))
@@ -261,24 +276,16 @@ export const computeRange = async ({
       ).flat()
 
       // Save for future computations.
-      futureEvents.forEach((event) => {
-        if (event.dependentKey in allEvents) {
-          allEvents[event.dependentKey]!.push(event)
-        } else {
-          // If making new array, insert events used in the formula before
-          // future event. This way we cache the most recent events below the
-          // current block since they weren't fetched when getting all future
-          // events.
-          allEvents[event.dependentKey] = [
-            ...result.eventsUsed.filter(
-              (usedEvent) => usedEvent.dependentKey === event.dependentKey
-            ),
-            event,
-          ]
-            // Sort ascending.
-            .sort((a, b) => Number(a.block.height - b.block.height))
-        }
-      })
+      futureEvents
+        // Sort ascending.
+        .sort((a, b) => Number(a.block.height - b.block.height))
+        .forEach((event) => {
+          if (event.dependentKey in allEvents) {
+            allEvents[event.dependentKey]!.push(event)
+          } else {
+            allEvents[event.dependentKey] = [event]
+          }
+        })
 
       newDependentKeys.forEach((key) => allDependentKeys.push(key))
     }
