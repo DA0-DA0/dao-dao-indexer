@@ -35,7 +35,7 @@ export const vetoableProposals: ContractFormula<VetoableProposalDaos[]> = {
       (
         await getTransformationMatches(
           undefined,
-          `proposalVetoer:${contractAddress}`
+          `proposalVetoer:${contractAddress}:*`
         )
       )?.map(({ contractAddress, value }) => ({
         proposalModuleAddress: contractAddress,

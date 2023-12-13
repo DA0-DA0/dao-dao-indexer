@@ -86,7 +86,7 @@ const vetoer: Transformer = {
   getValue: () => '',
 }
 
-// Map `proposalVetoer:<VETOER>` to proposal ID.
+// Create map from `proposalVetoer:<VETOER>:<PROPOSAL ID>` to proposal ID.
 const proposalVetoer: Transformer = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
@@ -96,7 +96,11 @@ const proposalVetoer: Transformer = {
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
       !!event.valueJson.veto,
   },
-  name: (event) => `proposalVetoer:${event.valueJson.veto.vetoer}`,
+  name: (event) => {
+    // "proposals"|"proposals_v2", proposalId
+    const [, proposalId] = dbKeyToKeys(event.key, [false, true])
+    return `proposalVetoer:${event.valueJson.veto.vetoer}:${proposalId}`
+  },
   getValue: (event) => {
     // "proposals"|"proposals_v2", proposalId
     const [, proposalId] = dbKeyToKeys(event.key, [false, true])
