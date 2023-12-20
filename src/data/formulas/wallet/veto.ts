@@ -1,21 +1,24 @@
-import { ContractFormula } from '@/core'
+import { ContractFormula, WalletFormula } from '@/core'
 
+import {
+  ProposalModuleWithInfo,
+  activeProposalModules,
+} from '../contract/daoCore/base'
 import {
   config as multipleChoiceConfig,
   proposal as multipleChoiceProposal,
-} from '../proposal/daoProposalMultiple'
-import { MultipleChoiceProposal } from '../proposal/daoProposalMultiple/types'
+} from '../contract/proposal/daoProposalMultiple'
+import { MultipleChoiceProposal } from '../contract/proposal/daoProposalMultiple/types'
 import {
   dao,
   config as singleChoiceConfig,
   proposal as singleChoiceProposal,
-} from '../proposal/daoProposalSingle'
+} from '../contract/proposal/daoProposalSingle'
 import {
   Config,
   SingleChoiceProposal,
-} from '../proposal/daoProposalSingle/types'
-import { ProposalResponse, StatusEnum } from '../proposal/types'
-import { ProposalModuleWithInfo, activeProposalModules } from './base'
+} from '../contract/proposal/daoProposalSingle/types'
+import { ProposalResponse, StatusEnum } from '../contract/proposal/types'
 
 type VetoableProposalsWithModule = {
   proposalModule: ProposalModuleWithInfo
@@ -27,15 +30,15 @@ type VetoableProposalDaos = {
   proposalsWithModule: VetoableProposalsWithModule[]
 }
 
-export const vetoableProposals: ContractFormula<VetoableProposalDaos[]> = {
+export const vetoableProposals: WalletFormula<VetoableProposalDaos[]> = {
   compute: async (env) => {
-    const { contractAddress, getTransformationMatches } = env
+    const { walletAddress, getTransformationMatches } = env
 
     const proposalsWithThisVetoer =
       (
         await getTransformationMatches(
           undefined,
-          `proposalVetoer:${contractAddress}:*`
+          `proposalVetoer:${walletAddress}:*`
         )
       )?.map(({ contractAddress, value }) => ({
         proposalModuleAddress: contractAddress,
