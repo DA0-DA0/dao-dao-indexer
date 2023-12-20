@@ -47,6 +47,10 @@ const main = async () => {
   // Initialize state.
   await State.createSingletonIfMissing()
 
+  console.log(
+    `\n[${new Date().toISOString()}] Starting background queue workers...`
+  )
+
   // Create queue workers.
   const madeWorkers = await Promise.all(
     workerMakers.map((makeWorker) =>
