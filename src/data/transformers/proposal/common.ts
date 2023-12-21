@@ -72,7 +72,7 @@ const voteCast: Transformer = {
       proposalId,
       voter,
       vote: event.valueJson,
-      votedAt: event.blockTimestamp.toISOString(),
+      votedAt: event.blockTimestamp?.toISOString(),
     } as VoteCast
   },
 }
