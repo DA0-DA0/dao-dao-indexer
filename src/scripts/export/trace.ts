@@ -471,7 +471,7 @@ const trace = async () => {
       console.log(
         `[${new Date().toISOString()}] Trace queue size: ${
           traceQueue.length
-        } (${traceQueue.length - lastTraceQueueLength} added)`
+        } (+${traceQueue.length - lastTraceQueueLength})`
       )
       lastTraceQueueLength = traceQueue.length
     }, 60 * 1000)
