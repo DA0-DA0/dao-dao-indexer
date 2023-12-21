@@ -137,6 +137,7 @@ export const queueWebhooks = async (
 
   if (pendingWebhooks.length) {
     const webhookQueue = getBullQueue<PendingWebhook>(QueueName.Webhooks)
+
     webhookQueue.on('error', async (err) => {
       console.error('Webhook queue errored', err)
 
@@ -158,7 +159,5 @@ export const queueWebhooks = async (
         data,
       }))
     )
-
-    await webhookQueue.close()
   }
 }
