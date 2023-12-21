@@ -461,6 +461,29 @@ const trace = async () => {
 
   // If WebSocket enabled, connect to it before queueing.
   if (webSocketEnabled) {
+    console.log(`[${new Date().toISOString()}] Connecting to WebSocket...`)
+    // Set a 1-minute interval that logs how many events are queued until the
+    // WebSocket is ready. This helps verify that the node is doing something
+    // even when no output is being produced from the node. This happens during
+    // upgrades that can occasionally take hours.
+    let lastTraceQueueLength = 0
+    let traceQueueUpdaterInterval: NodeJS.Timer | null = setInterval(() => {
+      console.log(
+        `[${new Date().toISOString()}] Trace queue size: ${
+          traceQueue.length
+        } (${traceQueue.length - lastTraceQueueLength} added)`
+      )
+      lastTraceQueueLength = traceQueue.length
+    }, 60 * 1000)
+    const stopTraceQueueUpdater = () => {
+      if (traceQueueUpdaterInterval === null) {
+        return
+      }
+
+      clearInterval(traceQueueUpdaterInterval)
+      traceQueueUpdaterInterval = null
+    }
+
     // Connect to local RPC WebSocket once ready. We need to read from the trace
     // as the server is starting but not start processing the queue until the
     // WebSocket block listener has connected. This is because the trace blocks
@@ -495,12 +518,16 @@ const trace = async () => {
               )
             },
             onConnect: () => {
-              console.log(`[${new Date().toISOString()}] WebSocket connected.`)
+              stopTraceQueueUpdater()
               webSocketReady = true
               webSocketConnected = true
+
+              console.log(`[${new Date().toISOString()}] WebSocket connected.`)
+
               processTraceQueue()
             },
             onError: async (error) => {
+              stopTraceQueueUpdater()
               webSocketConnected = false
               webSocket.terminate()
 
@@ -529,6 +556,7 @@ const trace = async () => {
                 return
               }
 
+              stopTraceQueueUpdater()
               webSocketConnected = false
 
               if (shuttingDown) {
