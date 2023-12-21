@@ -294,17 +294,6 @@ const trace = async () => {
         return
       }
 
-      // If trace has `store_name` that does not exist in any of the handlers,
-      // ignore.
-      if (
-        trace.metadata.store_name &&
-        !handlers.some(
-          ({ handler }) => handler.storeName === trace.metadata.store_name
-        )
-      ) {
-        return
-      }
-
       // Fetch block time.
       const blockTimeUnixMs = await getBlockTimeUnixMs(trace)
       const eventWithBlockTime: TracedEventWithBlockTime = {
@@ -454,11 +443,13 @@ const trace = async () => {
         return
       }
 
-      // Ignore ibc and slashing events. These get spammed during chain upgrades
-      // and waste memory, and none of our handlers use them.
+      // If trace has `store_name` that does not exist in any of the handlers,
+      // ignore.
       if (
-        tracedEvent.metadata.store_name === 'ibc' ||
-        tracedEvent.metadata.store_name === 'slashing'
+        tracedEvent.metadata.store_name &&
+        !handlers.some(
+          ({ handler }) => handler.storeName === tracedEvent.metadata.store_name
+        )
       ) {
         return
       }
