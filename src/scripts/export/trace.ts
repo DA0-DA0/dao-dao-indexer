@@ -454,6 +454,15 @@ const trace = async () => {
         return
       }
 
+      // Ignore ibc and slashing events. These get spammed during chain upgrades
+      // and waste memory, and none of our handlers use them.
+      if (
+        tracedEvent.metadata.store_name === 'ibc' ||
+        tracedEvent.metadata.store_name === 'slashing'
+      ) {
+        return
+      }
+
       traceQueue.push(tracedEvent)
       processTraceQueue()
     },
