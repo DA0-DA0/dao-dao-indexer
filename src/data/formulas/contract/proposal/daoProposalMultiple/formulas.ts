@@ -8,6 +8,8 @@ import { ListProposalFilter, ProposalResponse, StatusEnum } from '../types'
 import { isPassed, isRejected } from './status'
 import { Ballot, Config, MultipleChoiceProposal } from './types'
 
+export * from '../base'
+
 export const config: ContractFormula<Config | undefined> = {
   compute: async ({ contractAddress, get }) =>
     await get(contractAddress, 'config'),
@@ -44,11 +46,6 @@ export const proposal: ContractFormula<
 
     return proposal && intoResponse(env, proposal, idNum)
   },
-}
-
-export const creationPolicy: ContractFormula = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'creation_policy'),
 }
 
 export const listProposals: ContractFormula<

@@ -35,3 +35,5 @@ export interface ProposalResponse<Proposal> {
 }
 
 export type ListProposalFilter = 'passed'
+
+export type ProposalCreationPolicy = { anyone: {} } | { module: { addr: {} } }

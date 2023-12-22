@@ -7,6 +7,7 @@ import { makeProposalCreated } from './discordNotifier'
 import { makeIndexerCwReceiptPaid } from './indexerCwReceipt'
 import { makeInboxJoinedDao } from './notify/dao'
 import {
+  makeInboxPreProposeApprovalProposalCreated,
   makeInboxProposalClosed,
   makeInboxProposalCreated,
   makeInboxProposalExecuted,
@@ -26,6 +27,7 @@ export const getProcessedWebhooks = (
       makeInboxProposalCreated,
       makeInboxProposalExecuted,
       makeInboxProposalClosed,
+      makeInboxPreProposeApprovalProposalCreated,
       makeIndexerCwReceiptPaid,
       makeBroadcastVoteCast,
       makeProposalStatusChanged,
