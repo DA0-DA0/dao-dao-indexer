@@ -24,6 +24,7 @@ const APPROVER_CONTRACT_NAME = 'crates.io:dao-pre-propose-approver'
 const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
 const KEY_PREFIX_PROPOSALS_V2 = dbKeyForKeys('proposals_v2', '')
 const KEY_PREFIX_PENDING_PROPOSALS = dbKeyForKeys('pending_proposals', '')
+const KEY_PREFIX_COMPLETED_PROPOSALS = dbKeyForKeys('completed_proposals', '')
 
 // Fire webhook when a proposal is created.
 export const makeInboxProposalCreated: WebhookMaker = (config, state) => ({
@@ -314,6 +315,72 @@ export const makeInboxPreProposeApprovalProposalCreated: WebhookMaker = (
     return {
       chainId: state.chainId,
       type: 'pending_proposal_created',
+      data: {
+        chainId: state.chainId,
+        dao: daoAddress,
+        daoName: daoConfig.name,
+        imageUrl: daoConfig.image_url ?? undefined,
+        proposalId,
+        proposalTitle,
+      },
+    }
+  },
+})
+
+// Fire webhook when a pending proposal is rejected.
+export const makeInboxPreProposeApprovalProposalRejected: WebhookMaker = (
+  config,
+  state
+) => ({
+  filter: {
+    codeIdsKeys: PRE_PROPOSE_APPROVAL_PROPOSAL_CODE_IDS_KEYS,
+    matches: (event) =>
+      event.key.startsWith(KEY_PREFIX_COMPLETED_PROPOSALS) &&
+      'rejected' in event.valueJson.status,
+  },
+  endpoint: {
+    type: WebhookType.Url,
+    url: 'https://notifier.daodao.zone/notify',
+    method: 'POST',
+    headers: {
+      'x-api-key': config.notifierSecret,
+    },
+  },
+  getValue: async (event, _, env) => {
+    // Get DAO config and proposal modules for this DAO so we can retrieve the
+    // DAO's name and the prefix for this proposal module.
+    const [daoAddress, proposalModuleAddress] = await Promise.all([
+      daoPreProposeBaseDao.compute(env),
+      daoPreProposeBaseProposalModule.compute(env),
+    ])
+    if (!daoAddress || !proposalModuleAddress) {
+      return
+    }
+
+    const daoConfig = await daoCoreConfig.compute({
+      ...env,
+      contractAddress: daoAddress,
+    })
+    const proposalModules = await activeProposalModules.compute({
+      ...env,
+      contractAddress: daoAddress,
+    })
+    const proposalModule = proposalModules?.find(
+      (proposalModule) => proposalModule.address === proposalModuleAddress
+    )
+
+    if (!daoConfig || !proposalModule) {
+      return
+    }
+
+    // "pending_proposals", proposalNum
+    const [, proposalNum] = dbKeyToKeys(event.key, [false, true])
+    const proposalId = `${proposalModule.prefix}*${proposalNum}`
+    const proposalTitle = event.valueJson.msg.title
+
+    return {
+      chainId: state.chainId,
+      type: 'pending_proposal_rejected',
       data: {
         chainId: state.chainId,
         dao: daoAddress,

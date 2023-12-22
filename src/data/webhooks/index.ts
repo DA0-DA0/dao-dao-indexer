@@ -8,6 +8,7 @@ import { makeIndexerCwReceiptPaid } from './indexerCwReceipt'
 import { makeInboxJoinedDao } from './notify/dao'
 import {
   makeInboxPreProposeApprovalProposalCreated,
+  makeInboxPreProposeApprovalProposalRejected,
   makeInboxProposalClosed,
   makeInboxProposalCreated,
   makeInboxProposalExecuted,
@@ -28,6 +29,7 @@ export const getProcessedWebhooks = (
       makeInboxProposalExecuted,
       makeInboxProposalClosed,
       makeInboxPreProposeApprovalProposalCreated,
+      makeInboxPreProposeApprovalProposalRejected,
       makeIndexerCwReceiptPaid,
       makeBroadcastVoteCast,
       makeProposalStatusChanged,
