@@ -1,3 +1,5 @@
+import { Op } from 'sequelize'
+
 import { ContractFormula, WalletFormula } from '@/core'
 
 import {
@@ -32,18 +34,44 @@ type VetoableProposalDaos = {
 
 export const vetoableProposals: WalletFormula<VetoableProposalDaos[]> = {
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches } = env
+    const { walletAddress, getTransformationMatches, getCodeIdsForKeys } = env
 
+    // Get all cw1-whitelist contracts with this wallet as an admin.
+    const cw1WhitelistCodeIds = getCodeIdsForKeys('cw1-whitelist')
+    const cw1WhitelistContracts = cw1WhitelistCodeIds.length
+      ? (await getTransformationMatches(
+          undefined,
+          'admins',
+          {
+            [Op.contains]: walletAddress,
+          },
+          cw1WhitelistCodeIds
+        )) ?? []
+      : []
+
+    // Get all proposals with a vetoer set to this wallet or a cw1-whitelist
+    // contract where this wallet is an admin.
     const proposalsWithThisVetoer =
       (
-        await getTransformationMatches(
-          undefined,
-          `proposalVetoer:${walletAddress}:*`
-        )
-      )?.map(({ contractAddress, value }) => ({
-        proposalModuleAddress: contractAddress,
-        proposalId: value,
-      })) || []
+        await Promise.all([
+          getTransformationMatches(
+            undefined,
+            `proposalVetoer:${walletAddress}:*`
+          ),
+          ...cw1WhitelistContracts.map(({ contractAddress }) =>
+            getTransformationMatches(
+              undefined,
+              `proposalVetoer:${contractAddress}:*`
+            )
+          ),
+        ])
+      )?.flatMap(
+        (matches) =>
+          matches?.map(({ contractAddress, value }) => ({
+            proposalModuleAddress: contractAddress,
+            proposalId: value,
+          })) ?? []
+      ) || []
 
     const uniqueProposalModuleAddresses = Array.from(
       new Set(

@@ -26,24 +26,18 @@ export const ownerOf: WalletFormula<string[]> = {
 
     // Get all cw-vesting contracts with this wallet as the owner or a
     // cw1-whitelist contract where this wallet is an admin.
-    const cwVestingContracts = (
-      await Promise.all([
-        getTransformationMatches(
-          undefined,
-          'owner',
+    const cwVestingContracts =
+      (await getTransformationMatches(
+        undefined,
+        'owner',
+        [
           walletAddress,
-          cwVestingCodeIds
-        ),
-        ...cw1WhitelistContracts.map(({ contractAddress }) =>
-          getTransformationMatches(
-            undefined,
-            'owner',
-            contractAddress,
-            cwVestingCodeIds
-          )
-        ),
-      ])
-    ).flatMap((m) => m ?? [])
+          ...cw1WhitelistContracts.map(
+            ({ contractAddress }) => contractAddress
+          ),
+        ],
+        cwVestingCodeIds
+      )) ?? []
 
     return cwVestingContracts.map(({ contractAddress }) => contractAddress)
   },
