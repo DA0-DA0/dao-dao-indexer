@@ -8,6 +8,7 @@ import {
   BankStateEvent,
   Computation,
   ComputationDependency,
+  GovStateEvent,
   StakingSlashEvent,
   WasmStateEvent,
   WasmStateEventTransformation,
@@ -261,6 +262,7 @@ export const getDependableEventModels =
     WasmTxEvent,
     StakingSlashEvent,
     BankStateEvent,
+    GovStateEvent,
   ]
 
 // Get the dependable event model for a given key based on its namespace.

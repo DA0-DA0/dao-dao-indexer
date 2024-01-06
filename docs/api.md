@@ -30,6 +30,7 @@ This returns the status of the indexer.
   "lastStakingBlockHeightExported": string | null
   "lastWasmBlockHeightExported": string | null
   "lastBankBlockHeightExported": string | null
+  "lastGovBlockHeightExported": string | null
 }
 ```
 

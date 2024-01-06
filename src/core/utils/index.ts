@@ -92,7 +92,7 @@ export const getDependentKey = (
   namespace: DependentKeyNamespace,
   // If empty/undefined, wildcard used.
   ...keys: (string | undefined)[]
-) => `${namespace}:${keys.map((key) => key || '*').join(':')}`
+) => `${[namespace, ...keys].map((key) => key || '*').join(':')}`
 
 export const validateBlockString = (block: string, subject: string): Block => {
   let parsedBlock

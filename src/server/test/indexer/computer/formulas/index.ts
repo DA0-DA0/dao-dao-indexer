@@ -6,6 +6,7 @@ import { Contract } from '@/db'
 import { app } from '../../app'
 import { ComputerTestOptions } from '../types'
 import { loadBankTests } from './bank'
+import { loadGovTests } from './gov'
 import { loadStakingTests } from './staking'
 import { loadWasmTests } from './wasm'
 
@@ -16,6 +17,7 @@ export const loadFormulasTests = (options: ComputerTestOptions) => {
     })
 
     loadBankTests(options)
+    loadGovTests(options)
     loadStakingTests(options)
     loadWasmTests(options)
 

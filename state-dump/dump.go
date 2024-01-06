@@ -36,9 +36,13 @@ type (
 )
 
 var (
-	BalancesPrefix      = []byte{0x02}
+	// bank
+	BalancesPrefix = []byte{0x02}
+	// wasm
 	ContractKeyPrefix   = []byte{0x02}
 	ContractStorePrefix = []byte{0x03}
+	// gov
+	ProposalsKeyPrefix = []byte{0x00}
 )
 
 func main() {
@@ -97,9 +101,20 @@ func main() {
 	count := 0
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
-		// Only write contract keys.
-		if key[0] != ContractKeyPrefix[0] && key[0] != ContractStorePrefix[0] {
-			continue
+
+		// Only write relevant keys.
+		if storeName == "wasm" {
+			if key[0] != ContractKeyPrefix[0] && key[0] != ContractStorePrefix[0] {
+				continue
+			}
+		} else if storeName == "bank" {
+			if key[0] != BalancesPrefix[0] {
+				continue
+			}
+		} else if storeName == "gov" {
+			if key[0] != ProposalsKeyPrefix[0] {
+				continue
+			}
 		}
 
 		// Make sure key is for the given address. Different stores have the address
