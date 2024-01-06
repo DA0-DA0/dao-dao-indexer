@@ -1137,7 +1137,10 @@ export const getEnv = ({
     // Call hook.
     await onFetch?.([event])
 
-    return event.value
+    return {
+      ...event.value,
+      version: event.version,
+    }
   }
 
   const getProposals: FormulaProposalsGetter = async () => {
@@ -1199,11 +1202,14 @@ export const getEnv = ({
     // Call hook.
     await onFetch?.(events)
 
-    // Create denom balance map.
+    // Create proposal map.
     return events.reduce(
-      (acc, { proposalId, value }) => ({
+      (acc, { proposalId, value, version }) => ({
         ...acc,
-        [proposalId]: value,
+        [proposalId]: {
+          ...value,
+          version,
+        },
       }),
       {} as Record<string, Record<string, any>>
     )

@@ -482,6 +482,7 @@ export type ParsedGovStateEvent = {
   blockTimeUnixMs: string
   blockTimestamp: Date
   value: Record<string, any>
+  version: string
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<

@@ -3,16 +3,14 @@ import { DataType } from 'sequelize-typescript'
 
 module.exports = {
   async up(queryInterface: QueryInterface) {
-    await queryInterface.changeColumn('BankStateEvents', 'balance', {
-      type: DataType.TEXT,
+    await queryInterface.addColumn('GovStateEvents', 'version', {
+      type: DataType.STRING,
       allowNull: false,
+      defaultValue: 'v1',
     })
   },
 
   async down(queryInterface: QueryInterface) {
-    await queryInterface.changeColumn('BankStateEvents', 'balance', {
-      type: DataType.BIGINT,
-      allowNull: false,
-    })
+    await queryInterface.removeColumn('GovStateEvents', 'version')
   },
 }
