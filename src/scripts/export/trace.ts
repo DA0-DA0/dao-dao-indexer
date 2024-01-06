@@ -622,7 +622,11 @@ const trace = async () => {
     )
 
     const interval = setInterval(() => {
-      if (exporting === 0 && traceQueue.length === 0) {
+      if (
+        exporting === 0 &&
+        traceQueue.length === 0 &&
+        exportBatch.length === 0
+      ) {
         clearInterval(interval)
         resolve()
       }
