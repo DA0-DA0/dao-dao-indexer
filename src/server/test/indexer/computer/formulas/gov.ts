@@ -20,6 +20,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             value: {
               proposal: '1-1',
             },
+            version: 'version',
           },
           {
             proposalId: '1',
@@ -29,6 +30,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             value: {
               proposal: '1-2',
             },
+            version: 'version',
           },
           {
             proposalId: '2',
@@ -38,6 +40,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             value: {
               proposal: '2-3',
             },
+            version: 'version',
           },
           {
             proposalId: '3',
@@ -47,6 +50,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             value: {
               proposal: '3-4',
             },
+            version: 'version',
           },
         ])
 
@@ -64,6 +68,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect({
             proposal: '1-1',
+            version: 'version',
           })
 
         await request(app.callback())
@@ -72,6 +77,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect({
             proposal: '1-2',
+            version: 'version',
           })
 
         // Returns latest if no block.
@@ -81,6 +87,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect({
             proposal: '1-2',
+            version: 'version',
           })
       })
 
@@ -93,6 +100,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               value: {
                 proposal: '1-1',
+                version: 'version',
               },
               blockHeight: 1,
               blockTimeUnixMs: 1,
@@ -100,6 +108,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               value: {
                 proposal: '1-2',
+                version: 'version',
               },
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -117,6 +126,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               at: '1',
               value: {
                 proposal: '1-1',
+                version: 'version',
               },
               blockHeight: 1,
               blockTimeUnixMs: 1,
@@ -125,6 +135,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               at: '3',
               value: {
                 proposal: '1-2',
+                version: 'version',
               },
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -141,6 +152,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               value: {
                 proposal: '1-1',
+                version: 'version',
               },
               blockHeight: 1,
               blockTimeUnixMs: 1,
@@ -148,6 +160,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               value: {
                 proposal: '1-2',
+                version: 'version',
               },
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -163,6 +176,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               at: '1',
               value: {
                 proposal: '1-1',
+                version: 'version',
               },
               blockHeight: 1,
               blockTimeUnixMs: 1,
@@ -171,6 +185,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               at: '3',
               value: {
                 proposal: '1-2',
+                version: 'version',
               },
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -187,6 +202,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             proposals: [
               {
                 proposal: '1-1',
+                version: 'version',
               },
             ],
             total: 1,
@@ -200,9 +216,11 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             proposals: [
               {
                 proposal: '1-2',
+                version: 'version',
               },
               {
                 proposal: '2-3',
+                version: 'version',
               },
             ],
             total: 2,
@@ -217,12 +235,15 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             proposals: [
               {
                 proposal: '1-2',
+                version: 'version',
               },
               {
                 proposal: '2-3',
+                version: 'version',
               },
               {
                 proposal: '3-4',
+                version: 'version',
               },
             ],
             total: 3,
@@ -240,6 +261,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-1',
+                    version: 'version',
                   },
                 ],
                 total: 1,
@@ -252,6 +274,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-2',
+                    version: 'version',
                   },
                 ],
                 total: 1,
@@ -264,9 +287,11 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-2',
+                    version: 'version',
                   },
                   {
                     proposal: '2-3',
+                    version: 'version',
                   },
                 ],
                 total: 2,
@@ -287,6 +312,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-1',
+                    version: 'version',
                   },
                 ],
                 total: 1,
@@ -300,9 +326,11 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-2',
+                    version: 'version',
                   },
                   {
                     proposal: '2-3',
+                    version: 'version',
                   },
                 ],
                 total: 2,
@@ -324,6 +352,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-1',
+                    version: 'version',
                   },
                 ],
                 total: 1,
@@ -336,6 +365,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-2',
+                    version: 'version',
                   },
                 ],
                 total: 1,
@@ -348,9 +378,11 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-2',
+                    version: 'version',
                   },
                   {
                     proposal: '2-3',
+                    version: 'version',
                   },
                 ],
                 total: 2,
@@ -371,6 +403,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-1',
+                    version: 'version',
                   },
                 ],
                 total: 1,
@@ -384,9 +417,11 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     proposal: '1-2',
+                    version: 'version',
                   },
                   {
                     proposal: '2-3',
+                    version: 'version',
                   },
                 ],
                 total: 2,
