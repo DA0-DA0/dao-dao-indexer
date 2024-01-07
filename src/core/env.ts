@@ -1172,6 +1172,7 @@ export const getEnv = ({
               'blockHeight',
               'blockTimeUnixMs',
               'value',
+              'version',
             ],
             where: {
               blockHeight: blockHeightFilter,
