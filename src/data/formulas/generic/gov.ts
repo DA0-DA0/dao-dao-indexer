@@ -1,7 +1,7 @@
-import { GenericFormula } from '@/core'
+import { FormulaProposalObject, GenericFormula } from '@/core'
 
 export const proposal: GenericFormula<
-  Record<string, any> | undefined,
+  FormulaProposalObject | undefined,
   { proposalId: string }
 > = {
   compute: async ({ getProposal, args: { proposalId } }) => {
@@ -15,7 +15,7 @@ export const proposal: GenericFormula<
 
 export const proposals: GenericFormula<
   {
-    proposals: Record<string, any>[]
+    proposals: FormulaProposalObject[]
     total: number
   },
   {
@@ -52,7 +52,7 @@ export const proposals: GenericFormula<
 
 export const reverseProposals: GenericFormula<
   {
-    proposals: Record<string, any>[]
+    proposals: FormulaProposalObject[]
     total: number
   },
   {

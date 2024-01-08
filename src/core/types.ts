@@ -243,12 +243,18 @@ export type FormulaBalancesGetter = (
   address: string
 ) => Promise<Record<string, string> | undefined>
 
+export type FormulaProposalObject = {
+  id: string
+  value: string
+  version: string
+}
+
 export type FormulaProposalGetter = (
   proposalId: string
-) => Promise<Record<string, any> | undefined>
+) => Promise<FormulaProposalObject | undefined>
 
 export type FormulaProposalsGetter = () => Promise<
-  Record<string, Record<string, any>> | undefined
+  Record<string, FormulaProposalObject> | undefined
 >
 
 export type Env<Args extends Record<string, string> = {}> = {
@@ -481,7 +487,7 @@ export type ParsedGovStateEvent = {
   blockHeight: string
   blockTimeUnixMs: string
   blockTimestamp: Date
-  value: Record<string, any>
+  value: string
   version: string
 }
 

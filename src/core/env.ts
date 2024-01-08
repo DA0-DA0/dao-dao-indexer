@@ -28,6 +28,7 @@ import {
   FormulaPrefetch,
   FormulaPrefetchTransformations,
   FormulaProposalGetter,
+  FormulaProposalObject,
   FormulaProposalsGetter,
   FormulaSlashEventsGetter,
   FormulaTransformationDateGetter,
@@ -1138,7 +1139,8 @@ export const getEnv = ({
     await onFetch?.([event])
 
     return {
-      ...event.value,
+      id: event.proposalId,
+      value: event.value,
       version: event.version,
     }
   }
@@ -1208,11 +1210,12 @@ export const getEnv = ({
       (acc, { proposalId, value, version }) => ({
         ...acc,
         [proposalId]: {
-          ...value,
+          id: proposalId,
+          value,
           version,
         },
       }),
-      {} as Record<string, Record<string, any>>
+      {} as Record<string, FormulaProposalObject>
     )
   }
 

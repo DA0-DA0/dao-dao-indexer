@@ -47,9 +47,10 @@ export class GovStateEvent extends DependendableEventModel {
   @Column(DataType.DATE)
   blockTimestamp!: Date
 
+  // Base64-encoded protobuf
   @AllowNull(false)
-  @Column(DataType.JSONB)
-  value!: any
+  @Column(DataType.TEXT('long'))
+  value!: string
 
   @AllowNull(false)
   @Column(DataType.STRING)

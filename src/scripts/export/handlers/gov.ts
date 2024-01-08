@@ -1,4 +1,4 @@
-import { fromBase64 } from '@cosmjs/encoding'
+import { fromBase64, toBase64 } from '@cosmjs/encoding'
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
@@ -58,11 +58,13 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async () => {
     let value: any
     let version
     try {
-      value = ProposalV1.toAmino(ProposalV1.decode(valueData))
+      value = toBase64(ProposalV1.toProto(ProposalV1.decode(valueData)))
       version = 'v1'
     } catch {
       try {
-        value = ProposalV1Beta1.toAmino(ProposalV1Beta1.decode(valueData))
+        value = toBase64(
+          ProposalV1Beta1.toProto(ProposalV1Beta1.decode(valueData))
+        )
         version = 'v1beta1'
       } catch {
         return
