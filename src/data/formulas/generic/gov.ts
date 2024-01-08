@@ -6,7 +6,7 @@ export const proposal: GenericFormula<
 > = {
   compute: async ({ getProposal, args: { id } }) => {
     if (!id) {
-      throw new Error('missing `proposalId`')
+      throw new Error('missing `id`')
     }
 
     return await getProposal(id)
