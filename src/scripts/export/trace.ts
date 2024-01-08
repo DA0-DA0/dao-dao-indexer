@@ -221,7 +221,6 @@ const trace = async () => {
 
   console.log(`\n[${new Date().toISOString()}] Exporting from trace...`)
 
-  let webSocketReady = false
   let webSocketConnected = false
   const traceQueue: TracedEvent[] = []
   let traceExportPaused = false
@@ -378,11 +377,7 @@ const trace = async () => {
   // Process traced events queue by exporting to a job queue until a certain
   // concurrency is reached, then pause until the queue is drained.
   const processTraceQueue = () => {
-    if (
-      traceExportPaused ||
-      // If WebSocket is enabled, pause trace queue until WebSocket is ready.
-      (webSocketEnabled && !webSocketReady)
-    ) {
+    if (traceExportPaused) {
       return
     }
 
@@ -519,12 +514,9 @@ const trace = async () => {
             },
             onConnect: () => {
               stopTraceQueueUpdater()
-              webSocketReady = true
               webSocketConnected = true
 
               console.log(`[${new Date().toISOString()}] WebSocket connected.`)
-
-              processTraceQueue()
             },
             onError: async (error) => {
               stopTraceQueueUpdater()
@@ -537,7 +529,7 @@ const trace = async () => {
 
               // On error and not shutting down, reconnect.
               console.error(
-                `[${new Date().toISOString()}] WebSocket errored, reconnecting in 3 seconds...`,
+                `[${new Date().toISOString()}] WebSocket errored, reconnecting in 1 second...`,
                 error
               )
               Sentry.captureException(error, {
@@ -548,7 +540,7 @@ const trace = async () => {
                 },
               })
 
-              setTimeout(setUpWebSocket, 3000)
+              setTimeout(setUpWebSocket, 1000)
             },
             onClose: () => {
               // If already disconnected, from onError, do nothing.
@@ -588,9 +580,6 @@ const trace = async () => {
             },
           }
         )
-
-        webSocketReady = true
-        processTraceQueue()
       }
     })
   }
