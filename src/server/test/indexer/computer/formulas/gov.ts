@@ -55,7 +55,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
 
       it('returns correct proposal response for a single block', async () => {
         await request(app.callback())
-          .get('/generic/_/gov/proposal?block=1:1&proposalId=1')
+          .get('/generic/_/gov/proposal?block=1:1&id=1')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect({
@@ -65,7 +65,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           })
 
         await request(app.callback())
-          .get('/generic/_/gov/proposal?block=3:3&proposalId=1')
+          .get('/generic/_/gov/proposal?block=3:3&id=1')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect({
@@ -76,7 +76,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
 
         // Returns latest if no block.
         await request(app.callback())
-          .get('/generic/_/gov/proposal?proposalId=1')
+          .get('/generic/_/gov/proposal?id=1')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect({
@@ -88,7 +88,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
 
       it('returns correct proposal response for multiple blocks', async () => {
         await request(app.callback())
-          .get('/generic/_/gov/proposal?blocks=1:1..3:3&proposalId=1')
+          .get('/generic/_/gov/proposal?blocks=1:1..3:3&id=1')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -113,9 +113,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           ])
 
         await request(app.callback())
-          .get(
-            '/generic/_/gov/proposal?blocks=1:1..3:3&blockStep=2&proposalId=1'
-          )
+          .get('/generic/_/gov/proposal?blocks=1:1..3:3&blockStep=2&id=1')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -144,7 +142,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
 
       it('returns correct proposal response for multiple times', async () => {
         await request(app.callback())
-          .get('/generic/_/gov/proposal?times=1..3&proposalId=1')
+          .get('/generic/_/gov/proposal?times=1..3&id=1')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -169,7 +167,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           ])
 
         await request(app.callback())
-          .get('/generic/_/gov/proposal?times=1..3&timeStep=2&proposalId=1')
+          .get('/generic/_/gov/proposal?times=1..3&timeStep=2&id=1')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([

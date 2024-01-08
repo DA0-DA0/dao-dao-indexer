@@ -2,14 +2,14 @@ import { FormulaProposalObject, GenericFormula } from '@/core'
 
 export const proposal: GenericFormula<
   FormulaProposalObject | undefined,
-  { proposalId: string }
+  { id: string }
 > = {
-  compute: async ({ getProposal, args: { proposalId } }) => {
-    if (!proposalId) {
+  compute: async ({ getProposal, args: { id } }) => {
+    if (!id) {
       throw new Error('missing `proposalId`')
     }
 
-    return await getProposal(proposalId)
+    return await getProposal(id)
   },
 }
 
