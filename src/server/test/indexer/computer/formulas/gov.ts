@@ -17,40 +17,32 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             blockHeight: 1,
             blockTimeUnixMs: 1,
             blockTimestamp,
-            value: {
-              proposal: '1-1',
-            },
             version: 'version',
+            data: '1-1',
           },
           {
             proposalId: '1',
             blockHeight: 2,
             blockTimeUnixMs: 2,
             blockTimestamp,
-            value: {
-              proposal: '1-2',
-            },
             version: 'version',
+            data: '1-2',
           },
           {
             proposalId: '2',
             blockHeight: 3,
             blockTimeUnixMs: 3,
             blockTimestamp,
-            value: {
-              proposal: '2-3',
-            },
             version: 'version',
+            data: '2-3',
           },
           {
             proposalId: '3',
             blockHeight: 4,
             blockTimeUnixMs: 4,
             blockTimestamp,
-            value: {
-              proposal: '3-4',
-            },
             version: 'version',
+            data: '3-4',
           },
         ])
 
@@ -67,8 +59,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect({
-            proposal: '1-1',
+            id: '1',
             version: 'version',
+            data: '1-1',
           })
 
         await request(app.callback())
@@ -76,8 +69,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect({
-            proposal: '1-2',
+            id: '1',
             version: 'version',
+            data: '1-2',
           })
 
         // Returns latest if no block.
@@ -86,8 +80,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect({
-            proposal: '1-2',
+            id: '1',
             version: 'version',
+            data: '1-2',
           })
       })
 
@@ -99,16 +94,18 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect([
             {
               value: {
-                proposal: '1-1',
+                id: '1',
                 version: 'version',
+                data: '1-1',
               },
               blockHeight: 1,
               blockTimeUnixMs: 1,
             },
             {
               value: {
-                proposal: '1-2',
+                id: '1',
                 version: 'version',
+                data: '1-2',
               },
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -125,8 +122,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               at: '1',
               value: {
-                proposal: '1-1',
+                id: '1',
                 version: 'version',
+                data: '1-1',
               },
               blockHeight: 1,
               blockTimeUnixMs: 1,
@@ -134,8 +132,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               at: '3',
               value: {
-                proposal: '1-2',
+                id: '1',
                 version: 'version',
+                data: '1-2',
               },
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -151,16 +150,18 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect([
             {
               value: {
-                proposal: '1-1',
+                id: '1',
                 version: 'version',
+                data: '1-1',
               },
               blockHeight: 1,
               blockTimeUnixMs: 1,
             },
             {
               value: {
-                proposal: '1-2',
+                id: '1',
                 version: 'version',
+                data: '1-2',
               },
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -175,8 +176,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               at: '1',
               value: {
-                proposal: '1-1',
+                id: '1',
                 version: 'version',
+                data: '1-1',
               },
               blockHeight: 1,
               blockTimeUnixMs: 1,
@@ -184,8 +186,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               at: '3',
               value: {
-                proposal: '1-2',
+                id: '1',
                 version: 'version',
+                data: '1-2',
               },
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -201,8 +204,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect({
             proposals: [
               {
-                proposal: '1-1',
+                id: '1',
                 version: 'version',
+                data: '1-1',
               },
             ],
             total: 1,
@@ -215,12 +219,14 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect({
             proposals: [
               {
-                proposal: '1-2',
+                id: '1',
                 version: 'version',
+                data: '1-2',
               },
               {
-                proposal: '2-3',
+                id: '2',
                 version: 'version',
+                data: '2-3',
               },
             ],
             total: 2,
@@ -234,16 +240,19 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect({
             proposals: [
               {
-                proposal: '1-2',
+                id: '1',
                 version: 'version',
+                data: '1-2',
               },
               {
-                proposal: '2-3',
+                id: '2',
                 version: 'version',
+                data: '2-3',
               },
               {
-                proposal: '3-4',
+                id: '3',
                 version: 'version',
+                data: '3-4',
               },
             ],
             total: 3,
@@ -260,8 +269,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-1',
+                    id: '1',
                     version: 'version',
+                    data: '1-1',
                   },
                 ],
                 total: 1,
@@ -273,8 +283,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-2',
+                    id: '1',
                     version: 'version',
+                    data: '1-2',
                   },
                 ],
                 total: 1,
@@ -286,12 +297,14 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-2',
+                    id: '1',
                     version: 'version',
+                    data: '1-2',
                   },
                   {
-                    proposal: '2-3',
+                    id: '2',
                     version: 'version',
+                    data: '2-3',
                   },
                 ],
                 total: 2,
@@ -311,8 +324,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-1',
+                    id: '1',
                     version: 'version',
+                    data: '1-1',
                   },
                 ],
                 total: 1,
@@ -325,12 +339,14 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-2',
+                    id: '1',
                     version: 'version',
+                    data: '1-2',
                   },
                   {
-                    proposal: '2-3',
+                    id: '2',
                     version: 'version',
+                    data: '2-3',
                   },
                 ],
                 total: 2,
@@ -351,8 +367,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-1',
+                    id: '1',
                     version: 'version',
+                    data: '1-1',
                   },
                 ],
                 total: 1,
@@ -364,8 +381,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-2',
+                    id: '1',
                     version: 'version',
+                    data: '1-2',
                   },
                 ],
                 total: 1,
@@ -377,12 +395,14 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-2',
+                    id: '1',
                     version: 'version',
+                    data: '1-2',
                   },
                   {
-                    proposal: '2-3',
+                    id: '2',
                     version: 'version',
+                    data: '2-3',
                   },
                 ],
                 total: 2,
@@ -402,8 +422,9 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-1',
+                    id: '1',
                     version: 'version',
+                    data: '1-1',
                   },
                 ],
                 total: 1,
@@ -416,12 +437,14 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               value: {
                 proposals: [
                   {
-                    proposal: '1-2',
+                    id: '1',
                     version: 'version',
+                    data: '1-2',
                   },
                   {
-                    proposal: '2-3',
+                    id: '2',
                     version: 'version',
+                    data: '2-3',
                   },
                 ],
                 total: 2,

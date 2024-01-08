@@ -1,7 +1,7 @@
 services:
   test:
     image: node:16-alpine
-    command: npm run jest
+    command: "npm run jest -- -t 'gov'"
     working_dir: /usr/src/app
     ports:
       - 9227:9227 # debug

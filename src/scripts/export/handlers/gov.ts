@@ -55,14 +55,14 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async () => {
     }
 
     // Attempt v1 decoding, falling back to v1beta1. If both fail, ignore.
-    let value: any
+    let data: any
     let version
     try {
-      value = toBase64(ProposalV1.toProto(ProposalV1.decode(valueData)))
+      data = toBase64(ProposalV1.toProto(ProposalV1.decode(valueData)))
       version = 'v1'
     } catch {
       try {
-        value = toBase64(
+        data = toBase64(
           ProposalV1Beta1.toProto(ProposalV1Beta1.decode(valueData))
         )
         version = 'v1beta1'
@@ -77,20 +77,20 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async () => {
       blockHeight,
       blockTimeUnixMs,
       blockTimestamp,
-      value,
       version,
+      data,
     }
   }
 
   const process: Handler<ParsedGovStateEvent>['process'] = async (events) => {
     const exportEvents = async () =>
       // Unique index on [blockHeight, proposalId] ensures that we don't insert
-      // duplicate events. If we encounter a duplicate, we update the `value`
-      // and `version` fields in case event processing for a block was batched
+      // duplicate events. If we encounter a duplicate, we update the `version`
+      // and `data` fields in case event processing for a block was batched
       // separately.
       events.length > 0
         ? await GovStateEvent.bulkCreate(events, {
-            updateOnDuplicate: ['value', 'version'],
+            updateOnDuplicate: ['version', 'data'],
           })
         : []
 

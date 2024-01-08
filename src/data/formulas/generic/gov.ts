@@ -34,18 +34,14 @@ export const proposals: GenericFormula<
       throw new Error('invalid `limit`')
     }
 
-    const proposals = (await getProposals()) || {}
-
     // Sort ascending.
-    const proposalIds = Object.keys(proposals).sort((a, b) =>
-      Number(BigInt(a) - BigInt(b))
+    const proposals = ((await getProposals()) || []).sort((a, b) =>
+      Number(BigInt(a.id) - BigInt(b.id))
     )
 
     return {
-      proposals: proposalIds
-        .slice(offsetNum, offsetNum + limitNum)
-        .map((proposalId) => proposals[proposalId]),
-      total: proposalIds.length,
+      proposals: proposals.slice(offsetNum, offsetNum + limitNum),
+      total: proposals.length,
     }
   },
 }
@@ -71,18 +67,14 @@ export const reverseProposals: GenericFormula<
       throw new Error('invalid `limit`')
     }
 
-    const proposals = (await getProposals()) || {}
-
     // Sort descending.
-    const proposalIds = Object.keys(proposals).sort((a, b) =>
-      Number(BigInt(b) - BigInt(a))
+    const proposals = ((await getProposals()) || []).sort((a, b) =>
+      Number(BigInt(b.id) - BigInt(a.id))
     )
 
     return {
-      proposals: proposalIds
-        .slice(offsetNum, offsetNum + limitNum)
-        .map((proposalId) => proposals[proposalId]),
-      total: proposalIds.length,
+      proposals: proposals.slice(offsetNum, offsetNum + limitNum),
+      total: proposals.length,
     }
   },
 }

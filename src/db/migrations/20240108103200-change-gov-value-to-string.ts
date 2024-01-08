@@ -5,7 +5,7 @@ module.exports = {
   async up(queryInterface: QueryInterface) {
     await queryInterface.bulkDelete('GovStateEvents', {})
     await queryInterface.changeColumn('GovStateEvents', 'value', {
-      type: DataType.TEXT('long'),
+      type: DataType.TEXT,
       allowNull: false,
     })
   },

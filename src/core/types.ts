@@ -245,8 +245,8 @@ export type FormulaBalancesGetter = (
 
 export type FormulaProposalObject = {
   id: string
-  value: string
   version: string
+  data: string
 }
 
 export type FormulaProposalGetter = (
@@ -254,7 +254,7 @@ export type FormulaProposalGetter = (
 ) => Promise<FormulaProposalObject | undefined>
 
 export type FormulaProposalsGetter = () => Promise<
-  Record<string, FormulaProposalObject> | undefined
+  FormulaProposalObject[] | undefined
 >
 
 export type Env<Args extends Record<string, string> = {}> = {
@@ -487,8 +487,8 @@ export type ParsedGovStateEvent = {
   blockHeight: string
   blockTimeUnixMs: string
   blockTimestamp: Date
-  value: string
   version: string
+  data: string
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<

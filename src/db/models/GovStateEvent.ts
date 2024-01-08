@@ -47,14 +47,14 @@ export class GovStateEvent extends DependendableEventModel {
   @Column(DataType.DATE)
   blockTimestamp!: Date
 
-  // Base64-encoded protobuf
-  @AllowNull(false)
-  @Column(DataType.TEXT('long'))
-  value!: string
-
   @AllowNull(false)
   @Column(DataType.STRING)
   version!: string
+
+  // Base64-encoded protobuf data.
+  @AllowNull(false)
+  @Column(DataType.TEXT)
+  data!: string
 
   get block(): Block {
     return {
@@ -113,8 +113,7 @@ export class GovStateEvent extends DependendableEventModel {
       )
 
     return {
-      // Related logic in `makeComputationDependencyWhere` in
-      // `src/db/utils.ts`.
+      // Related logic in `makeComputationDependencyWhere` in `src/db/utils.ts`.
       proposalId: exactKeys,
     }
   }

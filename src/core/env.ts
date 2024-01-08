@@ -1140,8 +1140,8 @@ export const getEnv = ({
 
     return {
       id: event.proposalId,
-      value: event.value,
       version: event.version,
+      data: event.data,
     }
   }
 
@@ -1173,8 +1173,8 @@ export const getEnv = ({
               'proposalId',
               'blockHeight',
               'blockTimeUnixMs',
-              'value',
               'version',
+              'data',
             ],
             where: {
               blockHeight: blockHeightFilter,
@@ -1205,17 +1205,12 @@ export const getEnv = ({
     // Call hook.
     await onFetch?.(events)
 
-    // Create proposal map.
-    return events.reduce(
-      (acc, { proposalId, value, version }) => ({
-        ...acc,
-        [proposalId]: {
-          id: proposalId,
-          value,
-          version,
-        },
-      }),
-      {} as Record<string, FormulaProposalObject>
+    return events.map(
+      ({ proposalId, version, data }): FormulaProposalObject => ({
+        id: proposalId,
+        version,
+        data,
+      })
     )
   }
 
