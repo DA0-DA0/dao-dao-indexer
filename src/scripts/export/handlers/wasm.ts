@@ -1,7 +1,6 @@
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
 import * as Sentry from '@sentry/node'
 import retry from 'async-await-retry'
-import { ContractInfo } from 'cosmjs-types/cosmwasm/wasm/v1/types'
 import { LRUCache } from 'lru-cache'
 import { Sequelize } from 'sequelize'
 
@@ -14,6 +13,7 @@ import {
   WasmStateEventTransformation,
 } from '@/db'
 import { updateIndexesForContracts } from '@/ms'
+import { ContractInfo } from '@/protobuf/codegen/cosmwasm/wasm/v1/types'
 
 import { Handler, HandlerMaker } from '../types'
 import { queueWebhooks } from '../webhooks'
@@ -150,14 +150,12 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
         return
       }
 
-      const codeId = contractInfo.codeId.toInt()
-
       return {
         id: ['contract', blockHeight, contractAddress].join(':'),
         type: 'contract',
         data: {
           address: contractAddress,
-          codeId,
+          codeId: Number(contractInfo.codeId),
           blockHeight,
           blockTimeUnixMs,
         },

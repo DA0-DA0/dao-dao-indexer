@@ -1,10 +1,10 @@
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
 import retry from 'async-await-retry'
-import { Coin } from 'cosmjs-types/cosmos/base/v1beta1/coin'
 import { Sequelize } from 'sequelize'
 
 import { ParsedBankStateEvent } from '@/core'
 import { BankStateEvent, State } from '@/db'
+import { Coin } from '@/protobuf/codegen/cosmos/base/v1beta1/coin'
 
 import { Handler, HandlerMaker } from '../types'
 

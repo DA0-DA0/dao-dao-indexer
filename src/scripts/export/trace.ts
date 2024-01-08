@@ -480,7 +480,7 @@ const trace = async () => {
         return
       }
 
-      clearInterval(traceQueueUpdaterInterval)
+      clearInterval(traceQueueUpdaterInterval as unknown as number)
       traceQueueUpdaterInterval = null
     }
 

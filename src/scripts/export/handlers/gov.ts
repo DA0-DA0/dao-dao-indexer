@@ -1,11 +1,11 @@
 import { fromBase64 } from '@cosmjs/encoding'
 import retry from 'async-await-retry'
-import { Proposal as ProposalV1 } from 'cosmjs-types/cosmos/gov/v1/gov'
-import { Proposal as ProposalV1Beta1 } from 'cosmjs-types/cosmos/gov/v1beta1/gov'
 import { Sequelize } from 'sequelize'
 
 import { ParsedGovStateEvent } from '@/core'
 import { GovStateEvent, State } from '@/db'
+import { Proposal as ProposalV1 } from '@/protobuf/codegen/cosmos/gov/v1/gov'
+import { Proposal as ProposalV1Beta1 } from '@/protobuf/codegen/cosmos/gov/v1beta1/gov'
 
 import { Handler, HandlerMaker } from '../types'
 
@@ -58,11 +58,11 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async () => {
     let value: any
     let version
     try {
-      value = ProposalV1.toJSON(ProposalV1.decode(valueData))
+      value = ProposalV1.toAmino(ProposalV1.decode(valueData))
       version = 'v1'
     } catch {
       try {
-        value = ProposalV1Beta1.toJSON(ProposalV1Beta1.decode(valueData))
+        value = ProposalV1Beta1.toAmino(ProposalV1Beta1.decode(valueData))
         version = 'v1beta1'
       } catch {
         return
