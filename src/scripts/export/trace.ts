@@ -557,9 +557,9 @@ const trace = async () => {
 
               // On close and not shutting down, reconnect.
               console.error(
-                `[${new Date().toISOString()}] WebSocket closed, reconnecting in 3 seconds...`
+                `[${new Date().toISOString()}] WebSocket closed, reconnecting in 1 second...`
               )
-              setTimeout(setUpWebSocket, 3000)
+              setTimeout(setUpWebSocket, 1000)
             },
           })
         }
