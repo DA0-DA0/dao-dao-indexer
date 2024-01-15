@@ -59,6 +59,10 @@ export class State extends Model {
     }
   }
 
+  get latestBlockDate(): Date {
+    return new Date(Number(this.latestBlock.timeUnixMs))
+  }
+
   static async getSingleton(): Promise<State | null> {
     return await State.findOne({
       where: {

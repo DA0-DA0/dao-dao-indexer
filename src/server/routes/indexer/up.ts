@@ -4,10 +4,16 @@ import { DefaultContext, DefaultState } from 'koa'
 import { getStargateClient } from '@/core/utils/chain'
 import { State } from '@/db'
 
+type UpBlock = {
+  height: number
+  timeUnixMs: number
+  timestamp: string
+}
+
 type UpResponse =
   | {
-      chainHeight: number
-      indexerHeight: number
+      chainBlock: UpBlock
+      indexerBlock: UpBlock
       caughtUp: boolean
     }
   | {
@@ -30,16 +36,26 @@ export const up: Router.Middleware<
 
   const stargateClient = await getStargateClient()
 
-  const chainHeight = await stargateClient.getHeight()
-  const indexerHeight = Number(state.latestBlockHeight)
+  const latestChainBlock = await stargateClient.getBlock()
+
+  const chainBlock: UpBlock = {
+    height: latestChainBlock.header.height,
+    timeUnixMs: new Date(latestChainBlock.header.time).getTime(),
+    timestamp: new Date(latestChainBlock.header.time).toISOString(),
+  }
+  const indexerBlock: UpBlock = {
+    height: Number(state.latestBlock.height),
+    timeUnixMs: Number(state.latestBlock.timeUnixMs),
+    timestamp: state.latestBlockDate.toISOString(),
+  }
 
   // If indexer is within 5 blocks of chain, consider it caught up.
-  const caughtUp = indexerHeight > chainHeight - 5
+  const caughtUp = indexerBlock.height > chainBlock.height - 5
 
   ctx.status = caughtUp ? 200 : 412
   ctx.body = {
-    chainHeight,
-    indexerHeight,
+    chainBlock,
+    indexerBlock,
     caughtUp,
   }
 }
