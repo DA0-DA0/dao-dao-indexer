@@ -78,6 +78,8 @@ const OPEN_PROPOSALS_MAP: Record<
   // V2
   'cwd-proposal-single': singleChoiceOpenProposals,
   'dao-proposal-single': singleChoiceOpenProposals,
+  // Neutron
+  'cwd-subdao-proposal-single': singleChoiceOpenProposals,
 
   // Multiple choice
   'cwd-proposal-multiple': multipleChoiceOpenProposals,
@@ -124,6 +126,8 @@ const PROPOSAL_COUNT_MAP: Record<string, ContractFormula<number> | undefined> =
     // V2
     'cwd-proposal-single': singleChoiceProposalCount,
     'dao-proposal-single': singleChoiceProposalCount,
+    // Neutron
+    'cwd-subdao-proposal-single': singleChoiceProposalCount,
 
     // Multiple choice
     'cwd-proposal-multiple': multipleChoiceProposalCount,
@@ -213,6 +217,8 @@ const LIST_PROPOSALS_MAP: Record<
   // V2
   'cwd-proposal-single': singleChoiceListProposals,
   'dao-proposal-single': singleChoiceListProposals,
+  // Neutron
+  'cwd-subdao-proposal-single': singleChoiceListProposals,
 
   // Multiple choice
   'cwd-proposal-multiple': multipleChoiceListProposals,

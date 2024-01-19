@@ -193,6 +193,8 @@ const PROPOSAL_MODULE_CONFIG_MAP: Record<
   // V2+
   'cwd-proposal-single': singleChoiceConfig,
   'dao-proposal-single': singleChoiceConfig,
+  // Neutron
+  'cwd-subdao-proposal-single': singleChoiceConfig,
 
   // Multiple choice
   'cwd-proposal-multiple': multipleChoiceConfig,
@@ -216,6 +218,8 @@ const PROPOSAL_MAP: Record<
   // V2+
   'cwd-proposal-single': singleChoiceProposal,
   'dao-proposal-single': singleChoiceProposal,
+  // Neutron
+  'cwd-subdao-proposal-single': singleChoiceProposal,
 
   // Multiple choice
   'cwd-proposal-multiple': multipleChoiceProposal,
