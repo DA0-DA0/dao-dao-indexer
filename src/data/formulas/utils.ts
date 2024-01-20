@@ -30,7 +30,11 @@ export const expirationPlusDuration = (
     return { at_height: expiration.at_height + duration.height }
   } else if ('at_time' in expiration && 'time' in duration) {
     // `duration.time` is in seconds, so convert to nanoseconds for `at_time`.
-    return { at_time: expiration.at_time + duration.time * 1e6 }
+    return {
+      at_time: BigInt(
+        Number(expiration.at_time) + duration.time * 1e6
+      ).toString(),
+    }
   }
 
   // Should never happen.
