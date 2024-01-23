@@ -5,22 +5,21 @@ import {
   memberCount as memberCountFormula,
 } from './members'
 import { allProposals as allProposalsFormula } from './proposals'
-import { tvl as tvlFormula } from './tvl'
 
 type FeaturedRank = {
   tvl: number
   daysSinceLastProposalPassed: number
   giniCoefficient: number
   memberCount: number
+  proposalsInLast3MonthsCount: number
+  interProposalDurationsMedian: number
 }
 
 // Get attributes used when computing the featured rank.
 export const featuredRank: ContractFormula<FeaturedRank> = {
-  dynamic: true,
   compute: async (env) => {
-    const tvl = await tvlFormula.compute(env)
-
-    // Sort passed proposals by completedAt date, descending, most recent first.
+    // Sort passed proposals by completedAt date or createdAt date, descending
+    // (most recent first).
     const allPassedProposals = (
       (await allProposalsFormula.compute({
         ...env,
@@ -28,21 +27,51 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
           filter: 'passed',
         },
       })) ?? []
-    ).sort((a, b) =>
-      a.completedAt && b.completedAt
-        ? new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
-        : a.completedAt
-        ? -1
-        : 1
     )
+      .map((proposal) => ({
+        ...proposal,
+        activityDate: proposal.completedAt ?? proposal.createdAt,
+      }))
+      .sort((a, b) =>
+        a.activityDate && b.activityDate
+          ? Date.parse(b.activityDate) - Date.parse(a.activityDate)
+          : a.activityDate
+          ? -1
+          : b.activityDate
+          ? 1
+          : 0
+      )
 
-    const daysSinceLastProposalPassed =
-      allPassedProposals.length > 0 && allPassedProposals[0].completedAt
-        ? Math.floor(
-            (new Date().getTime() -
-              new Date(allPassedProposals[0].completedAt).getTime()) /
-              (1000 * 60 * 60 * 24)
-          )
+    const lastPassedProposalDate = allPassedProposals.find(
+      (proposal) => proposal.completedAt
+    )?.completedAt
+    const daysSinceLastProposalPassed = lastPassedProposalDate
+      ? Math.floor(
+          (Date.now() - Date.parse(lastPassedProposalDate)) /
+            (24 * 60 * 60 * 1000)
+        )
+      : -1
+
+    // Calculate times between each pair of proposals within the last 3 months.
+    const proposalsInLast3Months = allPassedProposals.filter(
+      (proposal) =>
+        proposal.activityDate &&
+        Date.parse(proposal.activityDate) >
+          Date.now() - 3 * 30 * 24 * 60 * 60 * 1000
+    )
+    const interProposalDurations = proposalsInLast3Months
+      .slice(1)
+      .map(
+        (proposal, index) =>
+          Date.parse(proposal.activityDate!) -
+          Date.parse(proposalsInLast3Months[index].activityDate!)
+      )
+
+    const interProposalDurationsMedian =
+      interProposalDurations.length > 0
+        ? interProposalDurations.sort((a, b) => a - b)[
+            Math.floor(interProposalDurations.length / 2)
+          ]
         : -1
 
     const memberVotingPowers = (
@@ -54,10 +83,13 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
     const memberCount = await memberCountFormula.compute(env)
 
     return {
-      tvl,
+      // Not used right now.
+      tvl: -1,
       daysSinceLastProposalPassed,
       giniCoefficient,
       memberCount,
+      proposalsInLast3MonthsCount: proposalsInLast3Months.length,
+      interProposalDurationsMedian,
     }
   },
 }
