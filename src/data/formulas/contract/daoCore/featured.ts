@@ -12,8 +12,10 @@ type FeaturedRank = {
   giniCoefficient: number
   memberCount: number
   proposalsInLast3MonthsCount: number
-  interProposalDurationsMedian: number
+  rank: number
 }
+
+const THREE_MONTHS_MS = 3 * 30 * 24 * 60 * 60 * 1000
 
 // Get attributes used when computing the featured rank.
 export const featuredRank: ContractFormula<FeaturedRank> = {
@@ -52,26 +54,31 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
         )
       : -1
 
-    // Calculate times between each pair of proposals within the last 3 months.
+    // Calculate times between each pair of proposals within the last 3 months,
+    // including the start and end.
+    const threeMonthsAgo = Date.now() - THREE_MONTHS_MS
     const proposalsInLast3Months = allPassedProposals.filter(
       (proposal) =>
         proposal.activityDate &&
-        Date.parse(proposal.activityDate) >
-          Date.now() - 3 * 30 * 24 * 60 * 60 * 1000
+        Date.parse(proposal.activityDate) >= threeMonthsAgo
     )
-    const interProposalDurations = proposalsInLast3Months
+    const proposalTimestampsInLast3Months = [
+      threeMonthsAgo,
+      ...proposalsInLast3Months.map((proposal) =>
+        Date.parse(proposal.activityDate!)
+      ),
+      Date.now(),
+    ]
+    const interProposalDurations = proposalTimestampsInLast3Months
       .slice(1)
       .map(
-        (proposal, index) =>
-          Date.parse(proposal.activityDate!) -
-          Date.parse(proposalsInLast3Months[index].activityDate!)
+        (timestamp, index) => timestamp - proposalTimestampsInLast3Months[index]
       )
 
-    const interProposalDurationsMedian =
-      interProposalDurations.length > 0
-        ? interProposalDurations.sort((a, b) => a - b)[
-            Math.floor(interProposalDurations.length / 2)
-          ]
+    const interProposalDurationsMean =
+      proposalsInLast3Months.length > 0
+        ? interProposalDurations.reduce((a, b) => a + b, 0) /
+          proposalsInLast3Months.length
         : -1
 
     const memberVotingPowers = (
@@ -82,6 +89,16 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
 
     const memberCount = await memberCountFormula.compute(env)
 
+    const rank =
+      // Prioritize lower gini coefficient.
+      (1 - giniCoefficient) * 34 +
+      // Prioritize more proposals in last 3 months, maxing out at 30.
+      (Math.min(proposalsInLast3Months.length, 30) / 30) * 33 +
+      // Prioritize lower mean duration between proposals.
+      (interProposalDurationsMean <= 1
+        ? 0
+        : ((45 - interProposalDurationsMean) / 45) * 33)
+
     return {
       // Not used right now.
       tvl: -1,
@@ -89,11 +106,12 @@ export const featuredRank: ContractFormula<FeaturedRank> = {
       giniCoefficient,
       memberCount,
       proposalsInLast3MonthsCount: proposalsInLast3Months.length,
-      interProposalDurationsMedian,
+      rank,
     }
   },
 }
 
+// The Gini coefficient of a set of values. Between 0 and 1, inclusive.
 const gini = (values: number[]): number => {
   // Mean absolute difference
   const mad = meanAbsoluteDifference(values)
