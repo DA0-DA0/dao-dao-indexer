@@ -35,18 +35,6 @@
         "sortableAttributes": ["value.proposalCount"],
         "formula": "daoCore/dumpState",
         "codeIdsKeys": ["dao-core"]
-      },
-      {
-        "index": "featured_daos",
-        "automatic": false,
-        "filterableAttributes": [
-          "value.daysSinceLastProposalPassed",
-          "value.giniCoefficient",
-          "value.memberCount"
-        ],
-        "sortableAttributes": ["value.tvl"],
-        "formula": "daoCore/featuredRank",
-        "codeIdsKeys": ["dao-core"]
       }
     ]
   },
