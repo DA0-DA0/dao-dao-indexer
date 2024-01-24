@@ -90,5 +90,13 @@ module.exports = {
       wait_ready: true,
       listen_timeout: 10000,
     },
+    {
+      name: 'server_migaloo-testnet',
+      script: 'dist/server/serve.js',
+      args: ['-p', '3438', '-c', 'config.migaloo-testnet.json'],
+      instances: 2,
+      wait_ready: true,
+      listen_timeout: 10000,
+    },
   ],
 }
