@@ -1,5 +1,6 @@
 export * from './daoCore'
 export * from './external'
+export * as neutron from './neutron'
 export * from './polytone'
 export * from './prePropose'
 export * from './proposal'
