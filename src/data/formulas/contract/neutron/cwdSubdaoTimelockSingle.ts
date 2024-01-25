@@ -11,7 +11,7 @@ export const proposal: ContractFormula<any, { id: string }> = {
       throw new Error('missing `id`')
     }
 
-    return await get(contractAddress, 'proposal', id)
+    return await get(contractAddress, 'proposals', id)
   },
 }
 
@@ -35,7 +35,7 @@ export const listProposals: ContractFormula<
       : -Infinity
 
     const proposals = Object.entries(
-      (await getMap<number, any>(contractAddress, 'proposal')) || {}
+      (await getMap<number, any>(contractAddress, 'proposals')) || {}
     )
       // Ascending by proposal ID.
       .sort(([a], [b]) => Number(a) - Number(b))
