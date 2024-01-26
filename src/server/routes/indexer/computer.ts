@@ -13,14 +13,7 @@ import {
   validateBlockString,
 } from '@/core'
 import { getTypedFormula } from '@/data'
-import {
-  AccountKey,
-  AccountKeyCredit,
-  Computation,
-  Contract,
-  State,
-  Validator,
-} from '@/db'
+import { AccountKey, AccountKeyCredit, Contract, State, Validator } from '@/db'
 
 import { captureSentryException } from '../../sentry'
 
@@ -512,13 +505,13 @@ export const computer: Router.Middleware = async (ctx) => {
           latestBlockHeightValid: undefined,
         }))
 
-        // Cache computations for future queries.
-        await Computation.createFromComputationOutputs(
-          address,
-          typedFormula,
-          args,
-          rangeComputations
-        )
+        // // Cache computations for future queries.
+        // await Computation.createFromComputationOutputs(
+        //   address,
+        //   typedFormula,
+        //   args,
+        //   rangeComputations
+        // )
       }
 
       let response: {
