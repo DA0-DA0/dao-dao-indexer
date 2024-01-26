@@ -383,6 +383,7 @@ export const computer: Router.Middleware = async (ctx) => {
       }
 
       let outputs: {
+        at?: Block
         value: any
         blockHeight: bigint
         blockTimeUnixMs: bigint
@@ -498,6 +499,8 @@ export const computer: Router.Middleware = async (ctx) => {
           args,
           blockStart: blocks[0],
           blockEnd: blocks[1],
+          blockStep,
+          timeUnixMsStep: timeStep,
         })
 
         outputs = rangeComputations.map(({ block, ...data }) => ({
@@ -521,97 +524,22 @@ export const computer: Router.Middleware = async (ctx) => {
         )
       }
 
-      let response: {
-        at?: string
-        value: any
-        // TODO: Turn into strings?
-        blockHeight: number
-        blockTimeUnixMs: number
-      }[] = []
-      // Skip to match step.
-      if (
-        (blockStep === undefined || blockStep === 1n) &&
-        (timeStep === undefined || timeStep === 1n)
-      ) {
-        response = outputs.map(({ value, blockHeight, blockTimeUnixMs }) => ({
+      computation = outputs.map(
+        ({ at, value, blockHeight, blockTimeUnixMs }) => ({
+          ...(at && (blockStep || timeStep)
+            ? {
+                at: blockStep
+                  ? Number(at.height)
+                  : timeStep
+                  ? Number(at.timeUnixMs)
+                  : undefined,
+              }
+            : {}),
           value,
           blockHeight: Number(blockHeight),
           blockTimeUnixMs: Number(blockTimeUnixMs),
-        }))
-      } else if (blockStep) {
-        for (
-          let blockHeight = blocks[0].height;
-          blockHeight <= blocks[1].height;
-          blockHeight =
-            // Prevent infinite loop.
-            blockHeight === blocks[1].height
-              ? blockHeight + 1n
-              : // Make sure to include the last block.
-              blockHeight + blockStep > blocks[1].height
-              ? blocks[1].height
-              : // Increment normally.
-                blockHeight + blockStep
-        ) {
-          // Sorted ascending by block, so find first computation with block
-          // height greater than desired block height and use the previous to
-          // get the latest value at the target block height. If not found, use
-          // the last one.
-          let index = outputs.findIndex((c) => c.blockHeight > blockHeight)
-          if (index === -1) {
-            index = outputs.length
-          }
-          if (index > 0) {
-            const output = outputs[index - 1]
-            response.push({
-              at: blockHeight.toString(),
-              value: output.value,
-              blockHeight: Number(output.blockHeight),
-              blockTimeUnixMs: Number(output.blockTimeUnixMs),
-            })
-            // Remove all computations before the one we just added, keeping the
-            // current one in case nothing has changed in the next step.
-            outputs.splice(0, index - 1)
-          }
-        }
-      } else if (times && timeStep) {
-        const endTimeUnixMs = times[1] ?? blocks[1].timeUnixMs
-        for (
-          let blockTime = times[0];
-          blockTime <= endTimeUnixMs;
-          blockTime =
-            // Prevent infinite loop.
-            blockTime === endTimeUnixMs
-              ? blockTime + 1n
-              : // Make sure to include the last block.
-              blockTime + timeStep > endTimeUnixMs
-              ? endTimeUnixMs
-              : // Increment normally.
-                blockTime + timeStep
-        ) {
-          // Sorted ascending by block, so find first computation with block
-          // time greater than desired block time and use the previous to get
-          // the latest value at the target block time. If not found, use the
-          // last one.
-          let index = outputs.findIndex((c) => c.blockTimeUnixMs > blockTime)
-          if (index === -1) {
-            index = outputs.length
-          }
-          if (index > 0) {
-            const output = outputs[index - 1]
-            response.push({
-              at: blockTime.toString(),
-              value: output.value,
-              blockHeight: Number(output.blockHeight),
-              blockTimeUnixMs: Number(output.blockTimeUnixMs),
-            })
-            // Remove all computations before the one we just added, keeping the
-            // current one in case nothing has changed in the next step.
-            outputs.splice(0, index - 1)
-          }
-        }
-      }
-
-      computation = response
+        })
+      )
     } else {
       // Otherwise compute for single block.
 

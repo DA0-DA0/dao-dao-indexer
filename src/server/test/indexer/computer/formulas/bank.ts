@@ -100,13 +100,13 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect([
             {
-              at: '1',
+              at: 1,
               value: '1000',
               blockHeight: 1,
               blockTimeUnixMs: 1,
             },
             {
-              at: '3',
+              at: 3,
               value: '2000',
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -138,13 +138,13 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect([
             {
-              at: '1',
+              at: 1,
               value: '1000',
               blockHeight: 1,
               blockTimeUnixMs: 1,
             },
             {
-              at: '3',
+              at: 3,
               value: '2000',
               blockHeight: 2,
               blockTimeUnixMs: 2,
@@ -218,7 +218,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect([
             {
-              at: '1',
+              at: 1,
               value: {
                 utest: '1000',
               },
@@ -226,7 +226,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
               blockTimeUnixMs: 1,
             },
             {
-              at: '3',
+              at: 3,
               value: {
                 utest: '2000',
                 uanother: '3000',
@@ -273,7 +273,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect([
             {
-              at: '1',
+              at: 1,
               value: {
                 utest: '1000',
               },
@@ -281,7 +281,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
               blockTimeUnixMs: 1,
             },
             {
-              at: '3',
+              at: 3,
               value: {
                 utest: '2000',
                 uanother: '3000',

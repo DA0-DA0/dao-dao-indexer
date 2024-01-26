@@ -118,7 +118,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect([
             {
-              at: '1',
+              at: 1,
               value: {
                 id: '1',
                 version: 'version',
@@ -128,7 +128,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               blockTimeUnixMs: 1,
             },
             {
-              at: '3',
+              at: 3,
               value: {
                 id: '1',
                 version: 'version',
@@ -172,7 +172,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect([
             {
-              at: '1',
+              at: 1,
               value: {
                 id: '1',
                 version: 'version',
@@ -182,7 +182,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               blockTimeUnixMs: 1,
             },
             {
-              at: '3',
+              at: 3,
               value: {
                 id: '1',
                 version: 'version',
@@ -318,7 +318,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect([
             {
-              at: '1',
+              at: 1,
               value: {
                 proposals: [
                   {
@@ -333,7 +333,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               blockTimeUnixMs: 1,
             },
             {
-              at: '3',
+              at: 3,
               value: {
                 proposals: [
                   {
@@ -416,7 +416,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect([
             {
-              at: '1',
+              at: 1,
               value: {
                 proposals: [
                   {
@@ -431,7 +431,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               blockTimeUnixMs: 1,
             },
             {
-              at: '3',
+              at: 3,
               value: {
                 proposals: [
                   {

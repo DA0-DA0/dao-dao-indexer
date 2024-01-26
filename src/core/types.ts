@@ -390,15 +390,30 @@ export type ComputeRangeOptions = {
   args: Record<string, any>
   blockStart: Block
   blockEnd: Block
+  /**
+   * If set, skip this number of blocks for each computation.
+   * Mutually exclusive with timeUnixMsStep.
+   */
+  blockStep?: bigint
+  /**
+   * If set, skip this amount of time for each computation.
+   * Mutually exclusive with blockStep.
+   */
+  timeUnixMsStep?: bigint
 } & TypedFormula
 
 export interface ComputationOutput {
-  // Undefined if formula did not use any keys.
+  // This is the earliest block this value is valid at, which is the latest
+  // block of all the keys required to compute this value. It's undefined if the
+  // formula did not use any keys.
   block: Block | undefined
   value: any
   dependentKeys: ComputationDependentKey[]
   // Used when computing ranges.
   latestBlockHeightValid?: bigint
+  // Used when computing ranges with a step. It may be after the actual block
+  // since the block corresponds with the earliest this output was valid.
+  at?: Block
 }
 
 export type CacheMap<T> = Record<string, T[] | null | undefined>

@@ -19,6 +19,12 @@ import {
   ComputeRangeOptions,
   FormulaType,
 } from './types'
+import {
+  getBlockForHeight,
+  getBlockForTime,
+  getNextBlockForHeight,
+  getNextBlockForTime,
+} from './utils'
 
 export const compute = async ({
   chainId,
@@ -91,6 +97,8 @@ export const computeRange = async ({
   args,
   blockStart,
   blockEnd,
+  blockStep,
+  timeUnixMsStep,
   ...options
 }: ComputeRangeOptions): Promise<ComputationOutput[]> => {
   // Dependent keys seen so far.
@@ -106,6 +114,11 @@ export const computeRange = async ({
 
   // Cache contracts across all computations since they stay constant.
   const contractCache: CacheMapSingle<Contract> = {}
+
+  // If a step is set, disable cache preloading since it may be much more
+  // inefficient to load all intermediate events than it is to simply query at
+  // each step.
+  const hasStepSet = !!blockStep || !!timeUnixMsStep
 
   const computeForBlockInRange = async (
     block: Block
@@ -151,7 +164,8 @@ export const computeRange = async ({
       contracts: contractCache,
     }
 
-    if (allDependentKeys.length > 0) {
+    // No caching if step is set.
+    if (!hasStepSet && allDependentKeys.length > 0) {
       addToCache(allDependentKeys, allEvents, initialCache.events, block)
     }
 
@@ -208,15 +222,23 @@ export const computeRange = async ({
         result.latestBlock &&
         result.latestBlock.height > previousResult.block.height)
     ) {
-      // If there is a previous result and the formula is not dynamic, update
-      // its latest valid block height to just before this one, since there's
-      // now a new value. If the formula is dynamic, then the previous result's
-      // latest valid block height is already correct.
-      if (previousResult && result.latestBlock && !options.formula.dynamic) {
+      // If there is a previous result, the formula is not dynamic, and there is
+      // no step set, update its latest valid block height to just before this
+      // one, since there's now a new value. If a step is set, we don't check
+      // how long the previous result is valid, so ignore. If the formula is
+      // dynamic, then the previous result's latest valid block height is
+      // already correct.
+      if (
+        previousResult &&
+        result.latestBlock &&
+        !options.formula.dynamic &&
+        !hasStepSet
+      ) {
         previousResult.latestBlockHeightValid = result.latestBlock.height - 1n
       }
 
       results.push({
+        at: currentBlock,
         block: result.latestBlock,
         value: result.value === undefined ? null : result.value,
         dependentKeys: result.dependentKeys,
@@ -226,78 +248,196 @@ export const computeRange = async ({
       })
     }
 
-    // Load events used into cache if they don't already exist. They may have
-    // been added in a previous future events fetch, so don't double-add.
-    result.eventsUsed
-      // Sort ascending.
-      .sort((a, b) => Number(a.block.height - b.block.height))
-      .forEach((event) => {
-        if (event.dependentKey in allEvents) {
-          if (!allEvents[event.dependentKey]!.includes(event)) {
-            allEvents[event.dependentKey]!.push(event)
-          }
-        } else {
-          allEvents[event.dependentKey] = [event]
-        }
-      })
+    // If step, just compute next step instead of preloading cache.
+    if (blockStep) {
+      nextPotentialBlock =
+        (await getBlockForHeight(
+          currentBlock.height + blockStep,
+          // Minimum.
+          currentBlock.height
+        )) || (await getNextBlockForHeight(currentBlock.height + blockStep))
+    } else if (timeUnixMsStep) {
+      nextPotentialBlock =
+        (await getBlockForTime(
+          currentBlock.timeUnixMs + timeUnixMsStep,
+          // Minimum.
+          currentBlock.timeUnixMs
+        )) ||
+        (await getNextBlockForTime(currentBlock.timeUnixMs + timeUnixMsStep))
 
-    // Preload all events for new dependent keys seen until the end.
-    const newDependentKeys = result.dependentKeys.filter(
-      (a) => !allDependentKeys.some((b) => dependentKeyMatches(a, b))
-    )
-    if (newDependentKeys.length > 0) {
-      const futureEvents = (
-        await Promise.all(
-          getDependableEventModels().map(async (DependableEventModel) => {
-            const namespacedDependentKeys = newDependentKeys.filter(({ key }) =>
-              key.startsWith(DependableEventModel.dependentKeyNamespace)
-            )
-            if (namespacedDependentKeys.length === 0) {
-              return []
-            }
-
-            return await (
-              DependableEventModel as unknown as ModelStatic<DependableEventModel>
-            ).findAll({
-              where: {
-                // After the current block up to the end block.
-                [DependableEventModel.blockHeightKey]: {
-                  [Op.gt]: currentBlock.height,
-                  [Op.lte]: blockEnd.height,
-                },
-                ...DependableEventModel.getWhereClauseForDependentKeys(
-                  namespacedDependentKeys
-                ),
-              },
-              order: [[DependableEventModel.blockHeightKey, 'ASC']],
-            })
-          })
-        )
-      ).flat()
-
-      // Save for future computations.
-      futureEvents
+      // Otherwise preload into cache.
+    } else {
+      // Load events used into cache if they don't already exist. They may have
+      // been added in a previous future events fetch, so don't double-add.
+      result.eventsUsed
         // Sort ascending.
         .sort((a, b) => Number(a.block.height - b.block.height))
         .forEach((event) => {
           if (event.dependentKey in allEvents) {
-            allEvents[event.dependentKey]!.push(event)
+            if (!allEvents[event.dependentKey]!.includes(event)) {
+              allEvents[event.dependentKey]!.push(event)
+            }
           } else {
             allEvents[event.dependentKey] = [event]
           }
         })
 
-      newDependentKeys.forEach((key) => allDependentKeys.push(key))
-    }
+      // Preload all events for new dependent keys seen until the end.
+      const newDependentKeys = result.dependentKeys.filter(
+        (a) => !allDependentKeys.some((b) => dependentKeyMatches(a, b))
+      )
+      if (newDependentKeys.length > 0) {
+        const futureEvents = (
+          await Promise.all(
+            getDependableEventModels().map(async (DependableEventModel) => {
+              const namespacedDependentKeys = newDependentKeys.filter(
+                ({ key }) =>
+                  key.startsWith(DependableEventModel.dependentKeyNamespace)
+              )
+              if (namespacedDependentKeys.length === 0) {
+                return []
+              }
 
-    // Find the next event that has the potential to change the result for the
-    // given dependencies. If it remains undefined, then we know that the result
-    // will not change because no inputs changed.
-    nextPotentialBlock = getNextPotentialBlock(
-      result.dependentKeys,
-      allEvents,
-      currentBlock
-    )
+              // The step logic doesn't currently work because there may be more
+              // than one type of event in a chunk due to varying keys (like
+              // different denom balances changing in the same chunk), so
+              // findOne is insufficient. To implement this, we'd need to be
+              // able to select only one of each unique key through a query
+              // somehow...
+
+              // // If block step exists, get the latest event for each interval of
+              // // blocks, because we only care about the most recent event for each
+              // // key within each chunk of blocks. We do not want to query for any
+              // // intermediary events.
+              // if (blockStep) {
+              //   // Get all blocks from the current block up to the end block at
+              //   // the given interval, inclusive of the end block.
+              //   const numNextBlocks = Math.ceil(
+              //     Number(blockEnd.height - currentBlock.height) /
+              //       Number(blockStep)
+              //   )
+              //   const allNextBlocks = new Array(numNextBlocks)
+              //     .fill(0)
+              //     .map((_, i) =>
+              //       i === numNextBlocks - 1
+              //         ? blockEnd.height
+              //         : currentBlock.height + BigInt(i + 1) * blockStep
+              //     )
+
+              //   return (
+              //     await Promise.all(
+              //       allNextBlocks.map((nextBlock, nextBlockIndex) =>
+              //         (
+              //           DependableEventModel as unknown as ModelStatic<DependableEventModel>
+              //         ).findOne({
+              //           where: {
+              //             // After the previous block up to the next block.
+              //             [DependableEventModel.blockHeightKey]: {
+              //               [Op.gt]:
+              //                 nextBlockIndex === 0
+              //                   ? currentBlock.height
+              //                   : allNextBlocks[nextBlockIndex - 1],
+              //               [Op.lte]: nextBlock,
+              //             },
+              //             ...DependableEventModel.getWhereClauseForDependentKeys(
+              //               namespacedDependentKeys
+              //             ),
+              //           },
+              //           order: [[DependableEventModel.blockHeightKey, 'DESC']],
+              //         })
+              //       )
+              //     )
+              //   ).filter((model): model is DependableEventModel => !!model)
+              // }
+
+              // // Same as the above block step case, but for time step.
+              // if (timeUnixMsStep) {
+              //   // Get all times from the current time up to the end time at the
+              //   // given interval, inclusive of the end time.
+              //   const numNextTimes = Math.ceil(
+              //     Number(blockEnd.timeUnixMs - currentBlock.timeUnixMs) /
+              //       Number(timeUnixMsStep)
+              //   )
+              //   const allNextTimes = new Array(numNextTimes)
+              //     .fill(0)
+              //     .map((_, i) =>
+              //       i === numNextTimes - 1
+              //         ? blockEnd.timeUnixMs
+              //         : currentBlock.timeUnixMs + BigInt(i + 1) * timeUnixMsStep
+              //     )
+
+              //   return (
+              //     await Promise.all(
+              //       allNextTimes.map((nextTime, nextTimeIndex) =>
+              //         (
+              //           DependableEventModel as unknown as ModelStatic<DependableEventModel>
+              //         ).findOne({
+              //           where: {
+              //             // After the previous time up to the next time.
+              //             [DependableEventModel.blockTimeUnixMsKey]: {
+              //               [Op.gt]:
+              //                 nextTimeIndex === 0
+              //                   ? currentBlock.timeUnixMs
+              //                   : allNextTimes[nextTimeIndex - 1],
+              //               [Op.lte]: nextTime,
+              //             },
+              //             ...DependableEventModel.getWhereClauseForDependentKeys(
+              //               namespacedDependentKeys
+              //             ),
+              //           },
+              //           order: [
+              //             [DependableEventModel.blockTimeUnixMsKey, 'DESC'],
+              //           ],
+              //         })
+              //       )
+              //     )
+              //   ).filter((model): model is DependableEventModel => !!model)
+              // }
+
+              // Otherwise, if no step set, just find all.
+              return await (
+                DependableEventModel as unknown as ModelStatic<DependableEventModel>
+              ).findAll({
+                where: {
+                  // After the current block up to the end block.
+                  [DependableEventModel.blockHeightKey]: {
+                    [Op.gt]: currentBlock.height,
+                    [Op.lte]: blockEnd.height,
+                  },
+                  ...DependableEventModel.getWhereClauseForDependentKeys(
+                    namespacedDependentKeys
+                  ),
+                },
+                order: [[DependableEventModel.blockHeightKey, 'ASC']],
+              })
+            })
+          )
+        ).flat()
+
+        // Save for future computations.
+        futureEvents
+          // Sort ascending.
+          .sort((a, b) => Number(a.block.height - b.block.height))
+          .forEach((event) => {
+            if (event.dependentKey in allEvents) {
+              allEvents[event.dependentKey]!.push(event)
+            } else {
+              allEvents[event.dependentKey] = [event]
+            }
+          })
+
+        newDependentKeys.forEach((key) => allDependentKeys.push(key))
+      }
+
+      // Find the next event that has the potential to change the result for the
+      // given dependencies. If it remains undefined, then we know that the
+      // result will not change because no inputs changed.
+      nextPotentialBlock = getNextPotentialBlock(
+        result.dependentKeys,
+        allEvents,
+        currentBlock
+      )
+    }
   }
 
   return results
