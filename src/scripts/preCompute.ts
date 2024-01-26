@@ -40,7 +40,7 @@ export const main = async () => {
   )
   program.option(
     '-b, --batch <size>',
-    'batch size for computing (defaults to 100,000)',
+    'batch size for computing',
     (value) => parseInt(value, 10),
     500000
   )
