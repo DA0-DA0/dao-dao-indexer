@@ -15,8 +15,10 @@ import { Computation, Contract, State, loadDb } from '@/db'
 export const main = async () => {
   // Parse arguments.
   const program = new Command()
-  program.requiredOption('-t, --type <formula type>', 'formula type to compute')
-  program.requiredOption('-f, --formula <formula>', 'formula name to compute')
+  program.requiredOption(
+    '-f, --formula <type/formula>',
+    'formula name to compute'
+  )
   program.option('-a, --args <args>', 'JSON args to pass to formula', '{}')
   program.option(
     '-t, --targets <addresses>',
@@ -112,7 +114,10 @@ export const main = async () => {
     throw new Error('No state found.')
   }
 
-  const typedFormula = getTypedFormula(options.type, options.formula)
+  const typedFormula = getTypedFormula(
+    options.formula.split('/')[0],
+    options.formula.split('/').slice(1).join('/')
+  )
 
   const initialStart = new Date()
   console.log(
