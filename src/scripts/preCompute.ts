@@ -5,6 +5,7 @@ import {
   bigIntMin,
   computeRange,
   getBlockForHeight,
+  getBlockForTime,
   getFirstBlock,
   loadConfig,
   validateBlockString,
@@ -38,6 +39,11 @@ export const main = async () => {
   program.option(
     '-s, --start <blockHeight:timeUnixMs>',
     'block to start computing from (defaults to earliest block)'
+  )
+  program.option(
+    '-u, --start-time <timeUnixMs>',
+    'block time to start computing from (if negative, relative to now)',
+    (value) => (value ? BigInt(value) : undefined)
   )
   program.option(
     '-e, --end <blockHeight:timeUnixMs>',
@@ -107,13 +113,21 @@ export const main = async () => {
     throw new Error('No addresses found.')
   }
 
-  const blockStart: Block | undefined = options.start
-    ? validateBlockString(options.start, 'start')
-    : await getFirstBlock()
+  const blockStart: Block | undefined =
+    (options.start
+      ? validateBlockString(options.start, 'start')
+      : options.startTime
+      ? await getBlockForTime(
+          // Relative if negative.
+          options.startTime < 0n
+            ? BigInt(Date.now()) + options.startTime
+            : options.startTime
+        )
+      : undefined) || (await getFirstBlock())
 
   // If blockStart undefined, no events found.
   if (!blockStart) {
-    throw new Error('No events found.')
+    throw new Error('No start block because no events found.')
   }
 
   const blockEnd: Block | undefined = options.end
