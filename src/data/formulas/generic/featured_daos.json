@@ -16,15 +16,15 @@
     "address": "juno1q6v7qhq0sepf87ra8gnwcmmj3r6em5vqucrea932tjwhvqzdm2fs0qsysf"
   },
   {
-    "chainId": "osmosis-1",
-    "address": "osmo1ltlaul7tfvm92jj3spsfl2hj2926zr325jzt5c6mx4f3r5a872js8ax5af"
-  },
-  {
     "chainId": "neutron-1",
     "address": "neutron1suhgf5svhu4usrurvxzlgn54ksxmn8gljarjtxqnapv8kjnp4nrstdxvff"
   },
   {
     "chainId": "neutron-1",
     "address": "neutron1zjdv3u6svlazlydmje2qcp44yqkt0059chz8gmyl5yrklmgv6fzq9chelu"
+  },
+  {
+    "chainId": "osmosis-1",
+    "address": "osmo1a40j922z0kwqhw2nn0nx66ycyk88vyzcs73fyjrd092cjgyvyjksrd8dp7"
   }
 ]
