@@ -31,6 +31,11 @@ export const main = async () => {
     (value) => value.split(',').map((id) => parseInt(id, 10))
   )
   program.option(
+    '-k, --code-ids-keys <keys>',
+    'comma separated list of code IDs keys from the config',
+    (value) => value.split(',')
+  )
+  program.option(
     '-s, --start <blockHeight:timeUnixMs>',
     'block to start computing from (defaults to earliest block)'
   )
@@ -52,7 +57,7 @@ export const main = async () => {
   const options = program.opts()
 
   // Load config with config option.
-  loadConfig(options.config)
+  const config = loadConfig(options.config)
 
   let args: Record<string, any> = {}
   if (options.args) {
@@ -80,11 +85,17 @@ export const main = async () => {
 
   if (options.targets) {
     addresses = options.targets
-  } else if (options.ids?.length) {
+  } else if (options.ids?.length || options.codeIdsKeys?.length) {
+    const codeIds = [
+      ...(options.ids || []),
+      ...(options.codeIdsKeys || []).flatMap(
+        (key: string) => config.codeIds?.[key]
+      ),
+    ]
     addresses = (
       await Contract.findAll({
         where: {
-          codeId: options.ids,
+          codeId: codeIds,
         },
       })
     ).map((contract) => contract.address)
