@@ -1,6 +1,6 @@
 import { GenericFormula } from '@/core'
 
-import featuredDaosPerChain from './featured_daos.json'
+import allFeaturedDaos from './featured_daos.json'
 
 export const featuredDaos: GenericFormula<
   {
@@ -10,7 +10,7 @@ export const featuredDaos: GenericFormula<
 > = {
   dynamic: true,
   compute: async (env) =>
-    featuredDaosPerChain
+    allFeaturedDaos
       .map((data, index) => ({
         ...data,
         order: index + 1,

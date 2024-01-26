@@ -4,6 +4,10 @@
     "address": "juno10h0hc64jv006rr8qy0zhlu4jsxct8qwa0vtaleayh0ujz0zynf2s2r7v8q"
   },
   {
+    "chainId": "neutron-1",
+    "address": "neutron1suhgf5svhu4usrurvxzlgn54ksxmn8gljarjtxqnapv8kjnp4nrstdxvff"
+  },
+  {
     "chainId": "juno-1",
     "address": "juno185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqc5vwdr"
   },
@@ -14,14 +18,6 @@
   {
     "chainId": "juno-1",
     "address": "juno1q6v7qhq0sepf87ra8gnwcmmj3r6em5vqucrea932tjwhvqzdm2fs0qsysf"
-  },
-  {
-    "chainId": "neutron-1",
-    "address": "neutron1suhgf5svhu4usrurvxzlgn54ksxmn8gljarjtxqnapv8kjnp4nrstdxvff"
-  },
-  {
-    "chainId": "neutron-1",
-    "address": "neutron1zjdv3u6svlazlydmje2qcp44yqkt0059chz8gmyl5yrklmgv6fzq9chelu"
   },
   {
     "chainId": "osmosis-1",
