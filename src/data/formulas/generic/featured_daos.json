@@ -22,5 +22,9 @@
   {
     "chainId": "osmosis-1",
     "address": "osmo1a40j922z0kwqhw2nn0nx66ycyk88vyzcs73fyjrd092cjgyvyjksrd8dp7"
+  },
+  {
+    "chainId": "juno-1",
+    "address": "juno1h5ex5dn62arjwvwkh88r475dap8qppmmec4sgxzmtdn5tnmke3lqwpplgg"
   }
 ]
