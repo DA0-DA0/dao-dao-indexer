@@ -3,7 +3,7 @@ import { AllowNull, Column, DataType, Table } from 'sequelize-typescript'
 
 import { Block, ComputationDependentKey, getDependentKey } from '@/core'
 
-import { DependendableEventModel, DependentKeyNamespace } from '../types'
+import { DependableEventModel, DependentKeyNamespace } from '../types'
 
 @Table({
   timestamps: true,
@@ -30,7 +30,7 @@ import { DependendableEventModel, DependentKeyNamespace } from '../types'
     },
   ],
 })
-export class BankStateEvent extends DependendableEventModel {
+export class BankStateEvent extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.TEXT)
   address!: string
@@ -93,6 +93,7 @@ export class BankStateEvent extends DependendableEventModel {
 
   static dependentKeyNamespace = DependentKeyNamespace.BankStateEvent
   static blockHeightKey: string = 'blockHeight'
+  static blockTimeUnixMsKey: string = 'blockTimeUnixMs'
 
   // Returns a where clause that will match all events that are described by the
   // dependent keys.

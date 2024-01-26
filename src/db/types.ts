@@ -17,12 +17,14 @@ export enum DependentKeyNamespace {
 }
 
 // Interface that event models must implement to be depended on by computations.
-export abstract class DependendableEventModel extends Model {
+export abstract class DependableEventModel extends Model {
   // The namespace for dependent keys from this event. Must be unique across all
   // types of dependable events.
   static dependentKeyNamespace: DependentKeyNamespace
   // The key that stores the block height
   static blockHeightKey: string
+  // The key that stores the block time in unix milliseconds
+  static blockTimeUnixMsKey: string
   // A function that returns a where clause that will match all events that are
   // described by the dependent keys.
   static getWhereClauseForDependentKeys(

@@ -3,7 +3,7 @@ import { AllowNull, Column, DataType, Table } from 'sequelize-typescript'
 
 import { Block, ComputationDependentKey, getDependentKey } from '@/core'
 
-import { DependendableEventModel, DependentKeyNamespace } from '../types'
+import { DependableEventModel, DependentKeyNamespace } from '../types'
 
 @Table({
   timestamps: true,
@@ -30,7 +30,7 @@ import { DependendableEventModel, DependentKeyNamespace } from '../types'
     },
   ],
 })
-export class GovStateEvent extends DependendableEventModel {
+export class GovStateEvent extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.BIGINT)
   proposalId!: string
@@ -89,6 +89,7 @@ export class GovStateEvent extends DependendableEventModel {
 
   static dependentKeyNamespace = DependentKeyNamespace.GovStateEvent
   static blockHeightKey: string = 'blockHeight'
+  static blockTimeUnixMsKey: string = 'blockTimeUnixMs'
 
   // Returns a where clause that will match all events that are described by the
   // dependent keys.

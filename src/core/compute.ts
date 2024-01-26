@@ -2,7 +2,7 @@ import { ModelStatic, Op } from 'sequelize'
 
 import {
   Contract,
-  DependendableEventModel,
+  DependableEventModel,
   dependentKeyMatches,
   getDependableEventModels,
 } from '@/db'
@@ -36,7 +36,7 @@ export const compute = async ({
     ? block
     : undefined
 
-  const onFetch = async (events: DependendableEventModel[]) => {
+  const onFetch = async (events: DependableEventModel[]) => {
     const latestEvent = [...events].sort((a, b) =>
       Number(b.block.height - a.block.height)
     )[0]
@@ -102,7 +102,7 @@ export const computeRange = async ({
   // based on many different keys, so a map that uses a prefix needs to be
   // reconstructed by individual key comparisons, meaning we need to store keys
   // separately here and not combined into their maps.
-  const allEvents: Record<string, DependendableEventModel[] | undefined> = {}
+  const allEvents: Record<string, DependableEventModel[] | undefined> = {}
 
   // Cache contracts across all computations since they stay constant.
   const contractCache: CacheMapSingle<Contract> = {}
@@ -113,7 +113,7 @@ export const computeRange = async ({
     latestBlock: Block | undefined
     value: any
     dependentKeys: ComputationDependentKey[]
-    eventsUsed: DependendableEventModel[]
+    eventsUsed: DependableEventModel[]
   }> => {
     // Store the latest block that we've seen for all keys accessed. This is the
     // earliest this computation could have been made. If the formula is
@@ -124,9 +124,9 @@ export const computeRange = async ({
       : undefined
 
     // Store the dependable events used for this computation.
-    let eventsUsed: DependendableEventModel[] = []
+    let eventsUsed: DependableEventModel[] = []
 
-    const onFetch = async (events: DependendableEventModel[]) => {
+    const onFetch = async (events: DependableEventModel[]) => {
       if (events.length) {
         eventsUsed = [...eventsUsed, ...events]
       }
@@ -257,7 +257,7 @@ export const computeRange = async ({
             }
 
             return await (
-              DependableEventModel as unknown as ModelStatic<DependendableEventModel>
+              DependableEventModel as unknown as ModelStatic<DependableEventModel>
             ).findAll({
               where: {
                 // After the current block up to the end block.
@@ -314,8 +314,8 @@ export const computeRange = async ({
 // needed.
 const addToCache = (
   dependentKeys: ComputationDependentKey[],
-  allEvents: Record<string, DependendableEventModel[] | undefined>,
-  cache: CacheMap<DependendableEventModel>,
+  allEvents: Record<string, DependableEventModel[] | undefined>,
+  cache: CacheMap<DependableEventModel>,
   block: Block
 ) => {
   const nonPrefixes = dependentKeys.filter(({ prefix }) => !prefix)
@@ -402,7 +402,7 @@ const addToCache = (
           ? prefixedKeyEventEntries[entryIndex][1]![currentEventIndex]
           : null
       )
-      .filter((event): event is DependendableEventModel => event !== null)
+      .filter((event): event is DependableEventModel => event !== null)
 
     // Remove all events that are before the current event we found for each
     // key, since future computations will only go up. Keep the one we found in
@@ -421,7 +421,7 @@ const addToCache = (
 // because no inputs changed.
 export const getNextPotentialBlock = (
   dependentKeys: ComputationDependentKey[],
-  allEvents: Record<string, DependendableEventModel[] | undefined>,
+  allEvents: Record<string, DependableEventModel[] | undefined>,
   currentBlock: Block
 ): Block | undefined => {
   let nextPotentialBlock: Block | undefined
@@ -454,7 +454,7 @@ export const getNextPotentialBlock = (
       .map(([, events]) =>
         events?.find((event) => event.block.height > currentBlock.height)
       )
-      .filter((event): event is DependendableEventModel => event !== undefined)
+      .filter((event): event is DependableEventModel => event !== undefined)
 
     const nextEvent = matchingEvents.sort((a, b) =>
       Number(a.block.height - b.block.height)

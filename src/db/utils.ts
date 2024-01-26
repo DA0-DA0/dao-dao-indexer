@@ -14,7 +14,7 @@ import {
   WasmStateEventTransformation,
   WasmTxEvent,
 } from './models'
-import { DependendableEventModel } from './types'
+import { DependableEventModel } from './types'
 
 // TODO: Compute computation if the latest computation is no longer valid? Maybe we should have a separate task that constantly checks the validity of computations and updates them as needed?
 
@@ -49,7 +49,7 @@ import { DependendableEventModel } from './types'
 // computation's validity by checking the range up to the latest changed block,
 // using the default behavior of starting from the `latestBlockHeightValid`.
 export const updateComputationValidityDependentOnChanges = async (
-  dependableEvents: DependendableEventModel[]
+  dependableEvents: DependableEventModel[]
 ): Promise<{
   updated: number
   destroyed: number
@@ -210,7 +210,7 @@ export const updateComputationValidityDependentOnChanges = async (
 // event models.
 const makeComputationDependencyWhere = (
   escape: (str: string) => string,
-  dependableEvents: DependendableEventModel[]
+  dependableEvents: DependableEventModel[]
 ) => {
   const dependentKeys = dependableEvents.map(({ dependentKey }) => dependentKey)
 
@@ -255,20 +255,19 @@ const makeComputationDependencyWhere = (
   }
 }
 
-export const getDependableEventModels =
-  (): typeof DependendableEventModel[] => [
-    WasmStateEvent,
-    WasmStateEventTransformation,
-    WasmTxEvent,
-    StakingSlashEvent,
-    BankStateEvent,
-    GovStateEvent,
-  ]
+export const getDependableEventModels = (): typeof DependableEventModel[] => [
+  WasmStateEvent,
+  WasmStateEventTransformation,
+  WasmTxEvent,
+  StakingSlashEvent,
+  BankStateEvent,
+  GovStateEvent,
+]
 
 // Get the dependable event model for a given key based on its namespace.
 export const getDependableEventModelForKey = (
   key: string
-): typeof DependendableEventModel | undefined => {
+): typeof DependableEventModel | undefined => {
   const namespace = key.split(':')[0]
   return getDependableEventModels().find(
     (model) => model.dependentKeyNamespace === namespace

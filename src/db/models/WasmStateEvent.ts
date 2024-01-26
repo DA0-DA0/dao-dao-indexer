@@ -15,7 +15,7 @@ import {
   getDependentKey,
 } from '@/core'
 
-import { DependendableEventModel, DependentKeyNamespace } from '../types'
+import { DependableEventModel, DependentKeyNamespace } from '../types'
 import { Contract } from './Contract'
 
 @Table({
@@ -48,7 +48,7 @@ import { Contract } from './Contract'
     },
   ],
 })
-export class WasmStateEvent extends DependendableEventModel {
+export class WasmStateEvent extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
@@ -149,6 +149,7 @@ export class WasmStateEvent extends DependendableEventModel {
 
   static dependentKeyNamespace = DependentKeyNamespace.WasmStateEvent
   static blockHeightKey: string = 'blockHeight'
+  static blockTimeUnixMsKey: string = 'blockTimeUnixMs'
 
   // Returns a where clause that will match all events that are described by the
   // dependent keys.

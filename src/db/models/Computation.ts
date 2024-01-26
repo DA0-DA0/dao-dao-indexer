@@ -20,7 +20,7 @@ import {
 } from '@/core'
 import { getTypedFormula } from '@/data'
 
-import { DependendableEventModel } from '../types'
+import { DependableEventModel } from '../types'
 import { dependentKeyMatches, getDependableEventModels } from '../utils'
 import { ComputationDependency } from './ComputationDependency'
 import { State } from './State'
@@ -156,7 +156,7 @@ export class Computation extends Model {
                 }
 
                 return await (
-                  DependableEventModel as unknown as ModelStatic<DependendableEventModel>
+                  DependableEventModel as unknown as ModelStatic<DependableEventModel>
                 ).findOne({
                   where: {
                     [DependableEventModel.blockHeightKey]: {
@@ -171,7 +171,7 @@ export class Computation extends Model {
                 })
               })
             )
-          ).filter((model): model is DependendableEventModel => model !== null)
+          ).filter((model): model is DependableEventModel => model !== null)
 
     const firstNewerEvent =
       firstNewerEvents.length > 0

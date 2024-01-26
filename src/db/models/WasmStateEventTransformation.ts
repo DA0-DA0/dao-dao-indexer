@@ -19,7 +19,7 @@ import {
 } from '@/core'
 import { getProcessedTransformers } from '@/data/transformers'
 
-import { DependendableEventModel, DependentKeyNamespace } from '../types'
+import { DependableEventModel, DependentKeyNamespace } from '../types'
 import { Contract } from './Contract'
 import { State } from './State'
 
@@ -52,7 +52,7 @@ import { State } from './State'
     },
   ],
 })
-export class WasmStateEventTransformation extends DependendableEventModel {
+export class WasmStateEventTransformation extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
@@ -95,6 +95,7 @@ export class WasmStateEventTransformation extends DependendableEventModel {
   static dependentKeyNamespace =
     DependentKeyNamespace.WasmStateEventTransformation
   static blockHeightKey: string = 'blockHeight'
+  static blockTimeUnixMsKey: string = 'blockTimeUnixMs'
 
   // Returns a where clause that will match all events that are described by the
   // dependent keys.

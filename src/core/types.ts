@@ -4,7 +4,7 @@ import { SequelizeOptions } from 'sequelize-typescript'
 
 import {
   Contract,
-  DependendableEventModel,
+  DependableEventModel,
   StakingSlashEvent,
   State,
   WasmStateEvent,
@@ -298,7 +298,7 @@ export interface EnvOptions {
 
   args?: Record<string, any>
   dependentKeys?: ComputationDependentKey[]
-  onFetch?: (events: DependendableEventModel[]) => void | Promise<void>
+  onFetch?: (events: DependableEventModel[]) => void | Promise<void>
   cache?: Partial<Cache>
 }
 
@@ -405,7 +405,7 @@ export type CacheMap<T> = Record<string, T[] | null | undefined>
 export type CacheMapSingle<T> = Record<string, T | null | undefined>
 
 export interface Cache {
-  events: CacheMap<DependendableEventModel>
+  events: CacheMap<DependableEventModel>
   contracts: CacheMapSingle<Contract>
 }
 
