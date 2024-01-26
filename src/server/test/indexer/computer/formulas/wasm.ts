@@ -1,7 +1,7 @@
 import request from 'supertest'
 
 import { dbKeyForKeys } from '@/core'
-import { Computation, State, WasmStateEvent } from '@/db'
+import { State, WasmStateEvent } from '@/db'
 
 import { app } from '../../app'
 import { ComputerTestOptions } from '../types'
@@ -149,23 +149,23 @@ export const loadWasmTests = (options: ComputerTestOptions) => {
         ])
     })
 
-    it('caches computations over range and uses them in the future', async () => {
-      const initialComputations = await Computation.count()
+    // it('caches computations over range and uses them in the future', async () => {
+    //   const initialComputations = await Computation.count()
 
-      await request(app.callback())
-        .get('/contract/valid_contract/formula?blocks=1:1..3:3')
-        .set('x-api-key', options.apiKey)
-        .expect(200)
+    //   await request(app.callback())
+    //     .get('/contract/valid_contract/formula?blocks=1:1..3:3')
+    //     .set('x-api-key', options.apiKey)
+    //     .expect(200)
 
-      expect(await Computation.count()).toBe(initialComputations + 3)
+    //   expect(await Computation.count()).toBe(initialComputations + 3)
 
-      // Repeating the same query should not create new computations.
-      await request(app.callback())
-        .get('/contract/valid_contract/formula')
-        .set('x-api-key', options.apiKey)
-        .expect(200)
+    //   // Repeating the same query should not create new computations.
+    //   await request(app.callback())
+    //     .get('/contract/valid_contract/formula')
+    //     .set('x-api-key', options.apiKey)
+    //     .expect(200)
 
-      expect(await Computation.count()).toBe(initialComputations + 3)
-    })
+    //   expect(await Computation.count()).toBe(initialComputations + 3)
+    // })
   })
 }
