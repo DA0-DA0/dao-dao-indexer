@@ -1,25 +1,26 @@
 import { Command } from 'commander'
-import { Op } from 'sequelize'
 
 import {
   Block,
-  FormulaType,
   bigIntMin,
   computeRange,
+  getBlockForHeight,
+  getFirstBlock,
   loadConfig,
   validateBlockString,
 } from '@/core'
 import { getTypedFormula } from '@/data'
-import { Computation, Contract, State, WasmStateEvent, loadDb } from '@/db'
+import { Computation, Contract, State, loadDb } from '@/db'
 
 export const main = async () => {
   // Parse arguments.
   const program = new Command()
+  program.requiredOption('-t, --type <formula type>', 'formula type to compute')
   program.requiredOption('-f, --formula <formula>', 'formula name to compute')
   program.option('-a, --args <args>', 'JSON args to pass to formula', '{}')
   program.option(
     '-t, --targets <addresses>',
-    'comma-separated list of target contract addresses',
+    'comma-separated list of target addresses',
     (value) => value.split(',')
   )
   program.option(
@@ -29,7 +30,7 @@ export const main = async () => {
   )
   program.option(
     '-s, --start <blockHeight:timeUnixMs>',
-    'block to start computing from (defaults to earliest event for the target contract)'
+    'block to start computing from (defaults to earliest block)'
   )
   program.option(
     '-e, --end <blockHeight:timeUnixMs>',
@@ -73,18 +74,12 @@ export const main = async () => {
     throw new Error('No state found.')
   }
 
-  let contractAddresses: string[]
+  let addresses: string[]
 
   if (options.targets) {
-    contractAddresses = (
-      await Contract.findAll({
-        where: {
-          address: options.targets,
-        },
-      })
-    ).map((contract) => contract.address)
+    addresses = options.targets
   } else if (options.ids?.length) {
-    contractAddresses = (
+    addresses = (
       await Contract.findAll({
         where: {
           codeId: options.ids,
@@ -92,25 +87,16 @@ export const main = async () => {
       })
     ).map((contract) => contract.address)
   } else {
-    throw new Error(
-      'Must specify either target contract addresses or code IDs.'
-    )
+    throw new Error('Must specify either target addresses or code IDs.')
   }
 
-  if (contractAddresses.length === 0) {
-    throw new Error('No contracts found.')
+  if (addresses.length === 0) {
+    throw new Error('No addresses found.')
   }
 
   const blockStart: Block | undefined = options.start
     ? validateBlockString(options.start, 'start')
-    : (
-        await WasmStateEvent.findOne({
-          where: {
-            contractAddress: contractAddresses,
-          },
-          order: [['blockHeight', 'ASC']],
-        })
-      )?.block
+    : await getFirstBlock()
 
   // If blockStart undefined, no events found.
   if (!blockStart) {
@@ -126,7 +112,7 @@ export const main = async () => {
     throw new Error('No state found.')
   }
 
-  const typedFormula = getTypedFormula(FormulaType.Contract, options.formula)
+  const typedFormula = getTypedFormula(options.type, options.formula)
 
   const initialStart = new Date()
   console.log(
@@ -134,15 +120,15 @@ export const main = async () => {
       options.formula
     } (with args ${JSON.stringify(
       args
-    )}) for ${contractAddresses.length.toLocaleString()} contract${
-      contractAddresses.length === 1 ? '' : 's'
+    )}) for ${addresses.length.toLocaleString()} address${
+      addresses.length === 1 ? '' : 'es'
     } from ${blockStart.height} to ${blockEnd.height}:`
   )
-  contractAddresses.forEach((address) => console.log(`  - ${address}`))
+  addresses.forEach((address) => console.log(`  - ${address}`))
   console.log()
 
   let computations = 0
-  for (const targetAddress of contractAddresses) {
+  for (const targetAddress of addresses) {
     const start = new Date()
     console.log(`[${start.toLocaleString()}] Computing ${targetAddress}...`)
 
@@ -155,20 +141,10 @@ export const main = async () => {
         block.height + BigInt(options.batch),
         blockEnd.height + 1n
       )
-      const endBlockEvent = await WasmStateEvent.findOne({
-        where: {
-          contractAddress: targetAddress,
-          blockHeight: {
-            // Make sure we don't infinite loop on one block.
-            [Op.gt]: block.height,
-            [Op.lte]: endBlockHeight,
-          },
-        },
-        order: [['blockHeight', 'DESC']],
-      })
+      const endBlock = await getBlockForHeight(endBlockHeight, block.height)
 
       // If no event before end block, we're done.
-      if (!endBlockEvent) {
+      if (!endBlock) {
         break
       }
 
@@ -178,7 +154,7 @@ export const main = async () => {
         targetAddress,
         args,
         blockStart: block,
-        blockEnd: endBlockEvent.block,
+        blockEnd: endBlock,
       })
       count += outputs.length
 
@@ -194,11 +170,11 @@ export const main = async () => {
 
       console.log(
         `  - Batch ${i} (${block.height}-${
-          endBlockEvent.blockHeight
+          endBlock.height
         }): ${outputs.length.toLocaleString()}`
       )
 
-      block = endBlockEvent.block
+      block = endBlock
       i++
     }
 
