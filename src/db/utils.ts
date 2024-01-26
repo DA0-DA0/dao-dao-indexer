@@ -1,7 +1,7 @@
 import { Op, Sequelize } from 'sequelize'
 
 import { ComputationDependentKey } from '@/core/types'
-import { bigIntMax, bigIntMin } from '@/core/utils'
+import { bigIntMin } from '@/core/utils'
 
 import { loadDb } from './connection'
 import {
@@ -68,19 +68,20 @@ export const updateComputationValidityDependentOnChanges = async (
   // Dependable events may be very long, so we don't want to spread them into a
   // call to `Math.min` and `Math.max` and potentially cause a stack overflow.
   // Use reduce instead to compute the min and max.
-  const { earliestBlockHeight, latestBlockHeight } = dependableEvents.reduce(
-    (acc, { block: { height } }) => ({
-      earliestBlockHeight:
-        acc.earliestBlockHeight === -1n
-          ? height
-          : bigIntMin(acc.earliestBlockHeight, height),
-      latestBlockHeight:
-        acc.latestBlockHeight === -1n
-          ? height
-          : bigIntMax(acc.latestBlockHeight, height),
-    }),
-    { earliestBlockHeight: -1n, latestBlockHeight: -1n }
-  )
+  const { earliestBlockHeight /* latestBlockHeight */ } =
+    dependableEvents.reduce(
+      (acc, { block: { height } }) => ({
+        earliestBlockHeight:
+          acc.earliestBlockHeight === -1n
+            ? height
+            : bigIntMin(acc.earliestBlockHeight, height),
+        /* latestBlockHeight:
+          acc.latestBlockHeight === -1n
+            ? height
+            : bigIntMax(acc.latestBlockHeight, height), */
+      }),
+      { earliestBlockHeight: -1n /* latestBlockHeight: -1n */ }
+    )
 
   const computationDependencyWhere = makeComputationDependencyWhere(
     escape,
@@ -102,11 +103,11 @@ export const updateComputationValidityDependentOnChanges = async (
       },
     ],
   })
-  const destroyed = (
-    await Promise.all(
-      computationsToDestroy.map((computation) => computation.destroy())
-    )
-  ).length
+  const destroyed = await Computation.destroy({
+    where: {
+      id: computationsToDestroy.map((computation) => computation.id),
+    },
+  })
 
   // 2. Update those starting before the earliest block and deemed valid after
   //    the earliest block.
@@ -129,20 +130,34 @@ export const updateComputationValidityDependentOnChanges = async (
     ],
   })
 
-  await Promise.all(
-    toUpdateInRange.map((computation) =>
-      computation.updateValidityUpToBlockHeight(
-        // Update the validity at least to the latest block height affected, to
-        // prevent future validity checks.
-        bigIntMax(
-          BigInt(computation.latestBlockHeightValid),
-          latestBlockHeight
-        ),
-        // Restart validity check at the earliest block instead of the default
-        // behavior of using the `latestBlockHeightValid` value.
-        earliestBlockHeight
-      )
-    )
+  // COMMENTING OUT FOR NOW: Too inefficient to do while exporting. Need to move
+  // validity updates to background task. For now, just invalidate.
+
+  // await Promise.all(
+  //   toUpdateInRange.map((computation) =>
+  //     computation.updateValidityUpToBlockHeight(
+  //       // Update the validity at least to the latest block height affected, to
+  //       // prevent future validity checks.
+  //       bigIntMax(
+  //         BigInt(computation.latestBlockHeightValid),
+  //         latestBlockHeight
+  //       ),
+  //       // Restart validity check at the earliest block instead of the default
+  //       // behavior of using the `latestBlockHeightValid` value.
+  //       earliestBlockHeight
+  //     )
+  //   )
+  // )
+
+  await Computation.update(
+    {
+      latestBlockHeightValid: earliestBlockHeight - 1n,
+    },
+    {
+      where: {
+        id: toUpdateInRange.map((computation) => computation.id),
+      },
+    }
   )
 
   // COMMENTING OUT FOR NOW: Too inefficient. Need to index Computation's

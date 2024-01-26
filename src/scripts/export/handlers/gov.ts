@@ -3,7 +3,11 @@ import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
 import { ParsedGovStateEvent } from '@/core'
-import { GovStateEvent, State } from '@/db'
+import {
+  GovStateEvent,
+  State,
+  updateComputationValidityDependentOnChanges,
+} from '@/db'
 import { Proposal as ProposalV1 } from '@/protobuf/codegen/cosmos/gov/v1/gov'
 import { Proposal as ProposalV1Beta1 } from '@/protobuf/codegen/cosmos/gov/v1beta1/gov'
 
@@ -11,7 +15,9 @@ import { Handler, HandlerMaker } from '../types'
 
 const STORE_NAME = 'gov'
 
-export const gov: HandlerMaker<ParsedGovStateEvent> = async () => {
+export const gov: HandlerMaker<ParsedGovStateEvent> = async ({
+  updateComputations,
+}) => {
   const match: Handler<ParsedGovStateEvent>['match'] = (trace) => {
     // ProposalsKeyPrefix = 0x00
     // gov keys are formatted as:
@@ -101,10 +107,9 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async () => {
       interval: 100,
     })) as GovStateEvent[]
 
-    // TODO(computations): Re-enable computations when they are invalidated in the background.
-    // if (updateComputations) {
-    //   await updateComputationValidityDependentOnChanges(exportedEvents)
-    // }
+    if (updateComputations) {
+      await updateComputationValidityDependentOnChanges(exportedEvents)
+    }
 
     // Store last block height exported, and update latest block
     // height/time if the last export is newer.

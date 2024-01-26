@@ -3,7 +3,11 @@ import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
 import { ParsedBankStateEvent } from '@/core'
-import { BankStateEvent, State } from '@/db'
+import {
+  BankStateEvent,
+  State,
+  updateComputationValidityDependentOnChanges,
+} from '@/db'
 import { Coin } from '@/protobuf/codegen/cosmos/base/v1beta1/coin'
 
 import { Handler, HandlerMaker } from '../types'
@@ -12,7 +16,7 @@ const STORE_NAME = 'bank'
 
 export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
   config: { bech32Prefix },
-  // updateComputations,
+  updateComputations,
 }) => {
   const match: Handler<ParsedBankStateEvent>['match'] = (trace) => {
     // BalancesPrefix = 0x02
@@ -128,10 +132,9 @@ export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
       interval: 100,
     })) as BankStateEvent[]
 
-    // TODO(computations): Re-enable computations when they are invalidated in the background.
-    // if (updateComputations) {
-    //   await updateComputationValidityDependentOnChanges(exportedEvents)
-    // }
+    if (updateComputations) {
+      await updateComputationValidityDependentOnChanges(exportedEvents)
+    }
 
     // Store last block height exported, and update latest block
     // height/time if the last export is newer.

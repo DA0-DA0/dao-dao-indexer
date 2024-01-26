@@ -1,4 +1,5 @@
 import Router from '@koa/router'
+import { Op } from 'sequelize'
 
 import {
   Block,
@@ -13,7 +14,14 @@ import {
   validateBlockString,
 } from '@/core'
 import { getTypedFormula } from '@/data'
-import { AccountKey, AccountKeyCredit, Contract, State, Validator } from '@/db'
+import {
+  AccountKey,
+  AccountKeyCredit,
+  Computation,
+  Contract,
+  State,
+  Validator,
+} from '@/db'
 
 import { captureSentryException } from '../../sentry'
 
@@ -310,11 +318,11 @@ export const computer: Router.Middleware = async (ctx) => {
 
     let computation
 
-    // const computationWhere = {
-    //   targetAddress: address,
-    //   formula: formulaName,
-    //   args: JSON.stringify(args),
-    // }
+    const computationWhere = {
+      targetAddress: address,
+      formula: formulaName,
+      args: JSON.stringify(args),
+    }
 
     // If time passed, compute block that correlates with that time.
     if (time) {
@@ -385,102 +393,102 @@ export const computer: Router.Middleware = async (ctx) => {
       // between. If not, compute range.
       let existingUsed = false
 
-      // TODO(computations): Re-enable computations when they are invalidated in the background.
-      // const existingStartComputation = await Computation.findOne({
-      //   where: {
-      //     ...computationWhere,
-      //     blockHeight: {
-      //       [Op.lte]: blocks[0].height,
-      //     },
-      //   },
-      //   order: [['blockHeight', 'DESC']],
-      // })
-      // // If start computation exists, check the rest.
-      // if (existingStartComputation) {
-      //   const existingRestComputations = await Computation.findAll({
-      //     where: {
-      //       ...computationWhere,
-      //       blockHeight: {
-      //         [Op.gt]: blocks[0].height,
-      //         [Op.lte]: blocks[1].height,
-      //       },
-      //     },
-      //     order: [['blockHeight', 'ASC']],
-      //   })
+      const existingStartComputation = await Computation.findOne({
+        where: {
+          ...computationWhere,
+          blockHeight: {
+            [Op.lte]: blocks[0].height,
+          },
+        },
+        order: [['blockHeight', 'DESC']],
+      })
+      // If start computation exists, check the rest.
+      if (existingStartComputation) {
+        const existingRestComputations = await Computation.findAll({
+          where: {
+            ...computationWhere,
+            blockHeight: {
+              [Op.gt]: blocks[0].height,
+              [Op.lte]: blocks[1].height,
+            },
+          },
+          order: [['blockHeight', 'ASC']],
+        })
 
-      //   // Ensure entire range is covered by checking if validations are
-      //   // chained. In other words, check that each computation is valid up
-      //   // until the block just before the next computation starts.
-      //   let existingComputations = [
-      //     existingStartComputation,
-      //     ...existingRestComputations,
-      //   ]
-      //   const isRangeCoveredBeforeEnd = existingComputations.every(
-      //     (computation, i) =>
-      //       i === existingComputations.length - 1 ||
-      //       BigInt(computation.latestBlockHeightValid) ===
-      //         BigInt(existingComputations[i + 1].blockHeight) - 1n
-      //   )
+        // Ensure entire range is covered by checking if validations are
+        // chained. In other words, check that each computation is valid up
+        // until the block just before the next computation starts.
+        let existingComputations = [
+          existingStartComputation,
+          ...existingRestComputations,
+        ]
+        const isRangeCoveredBeforeEnd = existingComputations.every(
+          (computation, i) =>
+            i === existingComputations.length - 1 ||
+            BigInt(computation.latestBlockHeightValid) ===
+              BigInt(existingComputations[i + 1].blockHeight) - 1n
+        )
 
-      //   // If range is covered, ensure that the end computation is valid at the
-      //   // end block.
-      //   let entireRangeValid =
-      //     isRangeCoveredBeforeEnd &&
-      //     (await existingComputations[
-      //       existingComputations.length - 1
-      //     ].updateValidityUpToBlockHeight(blocks[1].height))
+        // If range is covered, ensure that the end computation is valid at the
+        // end block.
+        let entireRangeValid =
+          isRangeCoveredBeforeEnd &&
+          (await existingComputations[
+            existingComputations.length - 1
+          ].updateValidityUpToBlockHeight(blocks[1].height))
 
-      //   // If range is covered until the end, we are dealing with an incomplete
-      //   // but continuous range. Load just the rest.
-      //   if (isRangeCoveredBeforeEnd && !entireRangeValid) {
-      //     const missingComputations = await computeRange({
-      //       ...typedFormula,
-      //       chainId: state.chainId,
-      //       targetAddress: address,
-      //       args,
-      //       // Start at the block of the last existing computation, since we
-      //       // need the block time to perform computations but cannot retrieve
-      //       // that information with just `latestBlockHeightValid`.
-      //       blockStart:
-      //         existingComputations[existingComputations.length - 1].block,
-      //       blockEnd: blocks[1],
-      //     })
+        // If range is covered until the end, we are dealing with an incomplete
+        // but continuous range. Load just the rest.
+        if (isRangeCoveredBeforeEnd && !entireRangeValid) {
+          const missingComputations = await computeRange({
+            ...typedFormula,
+            chainId: state.chainId,
+            targetAddress: address,
+            args,
+            // Start at the block of the last existing computation, since we
+            // need the block time to perform computations but cannot retrieve
+            // that information with just `latestBlockHeightValid`.
+            blockStart:
+              existingComputations[existingComputations.length - 1].block,
+            blockEnd: blocks[1],
+          })
 
-      //     // Ignore first computation since it's equivalent to the last existing
-      //     // computation.
-      //     missingComputations.shift()
+          // Ignore first computation since it's equivalent to the last existing
+          // computation.
+          missingComputations.shift()
 
-      //     // Cache computations for future queries.
-      //     const createdMissingComputations =
-      //       await Computation.createFromComputationOutputs(
-      //         address,
-      //         typedFormula,
-      //         args,
-      //         missingComputations
-      //       )
+          // Cache computations for future queries.
+          const createdMissingComputations =
+            await Computation.createFromComputationOutputs(
+              address,
+              typedFormula,
+              args,
+              missingComputations
+            )
 
-      //     // Avoid using push(...items) since there is a limit to the number of
-      //     // arguments that can be put on the stack, and the number of
-      //     // computations may be very large.
-      //     existingComputations = [
-      //       ...existingComputations,
-      //       ...createdMissingComputations,
-      //     ]
+          // Avoid using push(...items) since there is a limit to the number of
+          // arguments that can be put on the stack, and the number of
+          // computations may be very large.
+          existingComputations = [
+            ...existingComputations,
+            ...createdMissingComputations,
+          ]
 
-      //     entireRangeValid = await existingComputations[
-      //       existingComputations.length - 1
-      //     ].updateValidityUpToBlockHeight(blocks[1].height)
-      //   }
+          // Validate final computation.
+          entireRangeValid = await existingComputations[
+            existingComputations.length - 1
+          ].updateValidityUpToBlockHeight(blocks[1].height)
+        }
 
-      //   if (entireRangeValid) {
-      //     outputs = existingComputations.map(({ block, output }) => ({
-      //       value: output && JSON.parse(output),
-      //       blockHeight: block.height ?? -1n,
-      //       blockTimeUnixMs: block.timeUnixMs ?? -1n,
-      //     }))
-      //     existingUsed = true
-      //   }
-      // }
+        if (entireRangeValid) {
+          outputs = existingComputations.map(({ block, output }) => ({
+            value: output && JSON.parse(output),
+            blockHeight: block.height ?? -1n,
+            blockTimeUnixMs: block.timeUnixMs ?? -1n,
+          }))
+          existingUsed = true
+        }
+      }
 
       // If could not find existing range, compute.
       if (!existingUsed) {
@@ -620,62 +628,60 @@ export const computer: Router.Middleware = async (ctx) => {
         block = state.latestBlock
       }
 
-      // TODO(computations): Re-enable computations when they are invalidated in the background.
-      // // Get most recent computation if this formula does not change each block.
-      // const existingComputation = typedFormula.formula.dynamic
-      //   ? null
-      //   : await Computation.findOne({
-      //       where: {
-      //         ...computationWhere,
-      //         blockHeight: {
-      //           [Op.lte]: block.height,
-      //         },
-      //       },
-      //       order: [['blockHeight', 'DESC']],
-      //     })
+      // Get most recent computation if this formula does not change each block.
+      const existingComputation = typedFormula.formula.dynamic
+        ? null
+        : await Computation.findOne({
+            where: {
+              ...computationWhere,
+              blockHeight: {
+                [Op.lte]: block.height,
+              },
+            },
+            order: [['blockHeight', 'DESC']],
+          })
 
-      // // If found existing computation, check its validity.
-      // const existingComputationValid =
-      //   existingComputation !== null &&
-      //   (await existingComputation.updateValidityUpToBlockHeight(block.height))
+      // If found existing computation, check its validity.
+      const existingComputationValid =
+        existingComputation !== null &&
+        (await existingComputation.updateValidityUpToBlockHeight(block.height))
 
-      // if (existingComputation && existingComputationValid) {
-      //   computation =
-      //     existingComputation.output && JSON.parse(existingComputation.output)
-      // } else {
-      // Compute if did not find or use existing.
-      const computationOutput = await compute({
-        ...typedFormula,
-        chainId: state.chainId,
-        targetAddress: address,
-        args,
-        block,
-      })
+      if (existingComputation && existingComputationValid) {
+        computation =
+          existingComputation.output && JSON.parse(existingComputation.output)
+      } else {
+        // Compute if did not find or use existing.
+        const computationOutput = await compute({
+          ...typedFormula,
+          chainId: state.chainId,
+          targetAddress: address,
+          args,
+          block,
+        })
 
-      computation = computationOutput.value
+        computation = computationOutput.value
 
-      // TODO(computations): Re-enable computations when they are invalidated in the background.
-      // // Cache computation for future queries if this formula does not change
-      // // each block and if it outputted a non-undefined/non-null value.
-      // if (
-      //   !typedFormula.formula.dynamic &&
-      //   computationOutput.value !== undefined &&
-      //   computationOutput.value !== null
-      // ) {
-      //   await Computation.createFromComputationOutputs(
-      //     address,
-      //     typedFormula,
-      //     args,
-      //     [
-      //       {
-      //         ...computationOutput,
-      //         // Valid up to the current block.
-      //         latestBlockHeightValid: block.height,
-      //       },
-      //     ]
-      //   )
-      // }
-      // }
+        // Cache computation for future queries if this formula does not change
+        // each block and if it outputted a non-undefined/non-null value.
+        if (
+          !typedFormula.formula.dynamic &&
+          computationOutput.value !== undefined &&
+          computationOutput.value !== null
+        ) {
+          await Computation.createFromComputationOutputs(
+            address,
+            typedFormula,
+            args,
+            [
+              {
+                ...computationOutput,
+                // Valid up to the current block.
+                latestBlockHeightValid: block.height,
+              },
+            ]
+          )
+        }
+      }
     }
 
     // If string, encode as JSON.
