@@ -513,13 +513,14 @@ export const computer: Router.Middleware = async (ctx) => {
           latestBlockHeightValid: undefined,
         }))
 
-        // Cache computations for future queries.
-        await Computation.createFromComputationOutputs(
-          address,
-          typedFormula,
-          args,
-          rangeComputations
-        )
+        // Don't cache range computations automatically.
+        // // Cache computations for future queries.
+        // await Computation.createFromComputationOutputs(
+        //   address,
+        //   typedFormula,
+        //   args,
+        //   rangeComputations
+        // )
       }
 
       let response: {
