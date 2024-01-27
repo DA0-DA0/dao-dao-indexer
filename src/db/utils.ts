@@ -54,6 +54,9 @@ export const updateComputationValidityDependentOnChanges = async (
   updated: number
   destroyed: number
 }> => {
+  // DISABLE FOR NOW SINCE THIS IS TOO INEFFICIENT
+  return { updated: 0, destroyed: 0 }
+
   if (!dependableEvents.length) {
     return { updated: 0, destroyed: 0 }
   }
