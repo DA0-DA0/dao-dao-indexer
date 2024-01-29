@@ -8,6 +8,10 @@
     "address": "neutron1suhgf5svhu4usrurvxzlgn54ksxmn8gljarjtxqnapv8kjnp4nrstdxvff"
   },
   {
+    "chainId": "migaloo-1",
+    "address": "migaloo10zqfqhw44e6gvu97frjzcghunndskhu40uyztwu00y6dr9qxrz6qcjfrf7"
+  },
+  {
     "chainId": "juno-1",
     "address": "juno185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqc5vwdr"
   },
