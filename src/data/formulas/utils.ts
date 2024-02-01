@@ -32,7 +32,7 @@ export const expirationPlusDuration = (
     // `duration.time` is in seconds, so convert to nanoseconds for `at_time`.
     return {
       at_time: BigInt(
-        Number(expiration.at_time) + duration.time * 1e6
+        Number(expiration.at_time) + duration.time * 1e9
       ).toString(),
     }
   }
