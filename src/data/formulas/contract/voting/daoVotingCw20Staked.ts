@@ -7,8 +7,6 @@ import {
   totalStaked,
 } from '../staking/cw20Stake'
 
-const CODE_IDS_KEYS = ['dao-voting-cw20-staked']
-
 export const tokenContract: ContractFormula<string | undefined> = {
   compute: async ({ contractAddress, get, getTransformationMatch }) =>
     (await getTransformationMatch<string>(contractAddress, 'token'))?.value ??
@@ -28,10 +26,6 @@ export const votingPower: ContractFormula<
   string | undefined,
   { address: string }
 > = {
-  filter: {
-    codeIdsKeys: CODE_IDS_KEYS,
-  },
-
   compute: async (env) => {
     if (!env.args.address) {
       throw new Error('missing `address`')
@@ -62,10 +56,6 @@ export const votingPower: ContractFormula<
 }
 
 export const totalPower: ContractFormula<string> = {
-  filter: {
-    codeIdsKeys: CODE_IDS_KEYS,
-  },
-
   compute: async (env) => {
     const stakingContractAddress = (await stakingContract.compute(env)) ?? ''
     const power = await totalStaked.compute({
@@ -94,9 +84,6 @@ type Staker = StakerBalance & {
 }
 
 export const topStakers: ContractFormula<Staker[] | undefined> = {
-  filter: {
-    codeIdsKeys: CODE_IDS_KEYS,
-  },
   compute: async (env) => {
     const stakingContractAddress = await stakingContract.compute(env)
     if (!stakingContractAddress) {
