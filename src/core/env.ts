@@ -3,6 +3,7 @@ import { Op, Sequelize } from 'sequelize'
 import {
   BankStateEvent,
   Contract,
+  DistributionCommunityPoolStateEvent,
   GovStateEvent,
   StakingSlashEvent,
   WasmStateEvent,
@@ -19,6 +20,7 @@ import {
   FormulaBalancesGetter,
   FormulaCodeIdKeyForContractGetter,
   FormulaCodeIdsForKeysGetter,
+  FormulaCommunityPoolBalancesGetter,
   FormulaContractGetter,
   FormulaContractMatchesCodeIdKeysGetter,
   FormulaDateGetter,
@@ -1214,6 +1216,52 @@ export const getEnv = ({
     )
   }
 
+  const getCommunityPoolBalances: FormulaCommunityPoolBalancesGetter =
+    async () => {
+      const dependentKey = getDependentKey(
+        DistributionCommunityPoolStateEvent.dependentKeyNamespace
+      )
+      dependentKeys?.push({
+        key: dependentKey,
+        prefix: false,
+      })
+
+      // Check cache.
+      const cachedEvent = cache.events[dependentKey]
+      const event =
+        // If undefined, we haven't tried to fetch it yet. If not undefined,
+        // either it exists or it doesn't (null).
+        cachedEvent !== undefined
+          ? cachedEvent?.[0]
+          : await DistributionCommunityPoolStateEvent.findOne({
+              where: {
+                blockHeight: blockHeightFilter,
+              },
+              order: [['blockHeight', 'DESC']],
+            })
+
+      // Type-check. Should never happen assuming dependent key namespaces are
+      // unique across different event types.
+      if (event && !(event instanceof DistributionCommunityPoolStateEvent)) {
+        throw new Error('Incorrect event type.')
+      }
+
+      // Cache event, null if nonexistent.
+      if (cachedEvent === undefined) {
+        cache.events[dependentKey] = event ? [event] : null
+      }
+
+      // If no event found, return undefined.
+      if (!event) {
+        return
+      }
+
+      // Call hook.
+      await onFetch?.([event])
+
+      return event.balances
+    }
+
   return {
     chainId,
     block,
@@ -1246,5 +1294,7 @@ export const getEnv = ({
 
     getProposal,
     getProposals,
+
+    getCommunityPoolBalances,
   }
 }

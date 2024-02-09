@@ -14,6 +14,7 @@ export enum DependentKeyNamespace {
   StakingSlash = 'staking_slash',
   BankStateEvent = 'bank_state',
   GovStateEvent = 'gov_state',
+  DistributionCommunityPoolStateEvent = 'distribution_community_pool_state',
 }
 
 // Interface that event models must implement to be depended on by computations.

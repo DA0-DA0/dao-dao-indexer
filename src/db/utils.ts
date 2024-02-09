@@ -8,6 +8,7 @@ import {
   BankStateEvent,
   Computation,
   ComputationDependency,
+  DistributionCommunityPoolStateEvent,
   GovStateEvent,
   StakingSlashEvent,
   WasmStateEvent,
@@ -280,6 +281,7 @@ export const getDependableEventModels = (): typeof DependableEventModel[] => [
   StakingSlashEvent,
   BankStateEvent,
   GovStateEvent,
+  DistributionCommunityPoolStateEvent,
 ]
 
 // Get the dependable event model for a given key based on its namespace.

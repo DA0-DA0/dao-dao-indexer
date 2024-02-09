@@ -24,6 +24,8 @@ describe('GET /status', () => {
           state!.lastBankBlockHeightExported?.toString() || null,
         lastGovBlockHeightExported:
           state!.lastGovBlockHeightExported?.toString() || null,
+        lastDistributionBlockHeightExported:
+          state!.lastDistributionBlockHeightExported?.toString() || null,
       })
   })
 })

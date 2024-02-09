@@ -12,6 +12,7 @@ type GetStatusResponse =
       lastWasmBlockHeightExported: string | null
       lastBankBlockHeightExported: string | null
       lastGovBlockHeightExported: string | null
+      lastDistributionBlockHeightExported: string | null
     }
   | {
       error: string
@@ -42,5 +43,7 @@ export const getStatus: Router.Middleware<
       state.lastBankBlockHeightExported?.toString() || null,
     lastGovBlockHeightExported:
       state.lastBankBlockHeightExported?.toString() || null,
+    lastDistributionBlockHeightExported:
+      state.lastDistributionBlockHeightExported?.toString() || null,
   }
 }

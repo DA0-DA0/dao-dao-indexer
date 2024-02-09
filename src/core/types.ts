@@ -243,6 +243,10 @@ export type FormulaBalancesGetter = (
   address: string
 ) => Promise<Record<string, string> | undefined>
 
+export type FormulaCommunityPoolBalancesGetter = () => Promise<
+  Record<string, string> | undefined
+>
+
 export type FormulaProposalObject = {
   id: string
   version: string
@@ -287,6 +291,7 @@ export type Env<Args extends Record<string, string> = {}> = {
   getBalances: FormulaBalancesGetter
   getProposal: FormulaProposalGetter
   getProposals: FormulaProposalsGetter
+  getCommunityPoolBalances: FormulaCommunityPoolBalancesGetter
 }
 
 export interface EnvOptions {
@@ -480,6 +485,14 @@ export type ParsedBankStateEvent = {
   blockTimestamp: Date
   denom: string
   balance: string
+}
+
+export type ParsedDistributionCommunityPoolStateEvent = {
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  // Map denom to balance.
+  balances: Record<string, string>
 }
 
 export type ParsedGovStateEvent = {

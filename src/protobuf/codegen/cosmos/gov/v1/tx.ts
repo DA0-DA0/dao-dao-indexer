@@ -3,6 +3,7 @@ import { Any, AnyProtoMsg, AnyAmino, AnySDKType } from "../../../google/protobuf
 import { Coin, CoinAmino, CoinSDKType } from "../../base/v1beta1/coin";
 import { VoteOption, WeightedVoteOption, WeightedVoteOptionAmino, WeightedVoteOptionSDKType, Params, ParamsAmino, ParamsSDKType, voteOptionFromJSON, voteOptionToJSON } from "./gov";
 import { Timestamp } from "../../../google/protobuf/timestamp";
+import { CommunityPoolSpendProposal, CommunityPoolSpendProposalProtoMsg, CommunityPoolSpendProposalSDKType, CommunityPoolSpendProposalWithDeposit, CommunityPoolSpendProposalWithDepositProtoMsg, CommunityPoolSpendProposalWithDepositSDKType } from "../../distribution/v1beta1/distribution";
 import { TextProposal, TextProposalProtoMsg, TextProposalSDKType } from "../v1beta1/gov";
 import { StoreCodeProposal, StoreCodeProposalProtoMsg, StoreCodeProposalSDKType, InstantiateContractProposal, InstantiateContractProposalProtoMsg, InstantiateContractProposalSDKType, InstantiateContract2Proposal, InstantiateContract2ProposalProtoMsg, InstantiateContract2ProposalSDKType, MigrateContractProposal, MigrateContractProposalProtoMsg, MigrateContractProposalSDKType, SudoContractProposal, SudoContractProposalProtoMsg, SudoContractProposalSDKType, ExecuteContractProposal, ExecuteContractProposalProtoMsg, ExecuteContractProposalSDKType, UpdateAdminProposal, UpdateAdminProposalProtoMsg, UpdateAdminProposalSDKType, ClearAdminProposal, ClearAdminProposalProtoMsg, ClearAdminProposalSDKType, PinCodesProposal, PinCodesProposalProtoMsg, PinCodesProposalSDKType, UnpinCodesProposal, UnpinCodesProposalProtoMsg, UnpinCodesProposalSDKType, UpdateInstantiateConfigProposal, UpdateInstantiateConfigProposalProtoMsg, UpdateInstantiateConfigProposalSDKType, StoreAndInstantiateContractProposal, StoreAndInstantiateContractProposalProtoMsg, StoreAndInstantiateContractProposalSDKType } from "../../../cosmwasm/wasm/v1/proposal";
 import { BinaryReader, BinaryWriter } from "../../../binary";
@@ -120,7 +121,7 @@ export interface MsgSubmitProposalResponseSDKType {
  */
 export interface MsgExecLegacyContent {
   /** content is the proposal's content. */
-  content?: (TextProposal & StoreCodeProposal & InstantiateContractProposal & InstantiateContract2Proposal & MigrateContractProposal & SudoContractProposal & ExecuteContractProposal & UpdateAdminProposal & ClearAdminProposal & PinCodesProposal & UnpinCodesProposal & UpdateInstantiateConfigProposal & StoreAndInstantiateContractProposal & Any) | undefined;
+  content?: (CommunityPoolSpendProposal & CommunityPoolSpendProposalWithDeposit & TextProposal & StoreCodeProposal & InstantiateContractProposal & InstantiateContract2Proposal & MigrateContractProposal & SudoContractProposal & ExecuteContractProposal & UpdateAdminProposal & ClearAdminProposal & PinCodesProposal & UnpinCodesProposal & UpdateInstantiateConfigProposal & StoreAndInstantiateContractProposal & Any) | undefined;
   /** authority must be the gov module address. */
   authority: string;
 }
@@ -129,7 +130,7 @@ export interface MsgExecLegacyContentProtoMsg {
   value: Uint8Array;
 }
 export type MsgExecLegacyContentEncoded = Omit<MsgExecLegacyContent, "content"> & {
-  /** content is the proposal's content. */content?: TextProposalProtoMsg | StoreCodeProposalProtoMsg | InstantiateContractProposalProtoMsg | InstantiateContract2ProposalProtoMsg | MigrateContractProposalProtoMsg | SudoContractProposalProtoMsg | ExecuteContractProposalProtoMsg | UpdateAdminProposalProtoMsg | ClearAdminProposalProtoMsg | PinCodesProposalProtoMsg | UnpinCodesProposalProtoMsg | UpdateInstantiateConfigProposalProtoMsg | StoreAndInstantiateContractProposalProtoMsg | AnyProtoMsg | undefined;
+  /** content is the proposal's content. */content?: CommunityPoolSpendProposalProtoMsg | CommunityPoolSpendProposalWithDepositProtoMsg | TextProposalProtoMsg | StoreCodeProposalProtoMsg | InstantiateContractProposalProtoMsg | InstantiateContract2ProposalProtoMsg | MigrateContractProposalProtoMsg | SudoContractProposalProtoMsg | ExecuteContractProposalProtoMsg | UpdateAdminProposalProtoMsg | ClearAdminProposalProtoMsg | PinCodesProposalProtoMsg | UnpinCodesProposalProtoMsg | UpdateInstantiateConfigProposalProtoMsg | StoreAndInstantiateContractProposalProtoMsg | AnyProtoMsg | undefined;
 };
 /**
  * MsgExecLegacyContent is used to wrap the legacy content field into a message.
@@ -150,7 +151,7 @@ export interface MsgExecLegacyContentAminoMsg {
  * This ensures backwards compatibility with v1beta1.MsgSubmitProposal.
  */
 export interface MsgExecLegacyContentSDKType {
-  content?: TextProposalSDKType | StoreCodeProposalSDKType | InstantiateContractProposalSDKType | InstantiateContract2ProposalSDKType | MigrateContractProposalSDKType | SudoContractProposalSDKType | ExecuteContractProposalSDKType | UpdateAdminProposalSDKType | ClearAdminProposalSDKType | PinCodesProposalSDKType | UnpinCodesProposalSDKType | UpdateInstantiateConfigProposalSDKType | StoreAndInstantiateContractProposalSDKType | AnySDKType | undefined;
+  content?: CommunityPoolSpendProposalSDKType | CommunityPoolSpendProposalWithDepositSDKType | TextProposalSDKType | StoreCodeProposalSDKType | InstantiateContractProposalSDKType | InstantiateContract2ProposalSDKType | MigrateContractProposalSDKType | SudoContractProposalSDKType | ExecuteContractProposalSDKType | UpdateAdminProposalSDKType | ClearAdminProposalSDKType | PinCodesProposalSDKType | UnpinCodesProposalSDKType | UpdateInstantiateConfigProposalSDKType | StoreAndInstantiateContractProposalSDKType | AnySDKType | undefined;
   authority: string;
 }
 /** MsgExecLegacyContentResponse defines the Msg/ExecLegacyContent response type. */
@@ -1614,10 +1615,14 @@ export const MsgCancelProposalResponse = {
     };
   }
 };
-export const Cosmos_govv1beta1Content_InterfaceDecoder = (input: BinaryReader | Uint8Array): TextProposal | StoreCodeProposal | InstantiateContractProposal | InstantiateContract2Proposal | MigrateContractProposal | SudoContractProposal | ExecuteContractProposal | UpdateAdminProposal | ClearAdminProposal | PinCodesProposal | UnpinCodesProposal | UpdateInstantiateConfigProposal | StoreAndInstantiateContractProposal | Any => {
+export const Cosmos_govv1beta1Content_InterfaceDecoder = (input: BinaryReader | Uint8Array): CommunityPoolSpendProposal | CommunityPoolSpendProposalWithDeposit | TextProposal | StoreCodeProposal | InstantiateContractProposal | InstantiateContract2Proposal | MigrateContractProposal | SudoContractProposal | ExecuteContractProposal | UpdateAdminProposal | ClearAdminProposal | PinCodesProposal | UnpinCodesProposal | UpdateInstantiateConfigProposal | StoreAndInstantiateContractProposal | Any => {
   const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
   const data = Any.decode(reader, reader.uint32(), true);
   switch (data.typeUrl) {
+    case "/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":
+      return CommunityPoolSpendProposal.decode(data.value, undefined, true);
+    case "/cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit":
+      return CommunityPoolSpendProposalWithDeposit.decode(data.value, undefined, true);
     case "/cosmos.gov.v1beta1.TextProposal":
       return TextProposal.decode(data.value, undefined, true);
     case "/cosmwasm.wasm.v1.StoreCodeProposal":
@@ -1650,6 +1655,16 @@ export const Cosmos_govv1beta1Content_InterfaceDecoder = (input: BinaryReader | 
 };
 export const Cosmos_govv1beta1Content_FromAmino = (content: AnyAmino) => {
   switch (content.type) {
+    case "cosmos-sdk/v1/CommunityPoolSpendProposal":
+      return Any.fromPartial({
+        typeUrl: "/cosmos.distribution.v1beta1.CommunityPoolSpendProposal",
+        value: CommunityPoolSpendProposal.encode(CommunityPoolSpendProposal.fromPartial(CommunityPoolSpendProposal.fromAmino(content.value))).finish()
+      });
+    case "cosmos-sdk/v1/CommunityPoolSpendProposalWithDeposit":
+      return Any.fromPartial({
+        typeUrl: "/cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit",
+        value: CommunityPoolSpendProposalWithDeposit.encode(CommunityPoolSpendProposalWithDeposit.fromPartial(CommunityPoolSpendProposalWithDeposit.fromAmino(content.value))).finish()
+      });
     case "cosmos-sdk/TextProposal":
       return Any.fromPartial({
         typeUrl: "/cosmos.gov.v1beta1.TextProposal",
@@ -1721,6 +1736,16 @@ export const Cosmos_govv1beta1Content_FromAmino = (content: AnyAmino) => {
 };
 export const Cosmos_govv1beta1Content_ToAmino = (content: Any, useInterfaces: boolean = false) => {
   switch (content.typeUrl) {
+    case "/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":
+      return {
+        type: "cosmos-sdk/v1/CommunityPoolSpendProposal",
+        value: CommunityPoolSpendProposal.toAmino(CommunityPoolSpendProposal.decode(content.value, undefined, useInterfaces), useInterfaces)
+      };
+    case "/cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit":
+      return {
+        type: "cosmos-sdk/v1/CommunityPoolSpendProposalWithDeposit",
+        value: CommunityPoolSpendProposalWithDeposit.toAmino(CommunityPoolSpendProposalWithDeposit.decode(content.value, undefined, useInterfaces), useInterfaces)
+      };
     case "/cosmos.gov.v1beta1.TextProposal":
       return {
         type: "cosmos-sdk/TextProposal",

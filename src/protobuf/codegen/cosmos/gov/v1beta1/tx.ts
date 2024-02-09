@@ -2,6 +2,7 @@
 import { Any, AnyProtoMsg, AnyAmino, AnySDKType } from "../../../google/protobuf/any";
 import { Coin, CoinAmino, CoinSDKType } from "../../base/v1beta1/coin";
 import { VoteOption, WeightedVoteOption, WeightedVoteOptionAmino, WeightedVoteOptionSDKType, TextProposal, TextProposalProtoMsg, TextProposalSDKType, voteOptionFromJSON, voteOptionToJSON } from "./gov";
+import { CommunityPoolSpendProposal, CommunityPoolSpendProposalProtoMsg, CommunityPoolSpendProposalSDKType, CommunityPoolSpendProposalWithDeposit, CommunityPoolSpendProposalWithDepositProtoMsg, CommunityPoolSpendProposalWithDepositSDKType } from "../../distribution/v1beta1/distribution";
 import { StoreCodeProposal, StoreCodeProposalProtoMsg, StoreCodeProposalSDKType, InstantiateContractProposal, InstantiateContractProposalProtoMsg, InstantiateContractProposalSDKType, InstantiateContract2Proposal, InstantiateContract2ProposalProtoMsg, InstantiateContract2ProposalSDKType, MigrateContractProposal, MigrateContractProposalProtoMsg, MigrateContractProposalSDKType, SudoContractProposal, SudoContractProposalProtoMsg, SudoContractProposalSDKType, ExecuteContractProposal, ExecuteContractProposalProtoMsg, ExecuteContractProposalSDKType, UpdateAdminProposal, UpdateAdminProposalProtoMsg, UpdateAdminProposalSDKType, ClearAdminProposal, ClearAdminProposalProtoMsg, ClearAdminProposalSDKType, PinCodesProposal, PinCodesProposalProtoMsg, PinCodesProposalSDKType, UnpinCodesProposal, UnpinCodesProposalProtoMsg, UnpinCodesProposalSDKType, UpdateInstantiateConfigProposal, UpdateInstantiateConfigProposalProtoMsg, UpdateInstantiateConfigProposalSDKType, StoreAndInstantiateContractProposal, StoreAndInstantiateContractProposalProtoMsg, StoreAndInstantiateContractProposalSDKType } from "../../../cosmwasm/wasm/v1/proposal";
 import { BinaryReader, BinaryWriter } from "../../../binary";
 /**
@@ -10,7 +11,7 @@ import { BinaryReader, BinaryWriter } from "../../../binary";
  */
 export interface MsgSubmitProposal {
   /** content is the proposal's content. */
-  content?: (TextProposal & StoreCodeProposal & InstantiateContractProposal & InstantiateContract2Proposal & MigrateContractProposal & SudoContractProposal & ExecuteContractProposal & UpdateAdminProposal & ClearAdminProposal & PinCodesProposal & UnpinCodesProposal & UpdateInstantiateConfigProposal & StoreAndInstantiateContractProposal & Any) | undefined;
+  content?: (CommunityPoolSpendProposal & CommunityPoolSpendProposalWithDeposit & TextProposal & StoreCodeProposal & InstantiateContractProposal & InstantiateContract2Proposal & MigrateContractProposal & SudoContractProposal & ExecuteContractProposal & UpdateAdminProposal & ClearAdminProposal & PinCodesProposal & UnpinCodesProposal & UpdateInstantiateConfigProposal & StoreAndInstantiateContractProposal & Any) | undefined;
   /** initial_deposit is the deposit value that must be paid at proposal submission. */
   initialDeposit: Coin[];
   /** proposer is the account address of the proposer. */
@@ -21,7 +22,7 @@ export interface MsgSubmitProposalProtoMsg {
   value: Uint8Array;
 }
 export type MsgSubmitProposalEncoded = Omit<MsgSubmitProposal, "content"> & {
-  /** content is the proposal's content. */content?: TextProposalProtoMsg | StoreCodeProposalProtoMsg | InstantiateContractProposalProtoMsg | InstantiateContract2ProposalProtoMsg | MigrateContractProposalProtoMsg | SudoContractProposalProtoMsg | ExecuteContractProposalProtoMsg | UpdateAdminProposalProtoMsg | ClearAdminProposalProtoMsg | PinCodesProposalProtoMsg | UnpinCodesProposalProtoMsg | UpdateInstantiateConfigProposalProtoMsg | StoreAndInstantiateContractProposalProtoMsg | AnyProtoMsg | undefined;
+  /** content is the proposal's content. */content?: CommunityPoolSpendProposalProtoMsg | CommunityPoolSpendProposalWithDepositProtoMsg | TextProposalProtoMsg | StoreCodeProposalProtoMsg | InstantiateContractProposalProtoMsg | InstantiateContract2ProposalProtoMsg | MigrateContractProposalProtoMsg | SudoContractProposalProtoMsg | ExecuteContractProposalProtoMsg | UpdateAdminProposalProtoMsg | ClearAdminProposalProtoMsg | PinCodesProposalProtoMsg | UnpinCodesProposalProtoMsg | UpdateInstantiateConfigProposalProtoMsg | StoreAndInstantiateContractProposalProtoMsg | AnyProtoMsg | undefined;
 };
 /**
  * MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
@@ -44,7 +45,7 @@ export interface MsgSubmitProposalAminoMsg {
  * proposal Content.
  */
 export interface MsgSubmitProposalSDKType {
-  content?: TextProposalSDKType | StoreCodeProposalSDKType | InstantiateContractProposalSDKType | InstantiateContract2ProposalSDKType | MigrateContractProposalSDKType | SudoContractProposalSDKType | ExecuteContractProposalSDKType | UpdateAdminProposalSDKType | ClearAdminProposalSDKType | PinCodesProposalSDKType | UnpinCodesProposalSDKType | UpdateInstantiateConfigProposalSDKType | StoreAndInstantiateContractProposalSDKType | AnySDKType | undefined;
+  content?: CommunityPoolSpendProposalSDKType | CommunityPoolSpendProposalWithDepositSDKType | TextProposalSDKType | StoreCodeProposalSDKType | InstantiateContractProposalSDKType | InstantiateContract2ProposalSDKType | MigrateContractProposalSDKType | SudoContractProposalSDKType | ExecuteContractProposalSDKType | UpdateAdminProposalSDKType | ClearAdminProposalSDKType | PinCodesProposalSDKType | UnpinCodesProposalSDKType | UpdateInstantiateConfigProposalSDKType | StoreAndInstantiateContractProposalSDKType | AnySDKType | undefined;
   initial_deposit: CoinSDKType[];
   proposer: string;
 }
@@ -847,10 +848,14 @@ export const MsgDepositResponse = {
     };
   }
 };
-export const Cosmos_govv1beta1Content_InterfaceDecoder = (input: BinaryReader | Uint8Array): TextProposal | StoreCodeProposal | InstantiateContractProposal | InstantiateContract2Proposal | MigrateContractProposal | SudoContractProposal | ExecuteContractProposal | UpdateAdminProposal | ClearAdminProposal | PinCodesProposal | UnpinCodesProposal | UpdateInstantiateConfigProposal | StoreAndInstantiateContractProposal | Any => {
+export const Cosmos_govv1beta1Content_InterfaceDecoder = (input: BinaryReader | Uint8Array): CommunityPoolSpendProposal | CommunityPoolSpendProposalWithDeposit | TextProposal | StoreCodeProposal | InstantiateContractProposal | InstantiateContract2Proposal | MigrateContractProposal | SudoContractProposal | ExecuteContractProposal | UpdateAdminProposal | ClearAdminProposal | PinCodesProposal | UnpinCodesProposal | UpdateInstantiateConfigProposal | StoreAndInstantiateContractProposal | Any => {
   const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
   const data = Any.decode(reader, reader.uint32(), true);
   switch (data.typeUrl) {
+    case "/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":
+      return CommunityPoolSpendProposal.decode(data.value, undefined, true);
+    case "/cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit":
+      return CommunityPoolSpendProposalWithDeposit.decode(data.value, undefined, true);
     case "/cosmos.gov.v1beta1.TextProposal":
       return TextProposal.decode(data.value, undefined, true);
     case "/cosmwasm.wasm.v1.StoreCodeProposal":
@@ -883,6 +888,16 @@ export const Cosmos_govv1beta1Content_InterfaceDecoder = (input: BinaryReader | 
 };
 export const Cosmos_govv1beta1Content_FromAmino = (content: AnyAmino) => {
   switch (content.type) {
+    case "cosmos-sdk/CommunityPoolSpendProposal":
+      return Any.fromPartial({
+        typeUrl: "/cosmos.distribution.v1beta1.CommunityPoolSpendProposal",
+        value: CommunityPoolSpendProposal.encode(CommunityPoolSpendProposal.fromPartial(CommunityPoolSpendProposal.fromAmino(content.value))).finish()
+      });
+    case "cosmos-sdk/CommunityPoolSpendProposalWithDeposit":
+      return Any.fromPartial({
+        typeUrl: "/cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit",
+        value: CommunityPoolSpendProposalWithDeposit.encode(CommunityPoolSpendProposalWithDeposit.fromPartial(CommunityPoolSpendProposalWithDeposit.fromAmino(content.value))).finish()
+      });
     case "cosmos-sdk/TextProposal":
       return Any.fromPartial({
         typeUrl: "/cosmos.gov.v1beta1.TextProposal",
@@ -954,6 +969,16 @@ export const Cosmos_govv1beta1Content_FromAmino = (content: AnyAmino) => {
 };
 export const Cosmos_govv1beta1Content_ToAmino = (content: Any, useInterfaces: boolean = false) => {
   switch (content.typeUrl) {
+    case "/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":
+      return {
+        type: "cosmos-sdk/CommunityPoolSpendProposal",
+        value: CommunityPoolSpendProposal.toAmino(CommunityPoolSpendProposal.decode(content.value, undefined, useInterfaces), useInterfaces)
+      };
+    case "/cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit":
+      return {
+        type: "cosmos-sdk/CommunityPoolSpendProposalWithDeposit",
+        value: CommunityPoolSpendProposalWithDeposit.toAmino(CommunityPoolSpendProposalWithDeposit.decode(content.value, undefined, useInterfaces), useInterfaces)
+      };
     case "/cosmos.gov.v1beta1.TextProposal":
       return {
         type: "cosmos-sdk/TextProposal",

@@ -40,6 +40,7 @@ telescope({
         packages: [
           'cosmos.gov.v1',
           'cosmos.gov.v1beta1',
+          'cosmos.distribution.v1beta1',
           'cosmwasm.wasm.v1',
           'google.protobuf',
         ],
