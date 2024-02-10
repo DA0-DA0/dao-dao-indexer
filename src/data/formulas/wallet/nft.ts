@@ -1,5 +1,4 @@
 import groupBy from 'lodash.groupby'
-import { Op } from 'sequelize'
 
 import { WalletFormula } from '@/core'
 
@@ -76,9 +75,7 @@ export const stakedWithDaos: WalletFormula<CollectionWithTokens[]> = {
           `stakedNft:${walletAddress}:*`,
           undefined,
           daoVotingCw721StakedCodeIds.length > 0
-            ? {
-                [Op.in]: daoVotingCw721StakedCodeIds,
-              }
+            ? daoVotingCw721StakedCodeIds
             : undefined
         )
       )?.map(({ contractAddress, name }) => ({

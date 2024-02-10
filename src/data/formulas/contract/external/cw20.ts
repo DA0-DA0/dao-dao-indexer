@@ -1,5 +1,3 @@
-import { Op } from 'sequelize'
-
 import { ContractFormula } from '@/core'
 
 import { Expiration } from '../../../types'
@@ -249,9 +247,12 @@ export const daos: ContractFormula<string[]> = {
     // Get dao-voting-cw20-staked contracts that use this token contract.
     const daoVotingCw20StakedContracts =
       (
-        await getTransformationMatches(undefined, 'token', contractAddress, {
-          [Op.in]: getCodeIdsForKeys('dao-voting-cw20-staked'),
-        })
+        await getTransformationMatches(
+          undefined,
+          'token',
+          contractAddress,
+          getCodeIdsForKeys('dao-voting-cw20-staked')
+        )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
     // Get the DAO for each voting contract.

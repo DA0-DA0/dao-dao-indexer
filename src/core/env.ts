@@ -487,7 +487,7 @@ export const getEnv = ({
 
     // Check cache.
     const cachedTransformations = cache.events[dependentKey]
-    const transformations =
+    let transformations =
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
       cachedTransformations !== undefined
@@ -533,9 +533,6 @@ export const getEnv = ({
               {
                 model: Contract,
                 required: true,
-                where: whereCodeId && {
-                  codeId: whereCodeId,
-                },
               },
             ],
           })
@@ -556,6 +553,18 @@ export const getEnv = ({
       cache.events[dependentKey] = transformations.length
         ? transformations
         : null
+    }
+
+    // Filter by contract code IDs. We need to do this after the query since we
+    // cache only based on transformation event name. If a single formula
+    // queries the same name twice with different code ID filters, the first one
+    // will cache all the events, so we can't filter by code ID in the query.
+    if (whereCodeId) {
+      transformations = whereCodeId.length
+        ? transformations.filter((transformation) =>
+            whereCodeId.includes(transformation.contract.codeId)
+          )
+        : []
     }
 
     // If no transformations found, return undefined.

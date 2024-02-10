@@ -135,7 +135,7 @@ export type FormulaTransformationMatchesGetter = <T>(
   contractAddress: string | undefined,
   nameLike: string,
   whereClause?: any,
-  whereCodeId?: any
+  whereCodeId?: number[]
 ) => Promise<
   | {
       block: Block

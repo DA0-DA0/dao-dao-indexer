@@ -1,5 +1,3 @@
-import { Op } from 'sequelize'
-
 import { GenericFormula } from '@/core'
 
 import { dao as nativeDao } from '../contract/voting/daoVotingNativeStaked'
@@ -27,18 +25,19 @@ export const daos: GenericFormula<string[], { denom: string }> = {
           {
             denom,
           },
-          {
-            [Op.in]: getCodeIdsForKeys('dao-voting-native-staked'),
-          }
+          getCodeIdsForKeys('dao-voting-native-staked')
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
     // Get dao-voting-token-staked contracts that use this denom.
     const daoVotingTokenStakedContracts =
       (
-        await getTransformationMatches(undefined, 'denom', denom, {
-          [Op.in]: getCodeIdsForKeys('dao-voting-token-staked'),
-        })
+        await getTransformationMatches(
+          undefined,
+          'denom',
+          denom,
+          getCodeIdsForKeys('dao-voting-token-staked')
+        )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
     // Get the DAO for each voting contract.
