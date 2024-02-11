@@ -142,6 +142,8 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async ({
         },
       }
     )
+
+    return exportedEvents
   }
 
   return {

@@ -13,7 +13,6 @@ import {
   WasmStateEventTransformation,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-import { updateIndexesForContracts } from '@/ms'
 import { ContractInfo } from '@/protobuf/codegen/cosmwasm/wasm/v1/types'
 
 import { Handler, HandlerMaker } from '../types'
@@ -234,7 +233,7 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
         })
       )
     if (!stateEvents.length) {
-      return
+      return []
     }
 
     const state = await State.getSingleton()
@@ -398,11 +397,34 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
       }
     )) as WasmStateEventTransformation[]
 
+    // Add contract to transformations.
+    await Promise.all(
+      transformations.map(async (transformation) => {
+        let contract = contracts.find(
+          (contract) => contract.address === transformation.contractAddress
+        )
+        // Fetch contract if it wasn't found.
+        let missingContract = false
+        if (!contract) {
+          contract = (await transformation.$get('contract')) ?? undefined
+          missingContract = true
+        }
+
+        if (contract) {
+          if (missingContract) {
+            // Save for other transformations.
+            contracts.push(contract)
+          }
+
+          transformation.contract = contract
+        }
+      })
+    )
+
+    const createdEvents = [...exportedEvents, ...transformations]
+
     if (updateComputations) {
-      await updateComputationValidityDependentOnChanges([
-        ...exportedEvents,
-        ...transformations,
-      ])
+      await updateComputationValidityDependentOnChanges(createdEvents)
     }
 
     // Queue webhooks as needed.
@@ -443,11 +465,7 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
       }
     )
 
-    // Update meilisearch indexes. This must happen after the state is
-    // updated since it uses the latest block.
-    await updateIndexesForContracts({
-      contracts,
-    })
+    return createdEvents
   }
 
   return {

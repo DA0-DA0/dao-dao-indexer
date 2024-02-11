@@ -1,3 +1,5 @@
 export * from './client'
+export * from './queue'
 export * from './setup'
 export * from './update'
+export * from './utils'

@@ -4,7 +4,7 @@ import { loadConfig } from '@/core'
 
 let msClient: MeiliSearch | undefined
 
-export const loadMeilisearch = async () => {
+export const loadMeilisearch = () => {
   if (!msClient) {
     const { meilisearch } = loadConfig()
     if (!meilisearch) {

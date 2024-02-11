@@ -2,7 +2,7 @@ import { Command } from 'commander'
 
 import { loadConfig } from '@/core/config'
 import { loadDb } from '@/db'
-import { setupMeilisearch, updateIndexesForContracts } from '@/ms'
+import { setupMeilisearch, updateIndexes } from '@/ms'
 
 const main = async () => {
   // Parse arguments.
@@ -29,8 +29,7 @@ const main = async () => {
     await setupMeilisearch()
 
     // Update.
-    const updated = await updateIndexesForContracts({
-      mode: 'manual',
+    const updated = await updateIndexes({
       index: options.index,
     })
 

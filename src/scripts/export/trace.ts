@@ -59,9 +59,6 @@ if (config.sentryDsn) {
 const traceFile = path.join(config.home, 'trace.pipe')
 
 const main = async () => {
-  // Setup meilisearch.
-  await setupMeilisearch()
-
   // Ensure trace and update files exist.
   if (!fs.existsSync(traceFile)) {
     throw new Error(
@@ -86,6 +83,9 @@ const trace = async () => {
 
   // Initialize state.
   await State.createSingletonIfMissing()
+
+  // Setup meilisearch.
+  await setupMeilisearch()
 
   const exportQueue = getBullQueue<{ data: ExportQueueData[] }>(
     QueueName.Export

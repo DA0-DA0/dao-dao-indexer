@@ -2,6 +2,7 @@ import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import { Processor } from 'bullmq'
 
 import { Config, QueueName } from '@/core/types'
+import { DependableEventModel } from '@/db'
 
 export type Handler<Data extends unknown = unknown> = {
   // What store name to filter by for events to handle.
@@ -16,8 +17,9 @@ export type Handler<Data extends unknown = unknown> = {
         id: string
       })
     | undefined
-  // The function that will be called with queued objects.
-  process: (data: Data[]) => Promise<void>
+  // The function that will be called with queued objects. Returns created
+  // events.
+  process: (data: Data[]) => Promise<DependableEventModel[]>
 }
 
 export type HandlerMakerOptions = {

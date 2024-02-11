@@ -7,6 +7,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { loadConfig } from '@/core/config'
 import { ContractJson } from '@/core/types'
 
 @Table({
@@ -45,5 +46,15 @@ export class Contract extends Model {
         timestamp: this.instantiatedAtBlockTimestamp,
       },
     }
+  }
+
+  /**
+   * Return whether or not the contract matches a given set of code IDs keys
+   * from the config.
+   */
+  matchesCodeIdKeys(...keys: string[]): boolean {
+    const config = loadConfig()
+    const codeIds = keys.flatMap((key) => config.codeIds?.[key] ?? [])
+    return codeIds.includes(this.codeId)
   }
 }

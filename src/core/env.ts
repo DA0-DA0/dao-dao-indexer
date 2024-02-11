@@ -11,7 +11,7 @@ import {
   WasmTxEvent,
 } from '@/db'
 
-import { loadConfig } from './config'
+import { getCodeIdsForKeys, loadConfig } from './config'
 import {
   Cache,
   Env,
@@ -19,7 +19,6 @@ import {
   FormulaBalanceGetter,
   FormulaBalancesGetter,
   FormulaCodeIdKeyForContractGetter,
-  FormulaCodeIdsForKeysGetter,
   FormulaCommunityPoolBalancesGetter,
   FormulaContractGetter,
   FormulaContractMatchesCodeIdKeysGetter,
@@ -879,17 +878,13 @@ export const getEnv = ({
     return contract?.json
   }
 
-  // Get code ID key map from config.
-  const config = loadConfig()
-  const getCodeIdsForKeys: FormulaCodeIdsForKeysGetter = (...keys) =>
-    keys.flatMap((key) => config.codeIds?.[key] ?? [])
-
   const contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter =
     async (contractAddress, ...keys) => {
       const codeId = (await getContract(contractAddress))?.codeId
       return codeId !== undefined && getCodeIdsForKeys(...keys).includes(codeId)
     }
 
+  const config = loadConfig()
   // Tries to find the code ID of this contract in the code ID keys and returns
   // the first match.
   const getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter = async (

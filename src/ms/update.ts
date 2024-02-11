@@ -1,22 +1,21 @@
-import { Op } from 'sequelize'
-
-import { FormulaType, compute, loadConfig, serializeBlock } from '@/core'
-import { getContractFormula } from '@/data'
-import { Contract, State } from '@/db'
+import { compute, loadConfig, serializeBlock } from '@/core'
+import { getTypedFormula } from '@/data'
+import { meilisearchIndexers } from '@/data/meilisearch'
+import { State } from '@/db'
 
 import { loadMeilisearch } from './client'
+import { getMeilisearchIndexName } from './utils'
 
-type UpdateIndexesForContractsOptions = {
-  contracts?: Contract[]
-  mode?: 'automatic' | 'manual'
+type UpdateIndexesOptions = {
+  /**
+   * Filter by index ID.
+   */
   index?: string
 }
 
-export const updateIndexesForContracts = async ({
-  contracts,
-  mode = 'automatic',
+export const updateIndexes = async ({
   index: filterIndex,
-}: UpdateIndexesForContractsOptions = {}): Promise<number> => {
+}: UpdateIndexesOptions = {}): Promise<number> => {
   const config = loadConfig()
 
   // If no meilisearch in config, nothing to update.
@@ -24,7 +23,7 @@ export const updateIndexesForContracts = async ({
     return 0
   }
 
-  const client = await loadMeilisearch()
+  const client = loadMeilisearch()
 
   // Update indexes with data from the latest block height.
   const state = await State.getSingleton()
@@ -35,108 +34,70 @@ export const updateIndexesForContracts = async ({
   let exported = 0
 
   for (const {
-    index,
-    automatic = true,
-    formula: formulaName,
-    args = {},
-    codeIdsKeys,
-    contractAddresses,
-  } of config.meilisearch.indexes) {
+    id: indexId,
+    index: indexName,
+    getBulkUpdates,
+  } of meilisearchIndexers) {
+    // If no bulk updater, skip.
+    if (!getBulkUpdates) {
+      continue
+    }
+
     // If filter index is provided and does not match, skip.
-    if (filterIndex && filterIndex !== index) {
+    if (filterIndex && filterIndex !== indexId) {
       continue
     }
 
-    // If not automatic, skip.
-    if (!automatic && mode === 'automatic') {
-      continue
-    }
+    const index = client.index(getMeilisearchIndexName(state, indexName))
 
-    const formula = getContractFormula(formulaName)
-    if (!formula) {
-      throw new Error(`Formula ${formulaName} not found`)
-    }
-
-    const codeIds = codeIdsKeys?.flatMap((key) => config.codeIds?.[key] ?? [])
-
-    if (!codeIds?.length && !contractAddresses?.length) {
-      // console.error(
-      //   'One of codeIds or contractAddresses must be present in config.meilisearch.outputs'
-      // )
-      continue
-    }
-
-    const clientIndex = client.index(index)
-
-    const matchingContracts =
-      contracts?.filter(
-        (contract) =>
-          codeIds?.includes(contract.codeId) ||
-          contractAddresses?.includes(contract.address)
-      ) ??
-      // If no contracts provided, query for all matching contracts.
-      (await Contract.findAll({
-        where:
-          codeIds && contractAddresses
-            ? {
-                [Op.or]: {
-                  codeId: codeIds,
-                  address: contractAddresses,
-                },
-              }
-            : codeIds
-            ? {
-                codeId: codeIds,
-              }
-            : {
-                address: contractAddresses,
-              },
-      }))
-
-    if (!matchingContracts.length) {
-      continue
-    }
+    // Get bulk updates.
+    const updates = await getBulkUpdates()
+    console.log(
+      `[${indexId}] Found ${updates.length.toLocaleString()} updates. Computing...`
+    )
 
     try {
       let documents = []
-      // Compute formulas in batches of 100.
-      for (let i = 0; i < matchingContracts.length; i += 100) {
+      // Compute updates in batches of 100.
+      for (let i = 0; i < updates.length; i += 100) {
         documents.push(
           ...(await Promise.all(
-            matchingContracts.slice(i, i + 100).map(async (contract) => {
-              const { block, value } = await compute({
-                chainId: state.chainId,
-                name: formulaName,
-                type: FormulaType.Contract,
-                targetAddress: contract.address,
-                formula,
-                args,
-                block: state.latestBlock,
-              })
+            updates
+              .slice(i, i + 100)
+              .map(
+                async ({
+                  id,
+                  formula: { type, name, targetAddress, args = {} },
+                }) => {
+                  const typedFormula = getTypedFormula(type, name)
+                  const { block, value } = await compute({
+                    chainId: state.chainId,
+                    targetAddress,
+                    args,
+                    block: state.latestBlock,
+                    ...typedFormula,
+                  })
 
-              return {
-                contractAddress: contract.address,
-                codeId: contract.codeId,
-                block: block && serializeBlock(block),
-                value,
-              }
-            })
+                  return {
+                    id,
+                    block: block && serializeBlock(block),
+                    value,
+                  }
+                }
+              )
           ))
         )
 
         console.log(
-          `[ms/${index}] Finished computing ${documents.length.toLocaleString()}/${matchingContracts.length.toLocaleString()} formulas...`
+          `[${indexId}] Finished computing ${documents.length.toLocaleString()}/${updates.length.toLocaleString()} updates...`
         )
       }
 
-      await clientIndex.addDocuments(documents)
+      await index.addDocuments(documents)
 
       exported += documents.length
     } catch (err) {
-      console.error(
-        `Error computing formula ${formulaName} and adding to index ${index}:`,
-        err
-      )
+      console.error(`Error updating index ${indexId}:`, err)
     }
   }
 

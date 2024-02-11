@@ -167,6 +167,8 @@ export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
         },
       }
     )
+
+    return exportedEvents
   }
 
   return {

@@ -23,3 +23,11 @@ export const loadConfig = (configOverride?: string) => {
 
   return config
 }
+
+/**
+ * Get code IDs for a list of keys in the config.
+ */
+export const getCodeIdsForKeys = (...keys: string[]) => {
+  const config = loadConfig()
+  return keys.flatMap((key) => config.codeIds?.[key] ?? [])
+}

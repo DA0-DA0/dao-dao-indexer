@@ -1,6 +1,7 @@
 import retry from 'async-await-retry'
 
 import { QueueName } from '@/core/types'
+import { queueMeilisearchIndexUpdates } from '@/ms'
 
 import { handlerMakers } from '../handlers'
 import { ExportQueueData, ExportWorkerMaker } from '../types'
@@ -50,11 +51,26 @@ export const makeExportWorker: ExportWorkerMaker<{
             }
 
             // Retry 3 times with exponential backoff starting at 100ms delay.
-            await retry(handler.process, [events], {
+            const models = await retry(handler.process, [events], {
               retriesMax: 3,
               exponential: true,
               interval: 100,
             })
+
+            // Queue Meilisearch index updates.
+            if (models && Array.isArray(models) && models.length) {
+              const queued = (
+                await Promise.all(
+                  models.map((event) => queueMeilisearchIndexUpdates(event))
+                )
+              ).reduce((acc, q) => acc + q, 0)
+
+              if (queued > 0) {
+                console.log(
+                  `[${new Date().toISOString()}] Queued ${queued.toLocaleString()} search index update(s).`
+                )
+              }
+            }
 
             // If timed out, stop.
             if (timeout === null) {

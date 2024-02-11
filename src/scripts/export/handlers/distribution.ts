@@ -127,6 +127,8 @@ export const distribution: HandlerMaker<
           },
         }
       )
+
+      return exportedEvents
     }
 
   return {

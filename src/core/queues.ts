@@ -20,7 +20,7 @@ const getBullConnection = (): ConnectionOptions | undefined => {
  */
 export const activeBullQueues: Partial<Record<QueueName, Queue>> = {}
 
-export const getBullQueue = <T extends unknown>(name: QueueName) => {
+export const getBullQueue = <T extends unknown>(name: QueueName): Queue<T> => {
   if (!activeBullQueues[name]) {
     activeBullQueues[name] = new Queue<T>(name, {
       connection: getBullConnection(),

@@ -1,6 +1,9 @@
 import { loadConfig } from '@/core'
+import { meilisearchIndexers } from '@/data/meilisearch'
+import { State } from '@/db'
 
 import { loadMeilisearch } from './client'
+import { getMeilisearchIndexName } from './utils'
 
 export const setupMeilisearch = async () => {
   const { meilisearch } = loadConfig()
@@ -10,37 +13,44 @@ export const setupMeilisearch = async () => {
     return
   }
 
+  const state = await State.getSingleton()
+  if (!state) {
+    throw new Error('State not found.')
+  }
+
   const client = await loadMeilisearch()
 
-  // Create indexes if they don't exist.
+  // Ensure indexes exist and are up to date with their config.
   for (const {
     index,
     filterableAttributes,
     sortableAttributes,
-  } of meilisearch.indexes) {
+  } of meilisearchIndexers) {
+    const indexName = getMeilisearchIndexName(state, index)
+    // Find or create index, and make sure its primary key is `id`.
     try {
-      const clientIndex = await client.getIndex(index)
-      if (clientIndex.primaryKey !== 'contractAddress') {
+      const clientIndex = await client.getIndex(indexName)
+      if (clientIndex.primaryKey !== 'id') {
         await clientIndex.update({
-          primaryKey: 'contractAddress',
+          primaryKey: 'id',
         })
       }
     } catch {
       await client.createIndex(index, {
-        primaryKey: 'contractAddress',
+        primaryKey: 'id',
       })
     }
 
-    const clientIndex = client.index(index)
-
+    // Update index filterable and sortable attributes.
+    const clientIndex = client.index(indexName)
     await clientIndex.updateFilterableAttributes([
-      'contractAddress',
-      'codeId',
+      'id',
       'value',
       ...(filterableAttributes || []),
     ])
     await clientIndex.updateSortableAttributes([
-      'blockHeight',
+      'block.height',
+      'block.timeUnixMs',
       ...(sortableAttributes || []),
     ])
   }
