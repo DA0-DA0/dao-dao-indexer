@@ -601,6 +601,19 @@ const trace = async () => {
     )
   })
 
+  // Add user signal handler to log variables.
+  process.on('SIGUSR1', () => {
+    console.log(
+      [
+        'SIGUSR1:',
+        `Memory: ${JSON.stringify(process.memoryUsage(), null, 2)}`,
+        `Exporting: ${exporting.toLocaleString()}`,
+        `Trace queue size: ${traceQueue.length.toLocaleString()}`,
+        `Export batch size: ${exportBatch.length.toLocaleString()}`,
+      ].join('\n')
+    )
+  })
+
   // Wait for tracer to close. Happens on FIFO closure or if `closeTracer` is
   // manually called, such as in the SIGINT handler above.
   await tracer
