@@ -19,7 +19,6 @@ import {
   ComputeRangeOptions,
   FormulaType,
 } from './types'
-import { getBlockForHeight, getBlockForTime } from './utils'
 
 export const compute = async ({
   chainId,
@@ -92,8 +91,6 @@ export const computeRange = async ({
   args,
   blockStart,
   blockEnd,
-  blockStep,
-  timeStep,
   ...options
 }: ComputeRangeOptions): Promise<ComputationOutput[]> => {
   // Dependent keys seen so far.
@@ -227,24 +224,6 @@ export const computeRange = async ({
         // after the latestBlock returned in the result.
         latestBlockHeightValid: currentBlock.height,
       })
-    }
-
-    // If block step or time step passed, don't use the cache. Just find the
-    // next block and continue. Some queries operate on too much data, so
-    // specifying a step explicitly will avoid quering all the data just to
-    // filter it out.
-    if (blockStep !== undefined) {
-      nextPotentialBlock = await getBlockForHeight(
-        currentBlock.height + blockStep,
-        currentBlock.height
-      )
-      continue
-    } else if (timeStep !== undefined) {
-      nextPotentialBlock = await getBlockForTime(
-        currentBlock.timeUnixMs + timeStep,
-        currentBlock.timeUnixMs
-      )
-      continue
     }
 
     // Load events used into cache if they don't already exist. They may have
