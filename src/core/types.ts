@@ -439,6 +439,8 @@ export type ComputeRangeOptions = {
   args: Record<string, any>
   blockStart: Block
   blockEnd: Block
+  blockStep?: bigint
+  timeStep?: bigint
 } & TypedFormula
 
 export interface ComputationOutput {

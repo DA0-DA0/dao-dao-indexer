@@ -393,100 +393,106 @@ export const computer: Router.Middleware = async (ctx) => {
       // between. If not, compute range.
       let existingUsed = false
 
-      const existingStartComputation = await Computation.findOne({
-        where: {
-          ...computationWhere,
-          blockHeight: {
-            [Op.lte]: blocks[0].height,
-          },
-        },
-        order: [['blockHeight', 'DESC']],
-      })
-      // If start computation exists, check the rest.
-      if (existingStartComputation) {
-        const existingRestComputations = await Computation.findAll({
+      // Only check existing computations if a step is not defined. Otherwise
+      // just compute again.
+      if (blockStep === undefined && timeStep === undefined) {
+        const existingStartComputation = await Computation.findOne({
           where: {
             ...computationWhere,
             blockHeight: {
-              [Op.gt]: blocks[0].height,
-              [Op.lte]: blocks[1].height,
+              [Op.lte]: blocks[0].height,
             },
           },
-          order: [['blockHeight', 'ASC']],
+          order: [['blockHeight', 'DESC']],
         })
-
-        // Ensure entire range is covered by checking if validations are
-        // chained. In other words, check that each computation is valid up
-        // until the block just before the next computation starts.
-        let existingComputations = [
-          existingStartComputation,
-          ...existingRestComputations,
-        ]
-        const isRangeCoveredBeforeEnd = existingComputations.every(
-          (computation, i) =>
-            i === existingComputations.length - 1 ||
-            BigInt(computation.latestBlockHeightValid) ===
-              BigInt(existingComputations[i + 1].blockHeight) - 1n
-        )
-
-        // If range is covered, ensure that the end computation is valid at the
-        // end block.
-        let entireRangeValid =
-          isRangeCoveredBeforeEnd &&
-          (await existingComputations[
-            existingComputations.length - 1
-          ].updateValidityUpToBlockHeight(blocks[1].height))
-
-        // If range is covered until the end, we are dealing with an incomplete
-        // but continuous range. Load just the rest.
-        if (isRangeCoveredBeforeEnd && !entireRangeValid) {
-          const missingComputations = await computeRange({
-            ...typedFormula,
-            chainId: state.chainId,
-            targetAddress: address,
-            args,
-            // Start at the block of the last existing computation, since we
-            // need the block time to perform computations but cannot retrieve
-            // that information with just `latestBlockHeightValid`.
-            blockStart:
-              existingComputations[existingComputations.length - 1].block,
-            blockEnd: blocks[1],
+        // If start computation exists, check the rest.
+        if (existingStartComputation) {
+          const existingRestComputations = await Computation.findAll({
+            where: {
+              ...computationWhere,
+              blockHeight: {
+                [Op.gt]: blocks[0].height,
+                [Op.lte]: blocks[1].height,
+              },
+            },
+            order: [['blockHeight', 'ASC']],
           })
 
-          // Ignore first computation since it's equivalent to the last existing
-          // computation.
-          missingComputations.shift()
-
-          // Cache computations for future queries.
-          const createdMissingComputations =
-            await Computation.createFromComputationOutputs(
-              address,
-              typedFormula,
-              args,
-              missingComputations
-            )
-
-          // Avoid using push(...items) since there is a limit to the number of
-          // arguments that can be put on the stack, and the number of
-          // computations may be very large.
-          existingComputations = [
-            ...existingComputations,
-            ...createdMissingComputations,
+          // Ensure entire range is covered by checking if validations are
+          // chained. In other words, check that each computation is valid up
+          // until the block just before the next computation starts.
+          let existingComputations = [
+            existingStartComputation,
+            ...existingRestComputations,
           ]
+          const isRangeCoveredBeforeEnd = existingComputations.every(
+            (computation, i) =>
+              i === existingComputations.length - 1 ||
+              BigInt(computation.latestBlockHeightValid) ===
+                BigInt(existingComputations[i + 1].blockHeight) - 1n
+          )
 
-          // Validate final computation.
-          entireRangeValid = await existingComputations[
-            existingComputations.length - 1
-          ].updateValidityUpToBlockHeight(blocks[1].height)
-        }
+          // If range is covered, ensure that the end computation is valid at the
+          // end block.
+          let entireRangeValid =
+            isRangeCoveredBeforeEnd &&
+            (await existingComputations[
+              existingComputations.length - 1
+            ].updateValidityUpToBlockHeight(blocks[1].height))
 
-        if (entireRangeValid) {
-          outputs = existingComputations.map(({ block, output }) => ({
-            value: output && JSON.parse(output),
-            blockHeight: block.height ?? -1n,
-            blockTimeUnixMs: block.timeUnixMs ?? -1n,
-          }))
-          existingUsed = true
+          // If range is covered until the end, we are dealing with an incomplete
+          // but continuous range. Load just the rest.
+          if (isRangeCoveredBeforeEnd && !entireRangeValid) {
+            const missingComputations = await computeRange({
+              ...typedFormula,
+              chainId: state.chainId,
+              targetAddress: address,
+              args,
+              // Start at the block of the last existing computation, since we
+              // need the block time to perform computations but cannot retrieve
+              // that information with just `latestBlockHeightValid`.
+              blockStart:
+                existingComputations[existingComputations.length - 1].block,
+              blockEnd: blocks[1],
+              blockStep,
+              timeStep,
+            })
+
+            // Ignore first computation since it's equivalent to the last existing
+            // computation.
+            missingComputations.shift()
+
+            // Cache computations for future queries.
+            const createdMissingComputations =
+              await Computation.createFromComputationOutputs(
+                address,
+                typedFormula,
+                args,
+                missingComputations
+              )
+
+            // Avoid using push(...items) since there is a limit to the number of
+            // arguments that can be put on the stack, and the number of
+            // computations may be very large.
+            existingComputations = [
+              ...existingComputations,
+              ...createdMissingComputations,
+            ]
+
+            // Validate final computation.
+            entireRangeValid = await existingComputations[
+              existingComputations.length - 1
+            ].updateValidityUpToBlockHeight(blocks[1].height)
+          }
+
+          if (entireRangeValid) {
+            outputs = existingComputations.map(({ block, output }) => ({
+              value: output && JSON.parse(output),
+              blockHeight: block.height ?? -1n,
+              blockTimeUnixMs: block.timeUnixMs ?? -1n,
+            }))
+            existingUsed = true
+          }
         }
       }
 
@@ -499,6 +505,8 @@ export const computer: Router.Middleware = async (ctx) => {
           args,
           blockStart: blocks[0],
           blockEnd: blocks[1],
+          blockStep,
+          timeStep,
         })
 
         outputs = rangeComputations.map(({ block, ...data }) => ({
