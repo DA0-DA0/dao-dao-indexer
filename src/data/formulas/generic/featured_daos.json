@@ -33,6 +33,18 @@
   },
   {
     "chainId": "juno-1",
+    "address": "juno1mjsgk02jyn72jm2x7fgw72uu9wj7xy0v6pnuj2jd3aq7rgeqg5qq4dnhes"
+  },
+  {
+    "chainId": "juno-1",
+    "address": "juno1gyjl26rnqqyk6cuh6nqtvx8t885jgqagusvpqpvtgaygcjg2wjdqz0rzle"
+  },
+  {
+    "chainId": "juno-1",
+    "address": "juno1n34v729jqgysm5w0unukpt4kvqu4wqyacsv4krmd40f7pz5ruzwqau7e6m"
+  },
+  {
+    "chainId": "juno-1",
     "address": "juno1h5ex5dn62arjwvwkh88r475dap8qppmmec4sgxzmtdn5tnmke3lqwpplgg"
   }
 ]
