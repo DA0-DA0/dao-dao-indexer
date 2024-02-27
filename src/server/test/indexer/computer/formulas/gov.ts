@@ -17,7 +17,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             blockHeight: 1,
             blockTimeUnixMs: 1,
             blockTimestamp,
-            version: 'version',
             data: '1-1',
           },
           {
@@ -25,7 +24,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             blockHeight: 2,
             blockTimeUnixMs: 2,
             blockTimestamp,
-            version: 'version',
             data: '1-2',
           },
           {
@@ -33,7 +31,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             blockHeight: 3,
             blockTimeUnixMs: 3,
             blockTimestamp,
-            version: 'version',
             data: '2-3',
           },
           {
@@ -41,7 +38,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             blockHeight: 4,
             blockTimeUnixMs: 4,
             blockTimestamp,
-            version: 'version',
             data: '3-4',
           },
         ])
@@ -60,7 +56,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect({
             id: '1',
-            version: 'version',
             data: '1-1',
           })
 
@@ -70,7 +65,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect({
             id: '1',
-            version: 'version',
             data: '1-2',
           })
 
@@ -81,7 +75,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           .expect(200)
           .expect({
             id: '1',
-            version: 'version',
             data: '1-2',
           })
       })
@@ -95,7 +88,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               value: {
                 id: '1',
-                version: 'version',
                 data: '1-1',
               },
               blockHeight: 1,
@@ -104,7 +96,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               value: {
                 id: '1',
-                version: 'version',
                 data: '1-2',
               },
               blockHeight: 2,
@@ -121,7 +112,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               at: '1',
               value: {
                 id: '1',
-                version: 'version',
                 data: '1-1',
               },
               blockHeight: 1,
@@ -131,7 +121,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               at: '3',
               value: {
                 id: '1',
-                version: 'version',
                 data: '1-2',
               },
               blockHeight: 2,
@@ -149,7 +138,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               value: {
                 id: '1',
-                version: 'version',
                 data: '1-1',
               },
               blockHeight: 1,
@@ -158,7 +146,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             {
               value: {
                 id: '1',
-                version: 'version',
                 data: '1-2',
               },
               blockHeight: 2,
@@ -175,7 +162,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               at: '1',
               value: {
                 id: '1',
-                version: 'version',
                 data: '1-1',
               },
               blockHeight: 1,
@@ -185,7 +171,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               at: '3',
               value: {
                 id: '1',
-                version: 'version',
                 data: '1-2',
               },
               blockHeight: 2,
@@ -203,7 +188,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             proposals: [
               {
                 id: '1',
-                version: 'version',
                 data: '1-1',
               },
             ],
@@ -218,12 +202,10 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             proposals: [
               {
                 id: '1',
-                version: 'version',
                 data: '1-2',
               },
               {
                 id: '2',
-                version: 'version',
                 data: '2-3',
               },
             ],
@@ -239,17 +221,14 @@ export const loadGovTests = (options: ComputerTestOptions) => {
             proposals: [
               {
                 id: '1',
-                version: 'version',
                 data: '1-2',
               },
               {
                 id: '2',
-                version: 'version',
                 data: '2-3',
               },
               {
                 id: '3',
-                version: 'version',
                 data: '3-4',
               },
             ],
@@ -268,7 +247,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-1',
                   },
                 ],
@@ -282,7 +260,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-2',
                   },
                 ],
@@ -296,12 +273,10 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-2',
                   },
                   {
                     id: '2',
-                    version: 'version',
                     data: '2-3',
                   },
                 ],
@@ -323,7 +298,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-1',
                   },
                 ],
@@ -338,12 +312,10 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-2',
                   },
                   {
                     id: '2',
-                    version: 'version',
                     data: '2-3',
                   },
                 ],
@@ -366,7 +338,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-1',
                   },
                 ],
@@ -380,7 +351,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-2',
                   },
                 ],
@@ -394,12 +364,10 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-2',
                   },
                   {
                     id: '2',
-                    version: 'version',
                     data: '2-3',
                   },
                 ],
@@ -421,7 +389,6 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-1',
                   },
                 ],
@@ -436,12 +403,10 @@ export const loadGovTests = (options: ComputerTestOptions) => {
                 proposals: [
                   {
                     id: '1',
-                    version: 'version',
                     data: '1-2',
                   },
                   {
                     id: '2',
-                    version: 'version',
                     data: '2-3',
                   },
                 ],

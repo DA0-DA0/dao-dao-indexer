@@ -1146,7 +1146,6 @@ export const getEnv = ({
 
     return {
       id: event.proposalId,
-      version: event.version,
       data: event.data,
     }
   }
@@ -1172,14 +1171,13 @@ export const getEnv = ({
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
               // beginning of the query. This ensures we use the most recent
-              // version of each denom.
+              // version of each proposal.
               Sequelize.literal(
                 'DISTINCT ON("proposalId") \'\''
               ) as unknown as string,
               'proposalId',
               'blockHeight',
               'blockTimeUnixMs',
-              'version',
               'data',
             ],
             where: {
@@ -1212,9 +1210,8 @@ export const getEnv = ({
     await onFetch?.(events)
 
     return events.map(
-      ({ proposalId, version, data }): FormulaProposalObject => ({
+      ({ proposalId, data }): FormulaProposalObject => ({
         id: proposalId,
-        version,
         data,
       })
     )

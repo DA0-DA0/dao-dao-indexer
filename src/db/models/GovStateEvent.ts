@@ -47,10 +47,6 @@ export class GovStateEvent extends DependableEventModel {
   @Column(DataType.DATE)
   blockTimestamp!: Date
 
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  version!: string
-
   // Base64-encoded protobuf data.
   @AllowNull(false)
   @Column(DataType.TEXT)

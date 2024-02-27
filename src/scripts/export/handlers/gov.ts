@@ -1,4 +1,4 @@
-import { fromBase64, toBase64 } from '@cosmjs/encoding'
+import { fromBase64 } from '@cosmjs/encoding'
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
@@ -8,8 +8,6 @@ import {
   State,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-import { Proposal as ProposalV1 } from '@/protobuf/codegen/cosmos/gov/v1/gov'
-import { Proposal as ProposalV1Beta1 } from '@/protobuf/codegen/cosmos/gov/v1beta1/gov'
 
 import { Handler, HandlerMaker } from '../types'
 
@@ -47,34 +45,9 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async ({
     const blockTimeUnixMs = BigInt(trace.blockTimeUnixMs).toString()
     const blockTimestamp = new Date(trace.blockTimeUnixMs)
 
-    // Convert base64 value to utf-8 string, if present.
-    let valueData
-    try {
-      valueData = trace.value && fromBase64(trace.value)
-    } catch {
+    // If no value, ignore.
+    if (!trace.value) {
       return
-    }
-
-    // If failed to parse value, skip.
-    if (!valueData) {
-      return
-    }
-
-    // Attempt v1 decoding, falling back to v1beta1. If both fail, ignore.
-    let data: any
-    let version
-    try {
-      data = toBase64(ProposalV1.toProto(ProposalV1.decode(valueData)))
-      version = 'v1'
-    } catch {
-      try {
-        data = toBase64(
-          ProposalV1Beta1.toProto(ProposalV1Beta1.decode(valueData))
-        )
-        version = 'v1beta1'
-      } catch {
-        return
-      }
     }
 
     return {
@@ -83,20 +56,18 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async ({
       blockHeight,
       blockTimeUnixMs,
       blockTimestamp,
-      version,
-      data,
+      data: trace.value,
     }
   }
 
   const process: Handler<ParsedGovStateEvent>['process'] = async (events) => {
     const exportEvents = async () =>
       // Unique index on [blockHeight, proposalId] ensures that we don't insert
-      // duplicate events. If we encounter a duplicate, we update the `version`
-      // and `data` fields in case event processing for a block was batched
-      // separately.
+      // duplicate events. If we encounter a duplicate, we update the `data`
+      // field in case event processing for a block was batched separately.
       events.length > 0
         ? await GovStateEvent.bulkCreate(events, {
-            updateOnDuplicate: ['version', 'data'],
+            updateOnDuplicate: ['data'],
           })
         : []
 

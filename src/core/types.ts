@@ -293,7 +293,6 @@ export type FormulaCommunityPoolBalancesGetter = () => Promise<
 
 export type FormulaProposalObject = {
   id: string
-  version: string
   data: string
 }
 
@@ -546,7 +545,6 @@ export type ParsedGovStateEvent = {
   blockHeight: string
   blockTimeUnixMs: string
   blockTimestamp: Date
-  version: string
   data: string
 }
 
