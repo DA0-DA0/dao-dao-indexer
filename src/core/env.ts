@@ -357,7 +357,9 @@ export const getEnv = ({
 
   const prefetch: FormulaPrefetch = async (contractAddress, ...listOfKeys) => {
     const keys = listOfKeys.map((key) =>
-      typeof key === 'string' || typeof key === 'number'
+      typeof key === 'string' ||
+      typeof key === 'number' ||
+      key instanceof Uint8Array
         ? dbKeyForKeys(key)
         : !key.map
         ? dbKeyForKeys(...key.keys)

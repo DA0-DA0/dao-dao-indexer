@@ -1,3 +1,5 @@
+import { fromBech32 } from '@cosmjs/encoding'
+
 import { ContractFormula } from '@/core'
 
 import { Expiration } from '../../../types'
@@ -36,13 +38,26 @@ interface AccountBalance {
 }
 
 export const balance: ContractFormula<string, { address: string }> = {
-  compute: async ({ contractAddress, get, args: { address } }) => {
+  compute: async ({
+    contractAddress,
+    get,
+    contractMatchesCodeIdKeys,
+    args: { address },
+  }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
+    // cw20-base before v0.6.0-alpha3 stores addresses as raw bech32 data
+    // instead of addr strings
+    const isLegacy = await contractMatchesCodeIdKeys(
+      contractAddress,
+      'cw20-base-legacy'
+    )
+    const addressData = isLegacy ? fromBech32(address).data : address
+
     return (
-      (await get<string>(contractAddress, 'balance', address)) ??
+      (await get<string>(contractAddress, 'balance', addressData)) ??
       // If no balance is found, return 0.
       '0'
     )

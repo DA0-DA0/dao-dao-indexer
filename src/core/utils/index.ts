@@ -21,7 +21,9 @@ export const base64KeyToEventKey = (key: string): string =>
 export const eventKeyToBase64 = (key: string): string =>
   Buffer.from(key.split(',').map((c) => parseInt(c, 10))).toString('base64')
 
-export const dbKeyForKeys = (...keys: (string | number)[]): string => {
+export const dbKeyForKeys = (
+  ...keys: (string | number | Uint8Array)[]
+): string => {
   const bufferKeys = keys.map(keyToBuffer)
   const namespaces = bufferKeys.slice(0, -1)
   const key = bufferKeys.slice(-1)[0]
@@ -45,8 +47,8 @@ export const dbKeyForKeys = (...keys: (string | number)[]): string => {
   return buffer.join(',')
 }
 
-const keyToBuffer = (key: string | number): Buffer => {
-  if (typeof key === 'string') {
+export const keyToBuffer = (key: string | number | Uint8Array): Buffer => {
+  if (typeof key === 'string' || key instanceof Uint8Array) {
     return Buffer.from(key)
   }
 

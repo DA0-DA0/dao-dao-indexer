@@ -132,18 +132,19 @@ export type MeilisearchIndexUpdate = {
   }
 }
 
+export type KeyInput = string | number | Uint8Array
+
 export type FormulaGetter = <T>(
   contractAddress: string,
-  ...keys: (string | number)[]
+  ...keys: KeyInput[]
 ) => Promise<T | undefined>
 
 export type FormulaPrefetch = (
   contractAddress: string,
   ...listOfKeys: (
-    | string
-    | number
+    | KeyInput
     | {
-        keys: (string | number)[]
+        keys: KeyInput[]
         map?: boolean
       }
   )[]
@@ -154,7 +155,7 @@ export type FormulaMapGetter = <
   V = any
 >(
   contractAddress: string,
-  name: string | (string | number)[],
+  name: string | KeyInput[],
   options?: {
     // Default: 'string'. If 'string', the map key will be decoded assuming it's
     // a utf-8 string. If 'number', the map key will be decoded assuming it's a
@@ -171,7 +172,7 @@ export type FormulaDateGetter = (
 
 export type FormulaDateWithValueMatchGetter = (
   contractAddress: string,
-  keys: (string | number)[],
+  keys: KeyInput[],
   whereClause: any
 ) => Promise<Date | undefined>
 
