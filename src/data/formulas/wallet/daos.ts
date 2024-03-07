@@ -34,13 +34,48 @@ export const memberOf: WalletFormula<
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
-    // dao-voting-cw20-staked contracts using one of the cw20-stake contracts.
+    // oraichain-cw20-staking contracts where the address has a staked balance.
+    const oraichainCw20StakingContracts =
+      (
+        await getTransformationMatches(
+          undefined,
+          `stakedBalance:*:${walletAddress}`,
+          {
+            [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '0' }],
+          },
+          getCodeIdsForKeys('oraichain-cw20-staking')
+        )
+      )?.map(
+        ({ name, contractAddress }) =>
+          // Map to <staking contract>:<token contract>.
+          `${contractAddress}:${name.split(':')[1]}`
+      ) ?? []
+
+    // oraichain-cw20-staking-proxy-snapshot contracts for these contracts and
+    // tokens.
+    const oraichainCw20StakingProxySnapshotContracts =
+      (oraichainCw20StakingContracts.length > 0 &&
+        (
+          await getTransformationMatches(
+            undefined,
+            'proxyFor',
+            oraichainCw20StakingContracts,
+            getCodeIdsForKeys('oraichain-cw20-staking-proxy-snapshot')
+          )
+        )?.map(({ contractAddress }) => contractAddress)) ||
+      []
+
+    // dao-voting-cw20-staked contracts using one of the cw20-stake or
+    // oraichain-cw20-staking-proxy-snapshot contracts.
     const daoVotingCw20StakedContracts =
       (
         await getTransformationMatches(
           undefined,
           'stakingContract',
-          cw20StakeContracts,
+          [
+            ...cw20StakeContracts,
+            ...oraichainCw20StakingProxySnapshotContracts,
+          ],
           getCodeIdsForKeys('dao-voting-cw20-staked')
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []

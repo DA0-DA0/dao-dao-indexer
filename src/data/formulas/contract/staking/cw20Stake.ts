@@ -1,6 +1,6 @@
-import { ContractFormula } from '@/core'
+import { fromBech32 } from '@cosmjs/encoding'
 
-import { info } from '../common'
+import { ContractFormula } from '@/core'
 
 export type StakerBalance = {
   address: string
@@ -12,7 +12,14 @@ export const config: ContractFormula<any | undefined> = {
     await get(contractAddress, 'config'),
 }
 
-export const stakedBalance: ContractFormula<string, { address: string }> = {
+export const stakedBalance: ContractFormula<
+  string,
+  {
+    address: string
+    // Required when querying oraichain-cw20-staking contract directly.
+    oraichainStakingToken?: string
+  }
+> = {
   filter: {
     codeIdsKeys: [
       'cw20-stake',
@@ -29,41 +36,80 @@ export const stakedBalance: ContractFormula<string, { address: string }> = {
       throw new Error('missing `address`')
     }
 
-    const isOraichainProxy = await isOraichainCw20StakingProxySnapshot.compute(
-      env
-    )
+    let contractAddress = env.contractAddress
+    const keys = ['stakedBalance']
+    if (
+      await env.contractMatchesCodeIdKeys(
+        contractAddress,
+        'oraichain-cw20-staking-proxy-snapshot'
+      )
+    ) {
+      const proxyConfig = await config.compute(env)
+      if (!proxyConfig) {
+        throw new Error('missing proxy config')
+      }
+      contractAddress = proxyConfig.staking_contract
+      keys.push(proxyConfig.asset_key)
+    } else if (
+      await env.contractMatchesCodeIdKeys(
+        contractAddress,
+        'oraichain-cw20-staking'
+      )
+    ) {
+      if (!env.args.oraichainStakingToken) {
+        throw new Error('missing `oraichainStakingToken`')
+      }
+      keys.push(env.args.oraichainStakingToken)
+    }
 
-    // Get staking contract address from config if Oraichain proxy.
-    const contractAddress = isOraichainProxy
-      ? (await config.compute(env)).staking_contract
-      : env.contractAddress
+    keys.push(address)
 
     return (
       (
         await getTransformationMatch<string | undefined>(
           contractAddress,
-          `stakedBalance:${address}`
+          keys.join(':')
         )
       )?.value ?? '0'
     )
   },
 }
 
-export const totalStaked: ContractFormula<string> = {
+export const totalStaked: ContractFormula<
+  string,
+  {
+    // Required when querying oraichain-cw20-staking contract directly.
+    oraichainStakingToken?: string
+  }
+> = {
   compute: async (env) => {
-    const isOraichainProxy = await isOraichainCw20StakingProxySnapshot.compute(
-      env
-    )
+    let contractAddress = env.contractAddress
+    const keys: (string | Uint8Array)[] = ['total_staked']
+    if (
+      await env.contractMatchesCodeIdKeys(
+        contractAddress,
+        'oraichain-cw20-staking-proxy-snapshot'
+      )
+    ) {
+      const proxyConfig = await config.compute(env)
+      if (!proxyConfig) {
+        throw new Error('missing proxy config')
+      }
+      contractAddress = proxyConfig.staking_contract
+      keys.push(fromBech32(proxyConfig.asset_key).data)
+    } else if (
+      await env.contractMatchesCodeIdKeys(
+        contractAddress,
+        'oraichain-cw20-staking'
+      )
+    ) {
+      if (!env.args.oraichainStakingToken) {
+        throw new Error('missing `oraichainStakingToken`')
+      }
+      keys.push(fromBech32(env.args.oraichainStakingToken).data)
+    }
 
-    // Get staking contract address from config if Oraichain proxy.
-    const contractAddress = isOraichainProxy
-      ? (await config.compute(env)).staking_contract
-      : env.contractAddress
-
-    return (
-      (await env.get<string | undefined>(contractAddress, 'total_staked')) ||
-      '0'
-    )
+    return (await env.get<string | undefined>(contractAddress, ...keys)) || '0'
   },
 }
 
@@ -76,11 +122,14 @@ export const stakedValue: ContractFormula<string, { address: string }> = {
       throw new Error('missing `address`')
     }
 
-    await env.prefetch(env.contractAddress, 'balance', 'total_staked')
-
     const balance = Number(await totalValue.compute(env))
     const staked = Number(await stakedBalance.compute(env))
-    const total = Number(await totalStaked.compute(env))
+    const total = Number(
+      await totalStaked.compute({
+        ...env,
+        args: {},
+      })
+    )
 
     if (balance === 0 || staked === 0 || total === 0) {
       return '0'
@@ -136,6 +185,8 @@ export const topStakers: ContractFormula<
   StakerBalance[],
   {
     limit?: string
+    // Required when querying oraichain-cw20-staking contract directly.
+    oraichainStakingToken?: string
   }
 > = {
   filter: {
@@ -151,20 +202,38 @@ export const topStakers: ContractFormula<
       args: { limit },
     } = env
 
-    // Get staking contract address from config if Oraichain proxy.
-    const isOraichainProxy = await isOraichainCw20StakingProxySnapshot.compute(
-      env
-    )
-    const contractAddress = isOraichainProxy
-      ? (await config.compute(env)).staking_contract
-      : env.contractAddress
+    let contractAddress = env.contractAddress
+    const keys = ['stakedBalance']
+    if (
+      await env.contractMatchesCodeIdKeys(
+        contractAddress,
+        'oraichain-cw20-staking-proxy-snapshot'
+      )
+    ) {
+      const proxyConfig = await config.compute(env)
+      if (!proxyConfig) {
+        throw new Error('missing proxy config')
+      }
+      contractAddress = proxyConfig.staking_contract
+      keys.push(proxyConfig.asset_key)
+    } else if (
+      await env.contractMatchesCodeIdKeys(
+        contractAddress,
+        'oraichain-cw20-staking'
+      )
+    ) {
+      if (!env.args.oraichainStakingToken) {
+        throw new Error('missing `oraichainStakingToken`')
+      }
+      keys.push(env.args.oraichainStakingToken)
+    }
 
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     const stakers =
       (await getTransformationMap<string, string>(
         contractAddress,
-        'stakedBalance'
+        keys.join(':')
       )) ?? {}
     const stakes = Object.entries(stakers)
       // Remove zero balances.
@@ -178,13 +247,4 @@ export const topStakers: ContractFormula<
       balance,
     }))
   },
-}
-
-export const isOraichainCw20StakingProxySnapshot: ContractFormula<boolean> = {
-  compute: async (env) =>
-    (
-      await info.compute({
-        ...env,
-      })
-    )?.contract === 'cw20-staking-proxy-snapshot',
 }

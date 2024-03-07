@@ -66,26 +66,39 @@ export const keyToBuffer = (key: string | number | Uint8Array): Buffer => {
 export const dbKeyToKeys = (
   key: string,
   withNumericKeys: boolean[]
-): (string | number)[] => {
+): (string | number)[] =>
+  dbKeyToKeysAdvanced(
+    key,
+    withNumericKeys.map((numeric) => (numeric ? 'number' : 'string'))
+  ) as (string | number)[]
+
+export const dbKeyToKeysAdvanced = (
+  key: string,
+  withTypes: ('string' | 'number' | 'bytes')[]
+): (string | number | Uint8Array)[] => {
   const buffer = Buffer.from(key.split(',').map((c) => parseInt(c, 10)))
-  const keys: (string | number)[] = []
-  const addKey = (buffer: Buffer, numeric: boolean) =>
+  const keys: (string | number | Uint8Array)[] = []
+  const addKey = (buffer: Buffer, type: 'string' | 'number' | 'bytes') =>
     keys.push(
-      numeric ? parseInt(buffer.toString('hex'), 16) : buffer.toString('utf-8')
+      type === 'string'
+        ? buffer.toString('utf-8')
+        : type === 'number'
+        ? parseInt(buffer.toString('hex'), 16)
+        : new Uint8Array(buffer)
     )
 
-  const namespaces = withNumericKeys.slice(0, -1)
+  const namespaces = withTypes.slice(0, -1)
 
   let offset = 0
-  for (const isNumeric of namespaces) {
+  for (const type of namespaces) {
     const namespaceLength = buffer.readUInt16BE(offset)
     offset += 2
     const namespace = buffer.subarray(offset, offset + namespaceLength)
     offset += namespaceLength
-    addKey(namespace, isNumeric)
+    addKey(namespace, type)
   }
   // Add final key.
-  addKey(buffer.subarray(offset), withNumericKeys[withNumericKeys.length - 1])
+  addKey(buffer.subarray(offset), withTypes[withTypes.length - 1])
 
   return keys
 }

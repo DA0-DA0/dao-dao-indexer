@@ -1,7 +1,7 @@
 import { ParsedWasmStateEvent, Transformer } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
-const defaultGetValue = (event: ParsedWasmStateEvent) =>
+export const defaultGetValue = (event: ParsedWasmStateEvent) =>
   // If value is null but this is not a delete event, store an empty string
   // instead so this transformation doesn't look like a delete.
   event.valueJson === null && !event.delete ? '' : event.valueJson
