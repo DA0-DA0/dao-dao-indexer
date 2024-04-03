@@ -67,6 +67,8 @@ export type DumpState = {
   proposalCount?: number
   // Map polytone note address to remote address.
   polytoneProxies?: Record<string, string>
+  // Hide from search if storage item `hideFromSearch` exists.
+  hideFromSearch?: boolean
 }
 
 export type Cw20Balance = {
@@ -199,6 +201,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       createdAt,
       proposalCountResponse,
       polytoneProxiesResponse,
+      hideFromSearchValue,
     ] = await Promise.all([
       admin.compute(env),
       config.compute(env),
@@ -246,6 +249,12 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       instantiatedAt.compute(env),
       proposalCount.compute(env),
       polytoneProxies.compute(env),
+      item.compute({
+        ...env,
+        args: {
+          key: 'hideFromSearch',
+        },
+      }),
     ])
 
     // If no config, this must not be a DAO core contract.
@@ -318,6 +327,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       },
       proposalCount: proposalCountResponse,
       polytoneProxies: polytoneProxiesResponse,
+      hideFromSearch: !!hideFromSearchValue,
     }
   },
 }
