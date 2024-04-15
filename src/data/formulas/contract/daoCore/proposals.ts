@@ -1,4 +1,5 @@
 import { ContractFormula } from '@/core'
+import { loadConfig } from '@/core/config'
 
 import {
   listProposals as multipleChoiceListProposals,
@@ -16,7 +17,11 @@ import { getUniqueSubDaosInTree } from './utils'
 
 export type OpenProposal = {
   proposalModuleAddress: string
-  proposals: (ProposalResponse<any> & { voted?: boolean })[]
+  prefix: string
+  proposals: (ProposalResponse<any> & {
+    url: string
+    voted?: boolean
+  })[]
 }
 
 // Return open proposals and whether or not the given address voted. If no
@@ -28,6 +33,7 @@ export const openProposals: ContractFormula<
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
+    const { daoDaoBase } = loadConfig()
     const proposalModules = await activeProposalModules.compute(env)
 
     if (!proposalModules) {
@@ -37,7 +43,7 @@ export const openProposals: ContractFormula<
     return (
       await Promise.all(
         proposalModules.map(
-          async ({ address: proposalModuleAddress, info }) => {
+          async ({ address: proposalModuleAddress, info, prefix }) => {
             if (!info) {
               return undefined
             }
@@ -52,7 +58,13 @@ export const openProposals: ContractFormula<
             return (
               openProposals && {
                 proposalModuleAddress,
-                proposals: openProposals,
+                prefix,
+                proposals: openProposals.map((proposal) => ({
+                  url:
+                    daoDaoBase +
+                    `/dao/${env.contractAddress}/proposals/${prefix}${proposal.id}`,
+                  ...proposal,
+                })),
               }
             )
           }
