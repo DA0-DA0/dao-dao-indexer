@@ -301,9 +301,13 @@ export type FormulaProposalGetter = (
   proposalId: string
 ) => Promise<FormulaProposalObject | undefined>
 
-export type FormulaProposalsGetter = () => Promise<
-  FormulaProposalObject[] | undefined
->
+export type FormulaProposalsGetter = (
+  ascending?: boolean,
+  limit?: number,
+  offset?: number
+) => Promise<FormulaProposalObject[] | undefined>
+
+export type FormulaProposalCountGetter = () => Promise<number>
 
 export type Env<Args extends Record<string, string> = {}> = {
   chainId: string
@@ -335,6 +339,7 @@ export type Env<Args extends Record<string, string> = {}> = {
   getBalances: FormulaBalancesGetter
   getProposal: FormulaProposalGetter
   getProposals: FormulaProposalsGetter
+  getProposalCount: FormulaProposalCountGetter
   getCommunityPoolBalances: FormulaCommunityPoolBalancesGetter
 }
 

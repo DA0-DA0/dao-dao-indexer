@@ -23,25 +23,30 @@ export const proposals: GenericFormula<
     limit?: string
   }
 > = {
-  compute: async ({ getProposals, args: { offset, limit } }) => {
+  compute: async ({
+    getProposals,
+    getProposalCount,
+    args: { offset, limit },
+  }) => {
     const offsetNum = offset ? Math.max(0, Number(offset)) : 0
-    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+    const limitNum = limit ? Math.max(0, Number(limit)) : undefined
 
     if (isNaN(offsetNum)) {
       throw new Error('invalid `offset`')
     }
-    if (isNaN(limitNum)) {
+    if (limitNum !== undefined && isNaN(limitNum)) {
       throw new Error('invalid `limit`')
     }
 
     // Sort ascending.
-    const proposals = ((await getProposals()) || []).sort((a, b) =>
-      Number(BigInt(a.id) - BigInt(b.id))
-    )
+    const proposals = (await getProposals(true, limitNum, offsetNum)) || []
+
+    // Should be cached since all proposals were just fetched above.
+    const total = await getProposalCount()
 
     return {
-      proposals: proposals.slice(offsetNum, offsetNum + limitNum),
-      total: proposals.length,
+      proposals,
+      total,
     }
   },
 }
@@ -56,25 +61,30 @@ export const reverseProposals: GenericFormula<
     limit?: string
   }
 > = {
-  compute: async ({ getProposals, args: { offset, limit } }) => {
+  compute: async ({
+    getProposals,
+    getProposalCount,
+    args: { offset, limit },
+  }) => {
     const offsetNum = offset ? Math.max(0, Number(offset)) : 0
-    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+    const limitNum = limit ? Math.max(0, Number(limit)) : undefined
 
     if (isNaN(offsetNum)) {
       throw new Error('invalid `offset`')
     }
-    if (isNaN(limitNum)) {
+    if (limitNum !== undefined && isNaN(limitNum)) {
       throw new Error('invalid `limit`')
     }
 
     // Sort descending.
-    const proposals = ((await getProposals()) || []).sort((a, b) =>
-      Number(BigInt(b.id) - BigInt(a.id))
-    )
+    const proposals = (await getProposals(false, limitNum, offsetNum)) || []
+
+    // Should be cached since all proposals were just fetched above.
+    const total = await getProposalCount()
 
     return {
-      proposals: proposals.slice(offsetNum, offsetNum + limitNum),
-      total: proposals.length,
+      proposals,
+      total,
     }
   },
 }

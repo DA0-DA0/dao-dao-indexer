@@ -7,6 +7,8 @@ import {
   AccountKey,
   AccountKeyCredit,
   AccountKeyCreditPaymentSource,
+  GovStateEvent,
+  State,
   loadDb,
 } from '@/db'
 
@@ -23,14 +25,17 @@ export const main = async () => {
   // Load config with config option.
   loadConfig(_config)
 
+  const dataSequelize = await loadDb({
+    type: DbType.Data,
+  })
   const accountsSequelize = await loadDb({
     type: DbType.Accounts,
   })
 
-  // Set up test account.
+  // Set up dev account.
   const [testAccount] = await Account.findOrCreate({
     where: {
-      publicKey: 'test',
+      publicKey: 'dev',
     },
     include: [
       {
@@ -43,24 +48,64 @@ export const main = async () => {
       },
     ],
   })
-  // Create test account key if it doesn't exist.
+  // Create dev account key if it doesn't exist.
   const keys = (await testAccount.$get('keys')) ?? []
-  if (!keys.some(({ name }) => name === 'test')) {
+  if (!keys.some(({ name }) => name === 'dev')) {
     const accountKey = await testAccount.$create<AccountKey>('key', {
-      name: 'test',
-      description: 'test',
-      hashedKey: AccountKey.hashKey('test'),
+      name: 'dev',
+      description: 'dev',
+      hashedKey: AccountKey.hashKey('dev'),
     })
-    // Create test account key infinite test credit.
+    // Create dev account key infinite dev credit.
     await accountKey.$create<AccountKeyCredit>('credit', {
       paymentSource: AccountKeyCreditPaymentSource.Manual,
-      paymentId: 'test',
+      paymentId: 'dev',
       paidAt: new Date(),
       amount: -1,
     })
   }
 
+  // Add gov.
+  const blockTimestamp = new Date()
+  await GovStateEvent.bulkCreate([
+    {
+      proposalId: '1',
+      blockHeight: 1,
+      blockTimeUnixMs: 1,
+      blockTimestamp,
+      data: '1-1',
+    },
+    {
+      proposalId: '1',
+      blockHeight: 2,
+      blockTimeUnixMs: 2,
+      blockTimestamp,
+      data: '1-2',
+    },
+    {
+      proposalId: '2',
+      blockHeight: 3,
+      blockTimeUnixMs: 3,
+      blockTimestamp,
+      data: '2-3',
+    },
+    {
+      proposalId: '3',
+      blockHeight: 4,
+      blockTimeUnixMs: 4,
+      blockTimestamp,
+      data: '3-4',
+    },
+  ])
+
+  await (await State.getSingleton())!.update({
+    latestBlockHeight: 4,
+    latestBlockTimeUnixMs: 4,
+    lastGovBlockHeightExported: 4,
+  })
+
   await accountsSequelize.close()
+  await dataSequelize.close()
 }
 
 main()
