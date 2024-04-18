@@ -9,7 +9,7 @@ import { GovStateEvent } from '@/db'
 
 export const govProposals: MeilisearchIndexer = {
   id: 'gov-proposals',
-  index: 'gov_proposals',
+  index: 'gov-proposals',
   automatic: true,
   filterableAttributes: [
     'value.id',
