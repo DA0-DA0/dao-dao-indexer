@@ -297,6 +297,13 @@ export type FormulaProposalObject = {
   data: string
 }
 
+export type FormulaDecodedProposalObject = {
+  id: string
+  data: string
+  title: string
+  description: string
+}
+
 export type FormulaProposalGetter = (
   proposalId: string
 ) => Promise<FormulaProposalObject | undefined>

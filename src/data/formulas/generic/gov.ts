@@ -1,4 +1,12 @@
-import { FormulaProposalObject, GenericFormula } from '@/core'
+import { fromBase64 } from '@cosmjs/encoding'
+
+import {
+  FormulaDecodedProposalObject,
+  FormulaProposalObject,
+  GenericFormula,
+} from '@/core'
+import { Proposal as ProposalV1 } from '@/protobuf/codegen/cosmos/gov/v1/gov'
+import { Proposal as ProposalV1Beta1 } from '@/protobuf/codegen/cosmos/gov/v1beta1/gov'
 
 export const proposal: GenericFormula<
   FormulaProposalObject | undefined,
@@ -10,6 +18,53 @@ export const proposal: GenericFormula<
     }
 
     return await getProposal(id)
+  },
+}
+
+export const decodedProposal: GenericFormula<
+  FormulaDecodedProposalObject | undefined,
+  { id: string }
+> = {
+  compute: async ({ getProposal, args: { id } }) => {
+    if (!id) {
+      throw new Error('missing `id`')
+    }
+
+    const proposal = await getProposal(id)
+
+    let decoded: ProposalV1 | ProposalV1Beta1 | undefined
+    if (proposal) {
+      try {
+        decoded = ProposalV1.decode(fromBase64(proposal.data))
+      } catch {
+        try {
+          decoded = ProposalV1Beta1.decode(fromBase64(proposal.data))
+        } catch {}
+      }
+    }
+
+    const title = decoded
+      ? 'title' in decoded
+        ? decoded.title
+        : 'content' in decoded && decoded.content
+        ? decoded.content.title
+        : '<failed to decode>'
+      : '<failed to decode>'
+    const description = decoded
+      ? 'summary' in decoded
+        ? decoded.summary
+        : 'content' in decoded && decoded.content
+        ? decoded.content.description
+        : '<failed to decode>'
+      : '<failed to decode>'
+
+    return (
+      proposal && {
+        ...proposal,
+        title,
+        description,
+      }
+    )
   },
 }
 

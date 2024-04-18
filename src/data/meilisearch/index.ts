@@ -1,6 +1,11 @@
 import { MeilisearchIndexer } from '@/core'
 
-import { daos, proposals } from './daos'
+import { daoProposals, daos } from './daos'
+import { govProposals } from './gov'
 
 // Add meilisearch indexers here.
-export const meilisearchIndexers: MeilisearchIndexer[] = [daos, proposals]
+export const meilisearchIndexers: MeilisearchIndexer[] = [
+  daos,
+  daoProposals,
+  govProposals,
+]

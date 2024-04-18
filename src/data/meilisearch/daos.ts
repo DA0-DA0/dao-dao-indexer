@@ -53,8 +53,10 @@ export const daos: MeilisearchIndexer = {
   },
 }
 
-export const proposals: MeilisearchIndexer = {
-  id: 'proposals',
+export const daoProposals: MeilisearchIndexer = {
+  id: 'dao-proposals',
+  // Keep `proposals` for backwards compatibility reasons, even though the ID is
+  // `dao-proposals`.
   index: 'proposals',
   automatic: true,
   filterableAttributes: [
