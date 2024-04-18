@@ -5,7 +5,10 @@ import {
   FormulaProposalObject,
   GenericFormula,
 } from '@/core'
-import { Proposal as ProposalV1 } from '@/protobuf/codegen/cosmos/gov/v1/gov'
+import {
+  ProposalStatus,
+  Proposal as ProposalV1,
+} from '@/protobuf/codegen/cosmos/gov/v1/gov'
 import { Proposal as ProposalV1Beta1 } from '@/protobuf/codegen/cosmos/gov/v1beta1/gov'
 
 export const proposal: GenericFormula<
@@ -57,12 +60,18 @@ export const decodedProposal: GenericFormula<
         ? decoded.content.description
         : '<failed to decode>'
       : '<failed to decode>'
+    const status = decoded?.status || ProposalStatus.UNRECOGNIZED
 
     return (
       proposal && {
         ...proposal,
         title,
         description,
+        status,
+        submitTime: decoded?.submitTime?.getTime(),
+        depositEndTime: decoded?.depositEndTime?.getTime(),
+        votingStartTime: decoded?.votingStartTime?.getTime(),
+        votingEndTime: decoded?.votingEndTime?.getTime(),
       }
     )
   },

@@ -10,6 +10,7 @@ import {
   WasmStateEvent,
   WasmTxEvent,
 } from '@/db'
+import { ProposalStatus } from '@/protobuf/codegen/cosmos/gov/v1/gov'
 
 type DB = { uri?: string } & Pick<
   SequelizeOptions,
@@ -302,6 +303,11 @@ export type FormulaDecodedProposalObject = {
   data: string
   title: string
   description: string
+  status: ProposalStatus
+  submitTime?: number
+  depositEndTime?: number
+  votingStartTime?: number
+  votingEndTime?: number
 }
 
 export type FormulaProposalGetter = (

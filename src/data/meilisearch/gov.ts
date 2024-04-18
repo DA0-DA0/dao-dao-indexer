@@ -11,7 +11,19 @@ export const govProposals: MeilisearchIndexer = {
   id: 'gov-proposals',
   index: 'gov_proposals',
   automatic: true,
-  filterableAttributes: ['value.id', 'value.title', 'value.description'],
+  filterableAttributes: [
+    'value.id',
+    'value.title',
+    'value.description',
+    'value.status',
+  ],
+  sortableAttributes: [
+    'value.id',
+    'value.submitTime',
+    'value.depositEndTime',
+    'value.votingStartTime',
+    'value.votingEndTime',
+  ],
   matches: ({ event }) => {
     if (!(event instanceof GovStateEvent)) {
       return
