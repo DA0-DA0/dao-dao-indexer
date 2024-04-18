@@ -299,7 +299,7 @@ export type FormulaProposalObject = {
 }
 
 export type FormulaDecodedProposalObject = {
-  id: string
+  id: number
   data: string
   title: string
   description: string

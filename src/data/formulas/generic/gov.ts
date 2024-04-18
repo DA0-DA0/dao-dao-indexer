@@ -64,7 +64,8 @@ export const decodedProposal: GenericFormula<
 
     return (
       proposal && {
-        ...proposal,
+        id: Number(proposal.id),
+        data: proposal.data,
         title,
         description,
         status,
