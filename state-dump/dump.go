@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
@@ -48,7 +49,7 @@ var (
 func main() {
 	args := os.Args
 	if len(args) < 4 {
-		fmt.Println("Usage: dump <home_dir> <output> <store_name> [address]")
+		fmt.Println("Usage: dump <home_dir> <output> <store_name> [address(es)]")
 		os.Exit(1)
 	}
 
@@ -56,13 +57,19 @@ func main() {
 	output := args[2]
 	storeName := args[3]
 
-	var addressBech32Data []byte
+	var addressesBech32Data [][]byte
 	if len(args) > 4 {
-		_, bech32Data, err := bech32.DecodeToBase256(args[4])
-		if err != nil {
-			panic(err)
+		// split comma-separated list of addresses
+		addresses := strings.Split(args[4], ",")
+
+		for _, address := range addresses {
+			_, bech32Data, err := bech32.DecodeToBase256(address)
+			if err != nil {
+				panic(err)
+			}
+
+			addressesBech32Data = append(addressesBech32Data, bech32Data)
 		}
-		addressBech32Data = bech32Data
 	}
 
 	out, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
@@ -119,13 +126,29 @@ func main() {
 
 		// Make sure key is for the given address. Different stores have the address
 		// in a different position.
-		if len(addressBech32Data) > 0 {
+		if len(addressesBech32Data) > 0 {
 			if storeName == "wasm" {
-				if !bytes.HasPrefix(key[1:], addressBech32Data) {
+				found := false
+				for _, addressBech32Data := range addressesBech32Data {
+					if bytes.HasPrefix(key[1:], addressBech32Data) {
+						found = true
+						break
+					}
+				}
+
+				if !found {
 					continue
 				}
 			} else if storeName == "bank" {
-				if !bytes.HasPrefix(key[2:], addressBech32Data) {
+				found := false
+				for _, addressBech32Data := range addressesBech32Data {
+					if bytes.HasPrefix(key[2:], addressBech32Data) {
+						found = true
+						break
+					}
+				}
+
+				if !found {
 					continue
 				}
 			}
