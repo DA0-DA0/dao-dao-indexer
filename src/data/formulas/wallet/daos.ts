@@ -1,13 +1,16 @@
 import { Op } from 'sequelize'
 
 import { WalletFormula } from '@/core'
+import { ContractInfo } from '@/data/types'
 
+import { info } from '../contract'
 import { config, votingModule } from '../contract/daoCore/base'
 import { proposalCount } from '../contract/daoCore/proposals'
 
 export const memberOf: WalletFormula<
   {
     dao: string
+    info: ContractInfo
     votingModule: string
     config: any
     proposalCount: number
@@ -165,6 +168,7 @@ export const memberOf: WalletFormula<
     const daoStates = await Promise.all(
       daos.map((daoAddress) =>
         Promise.all([
+          info.compute({ ...env, contractAddress: daoAddress }),
           config.compute({ ...env, contractAddress: daoAddress }),
           votingModule.compute({ ...env, contractAddress: daoAddress }),
           proposalCount.compute({ ...env, contractAddress: daoAddress }),
@@ -172,15 +176,17 @@ export const memberOf: WalletFormula<
       )
     )
 
-    return daoStates.flatMap(([config, votingModule, proposalCount], index) =>
-      config && votingModule
-        ? {
-            dao: daos[index],
-            config,
-            votingModule,
-            proposalCount: proposalCount || 0,
-          }
-        : []
+    return daoStates.flatMap(
+      ([info, config, votingModule, proposalCount], index) =>
+        info && config && votingModule
+          ? {
+              dao: daos[index],
+              info,
+              config,
+              votingModule,
+              proposalCount: proposalCount || 0,
+            }
+          : []
     )
   },
 }
