@@ -10,4 +10,11 @@ module.exports = {
   roots: ['src'],
   modulePaths: [compilerOptions.baseUrl],
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
+  // Transform @dao-dao/* packages since they are not transpiled.
+  transform: {
+    'node_modules/@dao-dao/.+\\.tsx?': ['ts-jest'],
+  },
+  // node_modules is ignored by default, so override that behavior and allow
+  // @dao-dao/* packages to be transformed by using a negative lookahead.
+  transformIgnorePatterns: ['node_modules/(?!@dao-dao/.+\\.tsx?)'],
 }
