@@ -1,3 +1,4 @@
+import { ProposalStatus } from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1/gov'
 import { Options as PusherOptions } from 'pusher'
 import { WhereOptions } from 'sequelize'
 import { SequelizeOptions } from 'sequelize-typescript'
@@ -9,7 +10,6 @@ import {
   State,
   WasmTxEvent,
 } from '@/db'
-import { ProposalStatus } from '@/protobuf/codegen/cosmos/gov/v1/gov'
 
 type DB = { uri?: string } & Pick<
   SequelizeOptions,

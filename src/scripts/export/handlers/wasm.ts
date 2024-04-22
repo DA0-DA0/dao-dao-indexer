@@ -1,4 +1,5 @@
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
+import { ContractInfo } from '@dao-dao/types/protobuf/codegen/cosmwasm/wasm/v1/types'
 import * as Sentry from '@sentry/node'
 import retry from 'async-await-retry'
 import { LRUCache } from 'lru-cache'
@@ -13,7 +14,6 @@ import {
   WasmStateEventTransformation,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-import { ContractInfo } from '@/protobuf/codegen/cosmwasm/wasm/v1/types'
 
 import { Handler, HandlerMaker } from '../types'
 import { queueWebhooks } from '../webhooks'

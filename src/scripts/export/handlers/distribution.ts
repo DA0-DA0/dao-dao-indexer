@@ -1,4 +1,6 @@
 import { fromBase64 } from '@cosmjs/encoding'
+import { DecCoin } from '@dao-dao/types/protobuf/codegen/cosmos/base/v1beta1/coin'
+import { FeePool } from '@dao-dao/types/protobuf/codegen/cosmos/distribution/v1beta1/distribution'
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
@@ -8,8 +10,6 @@ import {
   State,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-import { DecCoin } from '@/protobuf/codegen/cosmos/base/v1beta1/coin'
-import { FeePool } from '@/protobuf/codegen/cosmos/distribution/v1beta1/distribution'
 
 import { Handler, HandlerMaker } from '../types'
 

@@ -9,6 +9,7 @@ import { Block, FormulaType, SerializedBlock } from '../types'
 
 export * from './block'
 export * from './chain'
+export * from './gov'
 export * from './objectMatchesStructure'
 
 // Convert base64 string to comma-separated list of bytes. See explanation in

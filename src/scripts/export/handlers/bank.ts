@@ -1,4 +1,5 @@
 import { fromBase64, fromUtf8, toBech32 } from '@cosmjs/encoding'
+import { Coin } from '@dao-dao/types/protobuf/codegen/cosmos/base/v1beta1/coin'
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
@@ -8,7 +9,6 @@ import {
   State,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-import { Coin } from '@/protobuf/codegen/cosmos/base/v1beta1/coin'
 
 import { Handler, HandlerMaker } from '../types'
 
