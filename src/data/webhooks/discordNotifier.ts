@@ -1,5 +1,6 @@
 import { WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
+import { WasmStateEvent } from '@/db'
 
 import {
   activeProposalModules,
@@ -14,8 +15,12 @@ const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
 const KEY_PREFIX_PROPOSALS_V2 = dbKeyForKeys('proposals_v2', '')
 
 // Fire webhook when a proposal is created.
-export const makeProposalCreated: WebhookMaker = (config, state) => ({
+export const makeProposalCreated: WebhookMaker<WasmStateEvent> = (
+  config,
+  state
+) => ({
   filter: {
+    EventType: WasmStateEvent,
     codeIdsKeys: CODE_IDS_KEYS,
     matches: (event) =>
       // Starts with proposals or proposals_v2.
@@ -23,8 +28,11 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2)) &&
       event.valueJson.status === StatusEnum.Open,
   },
-  endpoint: async (_, env) => {
-    const daoAddress = await getDaoAddressForProposalModule(env)
+  endpoint: async (event, env) => {
+    const daoAddress = await getDaoAddressForProposalModule({
+      ...env,
+      contractAddress: event.contractAddress,
+    })
     if (!daoAddress) {
       return
     }
@@ -35,15 +43,18 @@ export const makeProposalCreated: WebhookMaker = (config, state) => ({
       method: 'POST',
     }
   },
-  getValue: async (event, getLastValue, env) => {
+  getValue: async (event, getLastEvent, env) => {
     // Only fire the webhook the first time this exists.
-    if ((await getLastValue()) !== null) {
+    if (!(await getLastEvent())) {
       return
     }
 
     // Get DAO config and proposal modules for this DAO so we can retrieve the
     // DAO's name and the prefix for this proposal module.
-    const daoAddress = await getDaoAddressForProposalModule(env)
+    const daoAddress = await getDaoAddressForProposalModule({
+      ...env,
+      contractAddress: event.contractAddress,
+    })
     if (!daoAddress) {
       return
     }

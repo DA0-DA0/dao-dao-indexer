@@ -1,14 +1,18 @@
 import { WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
+import { WasmStateEvent } from '@/db'
 
 const KEY_PREFIX_RECEIPT_TOTALS = dbKeyForKeys('receipt_totals', '')
 
 // Fire webhook when a payment is paid to the indexer's cw-receipt contract.
-export const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
+export const makeIndexerCwReceiptPaid: WebhookMaker<WasmStateEvent> = (
+  config
+) =>
   !config.payment
     ? null
     : {
         filter: {
+          EventType: WasmStateEvent,
           contractAddresses: [config.payment.cwReceiptAddress],
           // Filter for receipt_totals state changes.
           matches: (event) => event.key.startsWith(KEY_PREFIX_RECEIPT_TOTALS),
@@ -24,7 +28,7 @@ export const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
                   'X-API-Key': config.payment.cwReceiptWebhookSecret,
                 },
               },
-        getValue: async (event, getLastValue) => {
+        getValue: async (event, getLastEvent) => {
           // "receipt_totals" | receiptId | serializedDenom
           const [, receiptId, serializedDenom] = dbKeyToKeys(event.key, [
             false,
@@ -32,7 +36,7 @@ export const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
             false,
           ])
           const amount = event.valueJson
-          const previousAmount = (await getLastValue()) || '0'
+          const previousAmount = (await getLastEvent())?.valueJson || '0'
 
           return {
             receiptId,

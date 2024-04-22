@@ -92,6 +92,29 @@ export class WasmStateEventTransformation extends DependableEventModel {
     )
   }
 
+  // Get the previous event for this name. If this is the first event for this
+  // name, return null. Cache the result so it can be reused since this
+  // shouldn't change.
+  previousEvent?: WasmStateEventTransformation | null
+  async getPreviousEvent(
+    cache = true
+  ): Promise<WasmStateEventTransformation | null> {
+    if (this.previousEvent === undefined || !cache) {
+      this.previousEvent = await WasmStateEventTransformation.findOne({
+        where: {
+          contractAddress: this.contractAddress,
+          name: this.name,
+          blockHeight: {
+            [Op.lt]: this.blockHeight,
+          },
+        },
+        order: [['blockHeight', 'DESC']],
+      })
+    }
+
+    return this.previousEvent
+  }
+
   static dependentKeyNamespace =
     DependentKeyNamespace.WasmStateEventTransformation
   static blockHeightKey: string = 'blockHeight'

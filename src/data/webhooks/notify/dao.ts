@@ -1,5 +1,6 @@
 import { WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
+import { WasmStateEvent } from '@/db'
 
 import { config as daoCoreConfig } from '../../formulas/contract/daoCore/base'
 
@@ -17,8 +18,12 @@ const KEY_PREFIX_USER_WEIGHTS = dbKeyForKeys('user_weights', '')
 const KEY_PREFIX_NB = dbKeyForKeys('nb', '')
 
 // Fire webhook when a user becomes a member of a DAO.
-export const makeInboxJoinedDao: WebhookMaker = (config, state) => ({
+export const makeInboxJoinedDao: WebhookMaker<WasmStateEvent> = (
+  config,
+  state
+) => ({
   filter: {
+    EventType: WasmStateEvent,
     codeIdsKeys: [
       CW20_STAKE_CODE_IDS_KEY,
       DAO_VOTING_CW4_CODE_IDS_KEY,
@@ -45,9 +50,10 @@ export const makeInboxJoinedDao: WebhookMaker = (config, state) => ({
       },
     }
   },
-  getValue: async (event, getLastValue, env) => {
-    // Only send if the first time this is set.
-    if ((await getLastValue()) !== null) {
+  getValue: async (event, getLastEvent, env) => {
+    // Only send if previously unset.
+    const lastEvent = await getLastEvent()
+    if (!lastEvent || lastEvent.delete) {
       return
     }
 

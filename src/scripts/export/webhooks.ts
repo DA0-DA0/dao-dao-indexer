@@ -3,7 +3,6 @@ import { randomUUID } from 'crypto'
 import * as Sentry from '@sentry/node'
 
 import {
-  ContractEnv,
   PendingWebhook,
   QueueName,
   getBullQueue,
@@ -11,11 +10,11 @@ import {
   loadConfig,
 } from '@/core'
 import { getProcessedWebhooks } from '@/data/webhooks'
-import { State, WasmStateEvent } from '@/db'
+import { DependableEventModel, State, WasmStateEvent } from '@/db'
 
 export const queueWebhooks = async (
   state: State,
-  wasmEvents: WasmStateEvent[]
+  events: DependableEventModel[]
 ): Promise<void> => {
   const webhooks = getProcessedWebhooks(loadConfig(), state)
   if (webhooks.length === 0) {
@@ -24,62 +23,58 @@ export const queueWebhooks = async (
 
   const pendingWebhooks = (
     await Promise.all(
-      wasmEvents.flatMap((wasmEvent) => {
+      events.flatMap((event) => {
         const webhooksForEvent = webhooks.filter((webhook) =>
-          webhook.filter(wasmEvent)
+          webhook.filter(event)
         )
 
         return webhooksForEvent.map(
           async (webhook): Promise<PendingWebhook | undefined> => {
-            const env: ContractEnv = {
-              ...getEnv({
-                chainId: state.chainId,
-                block: wasmEvent.block,
-                cache: {
-                  contracts: {
-                    [wasmEvent.contract.address]: wasmEvent.contract,
-                  },
-                },
-              }),
-              contractAddress: wasmEvent.contractAddress,
-            }
+            const env = getEnv({
+              chainId: state.chainId,
+              block: event.block,
+              cache:
+                event instanceof WasmStateEvent
+                  ? {
+                      contracts: {
+                        [event.contract.address]: event.contract,
+                      },
+                    }
+                  : undefined,
+            })
 
             // Wrap in try/catch in case a webhook errors. Don't want to prevent
             // other webhooks from sending.
             let value
             try {
               value = await webhook.getValue(
-                wasmEvent,
+                event,
                 async () => {
                   // Find most recent event for this contract and key before
                   // this block.
 
                   // Check events in case the most recent event is in the
                   // current group of events.
-                  const previousEvent = wasmEvents
+                  const previousEvent = events
                     .filter(
                       (e) =>
-                        e.contractAddress === wasmEvent.contractAddress &&
-                        e.key === e.key &&
-                        e.blockHeight < wasmEvent.blockHeight
+                        e.dependentKey === event.dependentKey &&
+                        e.block.height < event.block.height
                     )
                     .slice(-1)[0]
 
                   if (previousEvent) {
-                    return previousEvent.delete ? null : previousEvent.valueJson
+                    return previousEvent
                   }
 
                   // Fallback to database.
-                  const lastEvent = await wasmEvent.getPreviousEvent()
-                  return !lastEvent || lastEvent.delete
-                    ? null
-                    : lastEvent.valueJson
+                  return await event.getPreviousEvent()
                 },
                 env
               )
             } catch (error) {
               console.error(
-                `Error getting webhook value for event ${wasmEvent.blockHeight}/${wasmEvent.contractAddress}/${wasmEvent.key}: ${error}`
+                `Error getting webhook value for ${event.constructor.name} ID ${event.id} at block ${event.block.height}: ${error}`
               )
               Sentry.captureException(error, {
                 tags: {
@@ -88,7 +83,8 @@ export const queueWebhooks = async (
                   chainId: state.chainId,
                 },
                 extra: {
-                  wasmEvent,
+                  eventType: event.constructor.name,
+                  event: event.toJSON(),
                 },
               })
             }
@@ -99,11 +95,11 @@ export const queueWebhooks = async (
             try {
               endpoint =
                 typeof webhook.endpoint === 'function'
-                  ? await webhook.endpoint(wasmEvent, env)
+                  ? await webhook.endpoint(event, env)
                   : webhook.endpoint
             } catch (error) {
               console.error(
-                `Error getting webhook endpoint for event ${wasmEvent.blockHeight}/${wasmEvent.contractAddress}/${wasmEvent.key}: ${error}`
+                `Error getting webhook endpoint for ${event.constructor.name} ID ${event.id} at block ${event.block.height}: ${error}`
               )
               Sentry.captureException(error, {
                 tags: {
@@ -112,7 +108,8 @@ export const queueWebhooks = async (
                   chainId: state.chainId,
                 },
                 extra: {
-                  wasmEvent,
+                  eventType: event.constructor.name,
+                  event: event.toJSON(),
                 },
               })
             }
@@ -125,7 +122,8 @@ export const queueWebhooks = async (
             }
 
             return {
-              wasmEventId: wasmEvent.id,
+              eventType: event.constructor.name,
+              eventId: event.id,
               endpoint,
               value,
             }

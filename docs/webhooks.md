@@ -24,27 +24,47 @@ JS library to interact with it. If you are not using WebSockets, you can ignore
 Soketi and use URL endpoints only.
 
 ```ts
-type Webhook<V = any> = {
-  filter: RequireAtLeastOne<{
+type Webhook<
+  Event extends DependableEventModel = DependableEventModel,
+  Value = any
+> = {
+  filter: {
+    /**
+     * Required to filter events by type. This should be set to the class itself
+     * of the type of event to consider. This can be any class that extends
+     * DependableEventModel, such as WasmStateEvent or GovStateEvent.
+     */
+    EventType: new (...args: any) => Event
+  } & Partial<{
+    /**
+     * If passed, contract must match one of these code IDs keys.
+     *
+     * Only relevant when event is a WasmStateEvent.
+     */
     codeIdsKeys: string[]
+    /**
+     * If passed, contract must match one of these contract addresses.
+     *
+     * Only relevant when event is a WasmStateEvent.
+     */
     contractAddresses: string[]
-    matches: (event: WasmStateEvent) => boolean
+    /**
+     * A function to support any custom matching logic.
+     */
+    matches: (event: Event) => boolean
   }>
   // If returns undefined, the webhook will not be called.
   endpoint:
     | WebhookEndpoint
     | undefined
-    | ((event: WasmStateEvent, env: ContractEnv) => WebhookEndpoint | undefined)
-    | ((
-        event: WasmStateEvent,
-        env: ContractEnv
-      ) => Promise<WebhookEndpoint | undefined>)
+    | ((event: Event, env: ContractEnv) => WebhookEndpoint | undefined)
+    | ((event: Event, env: ContractEnv) => Promise<WebhookEndpoint | undefined>)
   // If returns undefined, the webhook will not be called.
   getValue: (
-    event: WasmStateEvent,
-    getLastValue: () => Promise<any | null>,
+    event: Event,
+    getLastEvent: () => Promise<Event | null>,
     env: ContractEnv
-  ) => V | undefined | Promise<V | undefined>
+  ) => Value | undefined | Promise<Value | undefined>
 }
 
 type WebhookEndpoint =
@@ -60,7 +80,10 @@ type WebhookEndpoint =
       event: string
     }
 
-type WebhookMaker = (config: Config, state: State) => Webhook | null | undefined
+type WebhookMaker<
+  Event extends DependableEventModel = DependableEventModel,
+  Value = any
+> = (config: Config, state: State) => Webhook<Event, Value> | null | undefined
 ```
 
 ## How to write a webhook
@@ -81,11 +104,12 @@ goes through on a payment smart contract. It uses both key utility functions to
 transform keys from and to the database format.
 
 ````ts
-const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
+const makeIndexerCwReceiptPaid: WebhookMaker<WasmStateEvent> = (config) =>
   !config.payment
     ? null
     : {
         filter: {
+          EventType: WasmStateEvent,
           contractAddresses: [config.payment.cwReceiptAddress],
           // Filter for receipt_totals state changes.
           matches: (event) => event.key.startsWith(dbKeyForKeys('receipt_totals', '')),
@@ -101,7 +125,7 @@ const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
                   'X-API-Key': config.payment.cwReceiptWebhookSecret,
                 },
               },
-        getValue: async (event, getLastValue) => {
+        getValue: async (event, getLastEvent) => {
           // "receipt_totals" | receiptId | serializedDenom
           const [, receiptId, serializedDenom] = dbKeyToKeys(event.key, [
             false,
@@ -109,7 +133,7 @@ const makeIndexerCwReceiptPaid: WebhookMaker = (config) =>
             false,
           ])
           const amount = event.valueJson
-          const previousAmount = (await getLastValue()) || '0'
+          const previousAmount = (await getLastEvent())?.valueJson || '0'
 
           return {
             receiptId,

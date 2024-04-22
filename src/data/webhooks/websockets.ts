@@ -1,6 +1,6 @@
 import { Webhook, WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
-import { State } from '@/db'
+import { State, WasmStateEvent } from '@/db'
 
 import { activeProposalModules } from '../formulas/contract/daoCore/base'
 import { getDaoAddressForProposalModule } from './utils'
@@ -13,10 +13,13 @@ const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
 const KEY_PREFIX_PROPOSALS_V2 = dbKeyForKeys('proposals_v2', '')
 
 const makeWebSocketEndpoint =
-  ({ chainId }: State): Webhook['endpoint'] =>
-  async (_, env) => {
+  ({ chainId }: State): Webhook<WasmStateEvent>['endpoint'] =>
+  async (event, env) => {
     // Get DAO address.
-    const daoAddress = await getDaoAddressForProposalModule(env)
+    const daoAddress = await getDaoAddressForProposalModule({
+      ...env,
+      contractAddress: event.contractAddress,
+    })
     if (!daoAddress) {
       return
     }
@@ -29,9 +32,13 @@ const makeWebSocketEndpoint =
   }
 
 // Broadcast to WebSockets when a vote is cast.
-export const makeBroadcastVoteCast: WebhookMaker = (config, state) =>
+export const makeBroadcastVoteCast: WebhookMaker<WasmStateEvent> = (
+  config,
+  state
+) =>
   config.soketi && {
     filter: {
+      EventType: WasmStateEvent,
       codeIdsKeys: [CODE_IDS_KEY_SINGLE, CODE_IDS_KEY_MULTIPLE],
       matches: (event) => event.key.startsWith(KEY_PREFIX_BALLOTS),
     },
@@ -45,7 +52,10 @@ export const makeBroadcastVoteCast: WebhookMaker = (config, state) =>
       ])
 
       // Get DAO address.
-      const daoAddress = await getDaoAddressForProposalModule(env)
+      const daoAddress = await getDaoAddressForProposalModule({
+        ...env,
+        contractAddress: event.contractAddress,
+      })
       if (!daoAddress) {
         return
       }
@@ -75,24 +85,31 @@ export const makeBroadcastVoteCast: WebhookMaker = (config, state) =>
   }
 
 // Broadcast to WebSockets when a proposal status changes, including creation.
-export const makeProposalStatusChanged: WebhookMaker = (config, state) =>
+export const makeProposalStatusChanged: WebhookMaker<WasmStateEvent> = (
+  config,
+  state
+) =>
   config.soketi && {
     filter: {
+      EventType: WasmStateEvent,
       codeIdsKeys: [CODE_IDS_KEY_SINGLE, CODE_IDS_KEY_MULTIPLE],
       matches: (event) =>
         event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2),
     },
     endpoint: makeWebSocketEndpoint(state),
-    getValue: async (event, getLastValue, env) => {
+    getValue: async (event, getLastEvent, env) => {
       // Only fire the webhook when the status changes.
-      const lastEvent = await getLastValue()
-      if (lastEvent !== null && lastEvent.status === event.valueJson.status) {
+      const lastEvent = await getLastEvent()
+      if (lastEvent && lastEvent.valueJson.status === event.valueJson.status) {
         return
       }
 
       // Get DAO address.
-      const daoAddress = await getDaoAddressForProposalModule(env)
+      const daoAddress = await getDaoAddressForProposalModule({
+        ...env,
+        contractAddress: event.contractAddress,
+      })
       if (!daoAddress) {
         return
       }

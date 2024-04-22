@@ -1,5 +1,6 @@
 import { WebhookMaker, WebhookType } from '@/core/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
+import { WasmStateEvent } from '@/db'
 
 import {
   activeProposalModules,
@@ -27,8 +28,12 @@ const KEY_PREFIX_PENDING_PROPOSALS = dbKeyForKeys('pending_proposals', '')
 const KEY_PREFIX_COMPLETED_PROPOSALS = dbKeyForKeys('completed_proposals', '')
 
 // Fire webhook when a proposal is created.
-export const makeInboxProposalCreated: WebhookMaker = (config, state) => ({
+export const makeInboxProposalCreated: WebhookMaker<WasmStateEvent> = (
+  config,
+  state
+) => ({
   filter: {
+    EventType: WasmStateEvent,
     codeIdsKeys: PROPOSAL_CODE_IDS_KEYS,
     matches: (event) =>
       // Starts with proposals or proposals_v2.
@@ -44,15 +49,18 @@ export const makeInboxProposalCreated: WebhookMaker = (config, state) => ({
       'x-api-key': config.notifierSecret,
     },
   },
-  getValue: async (event, getLastValue, env) => {
+  getValue: async (event, getLastEvent, env) => {
     // Only fire the webhook the first time this exists.
-    if ((await getLastValue()) !== null) {
+    if ((await getLastEvent()) !== null) {
       return
     }
 
     // Get DAO config and proposal modules for this DAO so we can retrieve the
     // DAO's name and the prefix for this proposal module.
-    const daoAddress = await getDaoAddressForProposalModule(env)
+    const daoAddress = await getDaoAddressForProposalModule({
+      ...env,
+      contractAddress: event.contractAddress,
+    })
     if (!daoAddress) {
       return
     }
@@ -97,8 +105,12 @@ export const makeInboxProposalCreated: WebhookMaker = (config, state) => ({
 })
 
 // Fire webhook when a proposal is executed.
-export const makeInboxProposalExecuted: WebhookMaker = (config, state) => ({
+export const makeInboxProposalExecuted: WebhookMaker<WasmStateEvent> = (
+  config,
+  state
+) => ({
   filter: {
+    EventType: WasmStateEvent,
     codeIdsKeys: PROPOSAL_CODE_IDS_KEYS,
     matches: (event) =>
       // Starts with proposals or proposals_v2.
@@ -115,20 +127,23 @@ export const makeInboxProposalExecuted: WebhookMaker = (config, state) => ({
       'x-api-key': config.notifierSecret,
     },
   },
-  getValue: async (event, getLastValue, env) => {
+  getValue: async (event, getLastEvent, env) => {
     // Only fire the webhook if the last event was not executed.
-    const lastValue = await getLastValue()
+    const lastEvent = await getLastEvent()
     if (
-      lastValue &&
-      (lastValue.status === StatusEnum.Executed ||
-        lastValue.status === StatusEnum.ExecutionFailed)
+      lastEvent &&
+      (lastEvent.valueJson.status === StatusEnum.Executed ||
+        lastEvent.valueJson.status === StatusEnum.ExecutionFailed)
     ) {
       return
     }
 
     // Get DAO config and proposal modules for this DAO so we can retrieve the
     // DAO's name and the prefix for this proposal module.
-    const daoAddress = await getDaoAddressForProposalModule(env)
+    const daoAddress = await getDaoAddressForProposalModule({
+      ...env,
+      contractAddress: event.contractAddress,
+    })
     if (!daoAddress) {
       return
     }
@@ -187,8 +202,12 @@ export const makeInboxProposalExecuted: WebhookMaker = (config, state) => ({
 })
 
 // Fire webhook when a proposal is closed.
-export const makeInboxProposalClosed: WebhookMaker = (config, state) => ({
+export const makeInboxProposalClosed: WebhookMaker<WasmStateEvent> = (
+  config,
+  state
+) => ({
   filter: {
+    EventType: WasmStateEvent,
     codeIdsKeys: PROPOSAL_CODE_IDS_KEYS,
     matches: (event) =>
       // Starts with proposals or proposals_v2.
@@ -204,16 +223,19 @@ export const makeInboxProposalClosed: WebhookMaker = (config, state) => ({
       'x-api-key': config.notifierSecret,
     },
   },
-  getValue: async (event, getLastValue, env) => {
+  getValue: async (event, getLastEvent, env) => {
     // Only fire the webhook if the last event was not closed.
-    const lastValue = await getLastValue()
-    if (lastValue && lastValue.status === StatusEnum.Closed) {
+    const lastEvent = await getLastEvent()
+    if (lastEvent && lastEvent.valueJson.status === StatusEnum.Closed) {
       return
     }
 
     // Get DAO config and proposal modules for this DAO so we can retrieve the
     // DAO's name and the prefix for this proposal module.
-    const daoAddress = await getDaoAddressForProposalModule(env)
+    const daoAddress = await getDaoAddressForProposalModule({
+      ...env,
+      contractAddress: event.contractAddress,
+    })
     if (!daoAddress) {
       return
     }
@@ -258,11 +280,11 @@ export const makeInboxProposalClosed: WebhookMaker = (config, state) => ({
 })
 
 // Fire webhook when a pending proposal that needs approval is created.
-export const makeInboxPreProposeApprovalProposalCreated: WebhookMaker = (
-  config,
-  state
-) => ({
+export const makeInboxPreProposeApprovalProposalCreated: WebhookMaker<
+  WasmStateEvent
+> = (config, state) => ({
   filter: {
+    EventType: WasmStateEvent,
     codeIdsKeys: PRE_PROPOSE_APPROVAL_PROPOSAL_CODE_IDS_KEYS,
     matches: (event) =>
       event.key.startsWith(KEY_PREFIX_PENDING_PROPOSALS) && !event.delete,
@@ -275,17 +297,23 @@ export const makeInboxPreProposeApprovalProposalCreated: WebhookMaker = (
       'x-api-key': config.notifierSecret,
     },
   },
-  getValue: async (event, getLastValue, env) => {
+  getValue: async (event, getLastEvent, env) => {
     // Only fire the webhook the first time this exists.
-    if ((await getLastValue()) !== null) {
+    if ((await getLastEvent()) !== null) {
       return
     }
 
     // Get DAO config and proposal modules for this DAO so we can retrieve the
     // DAO's name and the prefix for this proposal module.
     const [daoAddress, proposalModuleAddress] = await Promise.all([
-      daoPreProposeBaseDao.compute(env),
-      daoPreProposeBaseProposalModule.compute(env),
+      daoPreProposeBaseDao.compute({
+        ...env,
+        contractAddress: event.contractAddress,
+      }),
+      daoPreProposeBaseProposalModule.compute({
+        ...env,
+        contractAddress: event.contractAddress,
+      }),
     ])
     if (!daoAddress || !proposalModuleAddress) {
       return
@@ -328,11 +356,11 @@ export const makeInboxPreProposeApprovalProposalCreated: WebhookMaker = (
 })
 
 // Fire webhook when a pending proposal is rejected.
-export const makeInboxPreProposeApprovalProposalRejected: WebhookMaker = (
-  config,
-  state
-) => ({
+export const makeInboxPreProposeApprovalProposalRejected: WebhookMaker<
+  WasmStateEvent
+> = (config, state) => ({
   filter: {
+    EventType: WasmStateEvent,
     codeIdsKeys: PRE_PROPOSE_APPROVAL_PROPOSAL_CODE_IDS_KEYS,
     matches: (event) =>
       event.key.startsWith(KEY_PREFIX_COMPLETED_PROPOSALS) &&
@@ -350,8 +378,14 @@ export const makeInboxPreProposeApprovalProposalRejected: WebhookMaker = (
     // Get DAO config and proposal modules for this DAO so we can retrieve the
     // DAO's name and the prefix for this proposal module.
     const [daoAddress, proposalModuleAddress] = await Promise.all([
-      daoPreProposeBaseDao.compute(env),
-      daoPreProposeBaseProposalModule.compute(env),
+      daoPreProposeBaseDao.compute({
+        ...env,
+        contractAddress: event.contractAddress,
+      }),
+      daoPreProposeBaseProposalModule.compute({
+        ...env,
+        contractAddress: event.contractAddress,
+      }),
     ])
     if (!daoAddress || !proposalModuleAddress) {
       return

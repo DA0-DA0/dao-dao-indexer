@@ -38,4 +38,10 @@ export abstract class DependableEventModel extends Model {
   abstract get dependentKey(): string
   // A getter that returns the block.
   abstract get block(): Block
+  /**
+   * A function to fetch the previous event based on the current event.
+   */
+  async getPreviousEvent(_cache = true): Promise<DependableEventModel | null> {
+    throw new Error('Not implemented')
+  }
 }
