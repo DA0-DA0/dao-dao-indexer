@@ -26,12 +26,26 @@ export const makeInboxGovProposalCreated: WebhookMaker<GovStateEvent> = (
     },
   },
   getValue: async (event, getLastEvent) => {
-    // Only fire the webhook the first time this exists.
-    if ((await getLastEvent()) !== null) {
+    // Only fire the webhook if the last event does not exist (proposal launched
+    // right into voting period) or was not open for voting (proposal started in
+    // the deposit period).
+    const lastEvent = await getLastEvent()
+    const lastDecoded = lastEvent && decodeGovProposal(lastEvent.data)
+    if (
+      lastEvent &&
+      // If could not decode and check that last event was voting, ignore to
+      // avoid spamming when something breaks.
+      (!lastDecoded ||
+        // If last event was open for voting, ignore because already sent.
+        lastDecoded.status === ProposalStatus.PROPOSAL_STATUS_VOTING_PERIOD)
+    ) {
       return
     }
 
-    const { proposal, title } = decodeGovProposal(event.data)
+    const { proposal, title, status } = decodeGovProposal(event.data)
+    if (status !== ProposalStatus.PROPOSAL_STATUS_VOTING_PERIOD) {
+      return
+    }
 
     return {
       chainId: state.chainId,
@@ -71,7 +85,7 @@ export const makeInboxGovProposalPassed: WebhookMaker<GovStateEvent> = (
     const lastDecoded = lastEvent && decodeGovProposal(lastEvent.data)
     if (
       lastEvent &&
-      // If could not decode and verify that last event was passed, ignore to
+      // If could not decode and check that last event was passed, ignore to
       // avoid spamming when something breaks.
       (!lastDecoded ||
         // If last event was passed (or passed + execution failed), ignore
@@ -83,6 +97,12 @@ export const makeInboxGovProposalPassed: WebhookMaker<GovStateEvent> = (
     }
 
     const { proposal, title, status } = decodeGovProposal(event.data)
+    if (
+      status !== ProposalStatus.PROPOSAL_STATUS_PASSED &&
+      status !== ProposalStatus.PROPOSAL_STATUS_FAILED
+    ) {
+      return
+    }
 
     return {
       chainId: state.chainId,
@@ -132,7 +152,10 @@ export const makeInboxGovProposalRejected: WebhookMaker<GovStateEvent> = (
       return
     }
 
-    const { proposal, title } = decodeGovProposal(event.data)
+    const { proposal, title, status } = decodeGovProposal(event.data)
+    if (status !== ProposalStatus.PROPOSAL_STATUS_REJECTED) {
+      return
+    }
 
     return {
       chainId: state.chainId,
