@@ -1,6 +1,8 @@
+import { getConfiguredChainConfig } from '@dao-dao/utils'
+
 import { Webhook, WebhookMaker, WebhookType } from '@/core/types'
-import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
-import { State, WasmStateEvent } from '@/db'
+import { dbKeyForKeys, dbKeyToKeys, decodeGovProposal } from '@/core/utils'
+import { GovStateEvent, State, WasmStateEvent } from '@/db'
 
 import { activeProposalModules } from '../formulas/contract/daoCore/base'
 import { getDaoAddressForProposalModule } from './utils'
@@ -85,7 +87,7 @@ export const makeBroadcastVoteCast: WebhookMaker<WasmStateEvent> = (
   }
 
 // Broadcast to WebSockets when a proposal status changes, including creation.
-export const makeProposalStatusChanged: WebhookMaker<WasmStateEvent> = (
+export const makeDaoProposalStatusChanged: WebhookMaker<WasmStateEvent> = (
   config,
   state
 ) =>
@@ -135,6 +137,42 @@ export const makeProposalStatusChanged: WebhookMaker<WasmStateEvent> = (
         data: {
           proposalId,
           status: event.valueJson.status,
+        },
+      }
+    },
+  }
+
+// Broadcast to WebSockets when a gov proposal status changes, including
+// creation.
+export const makeGovProposalStatusChanged: WebhookMaker<GovStateEvent> = (
+  config,
+  state
+) =>
+  config.soketi && {
+    filter: {
+      EventType: GovStateEvent,
+    },
+    endpoint: {
+      type: WebhookType.Soketi,
+      channel: `${state.chainId}_${
+        getConfiguredChainConfig(state.chainId)?.name || 'GOV_PLACEHOLDER'
+      }`,
+      event: 'broadcast',
+    },
+    getValue: async (event, getLastEvent) => {
+      // Only fire the webhook when the status changes.
+      const lastEvent = await getLastEvent()
+      const lastStatus = lastEvent && decodeGovProposal(lastEvent.data)?.status
+      const status = decodeGovProposal(event.data)?.status
+      if (lastStatus && lastStatus === status) {
+        return
+      }
+
+      return {
+        type: 'proposal',
+        data: {
+          proposalId: event.proposalId,
+          status,
         },
       }
     },

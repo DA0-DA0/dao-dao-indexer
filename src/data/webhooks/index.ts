@@ -7,13 +7,22 @@ import { makeProposalCreated } from './discordNotifier'
 import { makeIndexerCwReceiptPaid } from './indexerCwReceipt'
 import { makeInboxJoinedDao } from './notify/dao'
 import {
+  makeInboxGovProposalCreated,
+  makeInboxGovProposalPassed,
+  makeInboxGovProposalRejected,
+} from './notify/gov'
+import {
   makeInboxPreProposeApprovalProposalCreated,
   makeInboxPreProposeApprovalProposalRejected,
   makeInboxProposalClosed,
   makeInboxProposalCreated,
   makeInboxProposalExecuted,
 } from './notify/proposal'
-import { makeBroadcastVoteCast, makeProposalStatusChanged } from './websockets'
+import {
+  makeBroadcastVoteCast,
+  makeDaoProposalStatusChanged,
+  makeGovProposalStatusChanged,
+} from './websockets'
 
 let processedWebhooks: ProcessedWebhook<any, any>[] | undefined
 export const getProcessedWebhooks = (
@@ -30,9 +39,13 @@ export const getProcessedWebhooks = (
       makeInboxProposalClosed,
       makeInboxPreProposeApprovalProposalCreated,
       makeInboxPreProposeApprovalProposalRejected,
+      makeInboxGovProposalCreated,
+      makeInboxGovProposalPassed,
+      makeInboxGovProposalRejected,
       makeIndexerCwReceiptPaid,
       makeBroadcastVoteCast,
-      makeProposalStatusChanged,
+      makeDaoProposalStatusChanged,
+      makeGovProposalStatusChanged,
     ]
 
     const _webhooks: Webhook[] = [
@@ -76,26 +89,30 @@ export const getProcessedWebhooks = (
             }
           }
 
-          // Wrap in try/catch in case a webhook errors. Don't want to prevent
-          // other webhooks from sending.
-          try {
-            return filter.matches?.(event) ?? true
-          } catch (error) {
-            console.error(
-              `Error matching webhook for ${event.constructor.name} ID ${event.id} at height ${event.block.height}: ${error}`
-            )
-            Sentry.captureException(error, {
-              tags: {
-                type: 'failed-webhook-match',
-              },
-              extra: {
-                event,
-              },
-            })
+          if (filter.matches) {
+            // Wrap in try/catch in case a webhook errors. Don't want to prevent
+            // other webhooks from sending.
+            try {
+              return filter.matches(event)
+            } catch (error) {
+              console.error(
+                `Error matching webhook for ${event.constructor.name} ID ${event.id} at height ${event.block.height}: ${error}`
+              )
+              Sentry.captureException(error, {
+                tags: {
+                  type: 'failed-webhook-match',
+                },
+                extra: {
+                  event,
+                },
+              })
 
-            // On error, do not match.
-            return false
+              // On error, do not match.
+              return false
+            }
           }
+
+          return true
         },
       }
     })
