@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/node'
 
 import { PendingMeilisearchIndexUpdate, QueueName, getBullQueue } from '@/core'
 import { meilisearchIndexers } from '@/data/meilisearch'
-import { DependableEventModel } from '@/db'
+import { DependableEventModel, State } from '@/db'
 
 /**
  * Queue index updates for a given event. Returns how many updates were queued.
@@ -49,18 +49,29 @@ export const queueMeilisearchIndexUpdates = async (
   )
 
   if (pendingUpdates.length) {
-    const queue = await getBullQueue<PendingMeilisearchIndexUpdate>(
-      QueueName.Search
-    )
+    const queue = getBullQueue<PendingMeilisearchIndexUpdate>(QueueName.Search)
+
+    queue.on('error', async (err) => {
+      console.error('Meilisearch index update queue errored', err)
+
+      Sentry.captureException(err, {
+        tags: {
+          type: 'meilisearch-index-update-queue-error',
+          chainId: (await State.getSingleton())?.chainId,
+        },
+        extra: {
+          pendingUpdates,
+        },
+      })
+    })
+
     await queue.addBulk(
       pendingUpdates.map((data) => ({
         name: randomUUID(),
         data,
       }))
     )
-
-    return pendingUpdates.length
   }
 
-  return 0
+  return pendingUpdates.length
 }

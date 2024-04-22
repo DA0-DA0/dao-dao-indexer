@@ -6,6 +6,7 @@ import { queueMeilisearchIndexUpdates } from '@/ms'
 import { handlerMakers } from '../handlers'
 import { ExportQueueData, ExportWorkerMaker } from '../types'
 import { getCosmWasmClient } from '../utils'
+import { queueWebhooks } from '../webhooks'
 
 export const makeExportWorker: ExportWorkerMaker<{
   data: ExportQueueData[]
@@ -57,8 +58,8 @@ export const makeExportWorker: ExportWorkerMaker<{
               interval: 100,
             })
 
-            // Queue Meilisearch index updates.
             if (models && Array.isArray(models) && models.length) {
+              // Queue Meilisearch index updates.
               const queued = (
                 await Promise.all(
                   models.map((event) => queueMeilisearchIndexUpdates(event))
@@ -69,6 +70,17 @@ export const makeExportWorker: ExportWorkerMaker<{
                 console.log(
                   `[${new Date().toISOString()}] Queued ${queued.toLocaleString()} search index update(s).`
                 )
+              }
+
+              // Queue webhooks.
+              if (options.sendWebhooks) {
+                const queued = await queueWebhooks(models)
+
+                if (queued > 0) {
+                  console.log(
+                    `[${new Date().toISOString()}] Queued ${queued.toLocaleString()} webhook(s).`
+                  )
+                }
               }
             }
 

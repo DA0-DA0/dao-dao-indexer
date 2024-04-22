@@ -13,12 +13,16 @@ import { getProcessedWebhooks } from '@/data/webhooks'
 import { DependableEventModel, State, WasmStateEvent } from '@/db'
 
 export const queueWebhooks = async (
-  state: State,
   events: DependableEventModel[]
-): Promise<void> => {
+): Promise<number> => {
+  const state = await State.getSingleton()
+  if (!state) {
+    return 0
+  }
+
   const webhooks = getProcessedWebhooks(loadConfig(), state)
   if (webhooks.length === 0) {
-    return
+    return 0
   }
 
   const pendingWebhooks = (
@@ -134,9 +138,9 @@ export const queueWebhooks = async (
   ).filter((w): w is PendingWebhook => w !== undefined)
 
   if (pendingWebhooks.length) {
-    const webhookQueue = getBullQueue<PendingWebhook>(QueueName.Webhooks)
+    const queue = getBullQueue<PendingWebhook>(QueueName.Webhooks)
 
-    webhookQueue.on('error', async (err) => {
+    queue.on('error', async (err) => {
       console.error('Webhook queue errored', err)
 
       Sentry.captureException(err, {
@@ -151,11 +155,13 @@ export const queueWebhooks = async (
       })
     })
 
-    webhookQueue.addBulk(
+    await queue.addBulk(
       pendingWebhooks.map((data) => ({
         name: randomUUID(),
         data,
       }))
     )
   }
+
+  return pendingWebhooks.length
 }
