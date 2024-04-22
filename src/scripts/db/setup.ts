@@ -43,7 +43,7 @@ export const main = async () => {
 
       // Add migrations to data database.
       const migrations = fs.readdirSync(
-        path.join(__dirname, '../../db/migrations')
+        path.join(process.cwd(), './dist/db/migrations')
       )
       for (const migration of migrations) {
         await dataSequelize.query(

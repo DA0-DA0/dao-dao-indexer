@@ -1,5 +1,10 @@
 {
-  "entry": ["src/server/serve.ts", "src/scripts/**/*.ts", "src/db/config.ts"],
+  "entry": [
+    "src/server/serve.ts",
+    "src/scripts/**/*.ts",
+    "src/db/config.ts",
+    "src/db/migrations/*.ts"
+  ],
   "splitting": false,
   "sourcemap": false,
   "clean": true,
