@@ -6,5 +6,5 @@ import { Column, Model, PrimaryKey, Table } from 'sequelize-typescript'
 export class Validator extends Model {
   @PrimaryKey
   @Column
-  operatorAddress!: string
+  declare operatorAddress: string
 }

@@ -43,23 +43,23 @@ export class AccountKeyCredit extends Model {
   @AllowNull(false)
   @ForeignKey(() => AccountKey)
   @Column
-  accountKeyId!: number
+  declare accountKeyId: number
 
   @BelongsTo(() => AccountKey)
-  accountKey!: AccountKey
+  declare accountKey: AccountKey
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  paymentSource!: AccountKeyCreditPaymentSource
+  declare paymentSource: AccountKeyCreditPaymentSource
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  paymentId!: string
+  declare paymentId: string
 
   // Null if not yet paid.
   @AllowNull
   @Column(DataType.DATE)
-  paidAt!: Date | null
+  declare paidAt: Date | null
 
   // Postgres integer type is 32-bit, which has a max of 2147483648, so use
   // bigint which is 64-bit instead.
@@ -68,19 +68,19 @@ export class AccountKeyCredit extends Model {
   @AllowNull(false)
   @Default(0n)
   @Column(DataType.BIGINT)
-  amount!: string
+  declare amount: string
 
   // Total number of credits used.
   @AllowNull(false)
   @Default(0n)
   @Column(DataType.BIGINT)
-  used!: string
+  declare used: string
 
   // Total number of times this credit has been used.
   @AllowNull(false)
   @Default(0n)
   @Column(DataType.BIGINT)
-  hits!: string
+  declare hits: string
 
   get paidFor(): boolean {
     return this.paidAt !== null

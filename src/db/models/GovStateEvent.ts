@@ -33,24 +33,24 @@ import { DependableEventModel, DependentKeyNamespace } from '../types'
 export class GovStateEvent extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  proposalId!: string
+  declare proposalId: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: string
+  declare blockHeight: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: string
+  declare blockTimeUnixMs: string
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  blockTimestamp!: Date
+  declare blockTimestamp: Date
 
   // Base64-encoded protobuf data.
   @AllowNull(false)
   @Column(DataType.TEXT)
-  data!: string
+  declare data: string
 
   get block(): Block {
     return {

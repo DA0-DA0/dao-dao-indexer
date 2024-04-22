@@ -41,64 +41,64 @@ export class WasmTxEvent extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
-  contractAddress!: string
+  declare contractAddress: string
 
   @BelongsTo(() => Contract)
-  contract!: Contract
+  declare contract: Contract
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: string
+  declare blockHeight: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: string
+  declare blockTimeUnixMs: string
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  blockTimestamp!: Date
+  declare blockTimestamp: Date
 
   @AllowNull(false)
   @Column(DataType.INTEGER)
-  txIndex!: number
+  declare txIndex: number
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  messageId!: string
+  declare messageId: string
 
   @AllowNull(false)
   @Column
-  action!: string
+  declare action: string
 
   @AllowNull(false)
   @Column
-  sender!: string
+  declare sender: string
 
   // JSON encoded value. Empty string if `reply` is not null.
   @AllowNull(false)
   @Column(DataType.TEXT)
-  msg!: string
+  declare msg: string
 
   @AllowNull
   @Column(DataType.JSONB)
-  msgJson!: any | null
+  declare msgJson: any | null
 
   // Null if `msg` is not empty.
   @AllowNull
   @Column(DataType.JSONB)
-  reply!: any | null
+  declare reply: any | null
 
   @AllowNull(false)
   @Column(DataType.JSONB)
-  funds!: any
+  declare funds: any
 
   @AllowNull
   @Column(DataType.JSONB)
-  response!: any | null
+  declare response: any | null
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  gasUsed!: string
+  declare gasUsed: string
 
   get block(): Block {
     return {

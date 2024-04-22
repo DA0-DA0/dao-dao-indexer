@@ -56,26 +56,26 @@ export class WasmStateEventTransformation extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
-  contractAddress!: string
+  declare contractAddress: string
 
   @BelongsTo(() => Contract)
-  contract!: Contract
+  declare contract: Contract
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: string
+  declare blockHeight: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: string
+  declare blockTimeUnixMs: string
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  name!: string
+  declare name: string
 
   @AllowNull
   @Column(DataType.JSONB)
-  value!: unknown | null
+  declare value: unknown | null
 
   get block(): Block {
     return {

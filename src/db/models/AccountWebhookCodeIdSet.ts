@@ -9,9 +9,9 @@ import { AccountWebhook } from './AccountWebhook'
 export class AccountWebhookCodeIdSet extends Model {
   @ForeignKey(() => AccountWebhook)
   @Column
-  webhookId!: number
+  declare webhookId: number
 
   @ForeignKey(() => AccountCodeIdSet)
   @Column
-  codeIdSetId!: number
+  declare codeIdSetId: number
 }

@@ -22,39 +22,39 @@ import { Block } from '@/core'
 export class State extends Model {
   @AllowNull(false)
   @Column
-  singleton!: boolean
+  declare singleton: boolean
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  chainId!: string
+  declare chainId: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  latestBlockHeight!: string
+  declare latestBlockHeight: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  latestBlockTimeUnixMs!: string
+  declare latestBlockTimeUnixMs: string
 
   @AllowNull
   @Column(DataType.BIGINT)
-  lastStakingBlockHeightExported!: string | null
+  declare lastStakingBlockHeightExported: string | null
 
   @AllowNull
   @Column(DataType.BIGINT)
-  lastWasmBlockHeightExported!: string | null
+  declare lastWasmBlockHeightExported: string | null
 
   @AllowNull
   @Column(DataType.BIGINT)
-  lastBankBlockHeightExported!: string | null
+  declare lastBankBlockHeightExported: string | null
 
   @AllowNull
   @Column(DataType.BIGINT)
-  lastGovBlockHeightExported!: string | null
+  declare lastGovBlockHeightExported: string | null
 
   @AllowNull
   @Column(DataType.BIGINT)
-  lastDistributionBlockHeightExported!: string | null
+  declare lastDistributionBlockHeightExported: string | null
 
   get latestBlock(): Block {
     return {

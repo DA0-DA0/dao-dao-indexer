@@ -28,37 +28,37 @@ export class AccountWebhookEventAttempt extends Model {
   @AllowNull(false)
   @ForeignKey(() => AccountWebhookEvent)
   @Column
-  webhookEventId!: number
+  declare webhookEventId: number
 
   @BelongsTo(() => AccountWebhookEvent)
-  webhookEvent!: AccountWebhookEvent
+  declare webhookEvent: AccountWebhookEvent
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  url!: string
+  declare url: string
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  requestBody!: string
+  declare requestBody: string
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  requestHeaders!: string
+  declare requestHeaders: string
 
   @AllowNull
   @Column(DataType.TEXT)
-  responseBody!: string | null
+  declare responseBody: string | null
 
   @AllowNull
   @Column(DataType.TEXT)
-  responseHeaders!: string | null
+  declare responseHeaders: string | null
 
   @AllowNull(false)
   @Column(DataType.INTEGER)
-  statusCode!: number
+  declare statusCode: number
 
   @CreatedAt
-  createdAt!: Date
+  declare createdAt: Date
 
   get apiJson(): AccountWebhookEventAttemptApiJson {
     return {

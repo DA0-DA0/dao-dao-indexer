@@ -33,27 +33,27 @@ import { DependableEventModel, DependentKeyNamespace } from '../types'
 export class BankStateEvent extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.TEXT)
-  address!: string
+  declare address: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: string
+  declare blockHeight: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: string
+  declare blockTimeUnixMs: string
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  blockTimestamp!: Date
+  declare blockTimestamp: Date
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  denom!: string
+  declare denom: string
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  balance!: string
+  declare balance: string
 
   get block(): Block {
     return {

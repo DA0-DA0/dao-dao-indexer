@@ -41,42 +41,42 @@ export class StakingSlashEvent extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Validator)
   @Column
-  validatorOperatorAddress!: string
+  declare validatorOperatorAddress: string
 
   @BelongsTo(() => Validator)
-  validator!: Validator
+  declare validator: Validator
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  registeredBlockHeight!: string
+  declare registeredBlockHeight: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  registeredBlockTimeUnixMs!: string
+  declare registeredBlockTimeUnixMs: string
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  registeredBlockTimestamp!: Date
+  declare registeredBlockTimestamp: Date
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  infractionBlockHeight!: string
+  declare infractionBlockHeight: string
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  slashFactor!: string
+  declare slashFactor: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  amountSlashed!: string
+  declare amountSlashed: string
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  effectiveFraction!: string
+  declare effectiveFraction: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  stakedTokensBurned!: string
+  declare stakedTokensBurned: string
 
   get block(): Block {
     return {

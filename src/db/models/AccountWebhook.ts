@@ -48,54 +48,54 @@ export class AccountWebhook extends Model {
   @AllowNull(false)
   @ForeignKey(() => Account)
   @Column
-  accountPublicKey!: string
+  declare accountPublicKey: string
 
   @BelongsTo(() => Account)
-  account!: Account
+  declare account: Account
 
   @AllowNull
   @ForeignKey(() => AccountKey)
   @Column
-  accountKeyId!: number
+  declare accountKeyId: number
 
   @BelongsTo(() => AccountKey)
-  accountKey!: AccountKey | null
+  declare accountKey: AccountKey | null
 
   @AllowNull
   @Column(DataType.STRING)
-  description!: string | null
+  declare description: string | null
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  url!: string
+  declare url: string
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  secret!: string
+  declare secret: string
 
   // Only send the first time this is set.
   @AllowNull(false)
   @Default(false)
   @Column(DataType.BOOLEAN)
-  onlyFirstSet!: boolean
+  declare onlyFirstSet: boolean
 
   @AllowNull
   @Column(DataType.ARRAY(DataType.STRING))
-  contractAddresses!: string[] | null
+  declare contractAddresses: string[] | null
 
   @BelongsToMany(() => AccountCodeIdSet, () => AccountWebhookCodeIdSet)
-  codeIdSets!: AccountCodeIdSet[]
+  declare codeIdSets: AccountCodeIdSet[]
 
   @AllowNull
   @Column(DataType.STRING)
-  stateKey!: string | null
+  declare stateKey: string | null
 
   @AllowNull
   @Column(DataType.STRING)
-  stateKeyType!: string | null
+  declare stateKeyType: string | null
 
   @HasMany(() => AccountWebhookEvent, 'webhookId')
-  events!: AccountWebhookEvent[]
+  declare events: AccountWebhookEvent[]
 
   async getApiJson(): Promise<AccountWebhookApiJson> {
     this.codeIdSets = (await this.$get('codeIdSets')) || []

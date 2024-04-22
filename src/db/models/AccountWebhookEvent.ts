@@ -61,39 +61,39 @@ export class AccountWebhookEvent extends Model {
   @AllowNull(false)
   @ForeignKey(() => AccountWebhook)
   @Column
-  webhookId!: number
+  declare webhookId: number
 
   @BelongsTo(() => AccountWebhook)
-  webhook!: AccountWebhook
+  declare webhook: AccountWebhook
 
   @HasMany(() => AccountWebhookEventAttempt, 'webhookEventId')
-  attempts!: AccountWebhookEventAttempt[]
+  declare attempts: AccountWebhookEventAttempt[]
 
   @AllowNull(false)
   @Unique
   @Column(DataType.STRING)
-  uuid!: string
+  declare uuid: string
 
   @AllowNull(false)
   @Default(AccountWebhookEventStatus.Pending)
   @Column(DataType.ENUM(...Object.values(AccountWebhookEventStatus)))
-  status!: AccountWebhookEventStatus
+  declare status: AccountWebhookEventStatus
 
   @AllowNull
   @Column(DataType.DATE)
-  succeededAt!: Date | null
+  declare succeededAt: Date | null
 
   @AllowNull
   @Column(DataType.DATE)
-  failedAt!: Date | null
+  declare failedAt: Date | null
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  url!: string
+  declare url: string
 
   @AllowNull(false)
   @Column(DataType.JSONB)
-  parsedEvent!: ParsedWasmStateEvent
+  declare parsedEvent: ParsedWasmStateEvent
 
   async getApiJson(): Promise<AccountWebhookEventApiJson> {
     this.attempts ||= (await this.$get('attempts')) ?? []

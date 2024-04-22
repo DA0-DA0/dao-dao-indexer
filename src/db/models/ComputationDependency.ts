@@ -39,14 +39,14 @@ export class ComputationDependency extends Model {
   @AllowNull(false)
   @ForeignKey(() => Computation)
   @Column
-  computationId!: number
+  declare computationId: number
 
   @BelongsTo(() => Computation)
-  computation!: Computation
+  declare computation: Computation
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  key!: string
+  declare key: string
 
   // If true, the computation depends on all keys that start with the given key.
   // This is used with maps for example, where the computation depends on all
@@ -54,7 +54,7 @@ export class ComputationDependency extends Model {
   @AllowNull(false)
   @Default(false)
   @Column
-  prefix!: boolean
+  declare prefix: boolean
 
   get dependentKey(): ComputationDependentKey {
     return {

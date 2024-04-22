@@ -23,18 +23,18 @@ export class AccountCodeIdSet extends Model {
   @AllowNull(false)
   @ForeignKey(() => Account)
   @Column
-  accountPublicKey!: string
+  declare accountPublicKey: string
 
   @BelongsTo(() => Account)
-  account!: Account
+  declare account: Account
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  name!: string
+  declare name: string
 
   @AllowNull(false)
   @Column(DataType.ARRAY(DataType.INTEGER))
-  codeIds!: number[]
+  declare codeIds: number[]
 
   public get apiJson(): AccountCodeIdSetApiJson {
     return {

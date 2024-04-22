@@ -52,22 +52,22 @@ export class WasmStateEvent extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column
-  contractAddress!: string
+  declare contractAddress: string
 
   @BelongsTo(() => Contract)
-  contract!: Contract
+  declare contract: Contract
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: string
+  declare blockHeight: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: string
+  declare blockTimeUnixMs: string
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  blockTimestamp!: Date
+  declare blockTimestamp: Date
 
   // Key is stored as a comma separated list of uint8 values that represents a
   // byte array. The byte array datatype doesn't allow for prefix queries, so we
@@ -76,20 +76,20 @@ export class WasmStateEvent extends DependableEventModel {
   // prefixing so we can efficiently query for all values in a map.
   @AllowNull(false)
   @Column(DataType.TEXT)
-  key!: string
+  declare key: string
 
   // JSON encoded value. Empty string if `delete` is true.
   @AllowNull(false)
   @Column(DataType.TEXT)
-  value!: string
+  declare value: string
 
   @AllowNull
   @Column(DataType.JSONB)
-  valueJson!: any | null
+  declare valueJson: any | null
 
   @AllowNull(false)
   @Column
-  delete!: boolean
+  declare delete: boolean
 
   get block(): Block {
     return {

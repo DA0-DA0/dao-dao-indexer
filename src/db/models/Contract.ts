@@ -16,23 +16,23 @@ import { ContractJson } from '@/core/types'
 export class Contract extends Model {
   @PrimaryKey
   @Column
-  address!: string
+  declare address: string
 
   @AllowNull(false)
   @Column
-  codeId!: number
+  declare codeId: number
 
   @AllowNull
   @Column(DataType.BIGINT)
-  instantiatedAtBlockHeight!: string
+  declare instantiatedAtBlockHeight: string
 
   @AllowNull
   @Column(DataType.BIGINT)
-  instantiatedAtBlockTimeUnixMs!: string
+  declare instantiatedAtBlockTimeUnixMs: string
 
   @AllowNull
   @Column(DataType.DATE)
-  instantiatedAtBlockTimestamp!: Date
+  declare instantiatedAtBlockTimestamp: Date
 
   get json(): ContractJson {
     return {

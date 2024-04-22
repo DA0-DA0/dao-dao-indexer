@@ -48,50 +48,50 @@ import { State } from './State'
 export class Computation extends Model {
   @AllowNull(false)
   @Column
-  targetAddress!: string
+  declare targetAddress: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: string
+  declare blockHeight: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: string
+  declare blockTimeUnixMs: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  latestBlockHeightValid!: string
+  declare latestBlockHeightValid: string
 
   // If false, the computation's output is valid up to the latest block and
   // cannot be extended. This may be false if the formula depends on the block
   // height/time.
   @AllowNull(false)
   @Column(DataType.BOOLEAN)
-  validityExtendable!: boolean
+  declare validityExtendable: boolean
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  type!: FormulaType
+  declare type: FormulaType
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  formula!: string
+  declare formula: string
 
   // JSON encoded value.
   @AllowNull(false)
   @Column(DataType.TEXT)
-  args!: string
+  declare args: string
 
   @HasMany(() => ComputationDependency, {
     foreignKey: 'computationId',
     onDelete: 'CASCADE',
   })
-  dependencies!: ComputationDependency[]
+  declare dependencies: ComputationDependency[]
 
   // JSON encoded value.
   @AllowNull
   @Column(DataType.TEXT)
-  output!: string | null
+  declare output: string | null
 
   get block(): Block {
     return {

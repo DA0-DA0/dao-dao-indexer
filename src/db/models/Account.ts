@@ -30,21 +30,21 @@ import { AccountWebhook } from './AccountWebhook'
 export class Account extends Model {
   @PrimaryKey
   @Column
-  publicKey!: string
+  declare publicKey: string
 
   @AllowNull(false)
   @Default(0)
   @Column(DataType.INTEGER)
-  nonce!: number
+  declare nonce: number
 
   @HasMany(() => AccountKey, 'accountPublicKey')
-  keys!: AccountKey[]
+  declare keys: AccountKey[]
 
   @HasMany(() => AccountWebhook, 'accountPublicKey')
-  webhooks!: AccountWebhook[]
+  declare webhooks: AccountWebhook[]
 
   @HasMany(() => AccountCodeIdSet, 'accountPublicKey')
-  codeIdSets!: AccountCodeIdSet[]
+  declare codeIdSets: AccountCodeIdSet[]
 
   // Generates a random API key and creates a key on this account with it. Also
   // setup one credit for the key to accept payment.

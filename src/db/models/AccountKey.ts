@@ -38,25 +38,25 @@ export class AccountKey extends Model {
   @AllowNull(false)
   @ForeignKey(() => Account)
   @Column
-  accountPublicKey!: string
+  declare accountPublicKey: string
 
   @BelongsTo(() => Account)
-  account!: Account
+  declare account: Account
 
   @AllowNull(false)
   @Column
-  name!: string
+  declare name: string
 
   @AllowNull
   @Column(DataType.STRING)
-  description!: string | null
+  declare description: string | null
 
   @AllowNull(false)
   @Column
-  hashedKey!: string
+  declare hashedKey: string
 
   @HasMany(() => AccountKeyCredit, 'accountKeyId')
-  credits!: AccountKeyCredit[]
+  declare credits: AccountKeyCredit[]
 
   public static generateKeyAndHash(): {
     key: string

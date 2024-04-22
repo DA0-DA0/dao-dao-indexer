@@ -24,20 +24,20 @@ import { DependableEventModel, DependentKeyNamespace } from '../types'
 export class DistributionCommunityPoolStateEvent extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockHeight!: string
+  declare blockHeight: string
 
   @AllowNull(false)
   @Column(DataType.BIGINT)
-  blockTimeUnixMs!: string
+  declare blockTimeUnixMs: string
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  blockTimestamp!: Date
+  declare blockTimestamp: Date
 
   // Map denom to balance.
   @AllowNull(false)
   @Column(DataType.JSONB)
-  balances!: Record<string, string>
+  declare balances: Record<string, string>
 
   get block(): Block {
     return {
