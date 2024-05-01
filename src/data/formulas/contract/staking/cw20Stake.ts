@@ -236,8 +236,11 @@ export const topStakers: ContractFormula<
         keys.join(':')
       )) ?? {}
     const stakes = Object.entries(stakers)
-      // Remove zero balances.
-      .filter(([, balance]) => Number(balance) > 0)
+      // Remove invalid addresses that end in colons (not sure how these appear,
+      // probably the snapshot map internals) and zero balances.
+      .filter(
+        ([address, balance]) => !address.endsWith(':') && Number(balance) > 0
+      )
       // Descending by balance.
       .sort(([, a], [, b]) => Number(b) - Number(a))
       .slice(0, limitNum)
