@@ -34,6 +34,10 @@ export const proposal: ContractFormula<
       args: { id },
     } = env
 
+    if (!id) {
+      throw new Error('missing `id`')
+    }
+
     const idNum = Number(id)
     let proposal = (
       await getTransformationMatch<SingleChoiceProposal>(
@@ -368,13 +372,18 @@ export const proposalCreatedAt: ContractFormula<
     getDateFirstTransformed,
     getDateKeyFirstSet,
     args: { id },
-  }) =>
-    (
+  }) => {
+    if (!id) {
+      throw new Error('missing `id`')
+    }
+
+    return (
       (await getDateFirstTransformed(contractAddress, `proposal:${id}`)) ??
       // Fallback to events.
       (await getDateKeyFirstSet(contractAddress, 'proposals_v2', Number(id))) ??
       (await getDateKeyFirstSet(contractAddress, 'proposals', Number(id)))
-    )?.toISOString(),
+    )?.toISOString()
+  },
 }
 
 // Return open proposals. If an address is passed, adds a flag indicating if

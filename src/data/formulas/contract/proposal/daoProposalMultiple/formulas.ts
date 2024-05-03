@@ -33,6 +33,10 @@ export const proposal: ContractFormula<
       args: { id },
     } = env
 
+    if (!id) {
+      throw new Error('missing `id`')
+    }
+
     const idNum = Number(id)
     const proposal =
       (
@@ -245,6 +249,10 @@ export const listVotes: ContractFormula<
     getDateKeyModified,
     args: { proposalId, limit, startAfter },
   }) => {
+    if (!proposalId) {
+      throw new Error('missing `proposalId`')
+    }
+
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     let votesCast = (
@@ -312,12 +320,17 @@ export const proposalCreatedAt: ContractFormula<
     getDateFirstTransformed,
     getDateKeyFirstSet,
     args: { id },
-  }) =>
-    (
+  }) => {
+    if (!id) {
+      throw new Error('missing `id`')
+    }
+
+    return (
       (await getDateFirstTransformed(contractAddress, `proposal:${id}`)) ??
       // Fallback to events.
       (await getDateKeyFirstSet(contractAddress, 'proposals', Number(id)))
-    )?.toISOString(),
+    )?.toISOString()
+  },
 }
 
 // Return open proposals. If an address is passed, adds a flag indicating if

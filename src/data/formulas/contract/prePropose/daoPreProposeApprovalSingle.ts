@@ -40,8 +40,12 @@ export const proposalCreatedAt: ContractFormula<
     getDateFirstTransformed,
     getDateKeyFirstSet,
     args: { id },
-  }) =>
-    (
+  }) => {
+    if (!id) {
+      throw new Error('missing `id`')
+    }
+
+    return (
       (await getDateFirstTransformed(
         contractAddress,
         `pendingProposal:${id}`
@@ -52,7 +56,8 @@ export const proposalCreatedAt: ContractFormula<
         'pending_proposals',
         Number(id)
       ))
-    )?.toISOString(),
+    )?.toISOString()
+  },
 }
 
 export const proposalCompletedAt: ContractFormula<
@@ -64,8 +69,12 @@ export const proposalCompletedAt: ContractFormula<
     getDateFirstTransformed,
     getDateKeyFirstSet,
     args: { id },
-  }) =>
-    (
+  }) => {
+    if (!id) {
+      throw new Error('missing `id`')
+    }
+
+    return (
       (await getDateFirstTransformed(
         contractAddress,
         `completedProposal:${id}`
@@ -76,7 +85,8 @@ export const proposalCompletedAt: ContractFormula<
         'completed_proposals',
         Number(id)
       ))
-    )?.toISOString(),
+    )?.toISOString()
+  },
 }
 
 export const proposal: ContractFormula<Proposal | undefined, { id: string }> = {
