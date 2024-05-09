@@ -36,16 +36,6 @@ type (
 	}
 )
 
-var (
-	// bank
-	BalancesPrefix = []byte{0x02}
-	// wasm
-	ContractKeyPrefix   = []byte{0x02}
-	ContractStorePrefix = []byte{0x03}
-	// gov
-	ProposalsKeyPrefix = []byte{0x00}
-)
-
 func main() {
 	args := os.Args
 	if len(args) < 4 {
@@ -109,28 +99,15 @@ func main() {
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
 
-		// Only write relevant keys.
-		if storeName == "wasm" {
-			if key[0] != ContractKeyPrefix[0] && key[0] != ContractStorePrefix[0] {
-				continue
-			}
-		} else if storeName == "bank" {
-			if key[0] != BalancesPrefix[0] {
-				continue
-			}
-		} else if storeName == "gov" {
-			if key[0] != ProposalsKeyPrefix[0] {
-				continue
-			}
-		}
-
 		// Make sure key is for the given address. Different stores have the address
 		// in a different position.
 		if len(addressesBech32Data) > 0 {
 			if storeName == "wasm" {
 				found := false
 				for _, addressBech32Data := range addressesBech32Data {
-					if bytes.HasPrefix(key[1:], addressBech32Data) {
+					// Terra Classic has an extra byte before the address, so check
+					// starting after 1 or 2.
+					if bytes.HasPrefix(key[1:], addressBech32Data) || bytes.HasPrefix(key[2:], addressBech32Data) {
 						found = true
 						break
 					}

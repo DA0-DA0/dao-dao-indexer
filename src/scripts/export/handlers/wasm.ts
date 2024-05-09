@@ -18,7 +18,7 @@ import {
 import { Handler, HandlerMaker } from '../types'
 
 const STORE_NAME = 'wasm'
-const CONTRACT_BYTE_LENGTH = 32
+const DEFAULT_CONTRACT_BYTE_LENGTH = 32
 
 type WasmExportData =
   | {
@@ -42,6 +42,13 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
   cosmWasmClient,
 }) => {
   const chainId = await cosmWasmClient.getChainId()
+
+  const isTerraClassic = chainId === 'columbus-5'
+
+  // Terra Classic uses different prefixes:
+  // https://github.com/classic-terra/wasmd/blob/v0.30.0-terra.3/x/wasm/types/keys.go#L31-L32
+  const CONTRACT_KEY_PREFIX = isTerraClassic ? 0x04 : 0x02
+  const CONTRACT_STORE_PREFIX = isTerraClassic ? 0x05 : 0x03
 
   // Get code ID for contract, cached in memory.
   const codeIdCache = new LRUCache<string, number>({
@@ -101,45 +108,72 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
   }
 
   const match: Handler<WasmExportData>['match'] = (trace) => {
-    // ContractStorePrefix = 0x03
-    // wasm keys are formatted as:
-    // ContractStorePrefix || contractAddressBytes || keyBytes
-
-    // ContractKeyPrefix = 0x02
-    // contract info keys are formatted as:
-    // ContractKeyPrefix || contractAddressBytes
+    // Format most wasm chains...
+    //
+    //   wasm keys:
+    //
+    //     ContractStorePrefix || contractAddressBytes || keyBytes
+    //
+    //   contract info keys:
+    //
+    //     ContractKeyPrefix || contractAddressBytes
+    //
+    // Terra Classic includes length prefixes:
+    // https://github.com/classic-terra/wasmd/blob/v0.30.0-terra.3/x/wasm/types/keys.go#L46-L60
+    //
+    //   wasm keys:
+    //
+    //     ContractStorePrefix || contractAddressLength || contractAddressBytes || keyBytes
+    //
+    //   contract info keys:
+    //
+    //     ContractKeyPrefix || contractAddressLength || contractAddressBytes
 
     const keyData = fromBase64(trace.key)
-    if (keyData[0] !== 0x02 && keyData[0] !== 0x03) {
+    if (
+      keyData[0] !== CONTRACT_STORE_PREFIX &&
+      keyData[0] !== CONTRACT_KEY_PREFIX
+    ) {
       return
     }
 
-    // Ignore keys that are too short to be a wasm key. Needs at least one more
-    // than the contract byte length for the prefix.
-    if (keyData.length < CONTRACT_BYTE_LENGTH + 1) {
+    const contractByteLength = isTerraClassic
+      ? keyData[1]
+      : DEFAULT_CONTRACT_BYTE_LENGTH
+    // Start of contract address in the key, taking into account the prefix.
+    // Terra Classic has an additional byte for the contract length.
+    const contractAddressOffset = isTerraClassic ? 2 : 1
+
+    // Ignore keys that are too short to be a wasm key.
+    if (keyData.length < contractAddressOffset + contractByteLength) {
       return
     }
 
     const contractAddress = toBech32(
       bech32Prefix,
-      keyData.slice(1, CONTRACT_BYTE_LENGTH + 1)
+      keyData.slice(
+        contractAddressOffset,
+        contractAddressOffset + contractByteLength
+      )
     )
     // Convert key to comma-separated list of bytes. See explanation in `Event`
     // model for more information.
-    const key = keyData.slice(CONTRACT_BYTE_LENGTH + 1).join(',')
+    const key = keyData
+      .slice(contractAddressOffset + contractByteLength)
+      .join(',')
 
     // Get code ID and block timestamp from chain.
     const blockHeight = BigInt(trace.metadata.blockHeight).toString()
     const blockTimeUnixMs = BigInt(trace.blockTimeUnixMs).toString()
 
     // If contract key, save contract info.
-    if (trace.operation === 'write' && keyData[0] === 0x02) {
+    if (trace.operation === 'write' && keyData[0] === CONTRACT_KEY_PREFIX) {
       // Parse as protobuf to get code ID.
       const protobufContractInfo = fromBase64(trace.value)
       let contractInfo
       try {
         contractInfo = ContractInfo.decode(protobufContractInfo)
-      } catch {
+      } catch (err) {
         // If failed to decode, not contract info.
         return
       }
