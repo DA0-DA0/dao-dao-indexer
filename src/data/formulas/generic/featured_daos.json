@@ -32,6 +32,10 @@
     "address": "osmo1a40j922z0kwqhw2nn0nx66ycyk88vyzcs73fyjrd092cjgyvyjksrd8dp7"
   },
   {
+    "chainId": "neutron-1",
+    "address": "neutron1r6n0effjs6wv0pdcq2wk7nwn4qmahsqvvu9lnj08hhw8pzt9t0lsr8rccf"
+  },
+  {
     "chainId": "juno-1",
     "address": "juno1mjsgk02jyn72jm2x7fgw72uu9wj7xy0v6pnuj2jd3aq7rgeqg5qq4dnhes"
   },
