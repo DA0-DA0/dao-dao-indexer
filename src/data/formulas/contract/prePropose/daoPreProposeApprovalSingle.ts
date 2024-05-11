@@ -41,7 +41,7 @@ export const proposalCreatedAt: ContractFormula<
     getDateKeyFirstSet,
     args: { id },
   }) => {
-    if (!id) {
+    if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 
@@ -70,7 +70,7 @@ export const proposalCompletedAt: ContractFormula<
     getDateKeyFirstSet,
     args: { id },
   }) => {
-    if (!id) {
+    if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 
@@ -98,7 +98,7 @@ export const proposal: ContractFormula<Proposal | undefined, { id: string }> = {
       args: { id },
     } = env
 
-    if (!id) {
+    if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 
@@ -319,7 +319,7 @@ export const completedProposalIdForCreatedProposalId: ContractFormula<
     get,
     args: { id },
   }) => {
-    if (!id) {
+    if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 

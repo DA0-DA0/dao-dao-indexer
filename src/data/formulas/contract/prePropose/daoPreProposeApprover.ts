@@ -12,7 +12,7 @@ export const preProposeApprovalIdForApproverProposalId: ContractFormula<
   { id: string }
 > = {
   compute: async ({ contractAddress, get, args: { id } }) => {
-    if (!id) {
+    if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 
@@ -25,7 +25,7 @@ export const approverProposalIdForPreProposeApprovalId: ContractFormula<
   { id: string }
 > = {
   compute: async ({ contractAddress, get, args: { id } }) => {
-    if (!id) {
+    if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 

@@ -7,7 +7,7 @@ export const config: ContractFormula = {
 
 export const proposal: ContractFormula<any, { id: string }> = {
   compute: async ({ contractAddress, get, args: { id } }) => {
-    if (!id) {
+    if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 
@@ -51,7 +51,7 @@ export const listProposals: ContractFormula<
 
 export const proposalExecutionError: ContractFormula<any, { id: string }> = {
   compute: async ({ contractAddress, get, args: { id } }) => {
-    if (!id) {
+    if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 
