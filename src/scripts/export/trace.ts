@@ -39,8 +39,12 @@ program.option(
   '--no-ws',
   "don't connect to websocket"
 )
+program.option(
+  '-o, --output <path>',
+  'optionally write streamed state to another file, acting as a passthrough'
+)
 program.parse()
-const { config: _config, ws: webSocketEnabled } = program.opts()
+const { config: _config, output, ws: webSocketEnabled } = program.opts()
 
 // Load config with config option.
 const config = loadConfig(_config)
@@ -59,14 +63,14 @@ if (config.sentryDsn) {
 const traceFile = path.join(config.home, 'trace.pipe')
 
 const main = async () => {
-  // Ensure trace and update files exist.
+  // Ensure trace file exists.
   if (!fs.existsSync(traceFile)) {
     throw new Error(
       `Trace file not found: ${traceFile}. Create it with "mkfifo ${traceFile}".`
     )
   }
 
-  // Verify trace and update files are FIFOs.
+  // Verify trace file is FIFOs.
   const stat = fs.statSync(traceFile)
   if (!stat.isFIFO()) {
     throw new Error(`Trace file is not a FIFO: ${traceFile}.`)
@@ -84,8 +88,15 @@ const trace = async () => {
   // Initialize state.
   await State.createSingletonIfMissing()
 
-  // Setup meilisearch.
+  // Set up meilisearch.
   await setupMeilisearch()
+
+  // Create write stream for output if configured.
+  const outputStream = output
+    ? fs.createWriteStream(output, {
+        flags: 'a',
+      })
+    : null
 
   const exportQueue = getBullQueue<{ data: ExportQueueData[] }>(
     QueueName.Export
@@ -416,6 +427,10 @@ const trace = async () => {
     file: traceFile,
     onData: (data) => {
       const tracedEvent = data as TracedEvent
+
+      // Output if configured.
+      outputStream?.write(JSON.stringify(tracedEvent) + '\n')
+
       // Ensure this is a traced write or delete event.
       if (
         !objectMatchesStructure(tracedEvent, {
