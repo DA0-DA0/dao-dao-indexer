@@ -103,13 +103,12 @@ export type MeilisearchIndexer = {
    */
   matches: (options: {
     event: DependableEventModel
+    state: State
   }) =>
     | MeilisearchIndexUpdate
     | undefined
     | false
-    | Promise<MeilisearchIndexUpdate>
-    | Promise<undefined>
-    | Promise<false>
+    | Promise<MeilisearchIndexUpdate | undefined | false>
   /**
    * The function to bulk update the index when manually updating.
    */
@@ -358,8 +357,10 @@ export type Env<Args extends Record<string, string> = {}> = {
 export interface EnvOptions {
   chainId: string
   block: Block
-  // If latest block is being used, this will be false. If fetching at a
-  // specific block, this will be true.
+  /**
+   * If latest block is being used, this will be false. If fetching at a
+   * specific block, this will be true.
+   */
   useBlockDate?: boolean
 
   args?: Record<string, any>

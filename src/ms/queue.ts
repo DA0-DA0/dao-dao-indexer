@@ -19,11 +19,19 @@ export const queueMeilisearchIndexUpdates = async (
     return 0
   }
 
+  const state = await State.getSingleton()
+  if (!state) {
+    throw new Error('State not found.')
+  }
+
   const pendingUpdates = (
     await Promise.all(
       automaticIndexers.map(async ({ id, matches }) => {
         try {
-          return matches({ event })
+          return matches({
+            event,
+            state,
+          })
         } catch (error) {
           console.error(error)
           Sentry.captureException(error, {

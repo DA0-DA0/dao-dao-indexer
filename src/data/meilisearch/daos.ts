@@ -1,12 +1,16 @@
 import { Op, Sequelize } from 'sequelize'
 
+import { getEnv } from '@/core'
 import { getCodeIdsForKeys } from '@/core/config'
 import {
+  ContractEnv,
   FormulaType,
   MeilisearchIndexUpdate,
   MeilisearchIndexer,
 } from '@/core/types'
 import { Contract, WasmStateEvent, WasmStateEventTransformation } from '@/db'
+
+import { getDaoAddressForProposalModule } from '../webhooks/utils'
 
 export const daos: MeilisearchIndexer = {
   id: 'daos',
@@ -18,16 +22,42 @@ export const daos: MeilisearchIndexer = {
     'value.proposalCount',
   ],
   sortableAttributes: ['value.proposalCount'],
-  matches: ({ event }) =>
-    event instanceof WasmStateEvent &&
-    !!event.contract?.matchesCodeIdKeys('dao-core') && {
-      id: event.contractAddress,
-      formula: {
-        type: FormulaType.Contract,
-        name: 'daoCore/dumpState',
-        targetAddress: event.contractAddress,
-      },
-    },
+  matches: async ({ event, state }) => {
+    if (!(event instanceof WasmStateEvent)) {
+      return
+    }
+
+    let daoAddress = event.contract?.matchesCodeIdKeys('dao-core')
+      ? event.contractAddress
+      : undefined
+
+    // If not DAO, attempt to fetch DAO from proposal module. This will fail if
+    // the address is not a proposal module. This is needed since the DAO dump
+    // state formula includes the total proposal count which is fetched from
+    // proposal modules.
+    if (!daoAddress) {
+      const env: ContractEnv = {
+        ...getEnv({
+          chainId: state.chainId,
+          block: event.block,
+          useBlockDate: true,
+        }),
+        contractAddress: event.contractAddress,
+      }
+      daoAddress = await getDaoAddressForProposalModule(env)
+    }
+
+    return (
+      !!daoAddress && {
+        id: daoAddress,
+        formula: {
+          type: FormulaType.Contract,
+          name: 'daoCore/dumpState',
+          targetAddress: daoAddress,
+        },
+      }
+    )
+  },
   getBulkUpdates: async () => {
     const codeIds = getCodeIdsForKeys('dao-core')
     if (!codeIds.length) {
