@@ -45,7 +45,7 @@ export const makeProposalCreated: WebhookMaker<WasmStateEvent> = (
   },
   getValue: async (event, getLastEvent, env) => {
     // Only fire the webhook the first time this exists.
-    if (!(await getLastEvent())) {
+    if ((await getLastEvent()) !== null) {
       return
     }
 
