@@ -139,22 +139,6 @@ export const queueWebhooks = async (
 
   if (pendingWebhooks.length) {
     const queue = getBullQueue<PendingWebhook>(QueueName.Webhooks)
-
-    queue.on('error', async (err) => {
-      console.error('Webhook queue errored', err)
-
-      Sentry.captureException(err, {
-        tags: {
-          type: 'webhook-queue-error',
-          script: 'export:trace',
-          chainId: state.chainId,
-        },
-        extra: {
-          pendingWebhooks,
-        },
-      })
-    })
-
     await queue.addBulk(
       pendingWebhooks.map((data) => ({
         name: randomUUID(),

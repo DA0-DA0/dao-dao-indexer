@@ -1,4 +1,7 @@
+import * as Sentry from '@sentry/node'
 import { ConnectionOptions, Processor, Queue, Worker } from 'bullmq'
+
+import { State } from '@/db/models'
 
 import { loadConfig } from './config'
 import { QueueName } from './types'
@@ -31,6 +34,17 @@ export const getBullQueue = <T extends unknown>(name: QueueName): Queue<T> => {
           delay: 300,
         },
       },
+    })
+
+    activeBullQueues[name]?.on('error', async (err) => {
+      console.error('Queue error', err)
+
+      Sentry.captureException(err, {
+        tags: {
+          type: 'queue-error',
+          chainId: (await State.getSingleton())?.chainId,
+        },
+      })
     })
   }
   return activeBullQueues[name]!

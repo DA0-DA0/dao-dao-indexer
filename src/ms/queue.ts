@@ -58,21 +58,6 @@ export const queueMeilisearchIndexUpdates = async (
 
   if (pendingUpdates.length) {
     const queue = getBullQueue<PendingMeilisearchIndexUpdate>(QueueName.Search)
-
-    queue.on('error', async (err) => {
-      console.error('Meilisearch index update queue errored', err)
-
-      Sentry.captureException(err, {
-        tags: {
-          type: 'meilisearch-index-update-queue-error',
-          chainId: (await State.getSingleton())?.chainId,
-        },
-        extra: {
-          pendingUpdates,
-        },
-      })
-    })
-
     await queue.addBulk(
       pendingUpdates.map((data) => ({
         name: randomUUID(),
