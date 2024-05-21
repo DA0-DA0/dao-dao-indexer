@@ -1,0 +1,36 @@
+# This Docker Composer runs the server by connecting to a remote server,
+# configured in `config.remote.json`. It uses a placeholder redis container with
+# nothing in it. This is to help build and test formulas against a remote DB.
+services:
+  server:
+    image: node:18-alpine
+    command: sh -c "npm install && npm run build; npm run serve:dev:nodocker"
+    working_dir: /usr/src/app
+    ports:
+      - 3420:3420 # server
+      - 9227:9227 # debug
+    volumes:
+      # use local files as source
+      - .:/usr/src/app
+    environment:
+      NODE_ENV: development
+      # contains db connection info for remote database
+      CONFIG_FILE: config.remote.json
+    # waits for redis to start
+    depends_on:
+      redis:
+        condition: service_healthy
+    # colorizes output
+    tty: true
+
+  # does not connect to remote redis server
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli ping']
+      interval: 1s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  node_modules:
