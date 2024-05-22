@@ -177,6 +177,56 @@ export const formula: ContractFormula = {
 }
 ```
 
+### Arguments
+
+Formulas can also take arguments. All arguments are passed as strings since they
+come from URL queries, so you must validate them inside the formula. The
+`ContractFormula` generic type lets you define the arguments so you can access
+them inside the `compute` function.
+
+This formula accesses a wallet's balance from a contract.
+
+```ts
+export const walletBalance: ContractFormula<number, { wallet: string }> = {
+  compute: async ({ get, contractAddress, args: { wallet } }) => {
+    if (!wallet) {
+      throw new Error('Missing wallet')
+    }
+
+    return await get(contractAddress, 'balance', wallet)
+  }
+}
+```
+
+### Dynamic formulas
+
+Mark a formula as `dynamic` (by setting `dynamic` to true) when its results
+change based on the block height and/or timestamp, even when a state key does
+not change. One example of this is when a formula checks an expiration.
+
+```ts
+export const paused: ContractFormula<PausedResponse> = {
+  // This formula depends on the block height/time to check expiration.
+  dynamic: true,
+  compute: async (env) => {
+    const { contractAddress, get, date } = env
+
+    const expiration = await get<Expiration | undefined>(
+      contractAddress,
+      'paused'
+    )
+
+    // at_time is in nanoseconds, so convert to milliseconds.
+    return !expiration || date.getTime() >= Number(expiration.at_time) / 1e6
+      ? { Unpaused: {} }
+      : { Paused: { expiration } }
+  },
+}
+```
+
+This affects historical range queries and caching behavior, since dynamic
+formulas rely on more than just state.
+
 ## Examples
 
 This formula returns the config for a
@@ -298,3 +348,8 @@ export const list: WalletFormula<ContractWithBalance[]> = {
   },
 }
 ```
+
+## Query
+
+Once you've written a formula, you can query it using the API server. Head over
+to the [query docs](./query.md) for more information.
