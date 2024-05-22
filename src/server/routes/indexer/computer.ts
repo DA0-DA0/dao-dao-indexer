@@ -86,7 +86,17 @@ export const computer: Router.Middleware = async (ctx) => {
     ctx.body = 'missing API key'
     return
   }
-  const accountKey = await AccountKey.findForKey(key)
+
+  let accountKey
+  try {
+    accountKey = await AccountKey.findForKey(key)
+  } catch (err) {
+    console.error(err)
+    ctx.status = 500
+    ctx.body = 'internal server error'
+    return
+  }
+
   if (!accountKey) {
     ctx.status = 401
     ctx.body = 'invalid API key'
@@ -260,60 +270,62 @@ export const computer: Router.Middleware = async (ctx) => {
     return
   }
 
-  // If type is "contract"...
-  if (typedFormula.type === FormulaType.Contract) {
-    const contract = await Contract.findByPk(address)
-
-    // ...validate that contract exists.
-    if (!contract) {
-      ctx.status = 404
-      ctx.body = 'contract not found'
-      return
-    }
-
-    // ...validate that filter is satisfied.
-    if (typedFormula.formula.filter) {
-      let allowed = true
-
-      if (typedFormula.formula.filter.codeIdsKeys?.length) {
-        const allCodeIds = typedFormula.formula.filter.codeIdsKeys.flatMap(
-          (key) => config.codeIds?.[key] ?? []
-        )
-        allowed &&= allCodeIds.includes(contract.codeId)
-      }
-
-      if (!allowed) {
-        ctx.status = 405
-        ctx.body = `the ${formulaName} formula does not apply to contract ${address}`
-        return
-      }
-    }
-  }
-  // ...if type is "validator"...
-  else if (typedFormula.type === FormulaType.Validator) {
-    const validator = await Validator.findByPk(address)
-
-    // ...validate that validator exists.
-    if (!validator) {
-      ctx.status = 404
-      ctx.body = 'validator not found'
-      return
-    }
-  }
-
-  // If formula is dynamic, we can't compute it over a range since we need
-  // specific blocks to compute it for.
-  if (typedFormula.formula.dynamic && (blocks || times)) {
-    ctx.status = 400
-    ctx.body =
-      'cannot compute dynamic formula over a range (compute it for a specific block/time instead)'
+  const state = await State.getSingleton()
+  if (!state) {
+    ctx.status = 500
+    ctx.body = 'state not found'
     return
   }
 
-  let state = await State.getSingleton()
   try {
-    if (!state) {
-      throw new Error('State not found')
+    // If type is "contract"...
+    if (typedFormula.type === FormulaType.Contract) {
+      const contract = await Contract.findByPk(address)
+
+      // ...validate that contract exists.
+      if (!contract) {
+        ctx.status = 404
+        ctx.body = 'contract not found'
+        return
+      }
+
+      // ...validate that filter is satisfied.
+      if (typedFormula.formula.filter) {
+        let allowed = true
+
+        if (typedFormula.formula.filter.codeIdsKeys?.length) {
+          const allCodeIds = typedFormula.formula.filter.codeIdsKeys.flatMap(
+            (key) => config.codeIds?.[key] ?? []
+          )
+          allowed &&= allCodeIds.includes(contract.codeId)
+        }
+
+        if (!allowed) {
+          ctx.status = 405
+          ctx.body = `the ${formulaName} formula does not apply to contract ${address}`
+          return
+        }
+      }
+    }
+    // ...if type is "validator"...
+    else if (typedFormula.type === FormulaType.Validator) {
+      const validator = await Validator.findByPk(address)
+
+      // ...validate that validator exists.
+      if (!validator) {
+        ctx.status = 404
+        ctx.body = 'validator not found'
+        return
+      }
+    }
+
+    // If formula is dynamic, we can't compute it over a range since we need
+    // specific blocks to compute it for.
+    if (typedFormula.formula.dynamic && (blocks || times)) {
+      ctx.status = 400
+      ctx.body =
+        'cannot compute dynamic formula over a range (compute it for a specific block/time instead)'
+      return
     }
 
     let computation

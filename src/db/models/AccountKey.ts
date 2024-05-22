@@ -130,10 +130,10 @@ export class AccountKey extends Model {
       return false
     }
 
-    // Use credit amount.
-    await credit.increment('used', { by: amount })
-    // Increment hits by one.
-    await credit.increment('hits')
+    // Use credit amount. On failure, just log and move on.
+    await credit.increment('used', { by: amount }).catch(console.error)
+    // Increment hits by one. On failure, just log and move on.
+    await credit.increment('hits').catch(console.error)
 
     return true
   }

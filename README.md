@@ -86,16 +86,16 @@ To understand how this indexer works and why it exists, read through the
 
 ```sql
 REVOKE ALL ON DATABASE db FROM readonly_user;
+-- revoke access from all databases
+SELECT format('REVOKE ALL ON DATABASE %I FROM readonly_user;', datname) FROM pg_database \gexec
+-- grant connection access to all databases
+SELECT format('GRANT CONNECT, SELECT ON DATABASE %I TO readonly_user;', datname) FROM pg_database WHERE datname = 'accounts' OR datname LIKE '%_%net' \gexec
 -- grant access to use SELECT on all tables
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO readonly_user;
 -- grant access to list tables
 GRANT USAGE ON SCHEMA public TO readonly_user;
 -- grant read access to future tables
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO readonly_user;
--- revoke access from all databases
-SELECT format('REVOKE ALL ON DATABASE %I FROM readonly_user;', datname) FROM pg_database \gexec
--- grant connection access to all databases
-SELECT format('GRANT CONNECT ON DATABASE %I TO readonly_user;', datname) FROM pg_database WHERE datname = 'accounts' OR datname LIKE '%_%net' \gexec
 ```
 
 ### Find the code IDs for a given Event key
