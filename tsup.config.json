@@ -3,7 +3,8 @@
     "src/server/serve.ts",
     "src/scripts/**/*.ts",
     "src/db/config.ts",
-    "src/db/migrations/*.ts"
+    "src/db/migrations/*.ts",
+    "src/core/index.ts"
   ],
   "splitting": false,
   "sourcemap": false,
