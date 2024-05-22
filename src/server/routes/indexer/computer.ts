@@ -336,11 +336,13 @@ export const computer: Router.Middleware = async (ctx) => {
       args: JSON.stringify(args),
     }
 
+    const currentTime = Date.now()
+
     // If time passed, compute block that correlates with that time.
     if (time) {
-      // If time is negative, subtract from latest block.
+      // If time is negative, subtract from current time.
       if (time < 0) {
-        time += BigInt(state.latestBlockTimeUnixMs)
+        time += BigInt(currentTime)
       }
 
       block = await getBlockForTime(time)
@@ -348,12 +350,12 @@ export const computer: Router.Middleware = async (ctx) => {
 
     // If times passed, compute blocks that correlate with those times.
     if (times && !accountKey.isTest) {
-      // If times are negative, subtract from latest block.
+      // If times are negative, subtract from current time.
       if (times[0] < 0) {
-        times[0] += BigInt(state.latestBlockTimeUnixMs)
+        times[0] += BigInt(currentTime)
       }
       if (times[1] && times[1] < 0) {
-        times[1] += BigInt(state.latestBlockTimeUnixMs)
+        times[1] += BigInt(currentTime)
       }
 
       const startBlock =

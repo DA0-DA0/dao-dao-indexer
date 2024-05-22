@@ -28,7 +28,7 @@
     "revalidate": "node dist/scripts/revalidate.js",
     "flood": "node dist/scripts/flood.js",
     "serve": "node dist/server/serve.js",
-    "serve:dev": "docker-compose -f compose.dev.yml up",
+    "serve:dev": "docker compose -f compose.dev.yml up",
     "serve:dev:nodocker": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/serve.js\"",
     "serve:dev:nodocker:accounts": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/serve.js -a\"",
     "serve:dev:nodocker:testnet": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/serve.js -c config.testnet.json\"",
