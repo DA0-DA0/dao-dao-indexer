@@ -64,3 +64,14 @@ export interface AuctionIds {
   curr: number
   next: number
 }
+
+export interface Price {
+  price: string,
+  time: string,
+}
+
+export interface PriceResponse {
+  pair: Pair,
+  price: string,
+  time: string,
+}
