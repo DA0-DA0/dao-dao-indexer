@@ -85,6 +85,7 @@ export const loadDb = async ({
 
     // Allow options to override logging, but default to false.
     logging: dbConfig.logging ?? logging ? console.log : false,
+    benchmark: dbConfig.logging ?? logging ? true : false,
 
     // Tell Sequelize what models we have.
     models: getModelsForType(type),

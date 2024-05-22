@@ -176,20 +176,6 @@ export const activeProposalModules: ContractFormula<
 
 export const dumpState: ContractFormula<DumpState | undefined> = {
   compute: async (env) => {
-    // Prefetch all data.
-    await env.prefetchTransformations(env.contractAddress, [
-      'admin',
-      'config',
-      'info',
-      {
-        name: 'proposalModule',
-        map: true,
-      },
-      'votingModule',
-      'activeProposalModuleCount',
-      'totalProposalModuleCount',
-    ])
-
     const [
       adminResponse,
       configResponse,
@@ -264,10 +250,9 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
 
     // Load admin info if admin is a DAO core contract.
     let adminConfig: Config | undefined | null = null
-    let adminInfo: ContractInfo | undefined
     let adminAdmin: string | undefined
     let adminRegisteredSubDao: boolean | undefined
-    const adminContractInfo =
+    const adminInfo =
       adminResponse && adminResponse !== env.contractAddress
         ? await info.compute({
             ...env,
@@ -276,28 +261,28 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
         : undefined
     if (
       adminResponse &&
-      adminContractInfo &&
-      CONTRACT_NAMES.some((name) => adminContractInfo.contract.includes(name))
+      adminInfo &&
+      CONTRACT_NAMES.some((name) => adminInfo.contract.includes(name))
     ) {
-      adminConfig = await config.compute({
-        ...env,
-        contractAddress: adminResponse,
-      })
-      if (adminConfig) {
-        adminInfo = await info.compute({
+      const [_adminAdmin, _adminConfig, adminSubDaos] = await Promise.all([
+        admin.compute({
           ...env,
           contractAddress: adminResponse,
-        })
-        adminAdmin = await admin.compute({
+        }),
+        config.compute({
           ...env,
           contractAddress: adminResponse,
-        })
+        }),
+        listSubDaos.compute({
+          ...env,
+          contractAddress: adminResponse,
+        }),
+      ])
 
+      if (_adminConfig) {
+        adminAdmin = _adminAdmin
+        adminConfig = _adminConfig
         // Check if the current DAO is registered as a SubDAO.
-        const adminSubDaos = await listSubDaos.compute({
-          ...env,
-          contractAddress: adminResponse,
-        })
         adminRegisteredSubDao = adminSubDaos.some(
           (subDao) => subDao.addr === env.contractAddress
         )

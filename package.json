@@ -33,6 +33,7 @@
     "serve:dev:nodocker:accounts": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/serve.js -a\"",
     "serve:dev:nodocker:testnet": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/serve.js -c config.testnet.json\"",
     "serve:dev:nodocker:mainnet": "nodemon --watch dist --signal SIGTERM --exec \"node dist/server/serve.js -c config.mainnet.json\"",
+    "serve:remote": "docker-compose -f compose.remote.yml up",
     "serve:prod": "npm install && npm run build && pm2 reload ecosystem.config.js --only server && pm2 save",
     "serve:prod:accounts": "npm run build && pm2 reload ecosystem.config.js --only server_accounts",
     "search:update": "node dist/scripts/searchUpdate.js",
