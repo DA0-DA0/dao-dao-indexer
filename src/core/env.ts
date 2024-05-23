@@ -475,7 +475,9 @@ export const getEnv = ({
     contractAddress,
     nameLike,
     where,
-    whereCodeId
+    whereCodeId,
+    whereName,
+    limit
   ) => {
     const dependentKey = getDependentKey(
       WasmStateEventTransformation.dependentKeyNamespace,
@@ -524,6 +526,7 @@ export const getEnv = ({
               name: {
                 // Replace * with % for LIKE query.
                 [Op.like]: nameLike.replace(/\*/g, '%'),
+                ...whereName,
               },
               ...(contractAddress && {
                 contractAddress,
@@ -533,6 +536,7 @@ export const getEnv = ({
               }),
               blockHeight: blockHeightFilter,
             },
+            limit,
             order: [
               // Needs to be first so we can use DISTINCT ON.
               ...distinctOn.map((key) => [key, 'ASC'] as [string, 'ASC']),

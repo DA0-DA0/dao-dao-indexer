@@ -178,8 +178,13 @@ export type FormulaDateWithValueMatchGetter = (
 export type FormulaTransformationMatchesGetter = <T>(
   contractAddress: string | undefined,
   nameLike: string,
+  // TODO(cache): figure out how this fits into the dependent key caching system
   whereClause?: any,
-  whereCodeId?: number[]
+  whereCodeId?: number[],
+  // TODO(cache): figure out how this fits into the dependent key caching system
+  whereName?: any,
+  // TODO(cache): figure out how this fits into the dependent key caching system
+  limit?: number
 ) => Promise<
   | {
       block: Block

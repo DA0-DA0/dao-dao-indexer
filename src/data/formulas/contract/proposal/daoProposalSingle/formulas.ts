@@ -305,12 +305,24 @@ export const listVotes: ContractFormula<
     getDateKeyModified,
     args: { proposalId, limit, startAfter },
   }) => {
+    if (!proposalId || isNaN(Number(proposalId)) || Number(proposalId) < 0) {
+      throw new Error('missing `proposalId`')
+    }
+
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     let votesCast = (
       await getTransformationMatches<VoteCast<Ballot>>(
         contractAddress,
-        `voteCast:*:${proposalId}`
+        `voteCast:*:${proposalId}`,
+        undefined,
+        undefined,
+        startAfter
+          ? {
+              [Op.gt]: `voteCast:${startAfter}:${proposalId}`,
+            }
+          : undefined,
+        limit ? limitNum : undefined
       )
     )?.map(({ value }) => value)
 
@@ -327,30 +339,25 @@ export const listVotes: ContractFormula<
         .filter((voter) => !startAfter || voter.localeCompare(startAfter) > 0)
         .slice(0, limitNum)
 
-      const votesCastAt = await Promise.all(
-        voters.map((voter) =>
-          getDateKeyModified(
-            contractAddress,
-            'ballots',
-            Number(proposalId),
-            voter
-          )
-        )
-      )
+      const votesCastAt =
+        voters.length <= 50
+          ? await Promise.all(
+              voters.map((voter) =>
+                getDateKeyModified(
+                  contractAddress,
+                  'ballots',
+                  Number(proposalId),
+                  voter
+                )
+              )
+            )
+          : undefined
 
       votesCast = voters.map((voter, index) => ({
         voter,
         vote: ballots[voter],
-        votedAt: votesCastAt[index]?.toISOString(),
+        votedAt: votesCastAt?.[index]?.toISOString(),
       }))
-    } else {
-      // Ascending by voter address.
-      votesCast = votesCast
-        .sort((a, b) => a.voter.localeCompare(b.voter))
-        .filter(
-          ({ voter }) => !startAfter || voter.localeCompare(startAfter) > 0
-        )
-        .slice(0, limitNum)
     }
 
     return votesCast.map(
@@ -360,6 +367,30 @@ export const listVotes: ContractFormula<
         votedAt,
       })
     )
+  },
+}
+
+export const voteCount: ContractFormula<
+  number | undefined,
+  {
+    proposalId: string
+  }
+> = {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { proposalId },
+  }) => {
+    if (!proposalId || isNaN(Number(proposalId)) || Number(proposalId) < 0) {
+      throw new Error('missing `proposalId`')
+    }
+
+    return (
+      await getTransformationMatch<number>(
+        contractAddress,
+        `voteCount:${proposalId}`
+      )
+    )?.value
   },
 }
 
