@@ -77,22 +77,6 @@ const voteCast: Transformer = {
   },
 }
 
-const voteCount: Transformer = {
-  filter: {
-    codeIdsKeys: CODE_IDS_KEYS,
-    matches: (event) => event.key.startsWith(KEY_PREFIX_BALLOTS),
-  },
-  name: (event) => {
-    // "ballots", proposalId, address
-    const [, proposalId] = dbKeyToKeys(event.key, [false, true, false])
-    return `voteCount:${proposalId}`
-  },
-  getValue: async (_, getLastValue) => {
-    const last = await getLastValue()
-    return (typeof last === 'number' ? last : 0) + 1
-  },
-}
-
 const vetoer: Transformer = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
@@ -124,4 +108,4 @@ const proposalVetoer: Transformer = {
   },
 }
 
-export default [proposal, proposed, voteCast, voteCount, vetoer, proposalVetoer]
+export default [proposal, proposed, voteCast, vetoer, proposalVetoer]

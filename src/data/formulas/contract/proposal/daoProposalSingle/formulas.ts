@@ -370,30 +370,6 @@ export const listVotes: ContractFormula<
   },
 }
 
-export const voteCount: ContractFormula<
-  number | undefined,
-  {
-    proposalId: string
-  }
-> = {
-  compute: async ({
-    contractAddress,
-    getTransformationMatch,
-    args: { proposalId },
-  }) => {
-    if (!proposalId || isNaN(Number(proposalId)) || Number(proposalId) < 0) {
-      throw new Error('missing `proposalId`')
-    }
-
-    return (
-      await getTransformationMatch<number>(
-        contractAddress,
-        `voteCount:${proposalId}`
-      )
-    )?.value
-  },
-}
-
 export const proposalCreatedAt: ContractFormula<
   string | undefined,
   { id: string }
