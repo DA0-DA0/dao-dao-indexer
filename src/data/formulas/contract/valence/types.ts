@@ -29,6 +29,7 @@ export interface RebalancerConfig {
 export type RebalancerConfigResponse = RebalancerConfig & { is_paused: Boolean }
 
 export interface AccountResponse {
+  admin: string | undefined
   rebalancerConfig: RebalancerConfigResponse | undefined
 }
 
@@ -36,7 +37,9 @@ export interface AccountResponse {
  * Auctions
  ****************************************************************************/
 export type Pair = [string, string]
-export type AuctionConfigResponse = AuctionConfig & AuctionStrategy
+export type AuctionConfigResponse = AuctionConfig & {
+  price_strategy: AuctionStrategy
+}
 
 export interface AuctionConfig {
   chain_halt_config: ChainHaltConfig
@@ -66,12 +69,17 @@ export interface AuctionIds {
 }
 
 export interface Price {
-  price: string,
-  time: string,
+  price: string
+  time: string
 }
 
 export interface PriceResponse {
-  pair: Pair,
-  price: string,
-  time: string,
+  pair: Pair
+  price: string
+  time: string
+}
+
+export interface FundsInAuctionsResponse {
+  pair: Pair
+  amount: string
 }
