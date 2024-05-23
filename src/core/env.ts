@@ -487,6 +487,16 @@ export const getEnv = ({
       prefix: false,
     })
 
+    // Columns we need to include in the DISTINCT ON clause.
+    const distinctOn = [
+      'name',
+      // We only need to add contractAddress to the DISTINCT ON clause if it's
+      // not defined. If it's defined, all fetched rows will be for the same
+      // contract. Otherwise, we retrieve all contracts matching the name and
+      // need to make sure only one name per contract is returned.
+      ...(contractAddress ? [] : ['contractAddress']),
+    ]
+
     // Check cache.
     const cachedTransformations = cache.events[dependentKey]
     let transformations =
@@ -501,7 +511,7 @@ export const getEnv = ({
               // beginning of the query. This ensures we use the most recent
               // version of the name for each contract.
               Sequelize.literal(
-                'DISTINCT ON("name", "contractAddress") \'\''
+                `DISTINCT ON("${distinctOn.join('", "')}") ''`
               ) as unknown as string,
               'id',
               'name',
@@ -525,10 +535,9 @@ export const getEnv = ({
             },
             order: [
               // Needs to be first so we can use DISTINCT ON.
-              ['name', 'ASC'],
-              ['contractAddress', 'ASC'],
+              ...distinctOn.map((key) => [key, 'ASC'] as [string, 'ASC']),
               // Descending block height ensures we get the most recent
-              // transformation for the (contractAddress,name) pair.
+              // transformation for the (contractAddress, name) pair.
               ['blockHeight', 'DESC'],
             ],
             include: [
