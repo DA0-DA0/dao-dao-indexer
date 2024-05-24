@@ -1,18 +1,15 @@
-import { map } from './../common'
-import {
-  ContractFormula,
-  dbKeyToKeys,
-} from '@/core'
+import { ContractFormula, dbKeyToKeys } from '@/core'
+
 import { Pair, Price, PriceResponse } from './types'
 
 export const allPrices: ContractFormula<PriceResponse[] | undefined> = {
   compute: async ({ contractAddress, getMap }) => {
-    let pairMap = (await getMap(contractAddress, 'prices', {
+    const pairMap = (await getMap(contractAddress, 'prices', {
       keyType: 'raw',
     }))!
 
     return Object.entries(pairMap).map(([key, value]) => {
-      let pair = dbKeyToKeys(key, [false, false]) as Pair
+      const pair = dbKeyToKeys(key, [false, false]) as Pair
 
       return {
         pair,
@@ -31,15 +28,19 @@ export const price: ContractFormula<
       throw new Error('Must include the pair argument')
     }
 
-    let pair = args.pair.split(',') as Pair
+    const pair = args.pair.split(',') as Pair
+    const { price, time } = (await get(
+      contractAddress,
+      'prices',
+      pair[0],
+      pair[1]
+    )) as Price
 
-    return get(contractAddress, 'prices', pair[0], pair[1]).then((res: any) => {
-      return {
-        pair,
-        price: res.price,
-        time: res.time,
-      }
-    })
+    return {
+      pair,
+      price,
+      time,
+    }
   },
 }
 
@@ -49,20 +50,20 @@ export const pricesOfDenom: ContractFormula<
     base_denom: string
   }
 > = {
-  compute: async ({ contractAddress, get, getMap, args }) => {
+  compute: async ({ contractAddress, getMap, args }) => {
     if (!args.base_denom) {
       throw new Error('Must include the pair argument')
     }
 
-    let pairs: PriceResponse[] = []
-    let pairMap = (await getMap(contractAddress, 'prices', {
+    const pairs: PriceResponse[] = []
+    const pairMap = (await getMap(contractAddress, 'prices', {
       keyType: 'raw',
     }))!
 
     Object.entries(pairMap).forEach(([key, value]) => {
-      let pair = dbKeyToKeys(key, [false, false]) as Pair
+      const pair = dbKeyToKeys(key, [false, false]) as Pair
 
-      if (pair[1] == args.base_denom) {
+      if (pair[1] === args.base_denom) {
         pairs.push({
           pair,
           ...value,

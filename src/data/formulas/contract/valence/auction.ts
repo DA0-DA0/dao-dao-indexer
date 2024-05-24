@@ -1,63 +1,76 @@
 import { ContractFormula, dbKeyToKeys } from '@/core'
-import { AuctionConfig, AuctionConfigResponse, AuctionIds, AuctionStrategy, FundsInAuctionsResponse, Pair } from './types'
-import { AUCTIONS_MANAGER_ADDR } from '.'
 
-export const config: ContractFormula<AuctionConfigResponse | undefined> =
-  {
-    compute: async ({ contractAddress, get }) => {
-      let config: AuctionConfig | undefined = await get(
-        contractAddress,
-        'auction_config'
-      )
-      let priceStrategy: AuctionStrategy | undefined = await get(
-        contractAddress,
-        'auction_strategy'
-      )
+import { AUCTIONS_MANAGER_ADDR } from './constants'
+import {
+  AuctionConfig,
+  AuctionConfigResponse,
+  AuctionIds,
+  AuctionStrategy,
+  FundsInAuctionsResponse,
+  Pair,
+} from './types'
 
-      if (config && priceStrategy) {
-        return {
-          ...config,
-          price_strategy: priceStrategy,
-        }
-      } else {
-        return undefined
+export const config: ContractFormula<AuctionConfigResponse | undefined> = {
+  compute: async ({ contractAddress, get }) => {
+    const config: AuctionConfig | undefined = await get(
+      contractAddress,
+      'auction_config'
+    )
+    const priceStrategy: AuctionStrategy | undefined = await get(
+      contractAddress,
+      'auction_strategy'
+    )
+
+    if (config && priceStrategy) {
+      return {
+        ...config,
+        price_strategy: priceStrategy,
       }
-    },
-  }
+    } else {
+      return undefined
+    }
+  },
+}
 
-export const accountFunds: ContractFormula<FundsInAuctionsResponse[] | undefined> = {
+export const accountFunds: ContractFormula<
+  FundsInAuctionsResponse[] | undefined
+> = {
   compute: async ({ contractAddress: accountAddr, get, getMap }) => {
-    let pairMap = (await getMap(AUCTIONS_MANAGER_ADDR, 'pairs', {
+    const pairMap = (await getMap(AUCTIONS_MANAGER_ADDR, 'pairs', {
       keyType: 'raw',
     }))!
 
-    return Promise.all(Object.entries(pairMap).map(async ([key, auctionAddr]) => {
-      let pair = dbKeyToKeys(key, [false, false]) as Pair
+    return Promise.all(
+      Object.entries(pairMap).map(async ([key, auctionAddr]) => {
+        const pair = dbKeyToKeys(key, [false, false]) as Pair
 
-      // get the current id of the auction
-      let auctionCurrId = (
-        (await get(auctionAddr, 'auction_ids')) as AuctionIds
-      ).curr
+        // get the current id of the auction
+        const auctionCurrId = (
+          (await get(auctionAddr, 'auction_ids')) as AuctionIds
+        ).curr
 
-      // get the funds amount
-      let funds: string | undefined = await get(
-        auctionAddr,
-        'funds',
-        auctionCurrId,
-        accountAddr
-      )
+        // get the funds amount
+        const funds: string | undefined = await get(
+          auctionAddr,
+          'funds',
+          auctionCurrId,
+          accountAddr
+        )
 
-      if (funds) {
-        return {
-          pair,
-          amount: funds,
-        } as FundsInAuctionsResponse
-      }
+        if (funds) {
+          return {
+            pair,
+            amount: funds,
+          } as FundsInAuctionsResponse
+        }
 
-      return undefined
-    })).then((res) => {
-      let filtered = res.filter(r => r !== undefined) as FundsInAuctionsResponse[];
-      return (filtered.length > 0) ? filtered : undefined 
+        return undefined
+      })
+    ).then((res) => {
+      const filtered = res.filter(
+        (r) => r !== undefined
+      ) as FundsInAuctionsResponse[]
+      return filtered.length > 0 ? filtered : undefined
     })
   },
 }

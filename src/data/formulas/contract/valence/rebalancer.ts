@@ -1,13 +1,16 @@
-import { ContractFormula } from "@/core"
-import { ParsedTarget, RebalancerConfig, RebalancerConfigResponse } from "./types"
-import { REBALANCER_ADDR } from "."
+import { ContractFormula } from '@/core'
 
-export const config: ContractFormula<
-  RebalancerConfigResponse | undefined
-> = {
+import { REBALANCER_ADDR } from './constants'
+import {
+  ParsedTarget,
+  RebalancerConfig,
+  RebalancerConfigResponse,
+} from './types'
+
+export const config: ContractFormula<RebalancerConfigResponse | undefined> = {
   compute: async ({ contractAddress: accountAddr, get }) => {
     // TODO: modify to transformer
-    let config: RebalancerConfig | undefined = await get(
+    const config: RebalancerConfig | undefined = await get(
       REBALANCER_ADDR,
       'configs',
       accountAddr
@@ -19,7 +22,7 @@ export const config: ContractFormula<
         is_paused: false,
       }
     } else {
-      let config: RebalancerConfig | undefined = await get(
+      const config: RebalancerConfig | undefined = await get(
         accountAddr,
         'paused_configs',
         accountAddr
@@ -39,16 +42,12 @@ export const config: ContractFormula<
 export const targets: ContractFormula<ParsedTarget[] | undefined> = {
   compute: async ({ contractAddress: accountAddr, get }) => {
     // TODO: modify to transformer
-    let config: RebalancerConfig | undefined = await get(
+    const config: RebalancerConfig | undefined = await get(
       REBALANCER_ADDR,
       'configs',
       accountAddr
     )
 
-    if (config) {
-      return config.targets
-    } else {
-      return undefined
-    }
+    return config?.targets
   },
 }
