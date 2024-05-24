@@ -91,6 +91,7 @@ export const daoProposals: MeilisearchIndexer = {
   automatic: true,
   filterableAttributes: [
     'value.id',
+    'value.dao',
     'value.proposal.title',
     'value.proposal.description',
     'value.proposal.proposer',

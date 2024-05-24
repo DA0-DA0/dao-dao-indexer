@@ -11,8 +11,9 @@ import { Ballot, Config, MultipleChoiceProposal } from './types'
 export * from '../base'
 
 export const config: ContractFormula<Config | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'config'),
+  compute: async ({ contractAddress, get, getTransformationMatch }) =>
+    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value ??
+    (await get<Config>(contractAddress, 'config')),
 }
 
 export const dao: ContractFormula<string | undefined> = {
@@ -37,6 +38,8 @@ export const proposal: ContractFormula<
       throw new Error('missing `id`')
     }
 
+    const daoAddress = await dao.compute(env)
+
     const idNum = Number(id)
     const proposal =
       (
@@ -48,7 +51,14 @@ export const proposal: ContractFormula<
       // Fallback to events.
       (await get<MultipleChoiceProposal>(contractAddress, 'proposals', idNum))
 
-    return proposal && intoResponse(env, proposal, idNum)
+    return (
+      proposal && {
+        ...intoResponse(env, proposal, idNum),
+        ...(daoAddress && {
+          dao: daoAddress,
+        }),
+      }
+    )
   },
 }
 

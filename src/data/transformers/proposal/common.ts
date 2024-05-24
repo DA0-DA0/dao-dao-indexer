@@ -3,6 +3,7 @@ import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 
 import { StatusEnum } from '../../formulas/contract/proposal/types'
 import { VoteCast } from '../../types'
+import { makeTransformer } from '../utils'
 
 const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
 
@@ -10,6 +11,8 @@ const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
 const KEY_PREFIX_PROPOSALS_V2 = dbKeyForKeys('proposals_v2', '')
 const KEY_PREFIX_BALLOTS = dbKeyForKeys('ballots', '')
 const KEY_CONFIG_V2 = dbKeyForKeys('config_v2')
+
+const config = makeTransformer(CODE_IDS_KEYS, 'config', ['config_v2', 'config'])
 
 const proposal: Transformer = {
   filter: {
@@ -108,4 +111,4 @@ const proposalVetoer: Transformer = {
   },
 }
 
-export default [proposal, proposed, voteCast, vetoer, proposalVetoer]
+export default [config, proposal, proposed, voteCast, vetoer, proposalVetoer]

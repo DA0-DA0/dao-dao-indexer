@@ -11,9 +11,10 @@ import { Ballot, Config, SingleChoiceProposal } from './types'
 export * from '../base'
 
 export const config: ContractFormula<Config | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    (await get(contractAddress, 'config_v2')) ??
-    (await get(contractAddress, 'config')),
+  compute: async ({ contractAddress, get, getTransformationMatch }) =>
+    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value ??
+    (await get<Config>(contractAddress, 'config_v2')) ??
+    (await get<Config>(contractAddress, 'config')),
 }
 
 export const dao: ContractFormula<string | undefined> = {
@@ -37,6 +38,8 @@ export const proposal: ContractFormula<
     if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
+
+    const daoAddress = await dao.compute(env)
 
     const idNum = Number(id)
     let proposal = (
@@ -68,7 +71,14 @@ export const proposal: ContractFormula<
       }
     }
 
-    return proposal && intoResponse(env, proposal, idNum, { v2 })
+    return (
+      proposal && {
+        ...intoResponse(env, proposal, idNum, { v2 }),
+        ...(daoAddress && {
+          dao: daoAddress,
+        }),
+      }
+    )
   },
 }
 

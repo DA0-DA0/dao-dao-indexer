@@ -28,6 +28,7 @@ export interface ProposalResponse<Proposal> {
   id: number
   proposal: Proposal
   // Extra.
+  dao?: string
   createdAt?: string
   completedAt?: string
   executedAt?: string
