@@ -99,6 +99,7 @@ export const daoProposals: MeilisearchIndexer = {
     'value.proposal.proposer',
     'value.proposal.status',
   ],
+  sortableAttributes: ['value.proposal.start_height'],
   matches: ({ event }) => {
     if (
       !(
