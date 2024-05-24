@@ -1,4 +1,4 @@
-import { compute, loadConfig, serializeBlock } from '@/core'
+import { compute, loadConfig } from '@/core'
 import { getTypedFormula } from '@/data'
 import { meilisearchIndexers } from '@/data/meilisearch'
 import { State } from '@/db'
@@ -80,7 +80,10 @@ export const updateIndexes = async ({
 
                   return {
                     id,
-                    block: block && serializeBlock(block),
+                    block: block && {
+                      height: Number(block.height),
+                      timeUnixMs: Number(block.timeUnixMs),
+                    },
                     value,
                   }
                 }

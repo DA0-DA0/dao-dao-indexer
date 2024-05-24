@@ -20,6 +20,7 @@ export const daos: MeilisearchIndexer = {
     'value.config.name',
     'value.config.description',
     'value.proposalCount',
+    'value.hideFromSearch',
   ],
   sortableAttributes: ['value.proposalCount'],
   matches: async ({ event, state }) => {
@@ -92,6 +93,7 @@ export const daoProposals: MeilisearchIndexer = {
   filterableAttributes: [
     'value.id',
     'value.dao',
+    'value.hideFromSearch',
     'value.proposal.title',
     'value.proposal.description',
     'value.proposal.proposer',

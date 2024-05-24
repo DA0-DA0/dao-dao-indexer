@@ -4,6 +4,7 @@ import { ContractEnv, ContractFormula } from '@/core'
 
 import { VoteCast, VoteInfo } from '../../../../types'
 import { expirationPlusDuration, isExpirationExpired } from '../../../utils'
+import { item } from '../../daoCore/base'
 import { ListProposalFilter, ProposalResponse, StatusEnum } from '../types'
 import { isPassed, isRejected } from './status'
 import { Ballot, Config, MultipleChoiceProposal } from './types'
@@ -39,6 +40,15 @@ export const proposal: ContractFormula<
     }
 
     const daoAddress = await dao.compute(env)
+    const hideFromSearch = daoAddress
+      ? !!(await item.compute({
+          ...env,
+          contractAddress: daoAddress,
+          args: {
+            key: 'hideFromSearch',
+          },
+        }))
+      : undefined
 
     const idNum = Number(id)
     const proposal =
@@ -56,6 +66,7 @@ export const proposal: ContractFormula<
         ...intoResponse(env, proposal, idNum),
         ...(daoAddress && {
           dao: daoAddress,
+          hideFromSearch,
         }),
       }
     )
