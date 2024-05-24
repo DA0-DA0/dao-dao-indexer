@@ -63,7 +63,7 @@ export const proposal: ContractFormula<
 
     return (
       proposal && {
-        ...intoResponse(env, proposal, idNum),
+        ...(await intoResponse(env, proposal, idNum)),
         ...(daoAddress && {
           dao: daoAddress,
           hideFromSearch,
