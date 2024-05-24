@@ -28,8 +28,9 @@ export interface ProposalResponse<Proposal> {
   id: number
   proposal: Proposal
   // Extra.
-  dao?: string
   hideFromSearch?: boolean
+  dao?: string
+  daoProposalId?: string
   createdAt?: string
   completedAt?: string
   executedAt?: string
