@@ -8,7 +8,7 @@ export const admin: ContractFormula<string | undefined> = {
     await get(contractAddress, 'admin'),
 }
 
-export const account: ContractFormula<AccountResponse | undefined> = {
+export const config: ContractFormula<AccountResponse | undefined> = {
   compute: async (env) => ({
     admin: await admin.compute(env),
     rebalancerConfig: await rebalancerConfig.compute(env),
