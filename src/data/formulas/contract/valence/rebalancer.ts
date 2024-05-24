@@ -23,7 +23,7 @@ export const config: ContractFormula<RebalancerConfigResponse | undefined> = {
       }
     } else {
       const config: RebalancerConfig | undefined = await get(
-        accountAddr,
+        REBALANCER_ADDR,
         'paused_configs',
         accountAddr
       )
