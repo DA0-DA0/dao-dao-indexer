@@ -1,14 +1,6 @@
-import { ContractFormula, dbKeyToKeys } from '@/core'
+import { ContractFormula } from '@/core'
 
-import { AUCTIONS_MANAGER_ADDR } from './constants'
-import {
-  AuctionConfig,
-  AuctionConfigResponse,
-  AuctionIds,
-  AuctionStrategy,
-  FundsInAuctionsResponse,
-  Pair,
-} from './types'
+import { AuctionConfig, AuctionConfigResponse, AuctionStrategy } from './types'
 
 export const config: ContractFormula<AuctionConfigResponse | undefined> = {
   compute: async ({ contractAddress, get }) => {
@@ -31,4 +23,3 @@ export const config: ContractFormula<AuctionConfigResponse | undefined> = {
     }
   },
 }
-
