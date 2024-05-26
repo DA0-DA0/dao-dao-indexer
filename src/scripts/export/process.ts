@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
-import { DbType, getBullWorker, loadConfig } from '@/core'
+import { DbType, getBullWorker, loadConfig, updateConfigWasmCodes } from '@/core'
 import { State, loadDb } from '@/db'
 
 import { workerMakers } from './workers'
@@ -26,7 +26,7 @@ program.parse()
 const { config: _config, update, webhooks } = program.opts()
 
 // Load config with config option.
-const config = loadConfig(_config)
+let config = loadConfig(_config)
 
 // Add Sentry error reporting.
 if (config.sentryDsn) {
@@ -43,6 +43,8 @@ const main = async () => {
   const accountsSequelize = await loadDb({
     type: DbType.Accounts,
   })
+
+  config = await updateConfigWasmCodes(config)
 
   // Initialize state.
   await State.createSingletonIfMissing()

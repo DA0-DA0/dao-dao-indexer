@@ -1,7 +1,9 @@
+import { WasmCodeKey } from '@/db/models/WasmCodeKey'
+
 import { WasmCode } from './types'
 import { WasmCodeService } from './wasm-code.service'
 
-test('WasmCodeService', () => {
+test('WasmCodeService', async () => {
   const codeIds = {
     codeKey1: [1, 2, 3],
     codeKey2: [4, 5, 6],
@@ -12,6 +14,8 @@ test('WasmCodeService', () => {
     new WasmCode('codeKey1', [1, 2, 3]),
     new WasmCode('codeKey2', [4, 5, 6]),
   ])
+
+  expect(wasmCodeService.exportWasmCodes()).toEqual(codeIds)
 
   expect(wasmCodeService.getWasmCodeAllIds()).toEqual([1, 2, 3, 4, 5, 6])
 
@@ -36,4 +40,19 @@ test('WasmCodeService', () => {
     'codeKey1',
     'codeKey2',
   ])
+
+  await WasmCodeKey.createWasmCode('codeKey1', 1)
+  await WasmCodeKey.createWasmCode('codeKey2', [2, 3])
+  await WasmCodeKey.createWasmCode('codeKey3', [])
+
+  const wasmCodes = await wasmCodeService.loadWasmCodeIdsFromDB()
+
+  expect(wasmCodes).toEqual([
+    new WasmCode('codeKey1', [1]),
+    new WasmCode('codeKey2', [2, 3]),
+    new WasmCode('codeKey3', []),
+  ])
+
+  const newWasmCodeService = await WasmCodeService.newWithWasmCodesFromDB()
+  expect(newWasmCodeService.getWasmCodes()).toEqual(wasmCodes)
 })

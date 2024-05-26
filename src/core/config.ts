@@ -21,10 +21,18 @@ export const loadConfig = (configOverride?: string) => {
     }
 
     config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
-    config.wasmCodes = new WasmCodeService(config.codeIds)
   }
 
   return config
+}
+
+export const updateConfigWasmCodes = async (
+  configToUpdate: Config
+): Promise<Config> => {
+  configToUpdate.wasmCodes = await WasmCodeService.newWithWasmCodesFromDB()
+  configToUpdate.codeIds = configToUpdate.wasmCodes.exportWasmCodes()
+  config = configToUpdate
+  return configToUpdate
 }
 
 /**

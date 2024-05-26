@@ -1,22 +1,55 @@
+import { WasmCodeKey } from '@/db/models/WasmCodeKey'
+import { WasmCodeKeyId } from '@/db/models/WasmCodeKeyId'
+
 import { WasmCode } from './types'
 import { WasmCodeAdapter } from './wasm-code.adapter'
 
 export class WasmCodeService implements WasmCodeAdapter {
-  private readonly wasmCodes: WasmCode[]
+  private wasmCodes: WasmCode[] = []
 
-  constructor(codeIds: Record<string, number[] | undefined> | undefined) {
-    if (!codeIds) {
-      throw new Error('No code IDs provided.')
+  constructor(
+    codeIds: Record<string, number[] | undefined> | undefined = undefined
+  ) {
+    if (codeIds) {
+      this.addWasmCode(
+        Object.entries(codeIds).map(
+          ([codeKey, codeIds]: [string, number[] | undefined]) =>
+            new WasmCode(codeKey, codeIds)
+        )
+      )
     }
+  }
 
-    this.wasmCodes = Object.entries(codeIds).map(
-      ([codeKey, codeIds]: [string, number[] | undefined]) =>
-        new WasmCode(codeKey, codeIds)
-    )
+  static async newWithWasmCodesFromDB(): Promise<WasmCodeService> {
+    const wasmCodeService = new WasmCodeService()
+    const wasmCodes = await wasmCodeService.loadWasmCodeIdsFromDB()
+    wasmCodeService.addWasmCode(wasmCodes)
+    return wasmCodeService
+  }
+
+  resetWasmCodes(): void {
+    this.wasmCodes = []
+  }
+
+  addWasmCode(wasmCodes: WasmCode[]): void {
+    this.wasmCodes.push(...wasmCodes)
   }
 
   getWasmCodes(): WasmCode[] {
     return this.wasmCodes
+  }
+
+  exportWasmCodes(): Record<string, number[] | undefined> {
+    return this.wasmCodes.reduce(
+      (
+        acc: Record<string, number[] | undefined>,
+        wasmCode: WasmCode
+      ): Record<string, number[] | undefined> => ({
+        ...acc,
+        [wasmCode.codeKey]: wasmCode.codeIds,
+      }),
+      {}
+    )
   }
 
   getWasmCodeAllIds(): number[] {
@@ -63,5 +96,19 @@ export class WasmCodeService implements WasmCodeAdapter {
     }
 
     return input.split(',').map((key: string) => key.trim())
+  }
+
+  async loadWasmCodeIdsFromDB(): Promise<WasmCode[]> {
+    return WasmCodeKey.findAllWithIds().then((wasmCodeKeys: WasmCodeKey[]) =>
+      wasmCodeKeys.map(
+        (wasmCodeKey: WasmCodeKey) =>
+          new WasmCode(
+            wasmCodeKey.codeKey,
+            wasmCodeKey.codeKeyIds.map(
+              (wasmCodeKeyId: WasmCodeKeyId) => wasmCodeKeyId.codeKeyId
+            )
+          )
+      )
+    )
   }
 }
