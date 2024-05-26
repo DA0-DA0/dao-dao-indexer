@@ -94,9 +94,8 @@ export const main = async () => {
   } else if (options.ids?.length || options.codeIdsKeys?.length) {
     const codeIds = [
       ...(options.ids || []),
-      ...(options.codeIdsKeys || []).flatMap(
-        (key: string) => config.codeIds?.[key]
-      ),
+      ...(config.wasmCodes?.findWasmCodeIdsByKeys(options.codeIdsKeys || []) ??
+        []),
     ]
     addresses = (
       await Contract.findAll({

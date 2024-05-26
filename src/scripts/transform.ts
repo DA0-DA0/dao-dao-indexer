@@ -74,9 +74,11 @@ const main = async () => {
       }
     : {}
 
-  const codeIds = (
-    codeIdsKeys && typeof codeIdsKeys === 'string' ? codeIdsKeys.split(',') : []
-  ).flatMap((key) => config.codeIds?.[key] ?? [])
+  const codeIdsKeysFromStr =
+    config.wasmCodes?.extractWasmCodeKeys(codeIdsKeys) ?? []
+  const codeIds =
+    config.wasmCodes?.findWasmCodeIdsByKeys(...codeIdsKeysFromStr) ?? []
+
   if (typeof codeIdsKeys === 'string' && codeIds.length === 0) {
     throw new Error('No code IDs found in config')
   }

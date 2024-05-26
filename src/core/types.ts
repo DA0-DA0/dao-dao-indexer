@@ -10,6 +10,7 @@ import {
   State,
   WasmTxEvent,
 } from '@/db'
+import { WasmCodeAdapter } from '@/wasmcodes/wasm-code.adapter'
 
 type DB = { uri?: string } & Pick<
   SequelizeOptions,
@@ -48,6 +49,9 @@ export type Config = {
   }
   // Map some arbitary string to a list of code IDs.
   codeIds?: Record<string, number[] | undefined>
+
+  wasmCodes?: WasmCodeAdapter
+
   // If present, sets up Sentry error reporting.
   sentryDsn?: string
   // Payment info.

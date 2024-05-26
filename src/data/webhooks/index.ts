@@ -59,8 +59,8 @@ export const getProcessedWebhooks = (
       .filter((webhook): webhook is Webhook => !!webhook)
 
     processedWebhooks = _webhooks.map(({ filter, ...webhook }) => {
-      const allCodeIds = filter.codeIdsKeys?.flatMap(
-        (key) => config.codeIds?.[key] ?? []
+      const allCodeIds = config.wasmCodes?.findWasmCodeIdsByKeys(
+        ...(filter.codeIdsKeys ?? [])
       )
 
       return {

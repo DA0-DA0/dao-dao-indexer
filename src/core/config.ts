@@ -1,6 +1,8 @@
 import * as fs from 'fs'
 import path from 'path'
 
+import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+
 import { Config } from './types'
 
 // Constants.
@@ -19,6 +21,7 @@ export const loadConfig = (configOverride?: string) => {
     }
 
     config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+    config.wasmCodes = new WasmCodeService(config.codeIds)
   }
 
   return config
@@ -27,7 +30,7 @@ export const loadConfig = (configOverride?: string) => {
 /**
  * Get code IDs for a list of keys in the config.
  */
-export const getCodeIdsForKeys = (...keys: string[]) => {
+export const getCodeIdsForKeys = (...keys: string[]): number[] => {
   const config = loadConfig()
-  return keys.flatMap((key) => config.codeIds?.[key] ?? [])
+  return config.wasmCodes?.findWasmCodeIdsByKeys(...keys) ?? []
 }

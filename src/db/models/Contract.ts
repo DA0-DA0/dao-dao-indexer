@@ -54,7 +54,7 @@ export class Contract extends Model {
    */
   matchesCodeIdKeys(...keys: string[]): boolean {
     const config = loadConfig()
-    const codeIds = keys.flatMap((key) => config.codeIds?.[key] ?? [])
+    const codeIds = config.wasmCodes?.findWasmCodeIdsByKeys(...keys) ?? []
     return codeIds.includes(this.codeId)
   }
 }

@@ -914,10 +914,7 @@ export const getEnv = ({
       return
     }
 
-    const codeIdKeys = Object.entries(config.codeIds ?? {}).flatMap(
-      ([key, value]) => (value?.includes(codeId) ? [key] : [])
-    )
-    return codeIdKeys[0]
+    return config.wasmCodes?.findWasmCodeKeyById(codeId)
   }
 
   const getSlashEvents: FormulaSlashEventsGetter = async (

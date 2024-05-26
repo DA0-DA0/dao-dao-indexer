@@ -43,8 +43,8 @@ export const getProcessedTransformers = (
     ]
 
     processedTransformers = _transformers.map(({ filter, ...webhook }) => {
-      const allCodeIds = filter.codeIdsKeys?.flatMap(
-        (key) => config.codeIds?.[key] ?? []
+      const allCodeIds = config.wasmCodes?.findWasmCodeIdsByKeys(
+        ...(filter.codeIdsKeys ?? [])
       )
 
       return {

@@ -59,9 +59,12 @@ const main = async () => {
   let replaced = 0
   const formulasReplaced = new Set<string>()
 
-  const codeIds = (
-    codeIdsKeys && typeof codeIdsKeys === 'string' ? codeIdsKeys.split(',') : []
-  ).flatMap((key) => config.codeIds?.[key] ?? [])
+  const codeIdsKeysFromStr: string[] =
+    config.wasmCodes?.extractWasmCodeKeys(codeIdsKeys) ?? []
+
+  const codeIds =
+    config.wasmCodes?.findWasmCodeIdsByKeys(...codeIdsKeysFromStr) ?? []
+
   const contracts =
     codeIds.length > 0
       ? await Contract.findAll({
