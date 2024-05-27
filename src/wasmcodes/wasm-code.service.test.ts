@@ -55,4 +55,14 @@ test('WasmCodeService', async () => {
 
   const newWasmCodeService = await WasmCodeService.newWithWasmCodesFromDB()
   expect(newWasmCodeService.getWasmCodes()).toEqual(wasmCodes)
+
+  await wasmCodeService.reloadWasmCodes()
+  expect(wasmCodeService.getWasmCodes()).toEqual(wasmCodes)
+
+  await WasmCodeKey.createWasmCode('codeKey4', [])
+  await wasmCodeService.reloadWasmCodes()
+  expect(wasmCodeService.getWasmCodes()).toEqual([
+    ...wasmCodes,
+    new WasmCode('codeKey4', []),
+  ])
 })

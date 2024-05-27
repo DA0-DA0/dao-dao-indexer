@@ -10,4 +10,5 @@ export interface WasmCodeAdapter {
   someWasmKeysHasCodeId(codeId: number | undefined, ...keys: string[]): boolean
   extractWasmCodeKeys(input: any): string[]
   loadWasmCodeIdsFromDB(): Promise<WasmCode[]>
+  reloadWasmCodes(): Promise<void>
 }

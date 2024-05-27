@@ -1,7 +1,12 @@
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
-import { DbType, getBullWorker, loadConfig, updateConfigWasmCodes } from '@/core'
+import {
+  DbType,
+  getBullWorker,
+  loadConfig,
+  updateConfigWasmCodes,
+} from '@/core'
 import { State, loadDb } from '@/db'
 
 import { workerMakers } from './workers'
@@ -44,7 +49,7 @@ const main = async () => {
     type: DbType.Accounts,
   })
 
-  config = await updateConfigWasmCodes(config)
+  await updateConfigWasmCodes(config)
 
   // Initialize state.
   await State.createSingletonIfMissing()
@@ -97,7 +102,6 @@ const main = async () => {
       })
     }
   })
-
   // Tell pm2 we're ready.
   if (process.send) {
     process.send('ready')

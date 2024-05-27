@@ -3,7 +3,6 @@ import { WasmCodeKeyId } from '@/db/models/WasmCodeKeyId'
 
 import { WasmCode } from './types'
 import { WasmCodeAdapter } from './wasm-code.adapter'
-
 export class WasmCodeService implements WasmCodeAdapter {
   private wasmCodes: WasmCode[] = []
 
@@ -36,7 +35,9 @@ export class WasmCodeService implements WasmCodeAdapter {
   }
 
   getWasmCodes(): WasmCode[] {
-    return this.wasmCodes
+    return this.wasmCodes.sort((a: WasmCode, b: WasmCode) =>
+      a.codeKey.localeCompare(b.codeKey)
+    )
   }
 
   exportWasmCodes(): Record<string, number[] | undefined> {
@@ -110,5 +111,11 @@ export class WasmCodeService implements WasmCodeAdapter {
           )
       )
     )
+  }
+
+  async reloadWasmCodes(): Promise<void> {
+    const wasmCodes = await this.loadWasmCodeIdsFromDB()
+    this.resetWasmCodes()
+    this.addWasmCode(wasmCodes)
   }
 }

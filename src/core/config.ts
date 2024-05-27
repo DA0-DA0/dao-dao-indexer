@@ -4,6 +4,7 @@ import path from 'path'
 import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
 
 import { Config } from './types'
+import { WasmCodeUpdater } from '@/wasmcodes/wasm-code-updater'
 
 // Constants.
 export const CONFIG_FILE = path.join(process.cwd(), './config.json')
@@ -27,12 +28,17 @@ export const loadConfig = (configOverride?: string) => {
 }
 
 export const updateConfigWasmCodes = async (
-  configToUpdate: Config
-): Promise<Config> => {
-  configToUpdate.wasmCodes = await WasmCodeService.newWithWasmCodesFromDB()
-  configToUpdate.codeIds = configToUpdate.wasmCodes.exportWasmCodes()
+  configToUpdate: Config,
+  keepUpdating: boolean = true
+) => {
+  configToUpdate.wasmCodes = config.wasmCodes ?? new WasmCodeService()
+  await WasmCodeUpdater.getInstance().updateWasmCodes(keepUpdating)
   config = configToUpdate
-  return configToUpdate
+}
+
+export const updateConfigCodeIds = async (): Promise<void> => {
+  await config.wasmCodes?.reloadWasmCodes()
+  config.codeIds = config.wasmCodes?.exportWasmCodes()
 }
 
 /**
