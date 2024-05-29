@@ -29,18 +29,20 @@ export const price: ContractFormula<
     }
 
     const pair = args.pair.split(',') as Pair
-    const { price, time } = (await get(
+    const priceAndTime = await get<Price>(
       contractAddress,
       'prices',
       pair[0],
       pair[1]
-    )) as Price
+    )
 
-    return {
-      pair,
-      price,
-      time,
-    }
+    return (
+      priceAndTime && {
+        pair,
+        price: priceAndTime.price,
+        time: priceAndTime.time,
+      }
+    )
   },
 }
 
@@ -56,9 +58,10 @@ export const pricesOfDenom: ContractFormula<
     }
 
     const pairs: PriceResponse[] = []
-    const pairMap = (await getMap(contractAddress, 'prices', {
-      keyType: 'raw',
-    }))!
+    const pairMap =
+      (await getMap(contractAddress, 'prices', {
+        keyType: 'raw',
+      })) || {}
 
     Object.entries(pairMap).forEach(([key, value]) => {
       const pair = dbKeyToKeys(key, [false, false]) as Pair

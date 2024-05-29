@@ -4,11 +4,8 @@ import { AuctionConfig, AuctionConfigResponse, AuctionStrategy } from './types'
 
 export const config: ContractFormula<AuctionConfigResponse | undefined> = {
   compute: async ({ contractAddress, get }) => {
-    const config: AuctionConfig | undefined = await get(
-      contractAddress,
-      'auction_config'
-    )
-    const priceStrategy: AuctionStrategy | undefined = await get(
+    const config = await get<AuctionConfig>(contractAddress, 'auction_config')
+    const priceStrategy = await get<AuctionStrategy>(
       contractAddress,
       'auction_strategy'
     )
