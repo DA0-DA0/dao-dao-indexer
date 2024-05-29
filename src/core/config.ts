@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import path from 'path'
 
-import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { Config } from './types'
 

@@ -6,7 +6,7 @@ import {
   Transformer,
   TransformerMaker,
 } from '@/core'
-import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import common from './common'
 import dao from './dao'

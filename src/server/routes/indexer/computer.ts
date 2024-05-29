@@ -22,7 +22,7 @@ import {
   State,
   Validator,
 } from '@/db'
-import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { captureSentryException } from '../../sentry'
 

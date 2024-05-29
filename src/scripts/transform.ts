@@ -9,7 +9,7 @@ import {
   loadDb,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 

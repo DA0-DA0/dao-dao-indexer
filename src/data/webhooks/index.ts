@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/node'
 
 import { Config, ProcessedWebhook, Webhook, WebhookMaker } from '@/core'
 import { State, WasmStateEvent } from '@/db'
-import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { makeProposalCreated } from './discordNotifier'
 import { makeIndexerCwReceiptPaid } from './indexerCwReceipt'

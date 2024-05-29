@@ -8,7 +8,7 @@ import {
 } from 'sequelize-typescript'
 
 import { ContractJson } from '@/core/types'
-import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 @Table({
   timestamps: true,

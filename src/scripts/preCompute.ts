@@ -12,7 +12,7 @@ import {
 } from '@/core'
 import { getTypedFormula } from '@/data'
 import { Computation, Contract, State, loadDb } from '@/db'
-import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 export const main = async () => {
   // Parse arguments.

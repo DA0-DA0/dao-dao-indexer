@@ -11,7 +11,7 @@ import {
   WasmTxEvent,
   loadDb,
 } from '@/db'
-import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { getCodeIdsForKeys, loadConfig } from './config'
 import {

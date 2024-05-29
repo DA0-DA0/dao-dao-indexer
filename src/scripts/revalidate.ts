@@ -6,7 +6,7 @@ import { Op } from 'sequelize'
 
 import { loadConfig } from '@/core'
 import { Computation, Contract, loadDb } from '@/db'
-import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 
