@@ -1,3 +1,4 @@
+import { updateConfigCodeIds } from '@/core/config'
 import { WasmCodeKey } from '@/db/models/WasmCodeKey'
 import { WasmCodeKeyId } from '@/db/models/WasmCodeKeyId'
 
@@ -5,25 +6,30 @@ import { WasmCode } from './types'
 import { WasmCodeAdapter } from './wasm-code.adapter'
 export class WasmCodeService implements WasmCodeAdapter {
   private wasmCodes: WasmCode[] = []
+  private interval: NodeJS.Timeout | undefined
 
-  constructor(
-    codeIds: Record<string, number[] | undefined> | undefined = undefined
-  ) {
-    if (codeIds) {
-      this.addWasmCode(
-        Object.entries(codeIds).map(
-          ([codeKey, codeIds]: [string, number[] | undefined]) =>
-            new WasmCode(codeKey, codeIds)
-        )
-      )
+  static instance: WasmCodeService
+
+  private constructor() {}
+
+  static getInstance(): WasmCodeService {
+    if (!this.instance) {
+      throw new Error('WasmCodeService not initialized')
     }
+    return this.instance
   }
 
   static async newWithWasmCodesFromDB(): Promise<WasmCodeService> {
+    if (this.instance) {
+      return this.getInstance()
+    }
+
     const wasmCodeService = new WasmCodeService()
     const wasmCodes = await wasmCodeService.loadWasmCodeIdsFromDB()
     wasmCodeService.addWasmCode(wasmCodes)
-    return wasmCodeService
+    await wasmCodeService.updateWasmCodes()
+    this.instance = wasmCodeService
+    return this.getInstance()
   }
 
   resetWasmCodes(): void {
@@ -35,9 +41,12 @@ export class WasmCodeService implements WasmCodeAdapter {
   }
 
   getWasmCodes(): WasmCode[] {
-    return this.wasmCodes.sort((a: WasmCode, b: WasmCode) =>
-      a.codeKey.localeCompare(b.codeKey)
-    )
+    return this.wasmCodes
+      .sort((a: WasmCode, b: WasmCode) => a.codeKey.localeCompare(b.codeKey))
+      .map(
+        (wasmCode: WasmCode) =>
+          new WasmCode(wasmCode.codeKey, wasmCode.codeIds?.sort())
+      )
   }
 
   exportWasmCodes(): Record<string, number[] | undefined> {
@@ -53,12 +62,6 @@ export class WasmCodeService implements WasmCodeAdapter {
     )
   }
 
-  getWasmCodeAllIds(): number[] {
-    return this.wasmCodes.flatMap(
-      (wasmCode: WasmCode) => wasmCode.codeIds ?? []
-    )
-  }
-
   findWasmCodeIdsByKeys(...keys: string[]): number[] {
     return keys.flatMap(
       (key: string) =>
@@ -67,24 +70,10 @@ export class WasmCodeService implements WasmCodeAdapter {
     )
   }
 
-  findWasmCodeKeyById(codeId: number): string | undefined {
-    return this.wasmCodes.find((wasmCode: WasmCode) =>
-      wasmCode.codeIds?.includes(codeId)
-    )?.codeKey
-  }
-
-  someWasmKeysHasCodeId(
-    codeId: number | undefined,
-    ...keys: string[]
-  ): boolean {
-    if (!codeId) {
-      return false
-    }
-    return keys.some((key: string) =>
-      this.wasmCodes
-        .find((wasmCode: WasmCode) => wasmCode.codeKey === key)
-        ?.codeIds?.includes(codeId)
-    )
+  findWasmCodeKeyById(codeId: number): string[] | undefined {
+    return this.wasmCodes
+      .filter((wasmCode: WasmCode) => wasmCode.codeIds?.includes(codeId))
+      .map((wasmCode: WasmCode) => wasmCode.codeKey)
   }
 
   extractWasmCodeKeys(input: any): string[] {
@@ -117,5 +106,18 @@ export class WasmCodeService implements WasmCodeAdapter {
     const wasmCodes = await this.loadWasmCodeIdsFromDB()
     this.resetWasmCodes()
     this.addWasmCode(wasmCodes)
+  }
+
+  async updateWasmCodes(): Promise<void> {
+    this.interval = setInterval(async () => {
+      await this.reloadWasmCodes()
+      await updateConfigCodeIds(this.exportWasmCodes())
+    }, 2000)
+  }
+
+  async stopUpdateWasmCodes(): Promise<void> {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }

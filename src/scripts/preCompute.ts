@@ -12,6 +12,7 @@ import {
 } from '@/core'
 import { getTypedFormula } from '@/data'
 import { Computation, Contract, State, loadDb } from '@/db'
+import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
 
 export const main = async () => {
   // Parse arguments.
@@ -94,8 +95,9 @@ export const main = async () => {
   } else if (options.ids?.length || options.codeIdsKeys?.length) {
     const codeIds = [
       ...(options.ids || []),
-      ...(config.wasmCodes?.findWasmCodeIdsByKeys(options.codeIdsKeys || []) ??
-        []),
+      ...(WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+        options.codeIdsKeys || []
+      ) ?? []),
     ]
     addresses = (
       await Contract.findAll({

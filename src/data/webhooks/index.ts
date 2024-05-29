@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/node'
 
 import { Config, ProcessedWebhook, Webhook, WebhookMaker } from '@/core'
 import { State, WasmStateEvent } from '@/db'
+import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
 
 import { makeProposalCreated } from './discordNotifier'
 import { makeIndexerCwReceiptPaid } from './indexerCwReceipt'
@@ -59,7 +60,7 @@ export const getProcessedWebhooks = (
       .filter((webhook): webhook is Webhook => !!webhook)
 
     processedWebhooks = _webhooks.map(({ filter, ...webhook }) => {
-      const allCodeIds = config.wasmCodes?.findWasmCodeIdsByKeys(
+      const allCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
         ...(filter.codeIdsKeys ?? [])
       )
 

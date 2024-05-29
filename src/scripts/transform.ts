@@ -9,6 +9,7 @@ import {
   loadDb,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
+import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 
@@ -75,9 +76,11 @@ const main = async () => {
     : {}
 
   const codeIdsKeysFromStr =
-    config.wasmCodes?.extractWasmCodeKeys(codeIdsKeys) ?? []
+    WasmCodeService.getInstance().extractWasmCodeKeys(codeIdsKeys) ?? []
   const codeIds =
-    config.wasmCodes?.findWasmCodeIdsByKeys(...codeIdsKeysFromStr) ?? []
+    WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+      ...codeIdsKeysFromStr
+    ) ?? []
 
   if (typeof codeIdsKeys === 'string' && codeIds.length === 0) {
     throw new Error('No code IDs found in config')

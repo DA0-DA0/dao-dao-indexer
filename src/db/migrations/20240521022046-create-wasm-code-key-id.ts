@@ -1,4 +1,4 @@
-import { QueryInterface } from 'sequelize'
+import { QueryInterface, fn } from 'sequelize'
 import { DataType } from 'sequelize-typescript'
 
 module.exports = {
@@ -23,12 +23,12 @@ module.exports = {
       createdAt: {
         allowNull: false,
         type: DataType.DATE,
-        defaultValue: new Date(),
+        defaultValue: fn('NOW'),
       },
       updatedAt: {
         allowNull: false,
         type: DataType.DATE,
-        defaultValue: new Date(),
+        defaultValue: fn('NOW'),
       },
     })
     await queryInterface.addIndex('WasmCodeKeyIds', {

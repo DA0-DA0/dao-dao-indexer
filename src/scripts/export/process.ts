@@ -31,7 +31,7 @@ program.parse()
 const { config: _config, update, webhooks } = program.opts()
 
 // Load config with config option.
-let config = loadConfig(_config)
+const config = loadConfig(_config)
 
 // Add Sentry error reporting.
 if (config.sentryDsn) {

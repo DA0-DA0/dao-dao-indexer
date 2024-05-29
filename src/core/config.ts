@@ -4,7 +4,6 @@ import path from 'path'
 import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
 
 import { Config } from './types'
-import { WasmCodeUpdater } from '@/wasmcodes/wasm-code-updater'
 
 // Constants.
 export const CONFIG_FILE = path.join(process.cwd(), './config.json')
@@ -27,24 +26,26 @@ export const loadConfig = (configOverride?: string) => {
   return config
 }
 
-export const updateConfigWasmCodes = async (
-  configToUpdate: Config,
-  keepUpdating: boolean = true
-) => {
-  configToUpdate.wasmCodes = config.wasmCodes ?? new WasmCodeService()
-  await WasmCodeUpdater.getInstance().updateWasmCodes(keepUpdating)
-  config = configToUpdate
+export const updateConfigWasmCodes = async (configToUpdate?: Config) => {
+  const wasmCodeService = await WasmCodeService.newWithWasmCodesFromDB()
+  updateConfigCodeIds(wasmCodeService.exportWasmCodes())
+
+  if (configToUpdate) {
+    configToUpdate.codeIds = config.codeIds
+  }
+
+  return configToUpdate
 }
 
-export const updateConfigCodeIds = async (): Promise<void> => {
-  await config.wasmCodes?.reloadWasmCodes()
-  config.codeIds = config.wasmCodes?.exportWasmCodes()
+export const updateConfigCodeIds = async (
+  codeIds: Record<string, number[] | undefined>
+): Promise<void> => {
+  config.codeIds = codeIds
 }
 
 /**
  * Get code IDs for a list of keys in the config.
  */
 export const getCodeIdsForKeys = (...keys: string[]): number[] => {
-  const config = loadConfig()
-  return config.wasmCodes?.findWasmCodeIdsByKeys(...keys) ?? []
+  return WasmCodeService.getInstance().findWasmCodeIdsByKeys(...keys) ?? []
 }

@@ -6,6 +6,7 @@ import {
   Transformer,
   TransformerMaker,
 } from '@/core'
+import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
 
 import common from './common'
 import dao from './dao'
@@ -43,7 +44,7 @@ export const getProcessedTransformers = (
     ]
 
     processedTransformers = _transformers.map(({ filter, ...webhook }) => {
-      const allCodeIds = config.wasmCodes?.findWasmCodeIdsByKeys(
+      const allCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
         ...(filter.codeIdsKeys ?? [])
       )
 

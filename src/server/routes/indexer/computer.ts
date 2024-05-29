@@ -22,6 +22,7 @@ import {
   State,
   Validator,
 } from '@/db'
+import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
 
 import { captureSentryException } from '../../sentry'
 
@@ -296,7 +297,9 @@ export const computer: Router.Middleware = async (ctx) => {
         if (typedFormula.formula.filter.codeIdsKeys?.length) {
           const codeIdKeys = typedFormula.formula.filter.codeIdsKeys
           const allCodeIds =
-            config.wasmCodes?.findWasmCodeIdsByKeys(...codeIdKeys) ?? []
+            WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+              ...codeIdKeys
+            ) ?? []
           allowed &&= allCodeIds.includes(contract.codeId)
         }
 

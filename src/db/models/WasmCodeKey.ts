@@ -26,17 +26,10 @@ export class WasmCodeKey extends Model {
 
   @AllowNull(true)
   @Column(DataType.TEXT)
-  declare description: number
+  declare description: string
 
   @HasMany(() => WasmCodeKeyId, 'codeKey')
   declare codeKeyIds: WasmCodeKeyId[]
-
-  create(params: {
-    codeKey: string
-    description: number
-  }): Promise<WasmCodeKey> {
-    return WasmCodeKey.create(params)
-  }
 
   async associateCodeKeyIds(codeKeyIds: WasmCodeKeyId[]): Promise<void> {
     await this.$add('codeKeyIds', codeKeyIds)

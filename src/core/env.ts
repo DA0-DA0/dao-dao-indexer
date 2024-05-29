@@ -11,6 +11,7 @@ import {
   WasmTxEvent,
   loadDb,
 } from '@/db'
+import { WasmCodeService } from '@/wasmcodes/wasm-code.service'
 
 import { getCodeIdsForKeys, loadConfig } from './config'
 import {
@@ -914,7 +915,7 @@ export const getEnv = ({
       return
     }
 
-    return config.wasmCodes?.findWasmCodeKeyById(codeId)
+    return WasmCodeService.getInstance().findWasmCodeKeyById(codeId)?.[0]
   }
 
   const getSlashEvents: FormulaSlashEventsGetter = async (
