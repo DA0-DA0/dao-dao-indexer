@@ -3,10 +3,11 @@ import { GenericFormula, dbKeyForKeys } from '@/core'
 export const daos: GenericFormula<number> = {
   dynamic: true,
   compute: async ({ query }) => {
+    // sg_dao and cw3_dao are beta/legacy DAO DAO (v0.2.5 and v0.3.0)
     const [{ count }] = await query(
       `SELECT COUNT(*) as "count" FROM (SELECT DISTINCT ON ("contractAddress") "contractAddress" FROM "WasmStateEvents" WHERE "key" = '${dbKeyForKeys(
         'contract_info'
-      )}' AND ("value" LIKE '%cw-core%' OR "value" LIKE '%cwd-core%' OR "value" LIKE '%dao-core%') ORDER BY "contractAddress") tmp`
+      )}' AND ("value" LIKE '%cw-core%' OR "value" LIKE '%cwd-core%' OR "value" LIKE '%dao-core%' OR "value" LIKE '%sg_dao%' OR "value" LIKE '%cw3_dao%') ORDER BY "contractAddress") tmp`
     )
 
     return Number(count)
