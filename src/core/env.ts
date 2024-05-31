@@ -1,4 +1,4 @@
-import { Op, Sequelize } from 'sequelize'
+import { Op, QueryTypes, Sequelize } from 'sequelize'
 
 import {
   BankStateEvent,
@@ -9,11 +9,13 @@ import {
   WasmStateEvent,
   WasmStateEventTransformation,
   WasmTxEvent,
+  loadDb,
 } from '@/db'
 
 import { getCodeIdsForKeys, loadConfig } from './config'
 import {
   Cache,
+  DbType,
   Env,
   EnvOptions,
   FormulaBalanceGetter,
@@ -32,6 +34,7 @@ import {
   FormulaProposalGetter,
   FormulaProposalObject,
   FormulaProposalsGetter,
+  FormulaQuerier,
   FormulaSlashEventsGetter,
   FormulaTransformationDateGetter,
   FormulaTransformationMapGetter,
@@ -1362,6 +1365,18 @@ export const getEnv = ({
       return event.balances
     }
 
+  const query: FormulaQuerier = async (query, bindParams) => {
+    const db = await loadDb({
+      type: DbType.Data,
+    })
+
+    return db.query(query, {
+      bind: bindParams,
+      raw: true,
+      type: QueryTypes.SELECT,
+    })
+  }
+
   return {
     chainId,
     block,
@@ -1397,5 +1412,7 @@ export const getEnv = ({
     getProposalCount,
 
     getCommunityPoolBalances,
+
+    query,
   }
 }

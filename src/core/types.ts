@@ -1,6 +1,6 @@
 import { ProposalStatus } from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1/gov'
 import { Options as PusherOptions } from 'pusher'
-import { WhereOptions } from 'sequelize'
+import { BindOrReplacements, WhereOptions } from 'sequelize'
 import { SequelizeOptions } from 'sequelize-typescript'
 
 import {
@@ -325,6 +325,11 @@ export type FormulaProposalsGetter = (
 
 export type FormulaProposalCountGetter = () => Promise<number>
 
+export type FormulaQuerier = (
+  query: string,
+  bindParams?: BindOrReplacements
+) => Promise<Record<string, unknown>[]>
+
 export type Env<Args extends Record<string, string> = {}> = {
   chainId: string
   block: Block
@@ -357,6 +362,12 @@ export type Env<Args extends Record<string, string> = {}> = {
   getProposals: FormulaProposalsGetter
   getProposalCount: FormulaProposalCountGetter
   getCommunityPoolBalances: FormulaCommunityPoolBalancesGetter
+
+  /**
+   * Raw database query. This cannot be cached, so any formula that uses this
+   * should be marked as `dynamic`.
+   */
+  query: FormulaQuerier
 }
 
 export interface EnvOptions {
