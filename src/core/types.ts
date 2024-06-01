@@ -333,10 +333,14 @@ export type FormulaQuerier = (
 export type Env<Args extends Record<string, string> = {}> = {
   chainId: string
   block: Block
-  // If latest block is being used, this will be the current date. If fetching
-  // at a specific block, this will be the date of that block.
+  /**
+   * If latest block is being used, this will be the current date. If fetching
+   * at a specific block, this will be the date of that block.
+   */
   date: Date
-  // Arguments may or may not be present, so force formula to handle undefined.
+  /**
+   * Arguments may or may not be present, so force formula to handle undefined.
+   */
   args: Partial<Args>
 
   get: FormulaGetter
