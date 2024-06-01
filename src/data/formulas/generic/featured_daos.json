@@ -50,5 +50,9 @@
   {
     "chainId": "juno-1",
     "address": "juno1h5ex5dn62arjwvwkh88r475dap8qppmmec4sgxzmtdn5tnmke3lqwpplgg"
+  },
+  {
+    "chainId": "neutron-1",
+    "address": "neutron1lqhw66n563pr2vszv4zqhjp7akwpd74vfj5gukh2crw45t5kfmvsa96ujv"
   }
 ]
