@@ -77,6 +77,10 @@ const main = async () => {
   const codeIds = (
     codeIdsKeys && typeof codeIdsKeys === 'string' ? codeIdsKeys.split(',') : []
   ).flatMap((key) => config.codeIds?.[key] ?? [])
+  if (typeof codeIdsKeys === 'string' && codeIds.length === 0) {
+    throw new Error('No code IDs found in config')
+  }
+
   const includeContract = {
     include: {
       model: Contract,
