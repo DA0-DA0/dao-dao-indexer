@@ -9,5 +9,10 @@ const stakingContract = makeTransformer(
 )
 const dao = makeTransformer(CODE_IDS_KEYS, 'dao')
 const token = makeTransformer(CODE_IDS_KEYS, 'token')
+const activeThreshold = makeTransformer(
+  CODE_IDS_KEYS,
+  'activeThreshold',
+  'active_threshold'
+)
 
-export default [stakingContract, dao, token]
+export default [stakingContract, dao, token, activeThreshold]

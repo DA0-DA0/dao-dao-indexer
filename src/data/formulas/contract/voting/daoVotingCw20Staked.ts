@@ -7,6 +7,8 @@ import {
   totalStaked,
 } from '../staking/cw20Stake'
 
+export { activeThreshold } from './common'
+
 export const tokenContract: ContractFormula<string | undefined> = {
   compute: async ({ contractAddress, get, getTransformationMatch }) =>
     (await getTransformationMatch<string>(contractAddress, 'token'))?.value ??
@@ -72,11 +74,6 @@ export const dao: ContractFormula<string | undefined> = {
     (await getTransformationMatch<string>(contractAddress, 'dao'))?.value ??
     // Fallback to events.
     (await get<string>(contractAddress, 'dao')),
-}
-
-export const activeThreshold: ContractFormula = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'active_threshold'),
 }
 
 type Staker = StakerBalance & {

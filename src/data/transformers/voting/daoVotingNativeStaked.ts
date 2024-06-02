@@ -14,5 +14,10 @@ const totalStaked = makeTransformer(
   'totalStaked',
   'total_staked'
 )
+const activeThreshold = makeTransformer(
+  CODE_IDS_KEYS,
+  'activeThreshold',
+  'active_threshold'
+)
 
-export default [config, dao, stakedBalance, totalStaked]
+export default [config, dao, stakedBalance, totalStaked, activeThreshold]

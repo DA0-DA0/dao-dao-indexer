@@ -11,6 +11,11 @@ const KEY_PREFIX_NB = dbKeyForKeys('nb', '')
 const config = makeTransformer(CODE_IDS_KEYS, 'config')
 const dao = makeTransformer(CODE_IDS_KEYS, 'dao')
 const totalStakedNfts = makeTransformer(CODE_IDS_KEYS, 'tsn')
+const activeThreshold = makeTransformer(
+  CODE_IDS_KEYS,
+  'activeThreshold',
+  'active_threshold'
+)
 
 const stakedNftPerOwner: Transformer = {
   filter: {
@@ -63,4 +68,5 @@ export default [
   stakedNftPerOwner,
   stakedNftOwner,
   stakedCount,
+  activeThreshold,
 ]
