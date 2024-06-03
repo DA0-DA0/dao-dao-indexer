@@ -109,11 +109,8 @@ export const fundsInAuction: ContractFormula<
 
         return undefined
       })
-    ).then((res) => {
-      const filtered = res.filter(
-        (r) => r !== undefined
-      ) as FundsInAuctionsResponse[]
-      return filtered.length > 0 ? filtered : undefined
-    })
+    ).then(
+      (res) => res.filter((r) => r !== undefined) as FundsInAuctionsResponse[]
+    )
   },
 }
