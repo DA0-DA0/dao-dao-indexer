@@ -47,7 +47,7 @@ export type DumpState = {
   // block since it deals with expiration, so it cannot be cached. However, we
   // want to cache DumpState to speed up the UI. The UI accesses `pause_info`
   // separately, so this is fine.
-  admin?: string
+  admin?: string | null
   config?: Config
   version?: ContractInfo
   proposal_modules?: ProposalModuleWithInfo[]
@@ -58,7 +58,7 @@ export type DumpState = {
   votingModuleInfo?: ContractInfo
   createdAt?: string
   adminInfo?: {
-    admin?: string
+    admin?: string | null
     config: Config
     info?: ContractInfo
     // Check if it has this current DAO as a SubDAO.
@@ -250,7 +250,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
 
     // Load admin info if admin is a DAO core contract.
     let adminConfig: Config | undefined | null = null
-    let adminAdmin: string | undefined
+    let adminAdmin: string | null = null
     let adminRegisteredSubDao: boolean | undefined
     const adminInfo =
       adminResponse && adminResponse !== env.contractAddress
@@ -335,14 +335,16 @@ export const paused: ContractFormula<PausedResponse> = {
   },
 }
 
-export const admin: ContractFormula<string | undefined> = {
+export const admin: ContractFormula<string | null> = {
   compute: async ({ contractAddress, getTransformationMatch, get }) => {
     return (
       (await getTransformationMatch<string>(contractAddress, 'admin'))?.value ??
       // Fallback to events.
       (await get<string>(contractAddress, 'admin')) ??
-      // Fallback to Neutron modified config main_dao field.
-      (await get<any>(contractAddress, 'config_v2'))?.main_dao
+      // Fallback to Neutron SubDAO config main_dao field.
+      (await get<any>(contractAddress, 'config_v2'))?.main_dao ??
+      // Null if nothing found because no admin set.
+      null
     )
   },
 }
