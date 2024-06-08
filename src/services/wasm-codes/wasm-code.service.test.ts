@@ -7,8 +7,8 @@ import { WasmCodeService } from './wasm-code.service'
 describe('WasmCodeService tests', () => {
   let wasmCodeService: WasmCodeService
 
-  afterAll(async () => {
-    await wasmCodeService.stopUpdateWasmCodes()
+  afterAll(() => {
+    wasmCodeService.stopUpdater()
   })
 
   test('WasmCodeService', async () => {
@@ -38,37 +38,42 @@ describe('WasmCodeService tests', () => {
       wasmCodeService.findWasmCodeIdsByKeys('codeKey1', 'codeKey2')
     ).toEqual([1, 2, 3, 4, 5, 6])
 
-    expect(wasmCodeService.findWasmCodeKeyById(1)).toEqual([
+    expect(wasmCodeService.findWasmCodeKeysById(1)).toEqual([
       'codeKey1',
       'codeKey3',
     ])
-    expect(wasmCodeService.findWasmCodeKeyById(4)).toEqual(['codeKey2'])
-    expect(wasmCodeService.findWasmCodeKeyById(7)).toEqual([])
+    expect(wasmCodeService.findWasmCodeKeysById(4)).toEqual(['codeKey2'])
+    expect(wasmCodeService.findWasmCodeKeysById(7)).toEqual([])
 
-    expect(wasmCodeService.extractWasmCodeKeys(undefined)).toEqual([])
-    expect(wasmCodeService.extractWasmCodeKeys('')).toEqual([])
-    expect(wasmCodeService.extractWasmCodeKeys('codeKey1')).toEqual([
+    expect(WasmCodeService.extractWasmCodeKeys(undefined)).toEqual([])
+    expect(WasmCodeService.extractWasmCodeKeys('')).toEqual([])
+    expect(WasmCodeService.extractWasmCodeKeys('codeKey1')).toEqual([
       'codeKey1',
     ])
-    expect(wasmCodeService.extractWasmCodeKeys('codeKey1,codeKey2')).toEqual([
+    expect(WasmCodeService.extractWasmCodeKeys('codeKey1,codeKey2')).toEqual([
       'codeKey1',
       'codeKey2',
     ])
 
-    await WasmCodeKeyId.destroy({ where: {} })
-    await WasmCodeKey.destroy({ where: {} })
+    await WasmCodeKeyId.truncate()
+    await WasmCodeKey.truncate({
+      cascade: true,
+    })
 
     await WasmCodeKey.createWasmCode('codeKey1', 1)
     await WasmCodeKey.createWasmCode('codeKey2', [2, 3])
     await WasmCodeKey.createWasmCode('codeKey3', [])
 
-    const wasmCodes = await wasmCodeService.loadWasmCodeIdsFromDB()
+    wasmCodeService.resetWasmCodes()
+    await wasmCodeService.loadWasmCodeIdsFromDB()
 
-    expect(wasmCodes).toEqual([
+    const wasmCodes = [
       new WasmCode('codeKey1', [1]),
       new WasmCode('codeKey2', [2, 3]),
       new WasmCode('codeKey3', []),
-    ])
+    ]
+
+    expect(wasmCodeService.getWasmCodes()).toEqual(wasmCodes)
 
     await wasmCodeService.reloadWasmCodes()
     expect(wasmCodeService.getWasmCodes()).toEqual(wasmCodes)

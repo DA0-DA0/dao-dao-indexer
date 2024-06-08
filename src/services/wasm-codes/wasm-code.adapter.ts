@@ -5,8 +5,7 @@ export interface WasmCodeAdapter {
   resetWasmCodes(): void
   exportWasmCodes(): Record<string, number[] | undefined>
   findWasmCodeIdsByKeys(...keys: string[]): number[]
-  findWasmCodeKeyById(id: number): string[] | undefined
-  extractWasmCodeKeys(input: any): string[]
-  loadWasmCodeIdsFromDB(): Promise<WasmCode[]>
+  findWasmCodeKeysById(id: number): string[] | undefined
+  loadWasmCodeIdsFromDB(): Promise<void>
   reloadWasmCodes(): Promise<void>
 }

@@ -14,22 +14,16 @@ export class WasmCodeService implements WasmCodeAdapter {
 
   static getInstance(): WasmCodeService {
     if (!this.instance) {
-      throw new Error('WasmCodeService not initialized')
+      this.instance = new WasmCodeService()
     }
     return this.instance
   }
 
   static async newWithWasmCodesFromDB(): Promise<WasmCodeService> {
-    if (this.instance) {
-      return this.getInstance()
-    }
-
-    const wasmCodeService = new WasmCodeService()
-    const wasmCodes = await wasmCodeService.loadWasmCodeIdsFromDB()
-    wasmCodeService.addWasmCode(wasmCodes)
-    await wasmCodeService.updateWasmCodes()
-    this.instance = wasmCodeService
-    return this.getInstance()
+    const wasmCodeService = WasmCodeService.getInstance()
+    await wasmCodeService.loadWasmCodeIdsFromDB()
+    wasmCodeService.startUpdater()
+    return wasmCodeService
   }
 
   resetWasmCodes(): void {
@@ -42,11 +36,11 @@ export class WasmCodeService implements WasmCodeAdapter {
 
   getWasmCodes(): WasmCode[] {
     return this.wasmCodes
+      .map((wasmCode: WasmCode) => {
+        wasmCode.codeIds?.sort()
+        return wasmCode
+      })
       .sort((a: WasmCode, b: WasmCode) => a.codeKey.localeCompare(b.codeKey))
-      .map(
-        (wasmCode: WasmCode) =>
-          new WasmCode(wasmCode.codeKey, wasmCode.codeIds?.sort())
-      )
   }
 
   exportWasmCodes(): Record<string, number[] | undefined> {
@@ -56,7 +50,7 @@ export class WasmCodeService implements WasmCodeAdapter {
         wasmCode: WasmCode
       ): Record<string, number[] | undefined> => ({
         ...acc,
-        [wasmCode.codeKey]: wasmCode.codeIds,
+        [wasmCode.codeKey]: wasmCode.codeIds?.sort(),
       }),
       {}
     )
@@ -70,13 +64,13 @@ export class WasmCodeService implements WasmCodeAdapter {
     )
   }
 
-  findWasmCodeKeyById(codeId: number): string[] | undefined {
+  findWasmCodeKeysById(codeId: number): string[] {
     return this.wasmCodes
       .filter((wasmCode: WasmCode) => wasmCode.codeIds?.includes(codeId))
       .map((wasmCode: WasmCode) => wasmCode.codeKey)
   }
 
-  extractWasmCodeKeys(input: any): string[] {
+  static extractWasmCodeKeys(input: any): string[] {
     if (!input) {
       return []
     }
@@ -88,36 +82,42 @@ export class WasmCodeService implements WasmCodeAdapter {
     return input.split(',').map((key: string) => key.trim())
   }
 
-  async loadWasmCodeIdsFromDB(): Promise<WasmCode[]> {
-    return WasmCodeKey.findAllWithIds().then((wasmCodeKeys: WasmCodeKey[]) =>
-      wasmCodeKeys.map(
-        (wasmCodeKey: WasmCodeKey) =>
-          new WasmCode(
-            wasmCodeKey.codeKey,
-            wasmCodeKey.codeKeyIds.map(
-              (wasmCodeKeyId: WasmCodeKeyId) => wasmCodeKeyId.codeKeyId
-            )
-          )
-      )
-    )
-  }
+  async loadWasmCodeIdsFromDB(): Promise<void> {
+    const wasmCodesFromDB = await WasmCodeKey.findAllWithIds()
 
-  async reloadWasmCodes(): Promise<void> {
-    const wasmCodes = await this.loadWasmCodeIdsFromDB()
-    this.resetWasmCodes()
+    const wasmCodes = wasmCodesFromDB.map(
+      (wasmCodeKey: WasmCodeKey) =>
+        new WasmCode(
+          wasmCodeKey.codeKey,
+          wasmCodeKey.codeKeyIds.map(
+            (wasmCodeKeyId: WasmCodeKeyId) => wasmCodeKeyId.codeKeyId
+          )
+        )
+    )
+
     this.addWasmCode(wasmCodes)
   }
 
-  async updateWasmCodes(): Promise<void> {
+  async reloadWasmCodes(): Promise<void> {
+    this.resetWasmCodes()
+    await this.loadWasmCodeIdsFromDB()
+  }
+
+  startUpdater(): void {
+    if (this.interval) {
+      return
+    }
+
     this.interval = setInterval(async () => {
       await this.reloadWasmCodes()
       await updateConfigCodeIds(this.exportWasmCodes())
     }, 2000)
   }
 
-  async stopUpdateWasmCodes(): Promise<void> {
+  stopUpdater(): void {
     if (this.interval) {
       clearInterval(this.interval)
+      this.interval = undefined
     }
   }
 }
