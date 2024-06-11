@@ -88,20 +88,23 @@ export class WasmCodeService implements WasmCodeAdapter {
   }
 
   async reloadWasmCodeIdsFromDB(): Promise<void> {
-    const wasmCodesFromDB = await WasmCodeKey.findAllWithIds()
+    try {
+      const wasmCodesFromDB = await WasmCodeKey.findAllWithIds()
 
-    const wasmCodes = wasmCodesFromDB.map(
-      (wasmCodeKey: WasmCodeKey) =>
-        new WasmCode(
-          wasmCodeKey.codeKey,
-          wasmCodeKey.codeKeyIds.map(
-            (wasmCodeKeyId: WasmCodeKeyId) => wasmCodeKeyId.codeKeyId
+      const wasmCodes = wasmCodesFromDB.map(
+        (wasmCodeKey: WasmCodeKey) =>
+          new WasmCode(
+            wasmCodeKey.codeKey,
+            wasmCodeKey.codeKeyIds.map(
+              (wasmCodeKeyId: WasmCodeKeyId) => wasmCodeKeyId.codeKeyId
+            )
           )
-        )
-    )
-
-    this.resetWasmCodes()
-    this.addWasmCodes(wasmCodes)
+      )
+      this.resetWasmCodes()
+      this.addWasmCodes(wasmCodes)
+    } catch (error) {
+      console.error('Failed to reload wasm code ids from DB:', error)
+    }
   }
 
   startUpdater(): void {
