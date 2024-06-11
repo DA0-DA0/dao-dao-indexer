@@ -27,7 +27,7 @@ export const loadConfig = (configOverride?: string) => {
 }
 
 export const updateConfigWasmCodes = async (configToUpdate?: Config) => {
-  const wasmCodeService = await WasmCodeService.newWithWasmCodesFromDB()
+  const wasmCodeService = await WasmCodeService.setUpInstance()
   updateConfigCodeIds(wasmCodeService.exportWasmCodes())
 
   if (configToUpdate) {

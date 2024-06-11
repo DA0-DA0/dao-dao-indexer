@@ -14,14 +14,19 @@ export class WasmCodeService implements WasmCodeAdapter {
 
   static getInstance(): WasmCodeService {
     if (!this.instance) {
-      this.instance = new WasmCodeService()
+      throw new Error(
+        'WasmCodeService not initialized because WasmCodeService.setUpInstance was never called'
+      )
     }
     return this.instance
   }
 
-  static async newWithWasmCodesFromDB(): Promise<WasmCodeService> {
-    const wasmCodeService = WasmCodeService.getInstance()
-    await wasmCodeService.loadWasmCodeIdsFromDB()
+  static async setUpInstance(): Promise<WasmCodeService> {
+    if (this.instance) {
+      return this.instance
+    }
+    const wasmCodeService = new WasmCodeService()
+    await wasmCodeService.reloadWasmCodeIdsFromDB()
     wasmCodeService.startUpdater()
     return wasmCodeService
   }
@@ -30,7 +35,7 @@ export class WasmCodeService implements WasmCodeAdapter {
     this.wasmCodes = []
   }
 
-  addWasmCode(wasmCodes: WasmCode[]): void {
+  addWasmCodes(wasmCodes: WasmCode[]): void {
     this.wasmCodes.push(...wasmCodes)
   }
 
@@ -82,7 +87,7 @@ export class WasmCodeService implements WasmCodeAdapter {
     return input.split(',').map((key: string) => key.trim())
   }
 
-  async loadWasmCodeIdsFromDB(): Promise<void> {
+  async reloadWasmCodeIdsFromDB(): Promise<void> {
     const wasmCodesFromDB = await WasmCodeKey.findAllWithIds()
 
     const wasmCodes = wasmCodesFromDB.map(
@@ -95,12 +100,8 @@ export class WasmCodeService implements WasmCodeAdapter {
         )
     )
 
-    this.addWasmCode(wasmCodes)
-  }
-
-  async reloadWasmCodes(): Promise<void> {
     this.resetWasmCodes()
-    await this.loadWasmCodeIdsFromDB()
+    this.addWasmCodes(wasmCodes)
   }
 
   startUpdater(): void {
@@ -109,7 +110,7 @@ export class WasmCodeService implements WasmCodeAdapter {
     }
 
     this.interval = setInterval(async () => {
-      await this.reloadWasmCodes()
+      await this.reloadWasmCodeIdsFromDB()
       await updateConfigCodeIds(this.exportWasmCodes())
     }, 2000)
   }

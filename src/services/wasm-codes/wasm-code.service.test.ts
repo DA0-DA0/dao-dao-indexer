@@ -22,7 +22,7 @@ describe('WasmCodeService tests', () => {
     await WasmCodeKey.createWasmCode('codeKey2', [4, 5, 6])
     await WasmCodeKey.createWasmCode('codeKey3', [1, 3, 5])
 
-    wasmCodeService = await WasmCodeService.newWithWasmCodesFromDB()
+    wasmCodeService = await WasmCodeService.setUpInstance()
 
     expect(wasmCodeService.getWasmCodes()).toEqual([
       new WasmCode('codeKey1', [1, 2, 3]),
@@ -64,8 +64,7 @@ describe('WasmCodeService tests', () => {
     await WasmCodeKey.createWasmCode('codeKey2', [2, 3])
     await WasmCodeKey.createWasmCode('codeKey3', [])
 
-    wasmCodeService.resetWasmCodes()
-    await wasmCodeService.loadWasmCodeIdsFromDB()
+    await wasmCodeService.reloadWasmCodeIdsFromDB()
 
     const wasmCodes = [
       new WasmCode('codeKey1', [1]),
@@ -75,11 +74,11 @@ describe('WasmCodeService tests', () => {
 
     expect(wasmCodeService.getWasmCodes()).toEqual(wasmCodes)
 
-    await wasmCodeService.reloadWasmCodes()
+    await wasmCodeService.reloadWasmCodeIdsFromDB()
     expect(wasmCodeService.getWasmCodes()).toEqual(wasmCodes)
 
     await WasmCodeKey.createWasmCode('codeKey4', [])
-    await wasmCodeService.reloadWasmCodes()
+    await wasmCodeService.reloadWasmCodeIdsFromDB()
     expect(wasmCodeService.getWasmCodes()).toEqual([
       ...wasmCodes,
       new WasmCode('codeKey4', []),
