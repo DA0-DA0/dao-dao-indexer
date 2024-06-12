@@ -40,6 +40,10 @@ export class WasmCodeService implements WasmCodeAdapter {
     this.wasmCodes = [...this.defaultWasmCodes]
   }
 
+  /**
+   * Return the singleton created by the setUpInstance method, throwing an error
+   * if not yet setup.
+   */
   static getInstance(): WasmCodeService {
     if (!this.instance) {
       throw new Error(
@@ -49,6 +53,12 @@ export class WasmCodeService implements WasmCodeAdapter {
     return this.instance
   }
 
+  /**
+   * Set up the WasmCodeService by loading defaults from the config and
+   * optionally starting the DB updater.
+   *
+   * Creates a singleton that is returned if already setup.
+   */
   static async setUpInstance({
     withUpdater = true,
   }: {
@@ -71,6 +81,11 @@ export class WasmCodeService implements WasmCodeAdapter {
     return this.instance
   }
 
+  /**
+   * Parse wasm code keys from an arbitrary input.
+   *
+   * Used in CLI.
+   */
   static extractWasmCodeKeys(input: any): string[] {
     if (!input || typeof input !== 'string') {
       return []
@@ -79,10 +94,51 @@ export class WasmCodeService implements WasmCodeAdapter {
     return input.split(',').map((key: string) => key.trim())
   }
 
-  getWasmCodes(): WasmCode[] {
-    return this.wasmCodes
+  /**
+   * Merge two lists of wasm codes.
+   */
+  private mergeWasmCodes(src: WasmCode[], dst: WasmCode[]): void {
+    // Merge from src into dst.
+    for (const { codeKey, codeIds } of src) {
+      let existing = dst.find((code) => code.codeKey === codeKey)
+      if (!existing) {
+        existing = new WasmCode(codeKey, [])
+        dst.push(existing)
+      }
+
+      // Add non-existent code ids.
+      for (const codeId of codeIds) {
+        if (!existing.codeIds.includes(codeId)) {
+          existing.codeIds.push(codeId)
+        }
+      }
+    }
   }
 
+  /**
+   * Manually add new wasm codes, storing them in the default list so they stick
+   * around during DB updates.
+   *
+   * Used in tests.
+   */
+  addDefaultWasmCodes(...wasmCodes: WasmCode[]): void {
+    // First store new wasm codes in default list so they stick around when the
+    // DB updates.
+    this.mergeWasmCodes(wasmCodes, this.defaultWasmCodes)
+    // Then merge into existing list.
+    this.mergeWasmCodes(wasmCodes, this.wasmCodes)
+  }
+
+  /**
+   * Return a copy of the list of wasm codes.
+   */
+  getWasmCodes(): WasmCode[] {
+    return [...this.wasmCodes]
+  }
+
+  /**
+   * Return a map of code key to code IDs.
+   */
   exportWasmCodes(): Record<string, number[]> {
     return Object.fromEntries(
       this.wasmCodes.map((wasmCode: WasmCode) => [
@@ -92,6 +148,9 @@ export class WasmCodeService implements WasmCodeAdapter {
     )
   }
 
+  /**
+   * Find all code IDs for the list of keys.
+   */
   findWasmCodeIdsByKeys(...keys: string[]): number[] {
     return keys.flatMap(
       (key: string) =>
@@ -100,62 +159,63 @@ export class WasmCodeService implements WasmCodeAdapter {
     )
   }
 
+  /**
+   * Find all keys that contain the given code ID.
+   */
   findWasmCodeKeysById(codeId: number): string[] {
     return this.wasmCodes
       .filter((wasmCode: WasmCode) => wasmCode.codeIds.includes(codeId))
       .map((wasmCode: WasmCode) => wasmCode.codeKey)
   }
 
+  /**
+   * Reload wasm codes from DB, preserving the default list and removing any
+   * previously loaded from the DB that no longer exist.
+   */
   async reloadWasmCodeIdsFromDB(): Promise<void> {
-    try {
-      const wasmCodesFromDB = await WasmCodeKey.findAllWithIds()
+    const wasmCodesFromDB = await WasmCodeKey.findAllWithIds()
 
-      const dbWasmCodes = wasmCodesFromDB.map(
-        (wasmCodeKey: WasmCodeKey) =>
-          new WasmCode(
-            wasmCodeKey.codeKey,
-            wasmCodeKey.codeKeyIds.map(
-              (wasmCodeKeyId: WasmCodeKeyId) => wasmCodeKeyId.codeKeyId
-            )
+    const dbWasmCodes = wasmCodesFromDB.map(
+      (wasmCodeKey: WasmCodeKey) =>
+        new WasmCode(
+          wasmCodeKey.codeKey,
+          wasmCodeKey.codeKeyIds.map(
+            (wasmCodeKeyId: WasmCodeKeyId) => wasmCodeKeyId.codeKeyId
           )
-      )
-
-      // Reset to defaults.
-      this.wasmCodes = [...this.defaultWasmCodes]
-
-      // Merge from DB with existing keys.
-      for (const dbWasmCode of dbWasmCodes) {
-        let existing = this.wasmCodes.find(
-          (code) => code.codeKey === dbWasmCode.codeKey
         )
-        if (!existing) {
-          existing = new WasmCode(dbWasmCode.codeKey, [])
-          this.wasmCodes.push(existing)
-        }
+    )
 
-        // Add non-existing code ids.
-        for (const codeId of dbWasmCode.codeIds) {
-          if (!existing.codeIds.includes(codeId)) {
-            existing.codeIds.push(codeId)
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to reload wasm code IDs from DB:', error)
-    }
+    // Reset to defaults.
+    this.wasmCodes = [...this.defaultWasmCodes]
+
+    // Merge DB codes into list with defaults.
+    this.mergeWasmCodes(dbWasmCodes, this.wasmCodes)
   }
 
+  /**
+   * Start updating wasm codes from DB on a timer, if not already started.
+   */
   async startUpdater(): Promise<void> {
     if (this.refreshInterval) {
       return
     }
 
-    this.refreshInterval = setInterval(this.reloadWasmCodeIdsFromDB, 60 * 1000)
-
     // Initial reload.
     await this.reloadWasmCodeIdsFromDB()
+
+    // Start updater.
+    this.refreshInterval = setInterval(async () => {
+      try {
+        await this.reloadWasmCodeIdsFromDB()
+      } catch (error) {
+        console.error('Failed to reload wasm code IDs from DB:', error)
+      }
+    }, 60 * 1000)
   }
 
+  /**
+   * Stop updating wasm codes from DB on a timer, if started.
+   */
   stopUpdater(): void {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval)

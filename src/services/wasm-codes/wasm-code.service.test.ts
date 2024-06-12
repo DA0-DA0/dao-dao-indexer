@@ -6,11 +6,9 @@ import { WasmCodeService } from './wasm-code.service'
 
 describe('WasmCodeService tests', () => {
   beforeAll(async () => {
-    await WasmCodeService.setUpInstance()
-  })
-
-  afterAll(() => {
-    WasmCodeService.getInstance().stopUpdater()
+    await WasmCodeService.setUpInstance({
+      withUpdater: false,
+    })
   })
 
   test('WasmCodeService', async () => {
@@ -25,6 +23,8 @@ describe('WasmCodeService tests', () => {
     await WasmCodeKey.createFromKeyAndIds('codeKey1', [1, 2, 3])
     await WasmCodeKey.createFromKeyAndIds('codeKey2', [4, 5, 6])
     await WasmCodeKey.createFromKeyAndIds('codeKey3', [1, 3, 5])
+
+    await wasmCodeService.reloadWasmCodeIdsFromDB()
 
     expect(wasmCodeService.getWasmCodes()).toEqual([
       new WasmCode('codeKey1', [1, 2, 3]),

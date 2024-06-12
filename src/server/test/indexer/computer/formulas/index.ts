@@ -1,7 +1,7 @@
 import request from 'supertest'
 
-import { loadConfig } from '@/core'
 import { Contract } from '@/db'
+import { WasmCode, WasmCodeService } from '@/services/wasm-codes'
 
 import { app } from '../../app'
 import { ComputerTestOptions } from '../types'
@@ -22,9 +22,10 @@ export const loadFormulasTests = (options: ComputerTestOptions) => {
     loadWasmTests(options)
 
     it('filters contract by code IDs specified in formula', async () => {
-      loadConfig().codeIds = {
-        'dao-core': [1, 2],
-      }
+      WasmCodeService.getInstance().addDefaultWasmCodes(
+        new WasmCode('dao-core', [1, 2])
+      )
+
       options.mockFormula({
         filter: {
           codeIdsKeys: ['not-dao-core'],
