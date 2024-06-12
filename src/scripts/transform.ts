@@ -59,10 +59,13 @@ const main = async () => {
   console.log(`\n[${new Date().toISOString()}] Transforming existing events...`)
 
   // Load config with config option.
-  const config = loadConfig(_config)
+  loadConfig(_config)
 
   // Load DB on start.
   const sequelize = await loadDb()
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
 
   let processed = 0
   let computationsUpdated = 0
@@ -75,11 +78,9 @@ const main = async () => {
       }
     : {}
 
-  const codeIdsKeysFromStr =
-    WasmCodeService.getInstance().extractWasmCodeKeys(codeIdsKeys) ?? []
   const codeIds =
     WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-      ...codeIdsKeysFromStr
+      ...WasmCodeService.extractWasmCodeKeys(codeIdsKeys)
     ) ?? []
 
   if (typeof codeIdsKeys === 'string' && codeIds.length === 0) {

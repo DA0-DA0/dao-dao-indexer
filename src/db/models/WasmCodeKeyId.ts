@@ -27,11 +27,5 @@ export class WasmCodeKeyId extends Model {
   declare codeKeyId: number
 
   @BelongsTo(() => WasmCodeKey, 'codeKey')
-  declare codeKeyIds: WasmCodeKey[]
-
-  static async findAllWithKeyCode(): Promise<WasmCodeKeyId[]> {
-    return WasmCodeKeyId.findAll({
-      include: WasmCodeKey,
-    })
-  }
+  declare codeKeys: WasmCodeKey[]
 }

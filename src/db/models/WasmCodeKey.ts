@@ -50,18 +50,20 @@ export class WasmCodeKey extends Model {
     })
   }
 
-  static async createWasmCode(
+  static async createFromKeyAndIds(
     codeKey: string,
     codeKeyId: number | number[]
   ): Promise<WasmCodeKey | null> {
     await WasmCodeKey.upsert({ codeKey })
-    const arrayCodeKeyId = Array.isArray(codeKeyId) ? codeKeyId : [codeKeyId]
 
-    await Promise.all(
-      arrayCodeKeyId.map(async (codeId: number) => {
-        await WasmCodeKeyId.upsert({ codeKeyId: codeId, codeKey })
-      })
+    const arrayCodeKeyId = Array.isArray(codeKeyId) ? codeKeyId : [codeKeyId]
+    await WasmCodeKeyId.bulkCreate(
+      arrayCodeKeyId.map((codeKeyId) => ({ codeKeyId, codeKey })),
+      {
+        ignoreDuplicates: true,
+      }
     )
+
     return WasmCodeKey.findByKeyIncludeIds(codeKey)
   }
 }

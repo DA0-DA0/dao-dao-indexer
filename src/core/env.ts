@@ -13,7 +13,6 @@ import {
 } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
 
-import { getCodeIdsForKeys, loadConfig } from './config'
 import {
   Cache,
   DbType,
@@ -898,13 +897,15 @@ export const getEnv = ({
     return contract?.json
   }
 
+  const getCodeIdsForKeys = (...keys: string[]): number[] =>
+    WasmCodeService.getInstance().findWasmCodeIdsByKeys(...keys)
+
   const contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter =
     async (contractAddress, ...keys) => {
       const codeId = (await getContract(contractAddress))?.codeId
       return codeId !== undefined && getCodeIdsForKeys(...keys).includes(codeId)
     }
 
-  const config = loadConfig()
   // Tries to find the code ID of this contract in the code ID keys and returns
   // the first match.
   const getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter = async (

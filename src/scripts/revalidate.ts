@@ -50,22 +50,22 @@ const main = async () => {
   const start = Date.now()
 
   // Load config with config option.
-  const config = loadConfig(_config)
+  loadConfig(_config)
 
   // Load DB on start.
   const sequelize = await loadDb()
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
 
   let latestId = initial - 1
   let updated = 0
   let replaced = 0
   const formulasReplaced = new Set<string>()
 
-  const codeIdsKeysFromStr: string[] =
-    WasmCodeService.getInstance().extractWasmCodeKeys(codeIdsKeys) ?? []
-
   const codeIds =
     WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-      ...codeIdsKeysFromStr
+      ...WasmCodeService.extractWasmCodeKeys(codeIdsKeys)
     ) ?? []
 
   const contracts =

@@ -43,51 +43,49 @@ export const getProcessedTransformers = (
       ...transformerMakers.map((maker) => maker(config)),
     ]
 
-    processedTransformers = _transformers.map(({ filter, ...webhook }) => {
-      const allCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-        ...(filter.codeIdsKeys ?? [])
-      )
+    processedTransformers = _transformers.map(({ filter, ...webhook }) => ({
+      ...webhook,
+      filter: (event) => {
+        let match = true
 
-      return {
-        ...webhook,
-        filter: (event) => {
-          let match = true
+        const allCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+          ...(filter.codeIdsKeys ?? [])
+        )
 
-          if (allCodeIds?.length) {
-            match &&= allCodeIds.includes(event.codeId)
+        if (allCodeIds.length) {
+          match &&= allCodeIds.includes(event.codeId)
+        }
+
+        if (match && filter.contractAddresses?.length) {
+          match &&= filter.contractAddresses.includes(event.contractAddress)
+        }
+
+        if (match && filter.matches) {
+          // Wrap in try/catch in case a transformer errors. Don't want to
+          // prevent other events from transforming.
+          try {
+            match &&= filter.matches(event)
+          } catch (error) {
+            console.error(
+              `Error matching transformer for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
+            )
+            Sentry.captureException(error, {
+              tags: {
+                type: 'failed-transformer-match',
+              },
+              extra: {
+                event,
+              },
+            })
+
+            // On error, do not match.
+            match = false
           }
+        }
 
-          if (match && filter.contractAddresses?.length) {
-            match &&= filter.contractAddresses.includes(event.contractAddress)
-          }
-
-          if (match && filter.matches) {
-            // Wrap in try/catch in case a transformer errors. Don't want to
-            // prevent other events from transforming.
-            try {
-              match &&= filter.matches(event)
-            } catch (error) {
-              console.error(
-                `Error matching transformer for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
-              )
-              Sentry.captureException(error, {
-                tags: {
-                  type: 'failed-transformer-match',
-                },
-                extra: {
-                  event,
-                },
-              })
-
-              // On error, do not match.
-              match = false
-            }
-          }
-
-          return match
-        },
-      }
-    })
+        return match
+      },
+    }))
   }
 
   return processedTransformers

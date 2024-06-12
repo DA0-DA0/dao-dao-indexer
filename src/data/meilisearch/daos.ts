@@ -1,7 +1,6 @@
 import { Op, Sequelize } from 'sequelize'
 
 import { getEnv } from '@/core'
-import { getCodeIdsForKeys } from '@/core/config'
 import {
   ContractEnv,
   FormulaType,
@@ -9,6 +8,7 @@ import {
   MeilisearchIndexer,
 } from '@/core/types'
 import { Contract, WasmStateEvent, WasmStateEventTransformation } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { getDaoAddressForProposalModule } from '../webhooks/utils'
 
@@ -60,7 +60,8 @@ export const daos: MeilisearchIndexer = {
     )
   },
   getBulkUpdates: async () => {
-    const codeIds = getCodeIdsForKeys('dao-core')
+    const codeIds =
+      WasmCodeService.getInstance().findWasmCodeIdsByKeys('dao-core')
     if (!codeIds.length) {
       return []
     }
@@ -136,8 +137,12 @@ export const daoProposals: MeilisearchIndexer = {
     )
   },
   getBulkUpdates: async () => {
-    const singleCodeIds = getCodeIdsForKeys('dao-proposal-single')
-    const multipleCodeIds = getCodeIdsForKeys('dao-proposal-multiple')
+    const singleCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+      'dao-proposal-single'
+    )
+    const multipleCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+      'dao-proposal-multiple'
+    )
     if (singleCodeIds.length + multipleCodeIds.length === 0) {
       return []
     }

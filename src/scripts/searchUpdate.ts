@@ -3,6 +3,7 @@ import { Command } from 'commander'
 import { loadConfig } from '@/core/config'
 import { loadDb } from '@/db'
 import { setupMeilisearch, updateIndexes } from '@/ms'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 const main = async () => {
   // Parse arguments.
@@ -23,6 +24,9 @@ const main = async () => {
 
   // Connect to db.
   const sequelize = await loadDb()
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
 
   try {
     // Setup meilisearch.

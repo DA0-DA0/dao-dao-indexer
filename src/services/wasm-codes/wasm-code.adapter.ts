@@ -2,8 +2,7 @@ import { WasmCode } from './types'
 
 export interface WasmCodeAdapter {
   getWasmCodes(): WasmCode[]
-  resetWasmCodes(): void
-  exportWasmCodes(): Record<string, number[] | undefined>
+  exportWasmCodes(): Partial<Record<string, number[]>>
   findWasmCodeIdsByKeys(...keys: string[]): number[]
   findWasmCodeKeysById(id: number): string[]
   reloadWasmCodeIdsFromDB(): Promise<void>

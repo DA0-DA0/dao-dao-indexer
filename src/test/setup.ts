@@ -5,6 +5,7 @@ import { loadConfig } from '@/core/config'
 import { closeAllBullQueues } from '@/core/queues'
 import { DbType } from '@/core/types'
 import { closeDb, loadDb, setup } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 loadConfig()
 
@@ -22,6 +23,9 @@ beforeEach(async () => {
 
   await setup(dataSequelize)
   await setup(accountsSequelize)
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
 })
 
 afterAll(async () => {

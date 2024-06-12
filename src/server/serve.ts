@@ -8,6 +8,7 @@ import Koa from 'koa'
 import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
 import { closeDb, loadDb } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { setupRouter } from './routes'
 import { captureSentryException } from './sentry'
@@ -77,12 +78,16 @@ const main = async () => {
   await loadDb({
     type: DbType.Accounts,
   })
+
   // Only connect to data if we're not serving the accounts API (i.e. we're
   // serving indexer data).
   if (!accounts) {
     await loadDb({
       type: DbType.Data,
     })
+
+    // Set up wasm code service.
+    await WasmCodeService.setUpInstance()
   }
 
   if (!options.port || isNaN(options.port)) {

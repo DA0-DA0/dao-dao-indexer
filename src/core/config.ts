@@ -1,8 +1,6 @@
 import * as fs from 'fs'
 import path from 'path'
 
-import { WasmCodeService } from '@/services/wasm-codes'
-
 import { Config } from './types'
 
 // Constants.
@@ -24,28 +22,4 @@ export const loadConfig = (configOverride?: string) => {
   }
 
   return config
-}
-
-export const updateConfigWasmCodes = async (configToUpdate?: Config) => {
-  const wasmCodeService = await WasmCodeService.setUpInstance()
-  updateConfigCodeIds(wasmCodeService.exportWasmCodes())
-
-  if (configToUpdate) {
-    configToUpdate.codeIds = config.codeIds
-  }
-
-  return configToUpdate
-}
-
-export const updateConfigCodeIds = async (
-  codeIds: Record<string, number[] | undefined>
-): Promise<void> => {
-  config.codeIds = codeIds
-}
-
-/**
- * Get code IDs for a list of keys in the config.
- */
-export const getCodeIdsForKeys = (...keys: string[]): number[] => {
-  return WasmCodeService.getInstance().findWasmCodeIdsByKeys(...keys) ?? []
 }

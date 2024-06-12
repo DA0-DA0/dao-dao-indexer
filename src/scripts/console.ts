@@ -4,6 +4,7 @@ import { Context } from 'vm'
 import { Command } from 'commander'
 import { Op, Sequelize, fn } from 'sequelize'
 
+import * as core from '@/core'
 import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
 import { loadDb } from '@/db'
@@ -46,7 +47,10 @@ const main = async () => {
   })
 
   // ADD TO CONTEXT
-  setupImport(Models)
+  setupImport({
+    ...core,
+    ...Models,
+  })
 
   // START REPL
   const r = repl.start('> ')

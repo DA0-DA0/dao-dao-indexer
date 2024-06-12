@@ -16,6 +16,7 @@ import {
 } from '@/core'
 import { State, loadDb } from '@/db'
 import { setupMeilisearch } from '@/ms'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { handlerMakers } from './handlers'
 import { ExportQueueData, TracedEvent, TracedEventWithBlockTime } from './types'
@@ -84,6 +85,9 @@ const trace = async () => {
   const dataSequelize = await loadDb({
     type: DbType.Data,
   })
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
 
   // Initialize state.
   await State.createSingletonIfMissing()

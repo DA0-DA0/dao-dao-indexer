@@ -9,7 +9,6 @@ import {
   computeRange,
   getBlockForTime,
   getFirstBlock,
-  loadConfig,
   typeIsFormulaType,
   validateBlockString,
 } from '@/core'
@@ -31,8 +30,6 @@ const testRateLimit = new Map<string, number>()
 const testCooldownSeconds = 10
 
 export const computer: Router.Middleware = async (ctx) => {
-  const config = loadConfig()
-
   const {
     block: _block,
     blocks: _blocks,
@@ -297,9 +294,7 @@ export const computer: Router.Middleware = async (ctx) => {
         if (typedFormula.formula.filter.codeIdsKeys?.length) {
           const codeIdKeys = typedFormula.formula.filter.codeIdsKeys
           const allCodeIds =
-            WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-              ...codeIdKeys
-            ) ?? []
+            WasmCodeService.getInstance().findWasmCodeIdsByKeys(...codeIdKeys)
           allowed &&= allCodeIds.includes(contract.codeId)
         }
 

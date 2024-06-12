@@ -1,13 +1,9 @@
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
-import {
-  DbType,
-  getBullWorker,
-  loadConfig,
-  updateConfigWasmCodes,
-} from '@/core'
+import { DbType, getBullWorker, loadConfig } from '@/core'
 import { State, loadDb } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { workerMakers } from './workers'
 
@@ -49,7 +45,8 @@ const main = async () => {
     type: DbType.Accounts,
   })
 
-  await updateConfigWasmCodes(config)
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
 
   // Initialize state.
   await State.createSingletonIfMissing()

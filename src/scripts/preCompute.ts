@@ -64,7 +64,7 @@ export const main = async () => {
   const options = program.opts()
 
   // Load config with config option.
-  const config = loadConfig(options.config)
+  loadConfig(options.config)
 
   let args: Record<string, any> = {}
   if (options.args) {
@@ -87,6 +87,9 @@ export const main = async () => {
   if (!state) {
     throw new Error('No state found.')
   }
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
 
   let addresses: string[]
 
