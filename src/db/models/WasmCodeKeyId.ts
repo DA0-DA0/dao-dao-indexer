@@ -3,6 +3,7 @@ import {
   BelongsTo,
   Column,
   Model,
+  PrimaryKey,
   Table,
 } from 'sequelize-typescript'
 
@@ -18,6 +19,10 @@ import { WasmCodeKey } from './WasmCodeKey'
   ],
 })
 export class WasmCodeKeyId extends Model {
+  @PrimaryKey
+  @Column
+  declare id: number
+
   @AllowNull(false)
   @Column
   declare codeKey: string

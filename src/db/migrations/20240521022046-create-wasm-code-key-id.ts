@@ -4,6 +4,11 @@ import { DataType } from 'sequelize-typescript'
 module.exports = {
   async up(queryInterface: QueryInterface) {
     await queryInterface.createTable('WasmCodeKeyIds', {
+      id: {
+        primaryKey: true,
+        autoIncrement: true,
+        type: DataType.INTEGER,
+      },
       codeKey: {
         allowNull: false,
         type: DataType.STRING,
