@@ -5,13 +5,17 @@ import { WasmCode } from './types'
 import { WasmCodeService } from './wasm-code.service'
 
 describe('WasmCodeService tests', () => {
-  let wasmCodeService: WasmCodeService
+  beforeAll(async () => {
+    await WasmCodeService.setUpInstance()
+  })
 
   afterAll(() => {
-    wasmCodeService.stopUpdater()
+    WasmCodeService.getInstance().stopUpdater()
   })
 
   test('WasmCodeService', async () => {
+    const wasmCodeService = WasmCodeService.getInstance()
+
     const codeIds = {
       codeKey1: [1, 2, 3],
       codeKey2: [4, 5, 6],
@@ -21,8 +25,6 @@ describe('WasmCodeService tests', () => {
     await WasmCodeKey.createFromKeyAndIds('codeKey1', [1, 2, 3])
     await WasmCodeKey.createFromKeyAndIds('codeKey2', [4, 5, 6])
     await WasmCodeKey.createFromKeyAndIds('codeKey3', [1, 3, 5])
-
-    wasmCodeService = await WasmCodeService.setUpInstance()
 
     expect(wasmCodeService.getWasmCodes()).toEqual([
       new WasmCode('codeKey1', [1, 2, 3]),

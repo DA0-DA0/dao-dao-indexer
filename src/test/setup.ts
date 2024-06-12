@@ -24,8 +24,10 @@ beforeEach(async () => {
   await setup(dataSequelize)
   await setup(accountsSequelize)
 
-  // Set up wasm code service.
-  await WasmCodeService.setUpInstance()
+  // Set up wasm code service without updater.
+  await WasmCodeService.setUpInstance({
+    withUpdater: false,
+  })
 })
 
 afterAll(async () => {

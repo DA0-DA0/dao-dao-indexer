@@ -4,6 +4,7 @@ import { WasmCodeKeyId } from '@/db/models/WasmCodeKeyId'
 
 import { WasmCode } from './types'
 import { WasmCodeAdapter } from './wasm-code.adapter'
+
 export class WasmCodeService implements WasmCodeAdapter {
   /**
    * Singleton instance.
@@ -48,17 +49,26 @@ export class WasmCodeService implements WasmCodeAdapter {
     return this.instance
   }
 
-  static async setUpInstance(): Promise<WasmCodeService> {
+  static async setUpInstance({
+    withUpdater = true,
+  }: {
+    /**
+     * Whether or not to start the updater automatically. Defaults to true.
+     */
+    withUpdater?: boolean
+  } = {}): Promise<WasmCodeService> {
     if (this.instance) {
       return this.instance
     }
 
     const config = loadConfig()
 
-    const wasmCodeService = new WasmCodeService(config.codeIds)
-    await wasmCodeService.startUpdater()
+    this.instance = new WasmCodeService(config.codeIds)
+    if (withUpdater) {
+      await this.instance.startUpdater()
+    }
 
-    return wasmCodeService
+    return this.instance
   }
 
   static extractWasmCodeKeys(input: any): string[] {
