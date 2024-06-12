@@ -7,19 +7,20 @@ module.exports = {
     // loads from config automatically
     const codes = (await WasmCodeService.setUpInstance()).getWasmCodes()
 
-    await queryInterface.bulkInsert(
-      'WasmCodeKeys',
-      codes.map(({ codeKey }) => ({ codeKey }))
+    const codeKeysInserts = codes.map(({ codeKey }) => ({ codeKey }))
+    if (codeKeysInserts.length) {
+      await queryInterface.bulkInsert('WasmCodeKeys', codeKeysInserts)
+    }
+
+    const codeKeyIdInserts = codes.flatMap(({ codeKey, codeIds }) =>
+      codeIds.map((codeKeyId) => ({
+        codeKey,
+        codeKeyId,
+      }))
     )
-    await queryInterface.bulkInsert(
-      'WasmCodeKeyIds',
-      codes.flatMap(({ codeKey, codeIds }) =>
-        codeIds.map((codeKeyId) => ({
-          codeKey,
-          codeKeyId,
-        }))
-      )
-    )
+    if (codeKeyIdInserts.length) {
+      await queryInterface.bulkInsert('WasmCodeKeyIds', codeKeyIdInserts)
+    }
   },
   async down(queryInterface: QueryInterface) {
     await queryInterface.bulkDelete('WasmCodeKeyIds', {})
