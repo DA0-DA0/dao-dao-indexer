@@ -8,6 +8,7 @@ import Koa from 'koa'
 import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
 import { closeDb, loadDb } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { setupRouter } from './routes'
 import { captureSentryException } from './sentry'
@@ -71,17 +72,25 @@ setupRouter(app, {
   accounts,
 })
 
+let wasmCodeService: WasmCodeService | null = null
+
 // Start.
 const main = async () => {
   // All servers need to connect to the accounts DB.
   await loadDb({
     type: DbType.Accounts,
   })
+
   // Only connect to data if we're not serving the accounts API (i.e. we're
   // serving indexer data).
   if (!accounts) {
     await loadDb({
       type: DbType.Data,
+    })
+
+    // Set up wasm code service.
+    wasmCodeService = await WasmCodeService.setUpInstance({
+      withUpdater: true,
     })
   }
 
@@ -101,9 +110,14 @@ const main = async () => {
 
 main()
 
-// On exit, close DB connection.
+// On exit, stop services and close DB connection.
 const cleanup = async () => {
   console.log('Shutting down...')
+
+  if (wasmCodeService) {
+    wasmCodeService.stopUpdater()
+  }
+
   await closeDb()
 }
 

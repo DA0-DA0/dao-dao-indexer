@@ -6,6 +6,7 @@ import { Op } from 'sequelize'
 
 import { loadConfig } from '@/core'
 import { Computation, Contract, loadDb } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 
@@ -49,19 +50,24 @@ const main = async () => {
   const start = Date.now()
 
   // Load config with config option.
-  const config = loadConfig(_config)
+  loadConfig(_config)
 
   // Load DB on start.
   const sequelize = await loadDb()
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
 
   let latestId = initial - 1
   let updated = 0
   let replaced = 0
   const formulasReplaced = new Set<string>()
 
-  const codeIds = (
-    codeIdsKeys && typeof codeIdsKeys === 'string' ? codeIdsKeys.split(',') : []
-  ).flatMap((key) => config.codeIds?.[key] ?? [])
+  const codeIds =
+    WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+      ...WasmCodeService.extractWasmCodeKeys(codeIdsKeys)
+    ) ?? []
+
   const contracts =
     codeIds.length > 0
       ? await Contract.findAll({

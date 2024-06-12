@@ -12,6 +12,7 @@ import {
 } from '@/core'
 import { getTypedFormula } from '@/data'
 import { Computation, Contract, State, loadDb } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 export const main = async () => {
   // Parse arguments.
@@ -63,7 +64,7 @@ export const main = async () => {
   const options = program.opts()
 
   // Load config with config option.
-  const config = loadConfig(options.config)
+  loadConfig(options.config)
 
   let args: Record<string, any> = {}
   if (options.args) {
@@ -87,6 +88,9 @@ export const main = async () => {
     throw new Error('No state found.')
   }
 
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
+
   let addresses: string[]
 
   if (options.targets) {
@@ -94,9 +98,9 @@ export const main = async () => {
   } else if (options.ids?.length || options.codeIdsKeys?.length) {
     const codeIds = [
       ...(options.ids || []),
-      ...(options.codeIdsKeys || []).flatMap(
-        (key: string) => config.codeIds?.[key]
-      ),
+      ...(WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+        options.codeIdsKeys || []
+      ) ?? []),
     ]
     addresses = (
       await Contract.findAll({

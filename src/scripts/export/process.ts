@@ -3,6 +3,7 @@ import { Command } from 'commander'
 
 import { DbType, getBullWorker, loadConfig } from '@/core'
 import { State, loadDb } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { workerMakers } from './workers'
 
@@ -42,6 +43,11 @@ const main = async () => {
   })
   const accountsSequelize = await loadDb({
     type: DbType.Accounts,
+  })
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance({
+    withUpdater: true,
   })
 
   // Initialize state.
@@ -89,13 +95,18 @@ const main = async () => {
       console.log('Shutting down after current worker jobs complete...')
       // Exit once all workers close.
       Promise.all(workers.map((worker) => worker.close())).then(async () => {
+        // Stop services.
+        WasmCodeService.getInstance().stopUpdater()
+
+        // Close DB connections.
         await dataSequelize.close()
         await accountsSequelize.close()
+
+        // Exit.
         process.exit(0)
       })
     }
   })
-
   // Tell pm2 we're ready.
   if (process.send) {
     process.send('ready')

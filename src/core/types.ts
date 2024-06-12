@@ -47,7 +47,8 @@ export type Config = {
     apiKey?: string
   }
   // Map some arbitary string to a list of code IDs.
-  codeIds?: Record<string, number[] | undefined>
+  codeIds?: Partial<Record<string, number[]>>
+
   // If present, sets up Sentry error reporting.
   sentryDsn?: string
   // Payment info.

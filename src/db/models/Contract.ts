@@ -7,8 +7,8 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { loadConfig } from '@/core/config'
 import { ContractJson } from '@/core/types'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 @Table({
   timestamps: true,
@@ -53,8 +53,8 @@ export class Contract extends Model {
    * from the config.
    */
   matchesCodeIdKeys(...keys: string[]): boolean {
-    const config = loadConfig()
-    const codeIds = keys.flatMap((key) => config.codeIds?.[key] ?? [])
+    const codeIds =
+      WasmCodeService.getInstance().findWasmCodeIdsByKeys(...keys) ?? []
     return codeIds.includes(this.codeId)
   }
 }

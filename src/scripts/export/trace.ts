@@ -16,6 +16,7 @@ import {
 } from '@/core'
 import { State, loadDb } from '@/db'
 import { setupMeilisearch } from '@/ms'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { handlerMakers } from './handlers'
 import { ExportQueueData, TracedEvent, TracedEventWithBlockTime } from './types'
@@ -83,6 +84,11 @@ const main = async () => {
 const trace = async () => {
   const dataSequelize = await loadDb({
     type: DbType.Data,
+  })
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance({
+    withUpdater: true,
   })
 
   // Initialize state.
@@ -657,6 +663,9 @@ const trace = async () => {
   })
 
   await traceExporter
+
+  // Stop services.
+  WasmCodeService.getInstance().stopUpdater()
 
   // Close database connection.
   await dataSequelize.close()

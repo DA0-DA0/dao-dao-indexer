@@ -4,10 +4,12 @@ import { Context } from 'vm'
 import { Command } from 'commander'
 import { Op, Sequelize, fn } from 'sequelize'
 
+import * as core from '@/core'
 import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
 import { loadDb } from '@/db'
 import * as Models from '@/db/models'
+import * as Services from '@/services'
 
 // Global context available to repl.
 const context: Context = {
@@ -46,7 +48,11 @@ const main = async () => {
   })
 
   // ADD TO CONTEXT
-  setupImport(Models)
+  setupImport({
+    ...core,
+    ...Models,
+    ...Services,
+  })
 
   // START REPL
   const r = repl.start('> ')

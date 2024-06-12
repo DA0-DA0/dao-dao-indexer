@@ -9,7 +9,6 @@ import {
   computeRange,
   getBlockForTime,
   getFirstBlock,
-  loadConfig,
   typeIsFormulaType,
   validateBlockString,
 } from '@/core'
@@ -22,6 +21,7 @@ import {
   State,
   Validator,
 } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 import { captureSentryException } from '../../sentry'
 
@@ -30,8 +30,6 @@ const testRateLimit = new Map<string, number>()
 const testCooldownSeconds = 10
 
 export const computer: Router.Middleware = async (ctx) => {
-  const config = loadConfig()
-
   const {
     block: _block,
     blocks: _blocks,
@@ -294,9 +292,9 @@ export const computer: Router.Middleware = async (ctx) => {
         let allowed = true
 
         if (typedFormula.formula.filter.codeIdsKeys?.length) {
-          const allCodeIds = typedFormula.formula.filter.codeIdsKeys.flatMap(
-            (key) => config.codeIds?.[key] ?? []
-          )
+          const codeIdKeys = typedFormula.formula.filter.codeIdsKeys
+          const allCodeIds =
+            WasmCodeService.getInstance().findWasmCodeIdsByKeys(...codeIdKeys)
           allowed &&= allCodeIds.includes(contract.codeId)
         }
 

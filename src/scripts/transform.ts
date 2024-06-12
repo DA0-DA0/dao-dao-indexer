@@ -9,6 +9,7 @@ import {
   loadDb,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
+import { WasmCodeService } from '@/services/wasm-codes'
 
 const LOADER_MAP = ['—', '\\', '|', '/']
 
@@ -58,10 +59,13 @@ const main = async () => {
   console.log(`\n[${new Date().toISOString()}] Transforming existing events...`)
 
   // Load config with config option.
-  const config = loadConfig(_config)
+  loadConfig(_config)
 
   // Load DB on start.
   const sequelize = await loadDb()
+
+  // Set up wasm code service.
+  await WasmCodeService.setUpInstance()
 
   let processed = 0
   let computationsUpdated = 0
@@ -74,9 +78,11 @@ const main = async () => {
       }
     : {}
 
-  const codeIds = (
-    codeIdsKeys && typeof codeIdsKeys === 'string' ? codeIdsKeys.split(',') : []
-  ).flatMap((key) => config.codeIds?.[key] ?? [])
+  const codeIds =
+    WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+      ...WasmCodeService.extractWasmCodeKeys(codeIdsKeys)
+    ) ?? []
+
   if (typeof codeIdsKeys === 'string' && codeIds.length === 0) {
     throw new Error('No code IDs found in config')
   }
