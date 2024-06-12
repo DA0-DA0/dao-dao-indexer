@@ -72,6 +72,8 @@ setupRouter(app, {
   accounts,
 })
 
+let wasmCodeService: WasmCodeService | null = null
+
 // Start.
 const main = async () => {
   // All servers need to connect to the accounts DB.
@@ -87,7 +89,9 @@ const main = async () => {
     })
 
     // Set up wasm code service.
-    await WasmCodeService.setUpInstance()
+    wasmCodeService = await WasmCodeService.setUpInstance({
+      withUpdater: true,
+    })
   }
 
   if (!options.port || isNaN(options.port)) {
@@ -106,9 +110,14 @@ const main = async () => {
 
 main()
 
-// On exit, close DB connection.
+// On exit, stop services and close DB connection.
 const cleanup = async () => {
   console.log('Shutting down...')
+
+  if (wasmCodeService) {
+    wasmCodeService.stopUpdater()
+  }
+
   await closeDb()
 }
 

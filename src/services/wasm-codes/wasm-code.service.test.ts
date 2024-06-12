@@ -6,9 +6,7 @@ import { WasmCodeService } from './wasm-code.service'
 
 describe('WasmCodeService tests', () => {
   beforeAll(async () => {
-    await WasmCodeService.setUpInstance({
-      withUpdater: false,
-    })
+    await WasmCodeService.setUpInstance()
   })
 
   test('WasmCodeService', async () => {

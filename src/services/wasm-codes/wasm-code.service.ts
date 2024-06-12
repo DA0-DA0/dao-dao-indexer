@@ -5,6 +5,12 @@ import { WasmCodeKeyId } from '@/db/models/WasmCodeKeyId'
 import { WasmCode } from './types'
 import { WasmCodeAdapter } from './wasm-code.adapter'
 
+/**
+ * A service to manage wasm codes that are loaded from the DB. This is used by
+ * various systems throughout the indexer, such as transformers that filter and
+ * transform state events from specific contracts and webhooks that listen for
+ * on-chain events from specific contracts.
+ */
 export class WasmCodeService implements WasmCodeAdapter {
   /**
    * Singleton instance.
@@ -54,16 +60,16 @@ export class WasmCodeService implements WasmCodeAdapter {
   }
 
   /**
-   * Set up the WasmCodeService by loading defaults from the config and
+   * Set up the wasm code service by loading defaults from the config and
    * optionally starting the DB updater.
    *
    * Creates a singleton that is returned if already setup.
    */
   static async setUpInstance({
-    withUpdater = true,
+    withUpdater = false,
   }: {
     /**
-     * Whether or not to start the updater automatically. Defaults to true.
+     * Whether or not to start the updater automatically. Defaults to false.
      */
     withUpdater?: boolean
   } = {}): Promise<WasmCodeService> {

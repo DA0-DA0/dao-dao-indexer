@@ -87,7 +87,9 @@ const trace = async () => {
   })
 
   // Set up wasm code service.
-  await WasmCodeService.setUpInstance()
+  await WasmCodeService.setUpInstance({
+    withUpdater: true,
+  })
 
   // Initialize state.
   await State.createSingletonIfMissing()
@@ -661,6 +663,9 @@ const trace = async () => {
   })
 
   await traceExporter
+
+  // Stop services.
+  WasmCodeService.getInstance().stopUpdater()
 
   // Close database connection.
   await dataSequelize.close()

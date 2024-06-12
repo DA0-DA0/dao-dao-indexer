@@ -46,7 +46,9 @@ const main = async () => {
   })
 
   // Set up wasm code service.
-  await WasmCodeService.setUpInstance()
+  await WasmCodeService.setUpInstance({
+    withUpdater: true,
+  })
 
   // Initialize state.
   await State.createSingletonIfMissing()
@@ -93,8 +95,14 @@ const main = async () => {
       console.log('Shutting down after current worker jobs complete...')
       // Exit once all workers close.
       Promise.all(workers.map((worker) => worker.close())).then(async () => {
+        // Stop services.
+        WasmCodeService.getInstance().stopUpdater()
+
+        // Close DB connections.
         await dataSequelize.close()
         await accountsSequelize.close()
+
+        // Exit.
         process.exit(0)
       })
     }
