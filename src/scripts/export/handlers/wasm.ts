@@ -6,14 +6,17 @@ import { LRUCache } from 'lru-cache'
 import { Sequelize } from 'sequelize'
 
 import { ParsedWasmStateEvent } from '@/core'
+import { wasmCodeTrackers } from '@/data/wasm-code-trackers'
 import {
   AccountWebhook,
   Contract,
   State,
+  WasmCodeKey,
   WasmStateEvent,
   WasmStateEventTransformation,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
+import { WasmCodeService } from '@/services'
 
 import { Handler, HandlerMaker } from '../types'
 
@@ -49,6 +52,11 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
   // https://github.com/classic-terra/wasmd/blob/v0.30.0-terra.3/x/wasm/types/keys.go#L31-L32
   const CONTRACT_KEY_PREFIX = isTerraClassic ? 0x04 : 0x02
   const CONTRACT_STORE_PREFIX = isTerraClassic ? 0x05 : 0x03
+
+  // Get the wasm code trackers for this chain.
+  const chainWasmCodeTrackers = wasmCodeTrackers.filter(
+    (t) => t.chainId === chainId
+  )
 
   // Get code ID for contract, cached in memory.
   const codeIdCache = new LRUCache<string, number>({
@@ -254,6 +262,51 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
           updateOnDuplicate: ['codeId'],
         }
       )
+
+      // Check if any contracts are tracked, and save their code ID if so.
+      if (chainWasmCodeTrackers.length > 0) {
+        let updatedCodeKey = false
+        await Promise.all(
+          contractEvents.flatMap(({ address, codeId }) => {
+            const trackers = chainWasmCodeTrackers.filter((t) =>
+              t.contractAddresses.has(address)
+            )
+
+            if (!trackers.length) {
+              return []
+            }
+
+            return trackers.map(async ({ codeKey }) => {
+              try {
+                await WasmCodeKey.createFromKeyAndIds(codeKey, codeId)
+                updatedCodeKey = true
+              } catch (err) {
+                // Capture failures and move on.
+                console.error(
+                  `Failed to save tracked wasm code for ${address} with code ID ${codeId} and code key ${codeKey}:`,
+                  err
+                )
+                Sentry.captureException(err, {
+                  tags: {
+                    type: 'failed-save-tracked-wasm-code',
+                    script: 'export',
+                    handler: 'wasm',
+                    chainId,
+                    codeKey,
+                    address,
+                    codeId,
+                  },
+                })
+              }
+            })
+          })
+        )
+
+        // Update service if any code keys were updated.
+        if (updatedCodeKey) {
+          await WasmCodeService.getInstance().reloadWasmCodeIdsFromDB()
+        }
+      }
     }
 
     // Export state.
