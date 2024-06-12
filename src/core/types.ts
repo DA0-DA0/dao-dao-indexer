@@ -46,7 +46,11 @@ export type Config = {
     host: string
     apiKey?: string
   }
-  // Map some arbitary string to a list of code IDs.
+
+  /**
+   * Map some arbitary string to a list of code IDs.
+   * @deprecated Use WasmCodeService to access code IDs.
+   */
   codeIds?: Partial<Record<string, number[]>>
 
   // If present, sets up Sentry error reporting.

@@ -63,10 +63,16 @@ const main = async () => {
   let replaced = 0
   const formulasReplaced = new Set<string>()
 
-  const codeIds =
-    WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-      ...WasmCodeService.extractWasmCodeKeys(codeIdsKeys)
-    ) ?? []
+  const extractedCodeIdsKeys = WasmCodeService.extractWasmCodeKeys(codeIdsKeys)
+  const codeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+    ...extractedCodeIdsKeys
+  )
+
+  if (extractedCodeIdsKeys.length > 0 && codeIds.length === 0) {
+    throw new Error(
+      'No code IDs found matching keys: ' + extractedCodeIdsKeys.join(', ')
+    )
+  }
 
   const contracts =
     codeIds.length > 0

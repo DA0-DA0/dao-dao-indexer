@@ -293,9 +293,10 @@ export const computer: Router.Middleware = async (ctx) => {
 
         if (typedFormula.formula.filter.codeIdsKeys?.length) {
           const codeIdKeys = typedFormula.formula.filter.codeIdsKeys
-          const allCodeIds =
-            WasmCodeService.getInstance().findWasmCodeIdsByKeys(...codeIdKeys)
-          allowed &&= allCodeIds.includes(contract.codeId)
+
+          allowed &&= WasmCodeService.getInstance()
+            .findWasmCodeIdsByKeys(...codeIdKeys)
+            .includes(contract.codeId)
         }
 
         if (!allowed) {
