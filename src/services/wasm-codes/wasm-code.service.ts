@@ -136,10 +136,15 @@ export class WasmCodeService implements WasmCodeAdapter {
   }
 
   /**
-   * Return a copy of the list of wasm codes.
+   * Return a sorted list of wasm codes with sorted IDs.
    */
   getWasmCodes(): WasmCode[] {
-    return [...this.wasmCodes]
+    return this.wasmCodes
+      .map(
+        (wasmCode: WasmCode) =>
+          new WasmCode(wasmCode.codeKey, wasmCode.codeIds.sort())
+      )
+      .sort((a, b) => a.codeKey.localeCompare(b.codeKey))
   }
 
   /**

@@ -19,7 +19,7 @@ describe('WasmCodeService tests', () => {
     }
 
     await WasmCodeKey.createFromKeyAndIds('codeKey1', [1, 2, 3])
-    await WasmCodeKey.createFromKeyAndIds('codeKey2', [4, 5, 6])
+    await WasmCodeKey.createFromKeyAndIds('codeKey2', [4, 5, 6, 5, 5, 5])
     await WasmCodeKey.createFromKeyAndIds('codeKey3', [1, 3, 5])
 
     await wasmCodeService.reloadWasmCodeIdsFromDB()
