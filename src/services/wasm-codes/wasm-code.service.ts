@@ -163,11 +163,14 @@ export class WasmCodeService implements WasmCodeAdapter {
    * Find all code IDs for the list of keys.
    */
   findWasmCodeIdsByKeys(...keys: string[]): number[] {
-    return keys.flatMap(
-      (key: string) =>
-        this.wasmCodes.find((wasmCode: WasmCode) => wasmCode.codeKey === key)
-          ?.codeIds ?? []
-    )
+    return keys.length === 0
+      ? []
+      : keys.flatMap(
+          (key: string) =>
+            this.wasmCodes.find(
+              (wasmCode: WasmCode) => wasmCode.codeKey === key
+            )?.codeIds ?? []
+        )
   }
 
   /**

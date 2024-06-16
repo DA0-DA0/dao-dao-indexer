@@ -193,6 +193,10 @@ export class WasmStateEventTransformation extends DependableEventModel {
   static async transformParsedStateEvents(
     events: ParsedWasmStateEvent[]
   ): Promise<WasmStateEventTransformation[]> {
+    if (events.length === 0) {
+      return []
+    }
+
     const chainId = (await State.getSingleton())?.chainId || 'unknown'
     const transformers = getProcessedTransformers(loadConfig())
     if (transformers.length === 0) {
