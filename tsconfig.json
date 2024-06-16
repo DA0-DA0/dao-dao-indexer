@@ -6,6 +6,7 @@
     "declaration": true,
     "importHelpers": true,
     "resolveJsonModule": true,
+    "skipLibCheck": true,
     "module": "commonjs",
     "outDir": "dist",
     "rootDir": "src",
@@ -16,5 +17,6 @@
       "@/*": ["*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }
