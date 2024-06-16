@@ -1,11 +1,10 @@
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
-import { DbType, getBullWorker, loadConfig } from '@/core'
+import { DbType, loadConfig } from '@/core'
 import { State, loadDb } from '@/db'
+import { QueueOptions, queues as queues } from '@/queues'
 import { WasmCodeService } from '@/services/wasm-codes'
-
-import { workerMakers } from './workers'
 
 // Parse arguments.
 const program = new Command()
@@ -53,39 +52,22 @@ const main = async () => {
   // Initialize state.
   await State.createSingletonIfMissing()
 
-  console.log(
-    `\n[${new Date().toISOString()}] Starting background queue workers...`
-  )
+  console.log(`\n[${new Date().toISOString()}] Starting workers...`)
 
-  // Create queue workers.
-  const madeWorkers = await Promise.all(
-    workerMakers.map((makeWorker) =>
-      makeWorker({
-        config,
-        updateComputations: !!update,
-        sendWebhooks: !!webhooks,
-      })
-    )
-  )
+  // Create bull workers.
+  const options: QueueOptions = {
+    config,
+    updateComputations: !!update,
+    sendWebhooks: !!webhooks,
+  }
 
-  const workers = madeWorkers.map(({ queueName, processor }) => {
-    const worker = getBullWorker(queueName, processor)
-
-    worker.on('error', async (err) => {
-      console.error('Worker errored', err)
-
-      Sentry.captureException(err, {
-        tags: {
-          type: 'worker-error',
-          script: 'export:process',
-          chainId: (await State.getSingleton())?.chainId ?? 'unknown',
-          queueName,
-        },
-      })
+  const workers = await Promise.all(
+    queues.map(async (Queue) => {
+      const queue = new Queue(options)
+      await queue.init()
+      return queue.getWorker()
     })
-
-    return worker
-  })
+  )
 
   // Add shutdown signal handler.
   process.on('SIGINT', () => {

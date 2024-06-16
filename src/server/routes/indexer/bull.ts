@@ -2,15 +2,13 @@ import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
 import { KoaAdapter } from '@bull-board/koa'
 
-import { QueueName, getBullQueue } from '@/core'
+import { queues } from '@/queues'
 
 export const makeBullBoardJobsMiddleware = (basePath: string) => {
   const serverAdapter = new KoaAdapter().setBasePath(basePath)
 
   createBullBoard({
-    queues: Object.values(QueueName).map(
-      (name) => new BullMQAdapter(getBullQueue(name))
-    ),
+    queues: queues.map((Queue) => new BullMQAdapter(Queue.getQueue())),
     serverAdapter,
   })
 

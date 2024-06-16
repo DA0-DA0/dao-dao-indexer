@@ -1,16 +1,28 @@
+import { Job, Queue } from 'bullmq'
+
 import { compute, serializeBlock } from '@/core'
-import { PendingMeilisearchIndexUpdate, QueueName } from '@/core/types'
+import { PendingMeilisearchIndexUpdate } from '@/core/types'
 import { getTypedFormula } from '@/data'
 import { State } from '@/db'
 import { getMeilisearchIndexName, loadMeilisearch } from '@/ms'
 
-import { ExportWorkerMaker } from '../types'
+import { BaseQueue } from './base'
+import { closeBullQueue, getBullQueue } from './connection'
 
-export const makeSearchWorker: ExportWorkerMaker<
-  PendingMeilisearchIndexUpdate
-> = async () => ({
-  queueName: QueueName.Search,
-  processor: async ({
+export class SearchQueue extends BaseQueue<PendingMeilisearchIndexUpdate> {
+  static queueName = 'search'
+
+  static getQueue = () =>
+    getBullQueue<PendingMeilisearchIndexUpdate>(this.queueName)
+  static add = async (
+    ...params: Parameters<Queue<PendingMeilisearchIndexUpdate>['add']>
+  ) => (await this.getQueue()).add(...params)
+  static addBulk = async (
+    ...params: Parameters<Queue<PendingMeilisearchIndexUpdate>['addBulk']>
+  ) => (await this.getQueue()).addBulk(...params)
+  static close = () => closeBullQueue(this.queueName)
+
+  async process({
     data: {
       index: indexName,
       update: {
@@ -18,7 +30,7 @@ export const makeSearchWorker: ExportWorkerMaker<
         formula: { type, name, targetAddress, args = {} },
       },
     },
-  }) => {
+  }: Job<PendingMeilisearchIndexUpdate>): Promise<void> {
     const typedFormula = getTypedFormula(type, name)
 
     const state = await State.getSingleton()
@@ -38,12 +50,12 @@ export const makeSearchWorker: ExportWorkerMaker<
       ...typedFormula,
     })
 
-    return await index.addDocuments([
+    await index.addDocuments([
       {
         id,
         block: block && serializeBlock(block),
         value,
       },
     ])
-  },
-})
+  }
+}

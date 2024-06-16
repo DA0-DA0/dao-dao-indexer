@@ -2,15 +2,10 @@ import { randomUUID } from 'crypto'
 
 import * as Sentry from '@sentry/node'
 
-import {
-  PendingWebhook,
-  QueueName,
-  getBullQueue,
-  getEnv,
-  loadConfig,
-} from '@/core'
+import { PendingWebhook, getEnv, loadConfig } from '@/core'
 import { getProcessedWebhooks } from '@/data/webhooks'
 import { DependableEventModel, State, WasmStateEvent } from '@/db'
+import { WebhooksQueue } from '@/queues/webhooks'
 
 export const queueWebhooks = async (
   events: DependableEventModel[]
@@ -138,8 +133,7 @@ export const queueWebhooks = async (
   ).filter((w): w is PendingWebhook => w !== undefined)
 
   if (pendingWebhooks.length) {
-    const queue = getBullQueue<PendingWebhook>(QueueName.Webhooks)
-    await queue.addBulk(
+    await WebhooksQueue.addBulk(
       pendingWebhooks.map((data) => ({
         name: randomUUID(),
         data,

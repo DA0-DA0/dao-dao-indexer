@@ -7,24 +7,19 @@ import { Command } from 'commander'
 import { LRUCache } from 'lru-cache'
 import waitPort from 'wait-port'
 
-import {
-  DbType,
-  QueueName,
-  getBullQueue,
-  loadConfig,
-  objectMatchesStructure,
-} from '@/core'
+import { DbType, loadConfig, objectMatchesStructure } from '@/core'
 import { State, loadDb } from '@/db'
 import { setupMeilisearch } from '@/ms'
+import { ExportQueue } from '@/queues/export'
 import { WasmCodeService } from '@/services/wasm-codes'
 
-import { handlerMakers } from './handlers'
-import { ExportQueueData, TracedEvent, TracedEventWithBlockTime } from './types'
+import { handlerMakers } from '../tracer/handlers'
+import { TracedEvent, TracedEventWithBlockTime } from '../tracer/types'
 import {
   getCosmWasmClient,
   setUpFifoJsonTracer,
   setUpWebSocketNewBlockListener,
-} from './utils'
+} from '../tracer/utils'
 
 const MAX_QUEUE_SIZE = 5000
 const MAX_BATCH_SIZE = 5000
@@ -103,21 +98,6 @@ const trace = async () => {
         flags: 'a',
       })
     : null
-
-  const exportQueue = getBullQueue<{ data: ExportQueueData[] }>(
-    QueueName.Export
-  )
-  exportQueue.on('error', async (err) => {
-    console.error('Export queue errored', err)
-
-    Sentry.captureException(err, {
-      tags: {
-        type: 'export-queue-error',
-        script: 'export:trace',
-        chainId: (await State.getSingleton())?.chainId ?? 'unknown',
-      },
-    })
-  })
 
   // Create CosmWasm client that batches requests.
   const cosmWasmClient = await getCosmWasmClient(config.rpc)
@@ -282,8 +262,9 @@ const trace = async () => {
         exportBatch[exportBatch.length - 1].trace.metadata.blockHeight
       )
       if (uniqueBatchData.length) {
-        exportQueue.add(blockHeight.toString(), {
-          data: uniqueBatchData.map(({ handler, data }): ExportQueueData => {
+        ExportQueue.add(
+          blockHeight.toString(),
+          uniqueBatchData.map(({ handler, data }) => {
             // Remove ID since it's no longer relevant.
             delete data.id
 
@@ -291,8 +272,8 @@ const trace = async () => {
               handler,
               data,
             }
-          }),
-        })
+          })
+        )
       }
 
       console.log(
@@ -671,7 +652,7 @@ const trace = async () => {
   await dataSequelize.close()
 
   // Close queue.
-  await exportQueue.close()
+  await ExportQueue.close()
 
   process.exit(0)
 }

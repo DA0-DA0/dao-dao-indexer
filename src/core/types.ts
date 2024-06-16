@@ -731,12 +731,6 @@ export enum DbType {
   Data = 'data',
 }
 
-export enum QueueName {
-  Export = 'export',
-  Webhooks = 'webhooks',
-  Search = 'search',
-}
-
 /**
  * A pending index update queued in the worker.
  */

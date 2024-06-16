@@ -2,9 +2,10 @@ import { randomUUID } from 'crypto'
 
 import * as Sentry from '@sentry/node'
 
-import { PendingMeilisearchIndexUpdate, QueueName, getBullQueue } from '@/core'
+import { PendingMeilisearchIndexUpdate } from '@/core'
 import { meilisearchIndexers } from '@/data/meilisearch'
 import { DependableEventModel, State } from '@/db'
+import { SearchQueue } from '@/queues/search'
 
 /**
  * Queue index updates for a given event. Returns how many updates were queued.
@@ -57,8 +58,7 @@ export const queueMeilisearchIndexUpdates = async (
   )
 
   if (pendingUpdates.length) {
-    const queue = getBullQueue<PendingMeilisearchIndexUpdate>(QueueName.Search)
-    await queue.addBulk(
+    await SearchQueue.addBulk(
       pendingUpdates.map((data) => ({
         name: randomUUID(),
         data,

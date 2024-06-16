@@ -1,7 +1,6 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
-import { Processor } from 'bullmq'
 
-import { Config, QueueName } from '@/core/types'
+import { Config } from '@/core/types'
 import { DependableEventModel } from '@/db'
 
 export type Handler<Data extends unknown = unknown> = {
@@ -33,6 +32,11 @@ export type HandlerMaker<Data extends unknown = unknown> = (
   options: HandlerMakerOptions
 ) => Promise<Handler<Data>>
 
+export type NamedHandler = {
+  name: string
+  handler: Handler
+}
+
 export type TracedEvent = {
   operation: 'read' | 'write' | 'delete'
   key: string
@@ -47,29 +51,3 @@ export type TracedEvent = {
 export type TracedEventWithBlockTime = TracedEvent & {
   blockTimeUnixMs: number
 }
-
-export type WorkerInitData = {
-  config: Config
-  update: boolean
-  webhooks: boolean
-  websocket: boolean
-}
-
-export type ExportQueueData = {
-  handler: string
-  data: unknown
-}
-
-export type ExportWorker<Data extends unknown = unknown> = {
-  queueName: QueueName
-  processor: Processor<Data>
-}
-
-export type ExportWorkerMakerOptions = Omit<
-  HandlerMakerOptions,
-  'cosmWasmClient'
->
-
-export type ExportWorkerMaker<Data extends unknown = unknown> = (
-  options: ExportWorkerMakerOptions
-) => Promise<ExportWorker<Data>>

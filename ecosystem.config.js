@@ -2,13 +2,13 @@ module.exports = {
   apps: [
     {
       name: 'tracer',
-      script: 'dist/scripts/export/trace.js',
+      script: 'dist/scripts/tracer.js',
       wait_ready: true,
       listen_timeout: 30000,
     },
     {
-      name: 'processor',
-      script: 'dist/scripts/export/process.js',
+      name: 'workers',
+      script: 'dist/scripts/workers.js',
       wait_ready: true,
       listen_timeout: 30000,
     },

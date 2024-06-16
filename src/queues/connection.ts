@@ -1,10 +1,8 @@
 import * as Sentry from '@sentry/node'
 import { ConnectionOptions, Processor, Queue, Worker } from 'bullmq'
 
+import { loadConfig } from '@/core'
 import { State } from '@/db/models'
-
-import { loadConfig } from './config'
-import { QueueName } from './types'
 
 const getBullConnection = (): ConnectionOptions | undefined => {
   const { redis } = loadConfig()
@@ -21,9 +19,9 @@ const getBullConnection = (): ConnectionOptions | undefined => {
  * Cache bull queues by name so we don't make duplicates and can close all at
  * once on exit.
  */
-export const activeBullQueues: Partial<Record<QueueName, Queue>> = {}
+export const activeBullQueues: Partial<Record<string, Queue>> = {}
 
-export const getBullQueue = <T extends unknown>(name: QueueName): Queue<T> => {
+export const getBullQueue = <T extends unknown>(name: string): Queue<T> => {
   if (!activeBullQueues[name]) {
     activeBullQueues[name] = new Queue<T>(name, {
       connection: getBullConnection(),
@@ -51,17 +49,25 @@ export const getBullQueue = <T extends unknown>(name: QueueName): Queue<T> => {
 }
 
 /**
- * Closes all active bull queues.
+ * Close all active bull queues.
  *
  * @returns `Promise` that resolves when all queues are closed.
  */
 export const closeAllBullQueues = async () =>
   await Promise.all(
-    Object.values(activeBullQueues).map((queue) => queue.close())
+    Object.values(activeBullQueues).map((queue) => queue?.close())
   )
 
+/**
+ * Close specific bull queue.
+ *
+ * @returns `Promise` that resolves when queue is closed.
+ */
+export const closeBullQueue = async (name: string) =>
+  activeBullQueues[name]?.close() ?? Promise.resolve()
+
 export const getBullWorker = <T extends unknown>(
-  name: QueueName,
+  name: string,
   processor: Processor<T>
 ) =>
   new Worker<T>(name, processor, {
