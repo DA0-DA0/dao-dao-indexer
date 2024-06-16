@@ -9,6 +9,7 @@ import { loadConfig } from '@/core/config'
 import { DbType } from '@/core/types'
 import { loadDb } from '@/db'
 import * as Models from '@/db/models'
+import { queues } from '@/queues'
 import * as Services from '@/services'
 
 // Global context available to repl.
@@ -52,6 +53,7 @@ const main = async () => {
     ...core,
     ...Models,
     ...Services,
+    ...Object.fromEntries(queues.map((queue) => [queue.name, queue])),
   })
 
   // START REPL
