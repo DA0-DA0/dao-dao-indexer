@@ -8,7 +8,7 @@ import { BaseQueue } from './base'
 import { closeBullQueue, getBullQueue } from './connection'
 
 export class WebhooksQueue extends BaseQueue<PendingWebhook> {
-  queueName = 'webhooks'
+  static queueName = 'webhooks'
 
   static getQueue = () => getBullQueue<PendingWebhook>(this.queueName)
   static add = async (...params: Parameters<Queue<PendingWebhook>['add']>) =>
