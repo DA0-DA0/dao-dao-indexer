@@ -73,9 +73,9 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
       throw new Error('no contract address nor code ID filter provided')
     } else {
       console.log(
-        `transforming events for contract addresses: ${addresses?.join(
-          ', '
-        )} and code IDs: ${codeIds.join(', ')}`
+        `transforming events for contract addresses: ${
+          addresses?.join(', ') || '<any>'
+        } and code IDs: ${codeIds.length > 0 ? codeIds.join(', ') : '<any>'}`
       )
     }
 

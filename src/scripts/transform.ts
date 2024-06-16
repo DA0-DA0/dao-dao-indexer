@@ -48,8 +48,6 @@ const main = async () => {
     codeIdsKeys,
   } = program.opts()
 
-  console.log(`\n[${new Date().toISOString()}] Transforming existing events...`)
-
   // Load config with config option.
   const config = loadConfig(_config)
 
@@ -72,8 +70,6 @@ const main = async () => {
       codeIdsKeys: WasmCodeService.extractWasmCodeKeys(codeIdsKeys),
     },
   } as any)
-
-  console.log(`\n[${new Date().toISOString()}] Transforming complete.`)
 
   await sequelize.close()
 
