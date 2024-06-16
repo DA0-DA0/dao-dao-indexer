@@ -7,13 +7,14 @@ import { State } from '@/db'
 import { getMeilisearchIndexName, loadMeilisearch } from '@/ms'
 
 import { BaseQueue } from './base'
-import { closeBullQueue, getBullQueue } from './connection'
+import { closeBullQueue, getBullQueue, getBullQueueEvents } from './connection'
 
 export class SearchQueue extends BaseQueue<PendingMeilisearchIndexUpdate> {
   static queueName = 'search'
 
   static getQueue = () =>
     getBullQueue<PendingMeilisearchIndexUpdate>(this.queueName)
+  static getQueueEvents = () => getBullQueueEvents(this.queueName)
   static add = async (
     ...params: Parameters<Queue<PendingMeilisearchIndexUpdate>['add']>
   ) => (await this.getQueue()).add(...params)

@@ -5,7 +5,7 @@ import { Contract, WasmStateEvent, WasmStateEventTransformation } from '@/db'
 import { WasmCodeService } from '@/services'
 
 import { BaseQueue } from './base'
-import { closeBullQueue, getBullQueue } from './connection'
+import { closeBullQueue, getBullQueue, getBullQueueEvents } from './connection'
 
 export type TransformationsQueuePayload = {
   /**
@@ -35,6 +35,7 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
 
   static getQueue = () =>
     getBullQueue<TransformationsQueuePayload>(this.queueName)
+  static getQueueEvents = () => getBullQueueEvents(this.queueName)
   static add = async (
     ...params: Parameters<Queue<TransformationsQueuePayload>['add']>
   ) => (await this.getQueue()).add(...params)
@@ -43,22 +44,21 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
   ) => (await this.getQueue()).addBulk(...params)
   static close = () => closeBullQueue(this.queueName)
 
-  async process({
-    data: {
+  async process(job: Job<TransformationsQueuePayload>): Promise<void> {
+    const {
       minBlockHeight = 0,
       batchSize = 5000,
       addresses,
       codeIdsKeys,
       codeIds: _codeIds = [],
-    },
-  }: Job<TransformationsQueuePayload>): Promise<void> {
+    } = job.data
+
     const foundCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
       ...(codeIdsKeys || [])
     )
     if (codeIdsKeys?.length && !foundCodeIds.length) {
-      throw new Error(
-        `no code IDs found for code IDs keys: ${codeIdsKeys.join(', ')}`
-      )
+      job.log(`no code IDs found for code IDs keys: ${codeIdsKeys.join(', ')}`)
+      return
     }
 
     const codeIds = [..._codeIds, ...foundCodeIds]
@@ -70,9 +70,10 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
       : undefined
 
     if (!addressFilter && !codeIds.length) {
-      throw new Error('no contract address nor code ID filter provided')
+      job.log('no contract address nor code ID filter provided')
+      return
     } else {
-      console.log(
+      job.log(
         `transforming events for contract addresses: ${
           addresses?.join(', ') || '<any>'
         } and code IDs: ${codeIds.length > 0 ? codeIds.join(', ') : '<any>'}`
@@ -105,10 +106,15 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
       ...includeContract,
     })
 
-    console.log(`found ${total.toLocaleString()} events to transform...`)
+    job.log(`found ${total.toLocaleString()} events to transform...`)
 
     let processed = 0
     let transformed = 0
+
+    const saveProgress = () =>
+      job.updateProgress(Math.round((processed / total) * 100))
+
+    saveProgress()
 
     let latestBlockEventIdsSeen: number[] = []
     while (processed < total) {
@@ -172,11 +178,11 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
 
       transformed += transformations.length
 
-      console.log(
+      job.log(
         `transformed/processed/total: ${transformed.toLocaleString()}/${processed.toLocaleString()}/${total.toLocaleString()}. latest block height: ${latestBlockHeight.toLocaleString()}`
       )
-    }
 
-    console.log('done!')
+      saveProgress()
+    }
   }
 }

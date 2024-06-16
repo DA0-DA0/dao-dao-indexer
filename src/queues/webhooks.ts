@@ -5,12 +5,13 @@ import Pusher from 'pusher'
 import { PendingWebhook, WebhookType } from '@/core/types'
 
 import { BaseQueue } from './base'
-import { closeBullQueue, getBullQueue } from './connection'
+import { closeBullQueue, getBullQueue, getBullQueueEvents } from './connection'
 
 export class WebhooksQueue extends BaseQueue<PendingWebhook> {
   static queueName = 'webhooks'
 
   static getQueue = () => getBullQueue<PendingWebhook>(this.queueName)
+  static getQueueEvents = () => getBullQueueEvents(this.queueName)
   static add = async (...params: Parameters<Queue<PendingWebhook>['add']>) =>
     (await this.getQueue()).add(...params)
   static addBulk = async (

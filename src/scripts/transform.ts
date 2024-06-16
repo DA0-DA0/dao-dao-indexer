@@ -2,7 +2,7 @@ import { Command } from 'commander'
 
 import { loadConfig } from '@/core'
 import { loadDb } from '@/db'
-import { TransformationsQueue } from '@/queues/transform'
+import { TransformationsQueue } from '@/queues/transformations'
 import { WasmCodeService } from '@/services/wasm-codes'
 
 const main = async () => {
@@ -33,23 +33,17 @@ const main = async () => {
     '-k, --code-ids-keys <keys>',
     'comma separated list of code IDs keys from the config to transform'
   )
-  program.option(
-    // Adds inverted `update` boolean to the options object.
-    '--no-update',
-    "don't update computation validity based on new events or transformations"
-  )
   program.parse()
   const {
     config: _config,
     initial,
     batch,
     addresses,
-    update,
     codeIdsKeys,
   } = program.opts()
 
   // Load config with config option.
-  const config = loadConfig(_config)
+  loadConfig(_config)
 
   // Load DB on start.
   const sequelize = await loadDb()
@@ -57,19 +51,32 @@ const main = async () => {
   // Set up wasm code service.
   await WasmCodeService.setUpInstance()
 
-  // Use queue process function directly.
-  await new TransformationsQueue({
-    config,
-    updateComputations: !!update,
-    sendWebhooks: false,
-  }).process({
-    data: {
+  const job = await TransformationsQueue.add(
+    `script_${Date.now()}`,
+    {
       minBlockHeight: initial,
       batchSize: batch,
       addresses,
       codeIdsKeys: WasmCodeService.extractWasmCodeKeys(codeIdsKeys),
     },
-  } as any)
+    {
+      attempts: 1,
+    }
+  )
+
+  const events = TransformationsQueue.getQueueEvents()
+  events.on('progress', ({ data }) => {
+    if (typeof data === 'number') {
+      console.log(`transformed ${data}%`)
+    }
+  })
+
+  try {
+    await job.waitUntilFinished(events)
+    console.log('finished!')
+  } catch (error) {
+    console.error('errored', error)
+  }
 
   await sequelize.close()
 

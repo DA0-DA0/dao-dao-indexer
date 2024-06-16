@@ -8,7 +8,7 @@ import { getCosmWasmClient } from '@/tracer/utils'
 
 import { queueWebhooks } from '../tracer/webhooks'
 import { BaseQueue } from './base'
-import { closeBullQueue, getBullQueue } from './connection'
+import { closeBullQueue, getBullQueue, getBullQueueEvents } from './connection'
 
 /**
  * Payload for items in the export queue, which consists of handler and data
@@ -23,6 +23,7 @@ export class ExportQueue extends BaseQueue<ExportQueuePayload> {
   static queueName = 'export'
 
   static getQueue = () => getBullQueue<ExportQueuePayload>(this.queueName)
+  static getQueueEvents = () => getBullQueueEvents(this.queueName)
   static add = async (
     ...params: Parameters<Queue<ExportQueuePayload>['add']>
   ) => (await this.getQueue()).add(...params)

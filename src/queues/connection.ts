@@ -1,5 +1,11 @@
 import * as Sentry from '@sentry/node'
-import { ConnectionOptions, Processor, Queue, Worker } from 'bullmq'
+import {
+  ConnectionOptions,
+  Processor,
+  Queue,
+  QueueEvents,
+  Worker,
+} from 'bullmq'
 
 import { loadConfig } from '@/core'
 import { State } from '@/db/models'
@@ -47,6 +53,9 @@ export const getBullQueue = <T extends unknown>(name: string): Queue<T> => {
   }
   return activeBullQueues[name]!
 }
+
+export const getBullQueueEvents = (name: string): QueueEvents =>
+  new QueueEvents(name, { connection: getBullConnection() })
 
 /**
  * Close all active bull queues.
