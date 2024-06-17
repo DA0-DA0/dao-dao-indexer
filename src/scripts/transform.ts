@@ -2,7 +2,7 @@ import { Command } from 'commander'
 
 import { loadConfig } from '@/core'
 import { loadDb } from '@/db'
-import { TransformationsQueue } from '@/queues/transformations'
+import { TransformationsQueue } from '@/queues/queues/transformations'
 import { WasmCodeService } from '@/services/wasm-codes'
 
 const main = async () => {

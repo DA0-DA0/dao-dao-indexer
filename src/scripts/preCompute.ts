@@ -10,8 +10,8 @@ import {
   loadConfig,
   validateBlockString,
 } from '@/core'
-import { getTypedFormula } from '@/data'
 import { Computation, Contract, State, loadDb } from '@/db'
+import { getTypedFormula } from '@/formulas'
 import { WasmCodeService } from '@/services/wasm-codes'
 
 export const main = async () => {

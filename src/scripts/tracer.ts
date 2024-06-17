@@ -9,8 +9,8 @@ import waitPort from 'wait-port'
 
 import { DbType, loadConfig, objectMatchesStructure } from '@/core'
 import { State, loadDb } from '@/db'
-import { setupMeilisearch } from '@/ms'
-import { ExportQueue } from '@/queues/export'
+import { ExportQueue } from '@/queues/queues/export'
+import { setupMeilisearch } from '@/search'
 import { WasmCodeService } from '@/services/wasm-codes'
 
 import { handlerMakers } from '../tracer/handlers'

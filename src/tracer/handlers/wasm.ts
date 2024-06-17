@@ -6,7 +6,6 @@ import { LRUCache } from 'lru-cache'
 import { Sequelize } from 'sequelize'
 
 import { ParsedWasmStateEvent } from '@/core'
-import { wasmCodeTrackers } from '@/data/wasm-code-trackers'
 import {
   AccountWebhook,
   Contract,
@@ -17,6 +16,8 @@ import {
   updateComputationValidityDependentOnChanges,
 } from '@/db'
 import { WasmCodeService } from '@/services'
+import { transformParsedStateEvents } from '@/transformers'
+import { wasmCodeTrackers } from '@/wasmCodeTrackers'
 
 import { Handler, HandlerMaker } from '../types'
 
@@ -474,7 +475,7 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
     // Transform events as needed.
     // Retry 3 times with exponential backoff starting at 100ms delay.
     const transformations = (await retry(
-      WasmStateEventTransformation.transformParsedStateEvents,
+      transformParsedStateEvents,
       [stateEvents],
       {
         retriesMax: 3,

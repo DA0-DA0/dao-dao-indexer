@@ -12,7 +12,6 @@ import {
   typeIsFormulaType,
   validateBlockString,
 } from '@/core'
-import { getTypedFormula } from '@/data'
 import {
   AccountKey,
   AccountKeyCredit,
@@ -21,6 +20,7 @@ import {
   State,
   Validator,
 } from '@/db'
+import { getTypedFormula } from '@/formulas'
 import { WasmCodeService } from '@/services/wasm-codes'
 
 import { captureSentryException } from '../../sentry'

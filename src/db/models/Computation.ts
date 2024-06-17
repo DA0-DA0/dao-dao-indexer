@@ -18,7 +18,7 @@ import {
   bigIntMin,
   compute,
 } from '@/core'
-import { getTypedFormula } from '@/data'
+import { getTypedFormula } from '@/formulas'
 
 import { DependableEventModel } from '../types'
 import { dependentKeyMatches, getDependableEventModels } from '../utils'

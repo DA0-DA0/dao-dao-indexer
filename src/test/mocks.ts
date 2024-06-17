@@ -1,7 +1,7 @@
 export const getTypedFormula = jest.fn()
 
 const mocks = {
-  '@/data/utils': {
+  '@/formulas': {
     getTypedFormula,
   },
 }
