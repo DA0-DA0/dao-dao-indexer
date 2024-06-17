@@ -1,5 +1,4 @@
-import { ContractFormula } from '@/core'
-
+import { ContractFormula } from '../../../types'
 import { instantiatedAt } from '../common'
 import { config as configFormula, item } from './base'
 import { memberCount as memberCountFormula } from './members'

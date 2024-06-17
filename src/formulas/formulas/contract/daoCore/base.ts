@@ -1,4 +1,4 @@
-import { ContractFormula } from '@/core'
+import { ContractFormula } from '@/formulas/types'
 
 import { ContractInfo, Expiration, ProposalModule } from '../../types'
 import { isExpirationExpired } from '../../utils'

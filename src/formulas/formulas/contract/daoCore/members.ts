@@ -1,5 +1,4 @@
-import { ContractFormula } from '@/core'
-
+import { ContractFormula } from '../../../types'
 import {
   listMembers as listCw4Members,
   totalWeight as totalCw4Weight,

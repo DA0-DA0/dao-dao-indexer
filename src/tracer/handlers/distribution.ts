@@ -4,7 +4,6 @@ import { FeePool } from '@dao-dao/types/protobuf/codegen/cosmos/distribution/v1b
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
-import { ParsedDistributionCommunityPoolStateEvent } from '@/core'
 import {
   DistributionCommunityPoolStateEvent,
   State,
@@ -14,6 +13,14 @@ import {
 import { Handler, HandlerMaker } from '../types'
 
 const STORE_NAME = 'distribution'
+
+export type ParsedDistributionCommunityPoolStateEvent = {
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  // Map denom to balance.
+  balances: Record<string, string>
+}
 
 export const distribution: HandlerMaker<
   ParsedDistributionCommunityPoolStateEvent

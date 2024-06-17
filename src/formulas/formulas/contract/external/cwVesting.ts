@@ -1,4 +1,6 @@
-import { ContractFormula, dbKeyToKeys } from '@/core'
+import { dbKeyToKeys } from '@/utils'
+
+import { ContractFormula } from '../../../types'
 
 type ValidatorStake = {
   validator: string

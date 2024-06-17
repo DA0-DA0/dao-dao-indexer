@@ -1,7 +1,7 @@
 import request from 'supertest'
 
-import { dbKeyForKeys } from '@/core/utils'
 import { Contract, State, WasmStateEvent } from '@/db'
+import { dbKeyForKeys } from '@/utils'
 
 import { app } from '../app'
 import { ComputerTestOptions } from './types'

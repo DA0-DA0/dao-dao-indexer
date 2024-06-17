@@ -1,6 +1,6 @@
-import { compute, loadConfig } from '@/core'
+import { loadConfig } from '@/config'
 import { State } from '@/db'
-import { getTypedFormula } from '@/formulas'
+import { compute, getTypedFormula } from '@/formulas'
 
 import { loadMeilisearch } from './client'
 import { meilisearchIndexers } from './indexers'

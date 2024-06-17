@@ -1,8 +1,8 @@
 import Router from '@koa/router'
 import { DefaultContext } from 'koa'
 
-import { objectMatchesStructure } from '@/core'
 import { Account } from '@/db'
+import { objectMatchesStructure } from '@/utils'
 
 import { verifySignature } from './auth'
 import { AccountState, AuthRequestBody } from './types'

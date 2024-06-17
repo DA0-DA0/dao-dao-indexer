@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { ContractEnv, ContractFormula } from '@/core'
+import { ContractEnv, ContractFormula } from '@/formulas/types'
 
 import { VoteCast, VoteInfo } from '../../../types'
 import { expirationPlusDuration, isExpirationExpired } from '../../../utils'

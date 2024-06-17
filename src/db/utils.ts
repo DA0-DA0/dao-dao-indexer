@@ -1,7 +1,7 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { ComputationDependentKey } from '@/core/types'
-import { bigIntMin } from '@/core/utils'
+import { ComputationDependentKey } from '@/formulas/types'
+import { bigIntMin } from '@/utils'
 
 import { loadDb } from './connection'
 import {

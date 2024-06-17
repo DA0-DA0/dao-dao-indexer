@@ -1,8 +1,8 @@
 import Router from '@koa/router'
 import { DefaultContext, DefaultState } from 'koa'
 
-import { getStargateClient } from '@/core/utils/chain'
 import { State } from '@/db'
+import { getStargateClient } from '@/utils'
 
 type UpBlock = {
   height: number

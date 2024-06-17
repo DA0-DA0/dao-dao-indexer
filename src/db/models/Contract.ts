@@ -7,8 +7,17 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { ContractJson } from '@/core/types'
 import { WasmCodeService } from '@/services/wasm-codes'
+import { Block } from '@/types'
+
+export type ContractJson = {
+  address: string
+  codeId: number
+  instantiatedAt: {
+    block: Block
+    timestamp: Date
+  }
+}
 
 @Table({
   timestamps: true,

@@ -1,5 +1,3 @@
-import { WebhookMaker, WebhookType } from '@/core/types'
-import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 import { WasmStateEvent } from '@/db'
 import {
   activeProposalModules,
@@ -12,6 +10,8 @@ import {
 import { MultipleChoiceProposal } from '@/formulas/formulas/contract/proposal/daoProposalMultiple/types'
 import { SingleChoiceProposal } from '@/formulas/formulas/contract/proposal/daoProposalSingle/types'
 import { StatusEnum } from '@/formulas/formulas/contract/proposal/types'
+import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
+import { WebhookMaker, WebhookType } from '@/webhooks'
 
 import { getDaoAddressForProposalModule } from '../../utils'
 

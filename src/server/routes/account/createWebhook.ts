@@ -3,8 +3,8 @@ import { randomUUID } from 'crypto'
 import Router from '@koa/router'
 import { DefaultContext } from 'koa'
 
-import { objectMatchesStructure } from '@/core'
 import { AccountKey, AccountWebhook, AccountWebhookStateKeyType } from '@/db'
+import { objectMatchesStructure } from '@/utils'
 
 import { AccountState } from './types'
 

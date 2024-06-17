@@ -1,12 +1,12 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/core/config'
-import { DbType } from '@/core/types'
+import { loadConfig } from '@/config'
 import {
   Account,
   AccountKey,
   AccountKeyCredit,
   AccountKeyCreditPaymentSource,
+  DbType,
   GovStateEvent,
   State,
   loadDb,

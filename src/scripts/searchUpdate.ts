@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/core/config'
+import { loadConfig } from '@/config'
 import { loadDb } from '@/db'
 import { setupMeilisearch, updateIndexes } from '@/search'
 import { WasmCodeService } from '@/services/wasm-codes'

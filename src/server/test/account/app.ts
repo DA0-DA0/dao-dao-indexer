@@ -1,6 +1,6 @@
 import Koa from 'koa'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/config'
 
 import { setupRouter } from '../../routes'
 

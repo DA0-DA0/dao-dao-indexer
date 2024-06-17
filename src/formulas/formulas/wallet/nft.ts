@@ -1,7 +1,6 @@
 import groupBy from 'lodash.groupby'
 
-import { WalletFormula } from '@/core'
-
+import { WalletFormula } from '../../types'
 import { info } from '../contract/common'
 import { tokens } from '../contract/external/cw721'
 import { config } from '../contract/voting/daoVotingCw721Staked'

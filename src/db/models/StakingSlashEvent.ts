@@ -8,7 +8,9 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { Block, ComputationDependentKey, getDependentKey } from '@/core'
+import { ComputationDependentKey } from '@/formulas/types'
+import { Block } from '@/types'
+import { getDependentKey } from '@/utils'
 
 import { DependableEventModel, DependentKeyNamespace } from '../types'
 import { Validator } from './Validator'

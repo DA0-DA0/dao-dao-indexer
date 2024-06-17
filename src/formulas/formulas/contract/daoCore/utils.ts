@@ -1,5 +1,4 @@
-import { ContractEnv } from '@/core'
-
+import { ContractEnv } from '../../../types'
 import { listSubDaos } from './base'
 
 // Get a list of unique SubDAOs in a DAO's tree of SubDAOs.

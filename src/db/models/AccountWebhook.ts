@@ -13,7 +13,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { dbKeyForKeys } from '@/core/utils'
+import { dbKeyForKeys } from '@/utils'
 
 import { Account } from './Account'
 import { AccountCodeIdSet } from './AccountCodeIdSet'

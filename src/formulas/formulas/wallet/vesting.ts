@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { WalletFormula } from '@/core'
+import { WalletFormula } from '../../types'
 
 export const ownerOf: WalletFormula<string[]> = {
   compute: async (env) => {

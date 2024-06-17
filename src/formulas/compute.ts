@@ -6,10 +6,10 @@ import {
   dependentKeyMatches,
   getDependableEventModels,
 } from '@/db'
+import { Block } from '@/types'
 
 import { getEnv } from './env'
 import {
-  Block,
   Cache,
   CacheMap,
   CacheMapSingle,

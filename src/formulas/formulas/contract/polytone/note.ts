@@ -1,4 +1,4 @@
-import { ContractFormula } from '@/core'
+import { ContractFormula } from '../../../types'
 
 export const remoteAddress: ContractFormula<
   string | undefined,

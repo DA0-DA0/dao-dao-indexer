@@ -1,13 +1,14 @@
 import Router from '@koa/router'
 import { DefaultContext, DefaultState } from 'koa'
 
-import { loadConfig, objectMatchesStructure } from '@/core'
+import { loadConfig } from '@/config'
 import {
   Account,
   AccountKey,
   AccountKeyCredit,
   AccountKeyCreditPaymentSource,
 } from '@/db'
+import { objectMatchesStructure } from '@/utils'
 
 type PaymentWebhookResponse =
   | {

@@ -1,5 +1,6 @@
-import { Transformer } from '@/core/types'
-import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
+import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
+
+import { Transformer } from '../../types'
 
 const CODE_IDS_KEYS = ['polytone-voice']
 const KEY_PREFIX_C2P = dbKeyForKeys('c2p', '')

@@ -1,5 +1,7 @@
-import { ParsedWasmStateEvent, Transformer } from '@/core/types'
-import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
+import { ParsedWasmStateEvent } from '@/tracer/handlers/wasm'
+import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
+
+import { Transformer } from './types'
 
 export const defaultGetValue = (event: ParsedWasmStateEvent) =>
   // If value is null but this is not a delete event, store an empty string

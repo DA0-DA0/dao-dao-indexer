@@ -4,10 +4,9 @@ import { Context } from 'vm'
 import { Command } from 'commander'
 import { Op, Sequelize, fn } from 'sequelize'
 
-import * as core from '@/core'
-import { loadConfig } from '@/core/config'
-import { DbType } from '@/core/types'
-import { loadDb } from '@/db'
+import * as Config from '@/config'
+import { loadConfig } from '@/config'
+import { DbType, loadDb } from '@/db'
 import * as Models from '@/db/models'
 import { queues } from '@/queues'
 import * as Services from '@/services'
@@ -50,7 +49,7 @@ const main = async () => {
 
   // ADD TO CONTEXT
   setupImport({
-    ...core,
+    ...Config,
     ...Models,
     ...Services,
     ...Object.fromEntries(queues.map((queue) => [queue.name, queue])),

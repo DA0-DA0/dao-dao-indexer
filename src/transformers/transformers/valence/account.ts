@@ -1,5 +1,6 @@
-import { Transformer } from '@/core/types'
-import { dbKeyForKeys } from '@/core/utils'
+import { dbKeyForKeys } from '@/utils'
+
+import { Transformer } from '../../types'
 
 const CODE_IDS_KEYS: string[] = ['valence-account']
 

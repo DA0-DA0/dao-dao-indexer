@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/config'
 import { Computation, loadDb } from '@/db'
 
 // Deletes computations.

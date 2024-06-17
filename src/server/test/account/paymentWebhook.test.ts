@@ -1,6 +1,6 @@
 import request from 'supertest'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/config'
 import { AccountKey, AccountKeyCreditPaymentSource } from '@/db'
 import { getAccountWithAuth } from '@/test/utils'
 

@@ -1,4 +1,4 @@
-import { ValidatorFormula } from '@/core'
+import { ValidatorFormula } from '../../types'
 
 type Slash = {
   registeredBlockHeight: string

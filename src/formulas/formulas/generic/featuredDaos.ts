@@ -1,5 +1,4 @@
-import { GenericFormula } from '@/core'
-
+import { GenericFormula } from '../../types'
 import allFeaturedDaos from './featured_daos.json'
 
 export const featuredDaos: GenericFormula<

@@ -1,5 +1,4 @@
-import { ContractFormula } from '@/core'
-
+import { ContractFormula } from '../../../types'
 import * as cw4Group from '../external/cw4Group'
 
 const CODE_IDS_KEYS = ['dao-voting-cw4']

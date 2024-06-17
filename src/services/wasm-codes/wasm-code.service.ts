@@ -1,4 +1,4 @@
-import { Config, loadConfig } from '@/core'
+import { Config, loadConfig } from '@/config'
 import { WasmCodeKey } from '@/db/models/WasmCodeKey'
 import { WasmCodeKeyId } from '@/db/models/WasmCodeKeyId'
 

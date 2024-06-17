@@ -1,7 +1,6 @@
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
-import { loadConfig } from '@/core/config'
-import { DbType } from '@/core/types'
+import { loadConfig } from '@/config'
 
 import {
   Account,
@@ -27,6 +26,7 @@ import {
   WasmStateEventTransformation,
   WasmTxEvent,
 } from './models'
+import { DbType } from './types'
 
 const sequelizeInstances: Partial<Record<DbType, Sequelize>> = {}
 

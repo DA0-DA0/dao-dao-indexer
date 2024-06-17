@@ -1,9 +1,9 @@
 import { toBech32 } from '@cosmjs/encoding'
 
-import { loadConfig } from '@/core/config'
-import { Transformer } from '@/core/types'
-import { dbKeyForKeys, dbKeyToKeysAdvanced } from '@/core/utils'
+import { loadConfig } from '@/config'
+import { dbKeyForKeys, dbKeyToKeysAdvanced } from '@/utils'
 
+import { Transformer } from '../../types'
 import { defaultGetValue } from '../../utils'
 
 const CODE_IDS_KEYS = ['oraichain-cw20-staking']

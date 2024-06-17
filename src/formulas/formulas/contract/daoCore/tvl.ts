@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-import { ContractEnv, ContractFormula } from '@/core/types'
-import { getStargateClient } from '@/core/utils/chain'
+import { ContractEnv, ContractFormula } from '@/formulas/types'
+import { getStargateClient } from '@/utils'
 
 import { tokenInfo } from '../external/cw20'
 import { getUniqueSubDaosInTree } from './utils'

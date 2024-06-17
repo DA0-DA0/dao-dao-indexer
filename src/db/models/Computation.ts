@@ -10,15 +10,14 @@ import {
 } from 'sequelize-typescript'
 
 import {
-  Block,
   ComputationOutput,
   FormulaType,
   TypedFormula,
-  bigIntMax,
-  bigIntMin,
   compute,
-} from '@/core'
-import { getTypedFormula } from '@/formulas'
+  getTypedFormula,
+} from '@/formulas'
+import { Block } from '@/types'
+import { bigIntMax, bigIntMin } from '@/utils'
 
 import { DependableEventModel } from '../types'
 import { dependentKeyMatches, getDependableEventModels } from '../utils'

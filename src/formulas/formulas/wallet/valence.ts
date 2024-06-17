@@ -1,4 +1,4 @@
-import { WalletFormula } from '@/core'
+import { WalletFormula } from '../../types'
 
 export const accounts: WalletFormula<string[]> = {
   compute: async (env) => {

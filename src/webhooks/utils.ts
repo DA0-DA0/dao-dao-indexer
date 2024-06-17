@@ -1,6 +1,6 @@
-import { ContractEnv } from '@/core'
 import { dao as daoProposalMultipleDao } from '@/formulas/formulas/contract/proposal/daoProposalMultiple'
 import { dao as daoProposalSingleDao } from '@/formulas/formulas/contract/proposal/daoProposalSingle'
+import { ContractEnv } from '@/formulas/types'
 
 const CODE_IDS_KEY_SINGLE = 'dao-proposal-single'
 const CODE_IDS_KEY_MULTIPLE = 'dao-proposal-multiple'

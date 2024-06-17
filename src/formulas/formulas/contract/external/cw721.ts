@@ -1,5 +1,4 @@
-import { ContractFormula } from '@/core'
-
+import { ContractFormula } from '../../../types'
 import { Expiration } from '../../types'
 
 interface ContractInfo {

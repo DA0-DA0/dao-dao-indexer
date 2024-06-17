@@ -3,7 +3,6 @@ import { Coin } from '@dao-dao/types/protobuf/codegen/cosmos/base/v1beta1/coin'
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
-import { ParsedBankStateEvent } from '@/core'
 import {
   BankStateEvent,
   State,
@@ -13,6 +12,15 @@ import {
 import { Handler, HandlerMaker } from '../types'
 
 const STORE_NAME = 'bank'
+
+export type ParsedBankStateEvent = {
+  address: string
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  denom: string
+  balance: string
+}
 
 export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
   config: { bech32Prefix },

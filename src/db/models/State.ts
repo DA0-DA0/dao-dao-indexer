@@ -7,7 +7,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { Block } from '@/core'
+import { Block } from '@/types'
 
 @Table({
   timestamps: true,

@@ -1,4 +1,4 @@
-import { ContractFormula } from '@/core'
+import { ContractFormula } from '../../../types'
 
 type SenderInfo = {
   connection_id: String

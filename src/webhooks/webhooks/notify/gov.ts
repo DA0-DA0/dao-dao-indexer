@@ -5,9 +5,9 @@ import {
   getImageUrlForChainId,
 } from '@dao-dao/utils'
 
-import { WebhookMaker, WebhookType } from '@/core/types'
-import { decodeGovProposal } from '@/core/utils'
 import { GovStateEvent } from '@/db'
+import { decodeGovProposal } from '@/utils'
+import { WebhookMaker, WebhookType } from '@/webhooks'
 
 // Fire webhook when a gov proposal is created.
 export const makeInboxGovProposalCreated: WebhookMaker<GovStateEvent> = (

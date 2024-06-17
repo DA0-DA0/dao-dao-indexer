@@ -1,7 +1,7 @@
 import request from 'supertest'
 
-import { serializeBlock } from '@/core/utils'
 import { State } from '@/db'
+import { serializeBlock } from '@/utils'
 
 import { app } from './app'
 

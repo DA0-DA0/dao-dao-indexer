@@ -1,16 +1,4 @@
-// https://github.com/CosmWasm/cw-storage-plus/blob/179bcd0dc2b769c787f411a7cf9a614a80e4dee0/src/helpers.rs#L57
-// Recreate cw-storage-plus key nesting format. Output is a comma-separated list
-// of uint8 values that represents a byte array. See `Event` model for more
-// information.
-
-import { DependentKeyNamespace } from '@/db'
-
-import { Block, FormulaType, SerializedBlock } from '../types'
-
-export * from './block'
-export * from './chain'
-export * from './gov'
-export * from './objectMatchesStructure'
+import { DependentKeyNamespace } from '@/db/types'
 
 // Convert base64 string to comma-separated list of bytes. See explanation in
 // `Event` model for the key attribute for more information.
@@ -22,6 +10,10 @@ export const base64KeyToEventKey = (key: string): string =>
 export const eventKeyToBase64 = (key: string): string =>
   Buffer.from(key.split(',').map((c) => parseInt(c, 10))).toString('base64')
 
+// https://github.com/CosmWasm/cw-storage-plus/blob/179bcd0dc2b769c787f411a7cf9a614a80e4dee0/src/helpers.rs#L57
+// Recreate cw-storage-plus key nesting format. Output is a comma-separated list
+// of uint8 values that represents a byte array. See `Event` model for more
+// information.
 export const dbKeyForKeys = (
   ...keys: (string | number | Uint8Array)[]
 ): string => {
@@ -109,48 +101,3 @@ export const getDependentKey = (
   // If empty/undefined, wildcard used.
   ...keys: (string | undefined)[]
 ) => `${[namespace, ...keys].map((key) => key || '*').join(':')}`
-
-export const validateBlockString = (block: string, subject: string): Block => {
-  let parsedBlock
-  try {
-    parsedBlock = block.split(':').map((s) => BigInt(s))
-  } catch (err) {
-    throw new Error(`${subject}'s values must be integers`)
-  }
-
-  if (parsedBlock.length !== 2) {
-    throw new Error(`${subject} must be a height:timeUnixMs pair`)
-  }
-
-  const [blockHeight, blockTimeUnixMs] = parsedBlock
-
-  if (blockHeight < 1 || blockTimeUnixMs < 0) {
-    throw new Error(
-      `${subject}'s height must be at least 1 and ${subject}'s timeUnixMs must be at least 0`
-    )
-  }
-
-  return {
-    height: blockHeight,
-    timeUnixMs: blockTimeUnixMs,
-  }
-}
-
-export const FormulaTypeValues = Object.values(FormulaType)
-export const typeIsFormulaType = (type: string): type is FormulaType =>
-  FormulaTypeValues.includes(type as FormulaType)
-
-// BigInt min and max functions.
-export const bigIntMax = (...args: bigint[]) =>
-  args.reduce((m, e) => (e > m ? e : m))
-export const bigIntMin = (...args: bigint[]) =>
-  args.reduce((m, e) => (e < m ? e : m))
-
-// Stringifies bigint fields.
-export const serializeBlock = ({
-  height,
-  timeUnixMs,
-}: Block): SerializedBlock => ({
-  height: height.toString(),
-  timeUnixMs: timeUnixMs.toString(),
-})

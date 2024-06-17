@@ -1,7 +1,13 @@
 import { WhereOptions } from 'sequelize'
 import { Model } from 'sequelize-typescript'
 
-import { Block, ComputationDependentKey } from '@/core/types'
+import { ComputationDependentKey } from '@/formulas/types'
+import { Block } from '@/types'
+
+export enum DbType {
+  Accounts = 'accounts',
+  Data = 'data',
+}
 
 // If you're adding a new dependable event, you must add a unique namespace to
 // this enum. This namespace will be used to identify the type of event in the

@@ -7,7 +7,7 @@ import {
   Worker,
 } from 'bullmq'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/config'
 import { State } from '@/db/models'
 
 const getBullConnection = (): ConnectionOptions | undefined => {

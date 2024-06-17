@@ -1,8 +1,7 @@
 import { ModelStatic, Op } from 'sequelize'
 
 import { DependableEventModel, getDependableEventModels } from '@/db'
-
-import { Block } from '../types'
+import { Block, SerializedBlock } from '@/types'
 
 /**
  * Get the latest block before or equal to the requested block height.
@@ -88,3 +87,38 @@ export const getFirstBlock = async (): Promise<Block | undefined> => {
     .flatMap((event) => event?.block || [])
     .sort((a, b) => Number(a.height - b.height))[0]
 }
+
+export const validateBlockString = (block: string, subject: string): Block => {
+  let parsedBlock
+  try {
+    parsedBlock = block.split(':').map((s) => BigInt(s))
+  } catch (err) {
+    throw new Error(`${subject}'s values must be integers`)
+  }
+
+  if (parsedBlock.length !== 2) {
+    throw new Error(`${subject} must be a height:timeUnixMs pair`)
+  }
+
+  const [blockHeight, blockTimeUnixMs] = parsedBlock
+
+  if (blockHeight < 1 || blockTimeUnixMs < 0) {
+    throw new Error(
+      `${subject}'s height must be at least 1 and ${subject}'s timeUnixMs must be at least 0`
+    )
+  }
+
+  return {
+    height: blockHeight,
+    timeUnixMs: blockTimeUnixMs,
+  }
+}
+
+// Stringifies bigint fields.
+export const serializeBlock = ({
+  height,
+  timeUnixMs,
+}: Block): SerializedBlock => ({
+  height: height.toString(),
+  timeUnixMs: timeUnixMs.toString(),
+})

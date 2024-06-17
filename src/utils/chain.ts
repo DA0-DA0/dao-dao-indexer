@@ -1,6 +1,6 @@
 import { StargateClient } from '@cosmjs/stargate'
 
-import { loadConfig } from '../config'
+import { loadConfig } from '@/config'
 
 let stargateClient: StargateClient | undefined
 export const getStargateClient = async () => {

@@ -1,4 +1,4 @@
-import { ContractFormula } from '@/core'
+import { ContractFormula } from '../../../types'
 
 interface StakerBalance {
   address: string

@@ -1,8 +1,8 @@
 import Router from '@koa/router'
 import { DefaultContext } from 'koa'
 
-import { objectMatchesStructure } from '@/core'
 import { AccountCodeIdSet } from '@/db'
+import { objectMatchesStructure } from '@/utils'
 
 import { AccountState } from './types'
 

@@ -1,8 +1,9 @@
 import * as Sentry from '@sentry/node'
 
-import { Config, ProcessedWebhook, Webhook, WebhookMaker } from '@/core'
+import { Config } from '@/config/types'
 import { State, WasmStateEvent } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
+import { ProcessedWebhook, Webhook, WebhookMaker } from '@/webhooks'
 
 import * as discordNotifier from './discordNotifier'
 import * as indexerCwReceipt from './indexerCwReceipt'

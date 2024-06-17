@@ -1,7 +1,6 @@
 import { fromBech32 } from '@cosmjs/encoding'
 
-import { ContractFormula } from '@/core'
-
+import { ContractFormula } from '../../../types'
 import { Expiration } from '../../types'
 import { dao } from '../voting/daoVotingCw20Staked'
 

@@ -1,15 +1,11 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { getEnv } from '@/core'
-import {
-  ContractEnv,
-  FormulaType,
-  MeilisearchIndexUpdate,
-  MeilisearchIndexer,
-} from '@/core/types'
 import { Contract, WasmStateEvent, WasmStateEventTransformation } from '@/db'
+import { ContractEnv, FormulaType, getEnv } from '@/formulas'
 import { WasmCodeService } from '@/services/wasm-codes'
 import { getDaoAddressForProposalModule } from '@/webhooks'
+
+import { MeilisearchIndexUpdate, MeilisearchIndexer } from '../types'
 
 export const daos: MeilisearchIndexer = {
   id: 'daos',

@@ -1,5 +1,6 @@
-import { ContractFormula, dbKeyToKeys } from '@/core'
+import { dbKeyToKeys } from '@/utils'
 
+import { ContractFormula } from '../../../types'
 import { AUCTIONS_MANAGER_ADDR, REBALANCER_ADDR } from './constants'
 import {
   AccountResponse,

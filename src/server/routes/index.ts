@@ -3,7 +3,7 @@ import Koa from 'koa'
 import auth from 'koa-basic-auth'
 import mount from 'koa-mount'
 
-import { Config } from '@/core/types'
+import { Config } from '@/config/types'
 
 import { accountRouter } from './account'
 import { indexerRouter } from './indexer'

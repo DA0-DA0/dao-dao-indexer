@@ -1,7 +1,6 @@
 import { Secp256k1HdWallet, makeSignDoc } from '@cosmjs/amino'
 import { toHex } from '@cosmjs/encoding'
 
-import { dbKeyForKeys } from '@/core/utils'
 import {
   Account,
   AccountKey,
@@ -13,6 +12,7 @@ import {
   WasmStateEvent,
 } from '@/db'
 import { AuthRequestBody } from '@/server/routes/account/types'
+import { dbKeyForKeys } from '@/utils'
 
 export type GetAuth = () => Promise<AuthRequestBody>
 

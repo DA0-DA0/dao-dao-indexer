@@ -1,9 +1,10 @@
+import { decodeGovProposal } from '@/utils'
+
 import {
   FormulaDecodedProposalObject,
   FormulaProposalObject,
   GenericFormula,
-  decodeGovProposal,
-} from '@/core'
+} from '../../types'
 
 export const proposal: GenericFormula<
   FormulaProposalObject | undefined,

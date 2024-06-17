@@ -1,5 +1,5 @@
-import { ContractFormula, FormulaType, TypedFormula } from '@/core'
 import { AccountKeyCredit } from '@/db'
+import { ContractFormula, FormulaType, TypedFormula } from '@/formulas/types'
 import { getTypedFormula, restoreOriginalMocks } from '@/test/mocks'
 import { getAccountWithAuth } from '@/test/utils'
 

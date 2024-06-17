@@ -1,6 +1,6 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 
-import { Config } from '@/core/types'
+import { Config } from '@/config/types'
 import { DependableEventModel } from '@/db'
 
 export type Handler<Data extends unknown = unknown> = {

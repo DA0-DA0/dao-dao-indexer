@@ -1,5 +1,4 @@
-import { MeilisearchIndexer } from '@/core'
-
+import { MeilisearchIndexer } from '../types'
 import { daoProposals, daos } from './daos'
 import { govProposals } from './gov'
 

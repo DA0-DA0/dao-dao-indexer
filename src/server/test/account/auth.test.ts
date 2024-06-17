@@ -1,7 +1,7 @@
 import { createMockContext } from '@shopify/jest-koa-mocks'
 import jwt from 'jsonwebtoken'
 
-import { loadConfig } from '@/core/config'
+import { loadConfig } from '@/config'
 import { Account } from '@/db'
 import { getAccountWithAuth } from '@/test/utils'
 

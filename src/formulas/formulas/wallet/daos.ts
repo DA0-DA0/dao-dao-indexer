@@ -1,7 +1,6 @@
 import { Op } from 'sequelize'
 
-import { WalletFormula } from '@/core'
-
+import { WalletFormula } from '../../types'
 import { info } from '../contract'
 import { config, votingModule } from '../contract/daoCore/base'
 import { proposalCount } from '../contract/daoCore/proposals'

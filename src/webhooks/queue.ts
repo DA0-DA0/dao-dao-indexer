@@ -2,10 +2,12 @@ import { randomUUID } from 'crypto'
 
 import * as Sentry from '@sentry/node'
 
-import { PendingWebhook, getEnv, loadConfig } from '@/core'
+import { loadConfig } from '@/config'
 import { DependableEventModel, State, WasmStateEvent } from '@/db'
+import { getEnv } from '@/formulas'
 import { WebhooksQueue } from '@/queues/queues/webhooks'
 
+import { PendingWebhook } from './types'
 import { getProcessedWebhooks } from './webhooks'
 
 export const queueWebhooks = async (

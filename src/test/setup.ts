@@ -1,9 +1,8 @@
 // Import before anything else so the mocks take precedence.
 import './mocks'
 
-import { loadConfig } from '@/core/config'
-import { DbType } from '@/core/types'
-import { closeDb, loadDb, setup } from '@/db'
+import { loadConfig } from '@/config'
+import { DbType, closeDb, loadDb, setup } from '@/db'
 import { closeAllBullQueues } from '@/queues'
 import { WasmCodeService } from '@/services/wasm-codes'
 

@@ -2,7 +2,6 @@ import { fromBase64 } from '@cosmjs/encoding'
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
-import { ParsedGovStateEvent } from '@/core'
 import {
   GovStateEvent,
   State,
@@ -12,6 +11,14 @@ import {
 import { Handler, HandlerMaker } from '../types'
 
 const STORE_NAME = 'gov'
+
+export type ParsedGovStateEvent = {
+  proposalId: string
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  data: string
+}
 
 export const gov: HandlerMaker<ParsedGovStateEvent> = async ({
   updateComputations,

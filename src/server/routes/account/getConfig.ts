@@ -1,7 +1,7 @@
 import Router from '@koa/router'
 import { DefaultContext, DefaultState } from 'koa'
 
-import { loadConfig } from '@/core/config'
+import { loadConfig } from '@/config'
 import { AccountKeyCredit } from '@/db'
 
 type GetConfigResponse =

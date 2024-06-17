@@ -1,18 +1,17 @@
 import { Command } from 'commander'
 
+import { loadConfig } from '@/config'
+import { Computation, Contract, State, loadDb } from '@/db'
+import { computeRange, getTypedFormula } from '@/formulas'
+import { WasmCodeService } from '@/services/wasm-codes'
+import { Block } from '@/types'
 import {
-  Block,
   bigIntMin,
-  computeRange,
   getBlockForHeight,
   getBlockForTime,
   getFirstBlock,
-  loadConfig,
   validateBlockString,
-} from '@/core'
-import { Computation, Contract, State, loadDb } from '@/db'
-import { getTypedFormula } from '@/formulas'
-import { WasmCodeService } from '@/services/wasm-codes'
+} from '@/utils'
 
 export const main = async () => {
   // Parse arguments.

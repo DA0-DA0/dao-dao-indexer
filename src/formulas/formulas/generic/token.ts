@@ -1,5 +1,4 @@
-import { GenericFormula } from '@/core'
-
+import { GenericFormula } from '../../types'
 import { dao as nativeDao } from '../contract/voting/daoVotingNativeStaked'
 import { dao as tokenDao } from '../contract/voting/daoVotingTokenStaked'
 

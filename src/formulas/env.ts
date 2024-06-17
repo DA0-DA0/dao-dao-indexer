@@ -3,6 +3,7 @@ import { Op, QueryTypes, Sequelize } from 'sequelize'
 import {
   BankStateEvent,
   Contract,
+  DbType,
   DistributionCommunityPoolStateEvent,
   GovStateEvent,
   StakingSlashEvent,
@@ -12,10 +13,10 @@ import {
   loadDb,
 } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
+import { dbKeyForKeys, dbKeyToKeys, getDependentKey } from '@/utils'
 
 import {
   Cache,
-  DbType,
   Env,
   EnvOptions,
   FormulaBalanceGetter,
@@ -42,7 +43,6 @@ import {
   FormulaTransformationMatchesGetter,
   FormulaTxEventsGetter,
 } from './types'
-import { dbKeyForKeys, dbKeyToKeys, getDependentKey } from './utils'
 
 // Generate environment for computation.
 export const getEnv = ({

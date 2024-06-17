@@ -1,4 +1,4 @@
-import { WalletFormula } from '@/core'
+import { WalletFormula } from '../../types'
 
 // Map polytone note contract to the proxy contract for this account.
 export const proxies: WalletFormula<Record<string, string>> = {

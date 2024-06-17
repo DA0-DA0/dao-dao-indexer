@@ -49,7 +49,7 @@ transform and webhooks to filter which events to fire on.
 Examples:
 
 ```ts
-import { dbKeyForKeys } from '@/core/utils'
+import { dbKeyForKeys } from '@/utils'
 
 // 105,116,101,109
 dbKeyForKeys('item')

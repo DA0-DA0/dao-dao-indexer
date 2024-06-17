@@ -8,7 +8,7 @@ import {
 } from '@cosmjs/tendermint-rpc'
 import { WebSocket } from 'ws'
 
-import { objectMatchesStructure } from '@/core'
+import { objectMatchesStructure } from '@/utils'
 
 type FifoJsonTracerOptions = {
   file: string

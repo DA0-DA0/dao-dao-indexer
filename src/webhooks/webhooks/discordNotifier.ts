@@ -1,11 +1,11 @@
-import { WebhookMaker, WebhookType } from '@/core/types'
-import { dbKeyForKeys, dbKeyToKeys } from '@/core/utils'
 import { WasmStateEvent } from '@/db'
 import {
   activeProposalModules,
   config as daoCoreConfig,
 } from '@/formulas/formulas/contract/daoCore/base'
 import { StatusEnum } from '@/formulas/formulas/contract/proposal/types'
+import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
+import { WebhookMaker, WebhookType } from '@/webhooks'
 
 import { getDaoAddressForProposalModule } from '../utils'
 

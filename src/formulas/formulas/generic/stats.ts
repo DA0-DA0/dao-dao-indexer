@@ -1,4 +1,6 @@
-import { GenericFormula, dbKeyForKeys } from '@/core'
+import { dbKeyForKeys } from '@/utils'
+
+import { GenericFormula } from '../../types'
 
 export const daos: GenericFormula<
   number,

@@ -4,7 +4,7 @@
 import { Command } from 'commander'
 import { Op } from 'sequelize'
 
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/config'
 import { Computation, Contract, loadDb } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
 

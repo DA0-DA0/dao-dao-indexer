@@ -1,9 +1,9 @@
 import Router from '@koa/router'
 import { DefaultContext, DefaultState } from 'koa'
 
-import { SerializedBlock } from '@/core/types'
-import { serializeBlock } from '@/core/utils'
 import { State } from '@/db'
+import { SerializedBlock } from '@/types'
+import { serializeBlock } from '@/utils'
 
 type GetStatusResponse =
   | {

@@ -1,8 +1,9 @@
 import * as Sentry from '@sentry/node'
 import { Op } from 'sequelize'
 
-import { ParsedWasmStateEvent, loadConfig } from '@/core'
+import { loadConfig } from '@/config'
 import { State, WasmStateEventTransformation } from '@/db'
+import { ParsedWasmStateEvent } from '@/tracer/handlers/wasm'
 
 import { getProcessedTransformers } from './transformers'
 import { PendingTransformation, UnevaluatedEventTransformation } from './types'

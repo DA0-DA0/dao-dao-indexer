@@ -1,5 +1,5 @@
-import { dbKeyToKeys } from '@/core/utils'
 import { ProposalModule } from '@/formulas/formulas/types'
+import { dbKeyToKeys } from '@/utils'
 
 import { makeTransformer, makeTransformerForMap } from '../../utils'
 

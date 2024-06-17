@@ -1,4 +1,4 @@
-import { loadConfig } from '@/core'
+import { loadConfig } from '@/config'
 import { State } from '@/db'
 
 import { loadMeilisearch } from './client'

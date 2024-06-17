@@ -1,10 +1,13 @@
 import { Job, Queue } from 'bullmq'
 
-import { compute, serializeBlock } from '@/core'
-import { PendingMeilisearchIndexUpdate } from '@/core/types'
 import { State } from '@/db'
-import { getTypedFormula } from '@/formulas'
-import { getMeilisearchIndexName, loadMeilisearch } from '@/search'
+import { compute, getTypedFormula } from '@/formulas'
+import {
+  PendingMeilisearchIndexUpdate,
+  getMeilisearchIndexName,
+  loadMeilisearch,
+} from '@/search'
+import { serializeBlock } from '@/utils'
 
 import { BaseQueue } from '../base'
 import { closeBullQueue, getBullQueue, getBullQueueEvents } from '../connection'

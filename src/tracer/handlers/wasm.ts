@@ -5,7 +5,6 @@ import retry from 'async-await-retry'
 import { LRUCache } from 'lru-cache'
 import { Sequelize } from 'sequelize'
 
-import { ParsedWasmStateEvent } from '@/core'
 import {
   AccountWebhook,
   Contract,
@@ -23,6 +22,19 @@ import { Handler, HandlerMaker } from '../types'
 
 const STORE_NAME = 'wasm'
 const DEFAULT_CONTRACT_BYTE_LENGTH = 32
+
+export type ParsedWasmStateEvent = {
+  type: 'state'
+  codeId: number
+  contractAddress: string
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  key: string
+  value: string
+  valueJson: any
+  delete: boolean
+}
 
 type WasmExportData =
   | {

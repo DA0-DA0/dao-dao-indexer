@@ -1,5 +1,4 @@
-import { ContractFormula } from '@/core'
-
+import { ContractFormula } from '../../../types'
 import {
   StakerBalance,
   topStakers as cw20StakeTopStakers,

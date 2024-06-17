@@ -1,12 +1,12 @@
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
-import { loadConfig } from '@/core/config'
-import { DbType } from '@/core/types'
+import { loadConfig } from '@/config'
 import {
   AccountWebhookEvent,
   AccountWebhookEventAttempt,
   AccountWebhookEventStatus,
+  DbType,
   loadDb,
 } from '@/db'
 

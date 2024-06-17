@@ -5,7 +5,7 @@ import CryptoJS from 'crypto-js'
 import jwt from 'jsonwebtoken'
 import { Middleware } from 'koa'
 
-import { loadConfig } from '@/core/config'
+import { loadConfig } from '@/config'
 import { Account } from '@/db'
 
 import { AccountState, AuthRequestBody } from './types'

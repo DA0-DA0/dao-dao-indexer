@@ -1,8 +1,7 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/core/config'
-import { DbType } from '@/core/types'
-import { loadDb } from '@/db'
+import { loadConfig } from '@/config'
+import { DbType, loadDb } from '@/db'
 
 // Parse arguments.
 const program = new Command()

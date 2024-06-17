@@ -12,7 +12,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { loadConfig } from '@/core/config'
+import { loadConfig } from '@/config'
 
 import { AccountCodeIdSet } from './AccountCodeIdSet'
 import { AccountKey } from './AccountKey'
