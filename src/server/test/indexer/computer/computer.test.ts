@@ -1,7 +1,7 @@
 import { AccountKeyCredit } from '@/db'
-import { ContractFormula, FormulaType, TypedFormula } from '@/formulas/types'
 import { getTypedFormula, restoreOriginalMocks } from '@/test/mocks'
 import { getAccountWithAuth } from '@/test/utils'
+import { ContractFormula, FormulaType, TypedFormula } from '@/types'
 
 import { loadCreditsTests } from './credits'
 import { loadFormulasTests } from './formulas'

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { ContractEnv, ContractFormula } from '@/formulas/types'
+import { ContractEnv, ContractFormula } from '@/types'
 import { getStargateClient } from '@/utils'
 
 import { tokenInfo } from '../external/cw20'

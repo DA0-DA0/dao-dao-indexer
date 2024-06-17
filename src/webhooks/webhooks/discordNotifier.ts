@@ -4,8 +4,8 @@ import {
   config as daoCoreConfig,
 } from '@/formulas/formulas/contract/daoCore/base'
 import { StatusEnum } from '@/formulas/formulas/contract/proposal/types'
+import { WebhookMaker, WebhookType } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
-import { WebhookMaker, WebhookType } from '@/webhooks'
 
 import { getDaoAddressForProposalModule } from '../utils'
 

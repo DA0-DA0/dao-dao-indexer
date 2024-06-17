@@ -1,7 +1,7 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 
-import { Config } from '@/config/types'
-import { DependableEventModel } from '@/db'
+import { Config } from './config'
+import { DependableEventModel } from './db'
 
 export type Handler<Data extends unknown = unknown> = {
   // What store name to filter by for events to handle.
@@ -50,4 +50,57 @@ export type TracedEvent = {
 
 export type TracedEventWithBlockTime = TracedEvent & {
   blockTimeUnixMs: number
+}
+
+export type ParsedWasmStateEvent = {
+  type: 'state'
+  codeId: number
+  contractAddress: string
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  key: string
+  value: string
+  valueJson: any
+  delete: boolean
+}
+
+export type WasmExportData =
+  | {
+      type: 'state'
+      data: Omit<ParsedWasmStateEvent, 'blockTimestamp'>
+    }
+  | {
+      type: 'contract'
+      data: {
+        address: string
+        codeId: number
+        blockHeight: string
+        blockTimeUnixMs: string
+      }
+    }
+
+export type ParsedGovStateEvent = {
+  proposalId: string
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  data: string
+}
+
+export type ParsedDistributionCommunityPoolStateEvent = {
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  // Map denom to balance.
+  balances: Record<string, string>
+}
+
+export type ParsedBankStateEvent = {
+  address: string
+  blockHeight: string
+  blockTimeUnixMs: string
+  blockTimestamp: Date
+  denom: string
+  balance: string
 }

@@ -1,6 +1,6 @@
 import { fromBech32 } from '@cosmjs/encoding'
 
-import { ContractFormula } from '../../../types'
+import { ContractFormula } from '@/types'
 
 export type StakerBalance = {
   address: string

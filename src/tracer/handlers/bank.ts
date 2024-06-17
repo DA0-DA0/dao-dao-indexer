@@ -8,19 +8,9 @@ import {
   State,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-
-import { Handler, HandlerMaker } from '../types'
+import { Handler, HandlerMaker, ParsedBankStateEvent } from '@/types'
 
 const STORE_NAME = 'bank'
-
-export type ParsedBankStateEvent = {
-  address: string
-  blockHeight: string
-  blockTimeUnixMs: string
-  blockTimestamp: Date
-  denom: string
-  balance: string
-}
 
 export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
   config: { bech32Prefix },

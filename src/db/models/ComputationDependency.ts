@@ -10,7 +10,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { ComputationDependentKey } from '@/formulas/types'
+import { ComputationDependentKey } from '@/types'
 
 import { Computation } from './Computation'
 

@@ -1,5 +1,6 @@
+import { WasmCodeTracker } from '@/types'
+
 import * as trackers from './trackers'
-import { WasmCodeTracker } from './types'
 
 /**
  * Track contracts and save their code IDs to a specified wasm code key in the

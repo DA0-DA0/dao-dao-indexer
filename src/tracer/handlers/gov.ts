@@ -7,18 +7,9 @@ import {
   State,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-
-import { Handler, HandlerMaker } from '../types'
+import { Handler, HandlerMaker, ParsedGovStateEvent } from '@/types'
 
 const STORE_NAME = 'gov'
-
-export type ParsedGovStateEvent = {
-  proposalId: string
-  blockHeight: string
-  blockTimeUnixMs: string
-  blockTimestamp: Date
-  data: string
-}
 
 export const gov: HandlerMaker<ParsedGovStateEvent> = async ({
   updateComputations,

@@ -6,11 +6,11 @@ import {
   AccountKey,
   AccountKeyCredit,
   AccountKeyCreditPaymentSource,
-  DbType,
   GovStateEvent,
   State,
   loadDb,
 } from '@/db'
+import { DbType } from '@/types'
 
 export const main = async () => {
   // Parse arguments.

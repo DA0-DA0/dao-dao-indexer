@@ -9,18 +9,13 @@ import {
   State,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
-
-import { Handler, HandlerMaker } from '../types'
+import {
+  Handler,
+  HandlerMaker,
+  ParsedDistributionCommunityPoolStateEvent,
+} from '@/types'
 
 const STORE_NAME = 'distribution'
-
-export type ParsedDistributionCommunityPoolStateEvent = {
-  blockHeight: string
-  blockTimeUnixMs: string
-  blockTimestamp: Date
-  // Map denom to balance.
-  balances: Record<string, string>
-}
 
 export const distribution: HandlerMaker<
   ParsedDistributionCommunityPoolStateEvent

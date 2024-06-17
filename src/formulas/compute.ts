@@ -1,15 +1,8 @@
 import { ModelStatic, Op } from 'sequelize'
 
+import { Contract, dependentKeyMatches, getDependableEventModels } from '@/db'
 import {
-  Contract,
-  DependableEventModel,
-  dependentKeyMatches,
-  getDependableEventModels,
-} from '@/db'
-import { Block } from '@/types'
-
-import { getEnv } from './env'
-import {
+  Block,
   Cache,
   CacheMap,
   CacheMapSingle,
@@ -17,8 +10,11 @@ import {
   ComputationOutput,
   ComputeOptions,
   ComputeRangeOptions,
+  DependableEventModel,
   FormulaType,
-} from './types'
+} from '@/types'
+
+import { getEnv } from './env'
 
 export const compute = async ({
   chainId,

@@ -1,4 +1,5 @@
-import { ContractFormula } from '../../types'
+import { ContractFormula } from '@/types'
+
 import { ContractInfo } from '../types'
 
 export const info: ContractFormula<ContractInfo | undefined> = {

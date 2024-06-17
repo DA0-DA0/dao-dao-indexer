@@ -1,6 +1,5 @@
+import { Transformer } from '@/types'
 import { dbKeyForKeys } from '@/utils'
-
-import { Transformer } from '../../types'
 
 const CODE_IDS_KEYS = ['oraichain-cw20-staking-proxy-snapshot']
 

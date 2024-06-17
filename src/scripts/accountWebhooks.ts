@@ -6,9 +6,9 @@ import {
   AccountWebhookEvent,
   AccountWebhookEventAttempt,
   AccountWebhookEventStatus,
-  DbType,
   loadDb,
 } from '@/db'
+import { DbType } from '@/types'
 
 let shuttingDown = false
 

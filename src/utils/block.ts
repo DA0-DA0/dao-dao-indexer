@@ -1,7 +1,7 @@
 import { ModelStatic, Op } from 'sequelize'
 
-import { DependableEventModel, getDependableEventModels } from '@/db'
-import { Block, SerializedBlock } from '@/types'
+import { getDependableEventModels } from '@/db'
+import { Block, DependableEventModel, SerializedBlock } from '@/types'
 
 /**
  * Get the latest block before or equal to the requested block height.

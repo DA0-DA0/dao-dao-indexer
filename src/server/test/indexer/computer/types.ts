@@ -1,5 +1,5 @@
 import { AccountKeyCredit } from '@/db'
-import { ContractFormula } from '@/formulas/types'
+import { ContractFormula } from '@/types'
 
 export type ComputerTestOptions = {
   apiKey: string

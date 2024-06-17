@@ -1,8 +1,8 @@
-import { ContractFormula } from '@/formulas/types'
+import { ContractFormula } from '@/types'
 
 import { ContractInfo, Expiration, ProposalModule } from '../../types'
 import { isExpirationExpired } from '../../utils'
-import { info, instantiatedAt } from '../common'
+import { info } from '../common'
 import { balance } from '../external/cw20'
 import { dao as daoPreProposeBaseDao } from '../prePropose/daoPreProposeBase'
 import {
@@ -17,7 +17,6 @@ import {
   totalPower as daoVotingCw721StakedTotalPower,
   votingPower as daoVotingCw721StakedVotingPower,
 } from '../voting/daoVotingCw721Staked'
-import { proposalCount } from './proposals'
 
 export type Config = {
   automatically_add_cw20s: boolean
@@ -42,35 +41,6 @@ export type PausedResponse =
       Unpaused: {}
     }
 
-export type DumpState = {
-  // Same as contract query, except `pause_info`. `pause_info` is dynamic by
-  // block since it deals with expiration, so it cannot be cached. However, we
-  // want to cache DumpState to speed up the UI. The UI accesses `pause_info`
-  // separately, so this is fine.
-  admin?: string | null
-  config?: Config
-  version?: ContractInfo
-  proposal_modules?: ProposalModuleWithInfo[]
-  voting_module?: string
-  active_proposal_module_count: number
-  total_proposal_module_count: number
-  // Extra.
-  votingModuleInfo?: ContractInfo
-  createdAt?: string
-  adminInfo?: {
-    admin?: string | null
-    config: Config
-    info?: ContractInfo
-    // Check if it has this current DAO as a SubDAO.
-    registeredSubDao?: boolean
-  } | null
-  proposalCount?: number
-  // Map polytone note address to remote address.
-  polytoneProxies?: Record<string, string>
-  // Hide from search if storage item `hideFromSearch` exists.
-  hideFromSearch?: boolean
-}
-
 export type Cw20Balance = {
   addr: string
   balance?: string
@@ -81,7 +51,7 @@ export type SubDao = {
   charter?: string | null
 }
 
-const CONTRACT_NAMES = ['cw-core', 'cwd-core', 'dao-core']
+export const CONTRACT_NAMES = ['cw-core', 'cwd-core', 'dao-core']
 
 export const config: ContractFormula<Config | undefined> = {
   compute: async ({ contractAddress, getTransformationMatch, get }) =>
@@ -171,149 +141,6 @@ export const activeProposalModules: ContractFormula<
     return modules?.filter(
       (module) => module.status === 'enabled' || module.status === 'Enabled'
     )
-  },
-}
-
-export const dumpState: ContractFormula<DumpState | undefined> = {
-  compute: async (env) => {
-    const [
-      adminResponse,
-      configResponse,
-      version,
-      proposal_modules,
-      { address: voting_module, info: votingModuleInfo },
-      activeProposalModuleCount,
-      totalProposalModuleCount,
-      createdAt,
-      proposalCountResponse,
-      polytoneProxiesResponse,
-      hideFromSearchValue,
-    ] = await Promise.all([
-      admin.compute(env),
-      config.compute(env),
-      info.compute(env),
-      proposalModules.compute(env),
-      votingModule.compute(env).then(async (contractAddress) => ({
-        address: contractAddress,
-        info: contractAddress
-          ? await info.compute({
-              ...env,
-              contractAddress,
-            })
-          : undefined,
-      })),
-      // V2
-      env
-        .getTransformationMatch<number | undefined>(
-          env.contractAddress,
-          'activeProposalModuleCount'
-        )
-        .then(
-          (transformation) =>
-            transformation?.value ??
-            // Fallback to events.
-            env.get<number | undefined>(
-              env.contractAddress,
-              'active_proposal_module_count'
-            )
-        ),
-      env
-        .getTransformationMatch<number | undefined>(
-          env.contractAddress,
-          'totalProposalModuleCount'
-        )
-        .then(
-          (transformation) =>
-            transformation?.value ??
-            // Fallback to events.
-            env.get<number | undefined>(
-              env.contractAddress,
-              'total_proposal_module_count'
-            )
-        ),
-      // Extra.
-      instantiatedAt.compute(env),
-      proposalCount.compute(env),
-      polytoneProxies.compute(env),
-      item.compute({
-        ...env,
-        args: {
-          key: 'hideFromSearch',
-        },
-      }),
-    ])
-
-    // If no config, this must not be a DAO core contract.
-    if (!configResponse) {
-      return undefined
-    }
-
-    // Load admin info if admin is a DAO core contract.
-    let adminConfig: Config | undefined | null = null
-    let adminAdmin: string | null = null
-    let adminRegisteredSubDao: boolean | undefined
-    const adminInfo =
-      adminResponse && adminResponse !== env.contractAddress
-        ? await info.compute({
-            ...env,
-            contractAddress: adminResponse,
-          })
-        : undefined
-    if (
-      adminResponse &&
-      adminInfo &&
-      CONTRACT_NAMES.some((name) => adminInfo.contract.includes(name))
-    ) {
-      const [_adminAdmin, _adminConfig, adminSubDaos] = await Promise.all([
-        admin.compute({
-          ...env,
-          contractAddress: adminResponse,
-        }),
-        config.compute({
-          ...env,
-          contractAddress: adminResponse,
-        }),
-        listSubDaos.compute({
-          ...env,
-          contractAddress: adminResponse,
-        }),
-      ])
-
-      if (_adminConfig) {
-        adminAdmin = _adminAdmin
-        adminConfig = _adminConfig
-        // Check if the current DAO is registered as a SubDAO.
-        adminRegisteredSubDao = adminSubDaos.some(
-          (subDao) => subDao.addr === env.contractAddress
-        )
-      }
-    }
-
-    return {
-      // Same as contract query.
-      admin: adminResponse,
-      config: configResponse,
-      version,
-      proposal_modules,
-      voting_module,
-      // V1 doesn't have these counts; all proposal modules are active.
-      active_proposal_module_count:
-        activeProposalModuleCount ?? proposal_modules?.length ?? 0,
-      total_proposal_module_count:
-        totalProposalModuleCount ?? proposal_modules?.length ?? 0,
-      // Extra.
-      votingModuleInfo,
-      createdAt,
-      adminInfo: adminConfig && {
-        admin: adminAdmin,
-        info: adminInfo,
-        config: adminConfig,
-        registeredSubDao: adminRegisteredSubDao,
-      },
-      proposalCount: proposalCountResponse,
-      polytoneProxies: polytoneProxiesResponse,
-      hideFromSearch: !!hideFromSearchValue,
-    }
   },
 }
 

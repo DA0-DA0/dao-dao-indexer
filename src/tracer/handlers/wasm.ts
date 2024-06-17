@@ -16,40 +16,16 @@ import {
 } from '@/db'
 import { WasmCodeService } from '@/services'
 import { transformParsedStateEvents } from '@/transformers'
+import {
+  Handler,
+  HandlerMaker,
+  ParsedWasmStateEvent,
+  WasmExportData,
+} from '@/types'
 import { wasmCodeTrackers } from '@/wasmCodeTrackers'
-
-import { Handler, HandlerMaker } from '../types'
 
 const STORE_NAME = 'wasm'
 const DEFAULT_CONTRACT_BYTE_LENGTH = 32
-
-export type ParsedWasmStateEvent = {
-  type: 'state'
-  codeId: number
-  contractAddress: string
-  blockHeight: string
-  blockTimeUnixMs: string
-  blockTimestamp: Date
-  key: string
-  value: string
-  valueJson: any
-  delete: boolean
-}
-
-type WasmExportData =
-  | {
-      type: 'state'
-      data: Omit<ParsedWasmStateEvent, 'blockTimestamp'>
-    }
-  | {
-      type: 'contract'
-      data: {
-        address: string
-        codeId: number
-        blockHeight: string
-        blockTimeUnixMs: string
-      }
-    }
 
 export const wasm: HandlerMaker<WasmExportData> = async ({
   config: { bech32Prefix },

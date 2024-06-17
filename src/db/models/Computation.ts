@@ -9,17 +9,16 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { compute, getTypedFormula } from '@/formulas'
 import {
+  Block,
   ComputationOutput,
+  DependableEventModel,
   FormulaType,
   TypedFormula,
-  compute,
-  getTypedFormula,
-} from '@/formulas'
-import { Block } from '@/types'
+} from '@/types'
 import { bigIntMax, bigIntMin } from '@/utils'
 
-import { DependableEventModel } from '../types'
 import { dependentKeyMatches, getDependableEventModels } from '../utils'
 import { ComputationDependency } from './ComputationDependency'
 import { State } from './State'

@@ -1,6 +1,6 @@
+import { ContractFormula } from '@/types'
 import { dbKeyToKeys } from '@/utils'
 
-import { ContractFormula } from '../../../types'
 import { Pair, Price, PriceResponse } from './types'
 
 export const allPrices: ContractFormula<PriceResponse[] | undefined> = {

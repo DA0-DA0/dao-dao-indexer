@@ -1,4 +1,4 @@
-import { ContractFormula } from '../../../types'
+import { ContractFormula } from '@/types'
 
 export const proposalModule: ContractFormula<string | undefined> = {
   compute: async ({ contractAddress, get }) =>

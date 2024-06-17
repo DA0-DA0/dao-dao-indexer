@@ -1,8 +1,8 @@
 import { StatusEnum } from '@/formulas/formulas/contract/proposal/types'
 import { VoteCast } from '@/formulas/formulas/types'
+import { Transformer } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 
-import { Transformer } from '../../types'
 import { makeTransformer } from '../../utils'
 
 const CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']

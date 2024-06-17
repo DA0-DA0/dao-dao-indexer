@@ -1,6 +1,7 @@
-import { Config, loadConfig } from '@/config'
+import { loadConfig } from '@/config'
 import { WasmCodeKey } from '@/db/models/WasmCodeKey'
 import { WasmCodeKeyId } from '@/db/models/WasmCodeKeyId'
+import { Config } from '@/types'
 
 import { WasmCode } from './types'
 import { WasmCodeAdapter } from './wasm-code.adapter'

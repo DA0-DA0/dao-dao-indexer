@@ -1,4 +1,4 @@
-import { Env } from '@/formulas/types'
+import { Env } from '@/types'
 
 import { isExpirationExpired } from '../../../utils'
 import { doesVoteCountPass } from '../utils/math'

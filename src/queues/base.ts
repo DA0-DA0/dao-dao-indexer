@@ -1,8 +1,8 @@
 import * as Sentry from '@sentry/node'
 import { Job, Queue, Worker } from 'bullmq'
 
-import { Config } from '@/config/types'
 import { State } from '@/db'
+import { Config } from '@/types'
 
 import { getBullWorker } from './connection'
 

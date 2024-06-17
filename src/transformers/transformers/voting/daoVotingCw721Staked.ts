@@ -1,6 +1,6 @@
+import { Transformer } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 
-import { Transformer } from '../../types'
 import { makeTransformer } from '../../utils'
 
 const CODE_IDS_KEYS = ['dao-voting-cw721-staked']

@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import path from 'path'
 
-import { Config } from './types'
+import { Config } from '@/types'
 
 // Constants.
 export const CONFIG_FILE = path.join(process.cwd(), './config.json')

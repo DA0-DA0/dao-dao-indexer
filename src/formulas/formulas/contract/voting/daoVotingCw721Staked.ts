@@ -1,4 +1,4 @@
-import { ContractFormula } from '../../../types'
+import { ContractFormula } from '@/types'
 
 type Config = {
   owner?: string | null

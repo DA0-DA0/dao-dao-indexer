@@ -8,11 +8,14 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { ComputationDependentKey } from '@/formulas/types'
-import { Block } from '@/types'
+import {
+  Block,
+  ComputationDependentKey,
+  DependableEventModel,
+  DependentKeyNamespace,
+} from '@/types'
 import { getDependentKey } from '@/utils'
 
-import { DependableEventModel, DependentKeyNamespace } from '../types'
 import { Contract } from './Contract'
 
 @Table({

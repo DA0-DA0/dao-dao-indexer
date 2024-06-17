@@ -1,5 +1,7 @@
-import { DependableEventModel, State } from '@/db'
-import { FormulaType } from '@/formulas/types'
+import { State } from '@/db/models/State'
+
+import { DependableEventModel } from './db'
+import { FormulaType } from './formulas'
 
 export type MeilisearchIndexer = {
   /**

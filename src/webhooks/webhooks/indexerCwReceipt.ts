@@ -1,6 +1,6 @@
 import { WasmStateEvent } from '@/db'
+import { WebhookMaker, WebhookType } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
-import { WebhookMaker, WebhookType } from '@/webhooks'
 
 const KEY_PREFIX_RECEIPT_TOTALS = dbKeyForKeys('receipt_totals', '')
 

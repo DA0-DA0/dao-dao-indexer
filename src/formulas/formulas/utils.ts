@@ -1,4 +1,5 @@
-import { Env } from '../types'
+import { Env } from '@/types'
+
 import { Duration, Expiration } from './types'
 
 export const isExpirationExpired = (

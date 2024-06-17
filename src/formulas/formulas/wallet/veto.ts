@@ -1,6 +1,7 @@
 import { Op } from 'sequelize'
 
-import { ContractFormula, WalletFormula } from '../../types'
+import { ContractFormula, WalletFormula } from '@/types'
+
 import {
   ProposalModuleWithInfo,
   activeProposalModules,

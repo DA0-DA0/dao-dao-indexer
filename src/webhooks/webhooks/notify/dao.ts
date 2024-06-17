@@ -1,7 +1,7 @@
 import { WasmStateEvent } from '@/db'
 import { config as daoCoreConfig } from '@/formulas/formulas/contract/daoCore/base'
+import { WebhookMaker, WebhookType } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
-import { WebhookMaker, WebhookType } from '@/webhooks'
 
 const CW20_STAKE_CODE_IDS_KEY = 'cw20-stake'
 const DAO_VOTING_CW4_CODE_IDS_KEY = 'dao-voting-cw4'

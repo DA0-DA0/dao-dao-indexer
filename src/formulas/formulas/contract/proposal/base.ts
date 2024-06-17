@@ -1,4 +1,5 @@
-import { ContractFormula } from '../../../types'
+import { ContractFormula } from '@/types'
+
 import { ProposalCreationPolicy } from './types'
 
 export const creationPolicy: ContractFormula<

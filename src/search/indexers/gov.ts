@@ -1,9 +1,11 @@
 import { Sequelize } from 'sequelize'
 
 import { GovStateEvent } from '@/db'
-import { FormulaType } from '@/formulas/types'
-
-import { MeilisearchIndexUpdate, MeilisearchIndexer } from '../types'
+import {
+  FormulaType,
+  MeilisearchIndexUpdate,
+  MeilisearchIndexer,
+} from '@/types'
 
 export const govProposals: MeilisearchIndexer = {
   id: 'gov-proposals',

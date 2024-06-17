@@ -1,4 +1,4 @@
-import { ContractFormula } from '../../../types'
+import { ContractFormula } from '@/types'
 
 export const status: ContractFormula = {
   compute: async ({ contractAddress, get, prefetch }) => {

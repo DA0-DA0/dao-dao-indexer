@@ -2,8 +2,8 @@ import { getConfiguredChainConfig } from '@dao-dao/utils'
 
 import { GovStateEvent, State, WasmStateEvent } from '@/db'
 import { activeProposalModules } from '@/formulas/formulas/contract/daoCore/base'
+import { Webhook, WebhookMaker, WebhookType } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys, decodeGovProposal } from '@/utils'
-import { Webhook, WebhookMaker, WebhookType } from '@/webhooks'
 
 import { getDaoAddressForProposalModule } from '../utils'
 

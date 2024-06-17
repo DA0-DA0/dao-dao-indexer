@@ -2,9 +2,10 @@
 import './mocks'
 
 import { loadConfig } from '@/config'
-import { DbType, closeDb, loadDb, setup } from '@/db'
+import { closeDb, loadDb, setup } from '@/db'
 import { closeAllBullQueues } from '@/queues'
 import { WasmCodeService } from '@/services/wasm-codes'
+import { DbType } from '@/types'
 
 loadConfig()
 

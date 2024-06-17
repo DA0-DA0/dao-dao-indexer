@@ -1,4 +1,5 @@
-import { WalletFormula } from '../../types'
+import { WalletFormula } from '@/types'
+
 import { info } from '../contract/common'
 import { balance } from '../contract/external/cw20'
 

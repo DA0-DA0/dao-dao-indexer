@@ -6,8 +6,9 @@ import { Command } from 'commander'
 import Koa from 'koa'
 
 import { loadConfig } from '@/config'
-import { DbType, closeDb, loadDb } from '@/db'
+import { closeDb, loadDb } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
+import { DbType } from '@/types'
 
 import { setupRouter } from './routes'
 import { captureSentryException } from './sentry'

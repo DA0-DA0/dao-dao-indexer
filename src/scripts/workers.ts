@@ -2,9 +2,10 @@ import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
 import { loadConfig } from '@/config'
-import { DbType, State, loadDb } from '@/db'
+import { State, loadDb } from '@/db'
 import { QueueOptions, queues as queues } from '@/queues'
 import { WasmCodeService } from '@/services/wasm-codes'
+import { DbType } from '@/types'
 
 // Parse arguments.
 const program = new Command()

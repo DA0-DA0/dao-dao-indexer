@@ -1,6 +1,6 @@
 import { loadConfig } from '@/config'
+import { ContractFormula } from '@/types'
 
-import { ContractFormula } from '../../../types'
 import {
   listProposals as multipleChoiceListProposals,
   openProposals as multipleChoiceOpenProposals,

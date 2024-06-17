@@ -6,10 +6,11 @@ import { Op, Sequelize, fn } from 'sequelize'
 
 import * as Config from '@/config'
 import { loadConfig } from '@/config'
-import { DbType, loadDb } from '@/db'
+import { loadDb } from '@/db'
 import * as Models from '@/db/models'
 import { queues } from '@/queues'
 import * as Services from '@/services'
+import { DbType } from '@/types'
 
 // Global context available to repl.
 const context: Context = {

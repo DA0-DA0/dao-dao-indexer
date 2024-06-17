@@ -3,10 +3,13 @@ import { Op } from 'sequelize'
 
 import { loadConfig } from '@/config'
 import { State, WasmStateEventTransformation } from '@/db'
-import { ParsedWasmStateEvent } from '@/tracer/handlers/wasm'
+import {
+  ParsedWasmStateEvent,
+  PendingTransformation,
+  UnevaluatedEventTransformation,
+} from '@/types'
 
 import { getProcessedTransformers } from './transformers'
-import { PendingTransformation, UnevaluatedEventTransformation } from './types'
 
 export const transformParsedStateEvents = async (
   events: ParsedWasmStateEvent[]

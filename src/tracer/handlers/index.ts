@@ -1,4 +1,5 @@
-import { HandlerMaker } from '../types'
+import { HandlerMaker } from '@/types'
+
 import { bank } from './bank'
 import { distribution } from './distribution'
 import { gov } from './gov'

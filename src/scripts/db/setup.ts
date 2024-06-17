@@ -5,7 +5,8 @@ import * as readline from 'readline'
 import { Command } from 'commander'
 
 import { loadConfig } from '@/config'
-import { DbType, loadDb, setup as setupDb } from '@/db'
+import { loadDb, setup as setupDb } from '@/db'
+import { DbType } from '@/types'
 
 export const main = async () => {
   // Parse arguments.

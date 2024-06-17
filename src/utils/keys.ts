@@ -1,4 +1,4 @@
-import { DependentKeyNamespace } from '@/db/types'
+import { DependentKeyNamespace } from '@/types'
 
 // Convert base64 string to comma-separated list of bytes. See explanation in
 // `Event` model for the key attribute for more information.

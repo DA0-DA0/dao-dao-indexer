@@ -1,6 +1,6 @@
+import { Transformer } from '@/types'
 import { dbKeyForKeys } from '@/utils'
 
-import { Transformer } from '../types'
 import { makeTransformer } from '../utils'
 
 // Transform for all contracts.

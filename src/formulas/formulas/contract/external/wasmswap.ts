@@ -1,4 +1,5 @@
-import { ContractFormula } from '../../../types'
+import { ContractFormula } from '@/types'
+
 import { Denom } from '../../types'
 import { tokenInfo } from './cw20'
 

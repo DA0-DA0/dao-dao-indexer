@@ -1,4 +1,4 @@
-import { ContractEnv, ContractFormula } from '../../../types'
+import { ContractEnv, ContractFormula } from '@/types'
 
 export * from './daoPreProposeBase'
 

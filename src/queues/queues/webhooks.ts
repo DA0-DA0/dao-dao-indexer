@@ -2,7 +2,7 @@ import axios from 'axios'
 import { Job, Queue } from 'bullmq'
 import Pusher from 'pusher'
 
-import { PendingWebhook, WebhookType } from '@/webhooks/types'
+import { PendingWebhook, WebhookType } from '@/types'
 
 import { BaseQueue } from '../base'
 import { closeBullQueue, getBullQueue, getBullQueueEvents } from '../connection'

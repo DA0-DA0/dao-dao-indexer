@@ -1,6 +1,6 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { ComputationDependentKey } from '@/formulas/types'
+import { ComputationDependentKey, DependableEventModel } from '@/types'
 import { bigIntMin } from '@/utils'
 
 import { loadDb } from './connection'
@@ -15,7 +15,6 @@ import {
   WasmStateEventTransformation,
   WasmTxEvent,
 } from './models'
-import { DependableEventModel } from './types'
 
 // TODO: Compute computation if the latest computation is no longer valid? Maybe we should have a separate task that constantly checks the validity of computations and updates them as needed?
 

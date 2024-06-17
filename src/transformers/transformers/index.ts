@@ -1,9 +1,13 @@
 import * as Sentry from '@sentry/node'
 
-import { Config } from '@/config/types'
 import { WasmCodeService } from '@/services/wasm-codes'
+import {
+  Config,
+  ProcessedTransformer,
+  Transformer,
+  TransformerMaker,
+} from '@/types'
 
-import { ProcessedTransformer, Transformer, TransformerMaker } from '../types'
 import common from './common'
 import dao from './dao'
 import external from './external'

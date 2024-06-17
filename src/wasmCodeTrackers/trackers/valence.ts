@@ -1,4 +1,4 @@
-import { WasmCodeTracker } from '../types'
+import { WasmCodeTracker } from '@/types'
 
 export const valenceAccountTracker: WasmCodeTracker = {
   chainId: 'neutron-1',

@@ -8,19 +8,20 @@ import { LRUCache } from 'lru-cache'
 import waitPort from 'wait-port'
 
 import { loadConfig } from '@/config'
-import { DbType, State, loadDb } from '@/db'
+import { State, loadDb } from '@/db'
 import { ExportQueue } from '@/queues/queues/export'
 import { setupMeilisearch } from '@/search'
 import { WasmCodeService } from '@/services/wasm-codes'
+import { DbType } from '@/types'
 import { objectMatchesStructure } from '@/utils'
 
 import { handlerMakers } from '../tracer/handlers'
-import { TracedEvent, TracedEventWithBlockTime } from '../tracer/types'
 import {
   getCosmWasmClient,
   setUpFifoJsonTracer,
   setUpWebSocketNewBlockListener,
 } from '../tracer/utils'
+import { TracedEvent, TracedEventWithBlockTime } from '../types/tracer'
 
 const MAX_QUEUE_SIZE = 5000
 const MAX_BATCH_SIZE = 5000

@@ -1,6 +1,8 @@
-import { Config } from '@/config/types'
-import { DependableEventModel, State } from '@/db'
-import { Env } from '@/formulas/types'
+import { State } from '@/db/models/State'
+
+import { Config } from './config'
+import { DependableEventModel } from './db'
+import { Env } from './formulas'
 
 export enum WebhookType {
   Url = 'url',

@@ -1,8 +1,8 @@
 import { WhereOptions } from 'sequelize'
 import { Model } from 'sequelize-typescript'
 
-import { ComputationDependentKey } from '@/formulas/types'
-import { Block } from '@/types'
+import { ComputationDependentKey } from './formulas'
+import { Block } from './misc'
 
 export enum DbType {
   Accounts = 'accounts',
@@ -49,5 +49,14 @@ export abstract class DependableEventModel extends Model {
    */
   async getPreviousEvent(_cache = true): Promise<DependableEventModel | null> {
     throw new Error('Not implemented')
+  }
+}
+
+export type ContractJson = {
+  address: string
+  codeId: number
+  instantiatedAt: {
+    block: Block
+    timestamp: Date
   }
 }

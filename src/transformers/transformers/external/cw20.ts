@@ -1,6 +1,6 @@
+import { Transformer } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 
-import { Transformer } from '../../types'
 import { makeTransformer } from '../../utils'
 
 // There are so many CW20 contracts, just don't filter by code ID.

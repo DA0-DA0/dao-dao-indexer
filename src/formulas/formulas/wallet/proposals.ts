@@ -1,4 +1,5 @@
-import { WalletFormula } from '../../types'
+import { WalletFormula } from '@/types'
+
 import { VoteCast } from '../types'
 
 export const created: WalletFormula<

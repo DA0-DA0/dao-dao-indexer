@@ -6,8 +6,8 @@ import {
 } from '@dao-dao/utils'
 
 import { GovStateEvent } from '@/db'
+import { WebhookMaker, WebhookType } from '@/types'
 import { decodeGovProposal } from '@/utils'
-import { WebhookMaker, WebhookType } from '@/webhooks'
 
 // Fire webhook when a gov proposal is created.
 export const makeInboxGovProposalCreated: WebhookMaker<GovStateEvent> = (

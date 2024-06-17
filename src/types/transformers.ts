@@ -1,6 +1,6 @@
-import { Config } from '@/config/types'
-import { ParsedWasmStateEvent } from '@/tracer/handlers/wasm'
-import { RequireAtLeastOne } from '@/types'
+import { Config } from './config'
+import { RequireAtLeastOne } from './misc'
+import { ParsedWasmStateEvent } from './tracer'
 
 export type Transformer<V = any> = {
   filter: RequireAtLeastOne<{

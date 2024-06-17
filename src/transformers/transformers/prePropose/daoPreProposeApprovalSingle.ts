@@ -1,6 +1,6 @@
+import { Transformer } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 
-import { Transformer } from '../../types'
 import { makeTransformerForMap } from '../../utils'
 
 const CODE_IDS_KEYS: string[] = ['dao-pre-propose-approval-single']

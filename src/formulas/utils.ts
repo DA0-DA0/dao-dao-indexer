@@ -1,10 +1,4 @@
 import {
-  contractFormulas,
-  genericFormulas,
-  validatorFormulas,
-  walletFormulas,
-} from './formulas'
-import {
   ContractFormula,
   FormulaType,
   GenericFormula,
@@ -12,7 +6,14 @@ import {
   TypedFormula,
   ValidatorFormula,
   WalletFormula,
-} from './types'
+} from '@/types'
+
+import {
+  contractFormulas,
+  genericFormulas,
+  validatorFormulas,
+  walletFormulas,
+} from './formulas'
 
 const makeGetFormula =
   <T extends unknown>(formulas: NestedFormulaMap<T> | T | undefined) =>

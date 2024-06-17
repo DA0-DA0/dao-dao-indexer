@@ -10,7 +10,6 @@ import {
   Validator,
 } from '@/db'
 import {
-  FormulaType,
   FormulaTypeValues,
   compute,
   computeRange,
@@ -18,7 +17,7 @@ import {
   typeIsFormulaType,
 } from '@/formulas'
 import { WasmCodeService } from '@/services/wasm-codes'
-import { Block } from '@/types'
+import { Block, FormulaType } from '@/types'
 import { getBlockForTime, getFirstBlock, validateBlockString } from '@/utils'
 
 import { captureSentryException } from '../../sentry'

@@ -2,11 +2,12 @@ import { randomUUID } from 'crypto'
 
 import * as Sentry from '@sentry/node'
 
-import { DependableEventModel, State } from '@/db'
+import { State } from '@/db'
 import { SearchQueue } from '@/queues/queues/search'
+import { DependableEventModel } from '@/types'
 
+import { PendingMeilisearchIndexUpdate } from '../types/search'
 import { meilisearchIndexers } from './indexers'
-import { PendingMeilisearchIndexUpdate } from './types'
 
 /**
  * Queue index updates for a given event. Returns how many updates were queued.

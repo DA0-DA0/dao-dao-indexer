@@ -1,4 +1,5 @@
-import { ContractFormula } from '../../../types'
+import { ContractFormula } from '@/types'
+
 import { AuctionConfig, AuctionConfigResponse, AuctionStrategy } from './types'
 
 export const config: ContractFormula<AuctionConfigResponse | undefined> = {
