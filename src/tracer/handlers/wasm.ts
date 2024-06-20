@@ -503,8 +503,21 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
     }
 
     // Queue webhooks as needed.
-    if (sendWebhooks && exportedEvents.length > 0) {
-      await AccountWebhook.queueWebhooks(exportedEvents)
+    if (sendWebhooks) {
+      // Don't queue webhooks for events before `lastWasmBlockHeightExported` to
+      // ensure that webhooks aren't sent more than once if we're catching up
+      // from a block we already processed. This happens when  restoring from an
+      // earlier snapshot, likely due to an error or to save space.
+      const potentialUnsentWebhookEvents = exportedEvents.filter(
+        (e) =>
+          // Include events on the last block we exported in case events from
+          // the same block were exported in separate batches and thus processed
+          // separately.
+          e.block.height >= BigInt(state.lastWasmBlockHeightExported || '0')
+      )
+      if (potentialUnsentWebhookEvents.length > 0) {
+        await AccountWebhook.queueWebhooks(potentialUnsentWebhookEvents)
+      }
     }
 
     // Store last block height exported, and update latest block
