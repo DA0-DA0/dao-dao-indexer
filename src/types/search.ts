@@ -1,4 +1,4 @@
-import { State } from '@/db/models/State'
+import type { State } from '@/db'
 
 import { DependableEventModel } from './db'
 import { FormulaType } from './formulas'

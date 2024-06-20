@@ -15,7 +15,7 @@ import {
   Unique,
 } from 'sequelize-typescript'
 
-import { ParsedWasmStateEvent, SerializedBlock } from '@/types'
+import type { ParsedWasmStateEvent, SerializedBlock } from '@/types'
 import { eventKeyToBase64 } from '@/utils'
 
 import { AccountWebhook } from './AccountWebhook'

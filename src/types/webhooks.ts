@@ -1,4 +1,4 @@
-import { State } from '@/db/models/State'
+import type { State } from '@/db'
 
 import { Config } from './config'
 import { DependableEventModel } from './db'

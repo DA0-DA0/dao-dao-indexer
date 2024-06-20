@@ -1,10 +1,9 @@
 import { ProposalStatus } from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1/gov'
 import { BindOrReplacements, WhereOptions } from 'sequelize'
 
-import { Contract } from '@/db/models/Contract'
-import { StakingSlashEvent } from '@/db/models/StakingSlashEvent'
-import { WasmTxEvent } from '@/db/models/WasmTxEvent'
+import type { Contract, StakingSlashEvent, WasmTxEvent } from '@/db'
 
+import { ComputationDependentKey } from './computation'
 import { ContractJson, DependableEventModel } from './db'
 import { Block, RequireAtLeastOne } from './misc'
 
