@@ -3,7 +3,6 @@ import { ContractFormula } from '@/types'
 import { ContractInfo } from '../../types'
 import { info, instantiatedAt, item } from '../common'
 import {
-  CONTRACT_NAMES,
   Config,
   ProposalModuleWithInfo,
   admin,
@@ -14,6 +13,7 @@ import {
   votingModule,
 } from './base'
 import { proposalCount } from './proposals'
+import { DAO_CORE_CONTRACT_NAMES } from './utils'
 
 export type DumpState = {
   // Same as contract query, except `pause_info`. `pause_info` is dynamic by
@@ -132,7 +132,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
     if (
       adminResponse &&
       adminInfo &&
-      CONTRACT_NAMES.some((name) => adminInfo.contract.includes(name))
+      DAO_CORE_CONTRACT_NAMES.some((name) => adminInfo.contract.includes(name))
     ) {
       const [_adminAdmin, _adminConfig, adminSubDaos] = await Promise.all([
         admin.compute({

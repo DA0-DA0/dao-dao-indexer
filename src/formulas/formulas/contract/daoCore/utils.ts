@@ -2,6 +2,8 @@ import { ContractEnv } from '@/types'
 
 import { listSubDaos } from './base'
 
+export const DAO_CORE_CONTRACT_NAMES = ['cw-core', 'cwd-core', 'dao-core']
+
 // Get a list of unique SubDAOs in a DAO's tree of SubDAOs.
 export const getUniqueSubDaosInTree = async (
   env: ContractEnv,

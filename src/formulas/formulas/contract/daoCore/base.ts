@@ -51,8 +51,6 @@ export type SubDao = {
   charter?: string | null
 }
 
-export const CONTRACT_NAMES = ['cw-core', 'cwd-core', 'dao-core']
-
 export const config: ContractFormula<Config | undefined> = {
   compute: async ({ contractAddress, getTransformationMatch, get }) =>
     (await getTransformationMatch<Config>(contractAddress, 'config'))?.value ??
