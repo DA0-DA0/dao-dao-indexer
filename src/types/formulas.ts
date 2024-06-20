@@ -349,13 +349,6 @@ export type Cache = {
   contracts: CacheMapSingle<Contract>
 }
 
-export type ComputationDependentKey = {
-  key: string
-  // This is used with maps for example, where a computation depends on all keys
-  // that start with the map prefix.
-  prefix: boolean
-}
-
 export type ComputeOptions = {
   chainId: string
   targetAddress: string
@@ -372,15 +365,6 @@ export type ComputeRangeOptions = {
   blockStep?: bigint
   timeStep?: bigint
 } & TypedFormula
-
-export type ComputationOutput = {
-  // Undefined if formula did not use any keys.
-  block: Block | undefined
-  value: any
-  dependentKeys: ComputationDependentKey[]
-  // Used when computing ranges.
-  latestBlockHeightValid?: bigint
-}
 
 export type NestedFormulaMap<F> = {
   [key: string]: F | NestedFormulaMap<F> | undefined

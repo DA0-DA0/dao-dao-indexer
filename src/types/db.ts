@@ -1,7 +1,7 @@
 import { WhereOptions } from 'sequelize'
 import { Model } from 'sequelize-typescript'
 
-import { ComputationDependentKey } from './formulas'
+import { ComputationDependentKey } from './computation'
 import { Block } from './misc'
 
 export enum DbType {

@@ -1,22 +1,14 @@
 import { Op, Sequelize } from 'sequelize'
 
-import { ComputationDependentKey, DependableEventModel } from '@/types'
+import { DependableEventModel } from '@/types'
 import { bigIntMin } from '@/utils'
 
 import { loadDb } from './connection'
-import {
-  BankStateEvent,
-  Computation,
-  ComputationDependency,
-  DistributionCommunityPoolStateEvent,
-  GovStateEvent,
-  StakingSlashEvent,
-  WasmStateEvent,
-  WasmStateEventTransformation,
-  WasmTxEvent,
-} from './models'
+import { Computation, ComputationDependency } from './models'
 
-// TODO: Compute computation if the latest computation is no longer valid? Maybe we should have a separate task that constantly checks the validity of computations and updates them as needed?
+// TODO: Compute computation if the latest computation is no longer valid? Maybe
+// we should have a separate task that constantly checks the validity of
+// computations and updates them as needed?
 
 // Update validity of computations dependent on changed keys in three ways:
 //
@@ -272,28 +264,3 @@ const makeComputationDependencyWhere = (
     ],
   }
 }
-
-export const getDependableEventModels = (): typeof DependableEventModel[] => [
-  WasmStateEvent,
-  WasmStateEventTransformation,
-  WasmTxEvent,
-  StakingSlashEvent,
-  BankStateEvent,
-  GovStateEvent,
-  DistributionCommunityPoolStateEvent,
-]
-
-// Get the dependable event model for a given key based on its namespace.
-export const getDependableEventModelForKey = (
-  key: string
-): typeof DependableEventModel | undefined => {
-  const namespace = key.split(':')[0]
-  return getDependableEventModels().find(
-    (model) => model.dependentKeyNamespace === namespace
-  )
-}
-
-export const dependentKeyMatches = (
-  a: ComputationDependentKey,
-  b: ComputationDependentKey
-) => a.key === b.key && a.prefix === b.prefix

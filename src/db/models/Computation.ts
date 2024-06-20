@@ -19,7 +19,7 @@ import {
 } from '@/types'
 import { bigIntMax, bigIntMin } from '@/utils'
 
-import { dependentKeyMatches, getDependableEventModels } from '../utils'
+import { dependentKeyMatches, getDependableEventModels } from '../dependable'
 import { ComputationDependency } from './ComputationDependency'
 import { State } from './State'
 

@@ -1,4 +1,5 @@
 export * from './models'
+export * from './computation'
 export * from './connection'
+export * from './dependable'
 export * from './setup'
-export * from './utils'
