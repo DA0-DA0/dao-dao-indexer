@@ -2,8 +2,9 @@ import retry from 'async-await-retry'
 import { Job, Queue } from 'bullmq'
 
 import { queueMeilisearchIndexUpdates } from '@/search'
-import { getCosmWasmClient, handlerMakers } from '@/tracer'
+import { handlerMakers } from '@/tracer'
 import { NamedHandler } from '@/types'
+import { getCosmWasmClient } from '@/utils'
 import { queueWebhooks } from '@/webhooks'
 
 import { BaseQueue } from '../base'

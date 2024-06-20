@@ -1,4 +1,12 @@
+import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 import { StargateClient } from '@cosmjs/stargate'
+import {
+  Comet38Client,
+  HttpBatchClient,
+  Tendermint34Client,
+  Tendermint37Client,
+  connectComet,
+} from '@cosmjs/tendermint-rpc'
 
 import { loadConfig } from '@/config'
 
@@ -10,4 +18,21 @@ export const getStargateClient = async () => {
   }
 
   return stargateClient
+}
+
+// Create CosmWasm client that batches requests.
+export const getCosmWasmClient = async (
+  rpc: string
+): Promise<CosmWasmClient> => {
+  const httpClient = new HttpBatchClient(rpc)
+  const tmClient = await (
+    (
+      await connectComet(rpc)
+    ).constructor as
+      | typeof Tendermint34Client
+      | typeof Tendermint37Client
+      | typeof Comet38Client
+  ).create(httpClient)
+  // @ts-ignore
+  return new CosmWasmClient(tmClient)
 }

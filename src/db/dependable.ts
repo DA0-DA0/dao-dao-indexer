@@ -1,14 +1,15 @@
 import { ComputationDependentKey, DependableEventModel } from '@/types'
 
-import { BankStateEvent } from './models/BankStateEvent'
-import { DistributionCommunityPoolStateEvent } from './models/DistributionCommunityPoolStateEvent'
-import { GovStateEvent } from './models/GovStateEvent'
-import { StakingSlashEvent } from './models/StakingSlashEvent'
-import { WasmStateEvent } from './models/WasmStateEvent'
-import { WasmStateEventTransformation } from './models/WasmStateEventTransformation'
-import { WasmTxEvent } from './models/WasmTxEvent'
+import {
+  BankStateEvent,
+  DistributionCommunityPoolStateEvent,
+  GovStateEvent,
+  StakingSlashEvent,
+  WasmStateEvent,
+  WasmStateEventTransformation,
+  WasmTxEvent,
+} from './models'
 
-// Prevent circular dependencies by importing each model from its own file.
 export const getDependableEventModels = (): typeof DependableEventModel[] => [
   WasmStateEvent,
   WasmStateEventTransformation,

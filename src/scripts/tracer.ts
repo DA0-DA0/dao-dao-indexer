@@ -12,16 +12,13 @@ import { State, loadDb } from '@/db'
 import { ExportQueue } from '@/queues/queues/export'
 import { setupMeilisearch } from '@/search'
 import { WasmCodeService } from '@/services/wasm-codes'
-import { DbType } from '@/types'
-import { objectMatchesStructure } from '@/utils'
-
-import { handlerMakers } from '../tracer/handlers'
 import {
-  getCosmWasmClient,
+  handlerMakers,
   setUpFifoJsonTracer,
   setUpWebSocketNewBlockListener,
-} from '../tracer/utils'
-import { TracedEvent, TracedEventWithBlockTime } from '../types/tracer'
+} from '@/tracer'
+import { DbType, TracedEvent, TracedEventWithBlockTime } from '@/types'
+import { getCosmWasmClient, objectMatchesStructure } from '@/utils'
 
 const MAX_QUEUE_SIZE = 5000
 const MAX_BATCH_SIZE = 5000
