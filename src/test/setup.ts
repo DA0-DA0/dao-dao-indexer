@@ -10,7 +10,7 @@ import { DbType } from '@/types'
 loadConfig()
 
 // Don't log errors during tests.
-jest.spyOn(console, 'error').mockImplementation()
+// jest.spyOn(console, 'error').mockImplementation()
 
 // Wipe databases before each test.
 beforeEach(async () => {

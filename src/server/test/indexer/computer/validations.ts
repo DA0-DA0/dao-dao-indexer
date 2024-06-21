@@ -1,8 +1,7 @@
 import request from 'supertest'
 
 import { Contract, Validator } from '@/db'
-import { FormulaTypeValues } from '@/formulas'
-import { FormulaType } from '@/types'
+import { FormulaType, FormulaTypeValues } from '@/types'
 
 import { app } from '../app'
 import { ComputerTestOptions } from './types'

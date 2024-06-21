@@ -1,21 +1,10 @@
-export const getTypedFormula = jest.fn()
+import * as utils from '@/formulas/utils'
 
-const mocks = {
-  '@/formulas': {
-    getTypedFormula,
-  },
-}
+export const getTypedFormula = jest.spyOn(utils, 'getTypedFormula')
 
 // Creates mocks with default implementations.
 export const restoreOriginalMocks = () => {
-  Object.entries(mocks).forEach(([module, mocks]) => {
-    jest.mock(module, () => mocks)
-
-    // Mock with default implementation unless overridden.
-    Object.entries(mocks).forEach(([name, mock]) => {
-      mock.mockImplementation(jest.requireActual(module)[name])
-    })
-  })
+  getTypedFormula.mockReset()
 }
 
 restoreOriginalMocks()

@@ -321,6 +321,8 @@ export enum FormulaType {
   Wallet = 'wallet',
 }
 
+export const FormulaTypeValues = Object.values(FormulaType)
+
 export type TypedFormula = { name: string } & (
   | {
       type: FormulaType.Contract

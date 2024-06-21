@@ -1,6 +1,7 @@
 import {
   ContractFormula,
   FormulaType,
+  FormulaTypeValues,
   GenericFormula,
   NestedFormulaMap,
   TypedFormula,
@@ -85,6 +86,5 @@ export const getTypedFormula = (
   } as TypedFormula
 }
 
-export const FormulaTypeValues = Object.values(FormulaType)
 export const typeIsFormulaType = (type: string): type is FormulaType =>
   FormulaTypeValues.includes(type as FormulaType)

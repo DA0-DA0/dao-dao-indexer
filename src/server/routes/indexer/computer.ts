@@ -8,17 +8,18 @@ import {
   Contract,
   State,
   Validator,
+  getBlockForTime,
+  getFirstBlock,
 } from '@/db'
 import {
-  FormulaTypeValues,
   compute,
   computeRange,
   getTypedFormula,
   typeIsFormulaType,
 } from '@/formulas'
 import { WasmCodeService } from '@/services/wasm-codes'
-import { Block, FormulaType } from '@/types'
-import { getBlockForTime, getFirstBlock, validateBlockString } from '@/utils'
+import { Block, FormulaType, FormulaTypeValues } from '@/types'
+import { validateBlockString } from '@/utils'
 
 import { captureSentryException } from '../../sentry'
 
@@ -259,20 +260,26 @@ export const computer: Router.Middleware = async (ctx) => {
   let typedFormula
   try {
     typedFormula = getTypedFormula(type, formulaName)
-  } catch {
-    ctx.status = 404
-    ctx.body = 'formula not found'
-    return
-  }
-
-  const state = await State.getSingleton()
-  if (!state) {
-    ctx.status = 500
-    ctx.body = 'state not found'
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('Formula not found')) {
+      ctx.status = 404
+      ctx.body = 'formula not found'
+    } else {
+      console.error(err)
+      ctx.status = 500
+      ctx.body = 'internal server error'
+    }
     return
   }
 
   try {
+    const state = await State.getSingleton()
+    if (!state) {
+      ctx.status = 500
+      ctx.body = 'state not found'
+      return
+    }
+
     // If type is "contract"...
     if (typedFormula.type === FormulaType.Contract) {
       const contract = await Contract.findByPk(address)
@@ -723,8 +730,6 @@ export const computer: Router.Middleware = async (ctx) => {
 
     captureSentryException(ctx, err, {
       tags: {
-        blockHeight: state?.latestBlockHeight,
-        blockTimeUnixMs: state?.latestBlockTimeUnixMs,
         key,
         type,
         address,
