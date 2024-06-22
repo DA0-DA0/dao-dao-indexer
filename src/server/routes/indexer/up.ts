@@ -34,9 +34,18 @@ export const up: Router.Middleware<
     return
   }
 
-  const stargateClient = await getStargateClient()
-
-  const latestChainBlock = await stargateClient.getBlock()
+  let latestChainBlock
+  try {
+    latestChainBlock = await (await getStargateClient()).getBlock()
+  } catch (err) {
+    ctx.status = 500
+    ctx.body = {
+      error: `Failed to get latest block: ${
+        err instanceof Error ? err.message : `${err}`
+      }`,
+    }
+    return
+  }
 
   const chainBlock: UpBlock = {
     height: latestChainBlock.header.height,
