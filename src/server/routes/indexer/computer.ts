@@ -449,34 +449,42 @@ export const computer: Router.Middleware = async (ctx) => {
                 BigInt(existingComputations[i + 1].blockHeight) - 1n
           )
 
-          // If range is covered, ensure that the end computation is valid at the
-          // end block.
+          // If range is covered, ensure that the end computation is valid at
+          // the end block.
           let entireRangeValid =
             isRangeCoveredBeforeEnd &&
             (await existingComputations[
               existingComputations.length - 1
             ].updateValidityUpToBlockHeight(blocks[1].height))
 
-          // If range is covered until the end, we are dealing with an incomplete
-          // but continuous range. Load just the rest.
+          // If range is covered until the end, we are dealing with an
+          // incomplete but continuous range. Load just the rest.
           if (isRangeCoveredBeforeEnd && !entireRangeValid) {
-            const missingComputations = await computeRange({
-              ...typedFormula,
-              chainId: state.chainId,
-              targetAddress: address,
-              args,
-              // Start at the block of the last existing computation, since we
-              // need the block time to perform computations but cannot retrieve
-              // that information with just `latestBlockHeightValid`.
-              blockStart:
-                existingComputations[existingComputations.length - 1].block,
-              blockEnd: blocks[1],
-              blockStep,
-              timeStep,
-            })
+            let missingComputations
+            // Formula errors are likely user errors, so just return 400.
+            try {
+              missingComputations = await computeRange({
+                ...typedFormula,
+                chainId: state.chainId,
+                targetAddress: address,
+                args,
+                // Start at the block of the last existing computation, since we
+                // need the block time to perform computations but cannot
+                // retrieve that information with just `latestBlockHeightValid`.
+                blockStart:
+                  existingComputations[existingComputations.length - 1].block,
+                blockEnd: blocks[1],
+                blockStep,
+                timeStep,
+              })
+            } catch (err) {
+              ctx.status = 400
+              ctx.body = err instanceof Error ? err.message : `${err}`
+              return
+            }
 
-            // Ignore first computation since it's equivalent to the last existing
-            // computation.
+            // Ignore first computation since it's equivalent to the last
+            // existing computation.
             missingComputations.shift()
 
             // Cache computations for future queries.
@@ -488,8 +496,8 @@ export const computer: Router.Middleware = async (ctx) => {
                 missingComputations
               )
 
-            // Avoid using push(...items) since there is a limit to the number of
-            // arguments that can be put on the stack, and the number of
+            // Avoid using push(...items) since there is a limit to the number
+            // of arguments that can be put on the stack, and the number of
             // computations may be very large.
             existingComputations = [
               ...existingComputations,
@@ -515,16 +523,24 @@ export const computer: Router.Middleware = async (ctx) => {
 
       // If could not find existing range, compute.
       if (!existingUsed) {
-        const rangeComputations = await computeRange({
-          ...typedFormula,
-          chainId: state.chainId,
-          targetAddress: address,
-          args,
-          blockStart: blocks[0],
-          blockEnd: blocks[1],
-          blockStep,
-          timeStep,
-        })
+        let rangeComputations
+        // Formula errors are likely user errors, so just return 400.
+        try {
+          rangeComputations = await computeRange({
+            ...typedFormula,
+            chainId: state.chainId,
+            targetAddress: address,
+            args,
+            blockStart: blocks[0],
+            blockEnd: blocks[1],
+            blockStep,
+            timeStep,
+          })
+        } catch (err) {
+          ctx.status = 400
+          ctx.body = err instanceof Error ? err.message : `${err}`
+          return
+        }
 
         outputs = rangeComputations.map(({ block, ...data }) => ({
           ...data,
@@ -679,15 +695,23 @@ export const computer: Router.Middleware = async (ctx) => {
       //     existingComputation.output && JSON.parse(existingComputation.output)
       // } else {
       // Compute if did not find or use existing.
-      const computationOutput = await compute({
-        ...typedFormula,
-        chainId: state.chainId,
-        targetAddress: address,
-        args,
-        block,
-      })
 
-      computation = computationOutput.value
+      // Formula errors are likely user errors, so just return 400.
+      try {
+        const computationOutput = await compute({
+          ...typedFormula,
+          chainId: state.chainId,
+          targetAddress: address,
+          args,
+          block,
+        })
+
+        computation = computationOutput.value
+      } catch (err) {
+        ctx.status = 400
+        ctx.body = err instanceof Error ? err.message : `${err}`
+        return
+      }
 
       //   // Cache computation for future queries if this formula does not change
       //   // each block and if it outputted a non-undefined/non-null value.
