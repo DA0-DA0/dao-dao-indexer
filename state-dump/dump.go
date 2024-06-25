@@ -107,7 +107,7 @@ func main() {
 				for _, addressBech32Data := range addressesBech32Data {
 					// Terra Classic has an extra byte before the address, so check
 					// starting after 1 or 2.
-					if bytes.HasPrefix(key[1:], addressBech32Data) || bytes.HasPrefix(key[2:], addressBech32Data) {
+					if (len(key) > 1 && bytes.HasPrefix(key[1:], addressBech32Data)) || (len(key) > 2 && bytes.HasPrefix(key[2:], addressBech32Data)) {
 						found = true
 						break
 					}
@@ -119,7 +119,7 @@ func main() {
 			} else if storeName == "bank" {
 				found := false
 				for _, addressBech32Data := range addressesBech32Data {
-					if bytes.HasPrefix(key[2:], addressBech32Data) {
+					if len(key) > 2 && bytes.HasPrefix(key[2:], addressBech32Data) {
 						found = true
 						break
 					}
