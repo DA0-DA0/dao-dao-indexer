@@ -1,5 +1,7 @@
 import { ContractFormula } from '@/types'
 
+import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
+
 interface StakerBalance {
   address: string
   balance: string
@@ -9,31 +11,64 @@ type Config = {
   denom: string
 }
 
-export const votingPower: ContractFormula<string, { address: string }> = {
+const CODE_IDS_KEYS = ['dao-voting-token-staked']
+
+export const votingPowerAtHeight: ContractFormula<
+  VotingPowerAtHeight,
+  { address: string }
+> = {
+  // Filter by code ID since someone may modify the contract. This is also used
+  // in DAO core to match the voting module and pass the query through.
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
     args: { address },
+    block,
   }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return (
-      (
-        await getTransformationMatch<string>(
-          contractAddress,
-          `stakedBalance:${address}`
-        )
-      )?.value ?? '0'
-    )
+    return {
+      power:
+        (
+          await getTransformationMatch<string>(
+            contractAddress,
+            `stakedBalance:${address}`
+          )
+        )?.value ?? '0',
+      height: Number(block.height),
+    }
+  },
+}
+
+export const votingPower: ContractFormula<string, { address: string }> = {
+  filter: votingPowerAtHeight.filter,
+  compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
+}
+
+export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+  // Filter by code ID since someone may modify the contract. This is also used
+  // in DAO core to match the voting module and pass the query through.
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async ({ contractAddress, getTransformationMatch, block }) => {
+    return {
+      power:
+        (await getTransformationMatch<string>(contractAddress, 'totalStaked'))
+          ?.value || '0',
+      height: Number(block.height),
+    }
   },
 }
 
 export const totalPower: ContractFormula<string> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'totalStaked'))
-      ?.value || '0',
+  filter: totalPowerAtHeight.filter,
+  compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
 export const dao: ContractFormula<string | undefined> = {

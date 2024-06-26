@@ -1,5 +1,7 @@
 import { ContractFormula } from '@/types'
 
+import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
+
 type Config = {
   owner?: string | null
   nft_address: string
@@ -34,34 +36,60 @@ export const nftClaims: ContractFormula<any[], { address: string }> = {
   },
 }
 
-export const votingPower: ContractFormula<string, { address: string }> = {
+export const votingPowerAtHeight: ContractFormula<
+  VotingPowerAtHeight,
+  { address: string }
+> = {
+  // Filter by code ID since someone may modify the contract. This is also used
+  // in DAO core to match the voting module and pass the query through.
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
     args: { address },
+    block,
   }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return (
-      (
-        await getTransformationMatch<string>(
-          contractAddress,
-          `stakedCount:${address}`
-        )
-      )?.value || '0'
-    )
+    return {
+      power:
+        (
+          await getTransformationMatch<string>(
+            contractAddress,
+            `stakedCount:${address}`
+          )
+        )?.value || '0',
+      height: Number(block.height),
+    }
   },
 }
 
-export const totalPower: ContractFormula<string> = {
+export const votingPower: ContractFormula<string, { address: string }> = {
+  filter: votingPowerAtHeight.filter,
+  compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
+}
+
+export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+  // Filter by code ID since someone may modify the contract. This is also used
+  // in DAO core to match the voting module and pass the query through.
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'tsn'))?.value ||
-    '0',
+  compute: async ({ contractAddress, getTransformationMatch, block }) => ({
+    power:
+      (await getTransformationMatch<string>(contractAddress, 'tsn'))?.value ||
+      '0',
+    height: Number(block.height),
+  }),
+}
+
+export const totalPower: ContractFormula<string> = {
+  filter: totalPowerAtHeight.filter,
+  compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
 export const stakedNfts: ContractFormula<

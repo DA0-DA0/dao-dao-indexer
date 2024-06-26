@@ -7,13 +7,23 @@ export type StakerBalance = {
   balance: string
 }
 
+export type StakedBalanceAtHeight = {
+  balance: string
+  height: number
+}
+
+export type TotalStakedAtHeight = {
+  total: string
+  height: number
+}
+
 export const config: ContractFormula<any | undefined> = {
   compute: async ({ contractAddress, get }) =>
     await get(contractAddress, 'config'),
 }
 
-export const stakedBalance: ContractFormula<
-  string,
+export const stakedBalanceAtHeight: ContractFormula<
+  StakedBalanceAtHeight,
   {
     address: string
     // Required when querying oraichain-cw20-staking contract directly.
@@ -31,6 +41,7 @@ export const stakedBalance: ContractFormula<
     const {
       getTransformationMatch,
       args: { address },
+      block,
     } = env
     if (!address) {
       throw new Error('missing `address`')
@@ -64,24 +75,47 @@ export const stakedBalance: ContractFormula<
 
     keys.push(address)
 
-    return (
+    const balance =
       (
         await getTransformationMatch<string | undefined>(
           contractAddress,
           keys.join(':')
         )
       )?.value ?? '0'
-    )
+
+    return {
+      balance,
+      height: Number(block.height),
+    }
   },
 }
 
-export const totalStaked: ContractFormula<
+export const stakedBalance: ContractFormula<
   string,
+  {
+    address: string
+    // Required when querying oraichain-cw20-staking contract directly.
+    oraichainStakingToken?: string
+  }
+> = {
+  filter: stakedBalanceAtHeight.filter,
+  compute: async (env) => (await stakedBalanceAtHeight.compute(env)).balance,
+}
+
+export const totalStakedAtHeight: ContractFormula<
+  TotalStakedAtHeight,
   {
     // Required when querying oraichain-cw20-staking contract directly.
     oraichainStakingToken?: string
   }
 > = {
+  filter: {
+    codeIdsKeys: [
+      'cw20-stake',
+      'oraichain-cw20-staking',
+      'oraichain-cw20-staking-proxy-snapshot',
+    ],
+  },
   compute: async (env) => {
     let contractAddress = env.contractAddress
     const keys: (string | Uint8Array)[] = ['total_staked']
@@ -109,8 +143,25 @@ export const totalStaked: ContractFormula<
       keys.push(fromBech32(env.args.oraichainStakingToken).data)
     }
 
-    return (await env.get<string | undefined>(contractAddress, ...keys)) || '0'
+    const total =
+      (await env.get<string | undefined>(contractAddress, ...keys)) || '0'
+
+    return {
+      total,
+      height: Number(env.block.height),
+    }
   },
+}
+
+export const totalStaked: ContractFormula<
+  string,
+  {
+    // Required when querying oraichain-cw20-staking contract directly.
+    oraichainStakingToken?: string
+  }
+> = {
+  filter: totalStakedAtHeight.filter,
+  compute: async (env) => (await totalStakedAtHeight.compute(env)).total,
 }
 
 export const stakedValue: ContractFormula<string, { address: string }> = {

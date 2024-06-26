@@ -1,22 +1,36 @@
 import { ContractFormula } from '@/types'
 
-import { ContractInfo, Expiration, ProposalModule } from '../../types'
+import {
+  ContractInfo,
+  Expiration,
+  ProposalModule,
+  TotalPowerAtHeight,
+  VotingPowerAtHeight,
+} from '../../types'
 import { isExpirationExpired } from '../../utils'
 import { info } from '../common'
 import { balance } from '../external/cw20'
 import { dao as daoPreProposeBaseDao } from '../prePropose/daoPreProposeBase'
 import {
-  totalPower as daoVotingCw20StakedTotalPower,
-  votingPower as daoVotingCw20StakedVotingPower,
+  totalPowerAtHeight as daoVotingCw20StakedTotalPowerAtHeight,
+  votingPowerAtHeight as daoVotingCw20StakedVotingPowerAtHeight,
 } from '../voting/daoVotingCw20Staked'
 import {
-  totalPower as daoVotingCw4TotalPower,
-  votingPower as daoVotingCw4VotingPower,
+  totalPowerAtHeight as daoVotingCw4TotalPowerAtHeight,
+  votingPowerAtHeight as daoVotingCw4VotingPowerAtHeight,
 } from '../voting/daoVotingCw4'
 import {
-  totalPower as daoVotingCw721StakedTotalPower,
-  votingPower as daoVotingCw721StakedVotingPower,
+  totalPowerAtHeight as daoVotingCw721StakedTotalPowerAtHeight,
+  votingPowerAtHeight as daoVotingCw721StakedVotingPowerAtHeight,
 } from '../voting/daoVotingCw721Staked'
+import {
+  totalPowerAtHeight as daoVotingNativeStakedTotalPowerAtHeight,
+  votingPowerAtHeight as daoVotingNativeStakedVotingPowerAtHeight,
+} from '../voting/daoVotingNativeStaked'
+import {
+  totalPowerAtHeight as daoVotingTokenStakedTotalPowerAtHeight,
+  votingPowerAtHeight as daoVotingTokenStakedVotingPowerAtHeight,
+} from '../voting/daoVotingTokenStaked'
 
 export type Config = {
   automatically_add_cw20s: boolean
@@ -288,8 +302,19 @@ export const daoUri: ContractFormula<string> = {
   compute: async (env) => (await config.compute(env))?.dao_uri ?? '',
 }
 
-export const votingPower: ContractFormula<
-  string | undefined,
+const VOTING_POWER_AT_HEIGHT_FORMULAS: ContractFormula<
+  VotingPowerAtHeight | undefined,
+  { address: string }
+>[] = [
+  daoVotingCw4VotingPowerAtHeight,
+  daoVotingCw20StakedVotingPowerAtHeight,
+  daoVotingCw721StakedVotingPowerAtHeight,
+  daoVotingNativeStakedVotingPowerAtHeight,
+  daoVotingTokenStakedVotingPowerAtHeight,
+]
+
+export const votingPowerAtHeight: ContractFormula<
+  VotingPowerAtHeight | undefined,
   { address: string }
 > = {
   compute: async (env) => {
@@ -305,17 +330,34 @@ export const votingPower: ContractFormula<
     }
 
     // Find formula matching code ID key.
-    const votingPowerFormula = VOTING_POWER_FORMULAS.find((formula) =>
-      formula.filter?.codeIdsKeys?.includes(codeIdKey)
+    const votingPowerAtHeightFormula = VOTING_POWER_AT_HEIGHT_FORMULAS.find(
+      (formula) => formula.filter?.codeIdsKeys?.includes(codeIdKey)
     )
-    return await votingPowerFormula?.compute({
+    return await votingPowerAtHeightFormula?.compute({
       ...env,
       contractAddress: votingModuleAddress,
     })
   },
 }
 
-export const totalPower: ContractFormula<string | undefined> = {
+export const votingPower: ContractFormula<
+  string | undefined,
+  { address: string }
+> = {
+  compute: async (env) => (await votingPowerAtHeight.compute(env))?.power,
+}
+
+const TOTAL_POWER_AT_HEIGHT_FORMULAS: ContractFormula<TotalPowerAtHeight>[] = [
+  daoVotingCw4TotalPowerAtHeight,
+  daoVotingCw20StakedTotalPowerAtHeight,
+  daoVotingCw721StakedTotalPowerAtHeight,
+  daoVotingNativeStakedTotalPowerAtHeight,
+  daoVotingTokenStakedTotalPowerAtHeight,
+]
+
+export const totalPowerAtHeight: ContractFormula<
+  TotalPowerAtHeight | undefined
+> = {
   compute: async (env) => {
     const votingModuleAddress = (await votingModule.compute(env)) ?? ''
     if (!votingModuleAddress) {
@@ -329,30 +371,22 @@ export const totalPower: ContractFormula<string | undefined> = {
     }
 
     // Find formula matching code ID key.
-    const totalPowerFormula = TOTAL_POWER_FORMULAS.find((formula) =>
-      formula.filter?.codeIdsKeys?.includes(codeIdKey)
+    const totalPowerAtHeightFormula = TOTAL_POWER_AT_HEIGHT_FORMULAS.find(
+      (formula) => formula.filter?.codeIdsKeys?.includes(codeIdKey)
     )
-    return await totalPowerFormula?.compute({
+    return await totalPowerAtHeightFormula?.compute({
       ...env,
       contractAddress: votingModuleAddress,
     })
   },
 }
 
-// These formulas must have code ID filters set so we can match them.
-const VOTING_POWER_FORMULAS: ContractFormula<
+export const totalPower: ContractFormula<
   string | undefined,
   { address: string }
->[] = [
-  daoVotingCw4VotingPower,
-  daoVotingCw20StakedVotingPower,
-  daoVotingCw721StakedVotingPower,
-]
-const TOTAL_POWER_FORMULAS: ContractFormula<string>[] = [
-  daoVotingCw4TotalPower,
-  daoVotingCw20StakedTotalPower,
-  daoVotingCw721StakedTotalPower,
-]
+> = {
+  compute: async (env) => (await totalPowerAtHeight.compute(env))?.power,
+}
 
 // Returns contracts with an admin state key set to this DAO. Hopefully these
 // are mostly DAO contracts.

@@ -44,3 +44,10 @@ export type VoteCast<Vote = any> = {
 }
 
 export type VoteInfo<Vote = any> = Omit<VoteCast, 'vote'> & Vote
+
+export type VotingPowerAtHeight = {
+  power: string
+  height: number
+}
+
+export type TotalPowerAtHeight = VotingPowerAtHeight
