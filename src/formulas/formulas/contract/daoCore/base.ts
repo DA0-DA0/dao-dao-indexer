@@ -45,14 +45,14 @@ export type ProposalModuleWithInfo = ProposalModule & {
   info?: ContractInfo
 }
 
-export type PausedResponse =
+export type PauseInfoResponse =
   | {
-      Paused: {
+      paused: {
         expiration: Expiration
       }
     }
   | {
-      Unpaused: {}
+      unpaused: {}
     }
 
 export type Cw20Balance = {
@@ -156,7 +156,7 @@ export const activeProposalModules: ContractFormula<
   },
 }
 
-export const paused: ContractFormula<PausedResponse> = {
+export const pauseInfo: ContractFormula<PauseInfoResponse> = {
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -169,10 +169,13 @@ export const paused: ContractFormula<PausedResponse> = {
       (await get<Expiration | undefined>(contractAddress, 'paused'))
 
     return !expiration || isExpirationExpired(env, expiration)
-      ? { Unpaused: {} }
-      : { Paused: { expiration } }
+      ? { unpaused: {} }
+      : { paused: { expiration } }
   },
 }
+
+// Backwards compatibility.
+export const paused = pauseInfo
 
 export const admin: ContractFormula<string | null> = {
   compute: async ({ contractAddress, getTransformationMatch, get }) => {
