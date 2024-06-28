@@ -16,49 +16,7 @@
         Map::new("dcfg");
     /// Maps Account ID to the address of its core contracts
     pub const ACCOUNT_ADDRESSES: Map<&AccountId, AccountBase> = Map::new("accs");
-
-pub fn handle_modules_query(deps: Deps, modules: Vec<ModuleInfo>) -> StdResult<ModulesResponse> {
-    let mut modules_response = ModulesResponse { modules: vec![] };
-    for mut module in modules {
-        let maybe_module_ref = if let ModuleVersion::Version(_) = module.version {
-            REGISTERED_MODULES.load(deps.storage, &module)
-        } else {
-            // get latest
-            let versions: StdResult<Vec<(String, ModuleReference)>> = REGISTERED_MODULES
-                .prefix((module.namespace.clone(), module.name.clone()))
-                .range(deps.storage, None, None, Order::Descending)
-                .take(1)
-                .collect();
-            let (latest_version, id) = versions?
-                .first()
-                .ok_or_else(|| StdError::GenericErr {
-                    msg: VCError::ModuleNotFound(module.clone()).to_string(),
-                })?
-                .clone();
-            module.version = ModuleVersion::Version(latest_version);
-            Ok(id)
-        };
-
-        match maybe_module_ref {
-            Err(_) => Err(StdError::generic_err(
-                VCError::ModuleNotFound(module).to_string(),
-            )),
-            Ok(mod_ref) => {
-                modules_response.modules.push(ModuleResponse {
-                    module: Module {
-                        info: module.clone(),
-                        reference: mod_ref,
-                    },
-                    config: ModuleConfiguration::from_storage(deps.storage, &module)?,
-                });
-                Ok(())
-            }
-        }?;
-    }
-
-    Ok(modules_response)
-}
- */
+*/
 
 import semver from 'semver/preload'
 
@@ -79,7 +37,7 @@ const VersionControlStorageKeys = {
   ACCOUNT_ADDRESSES: 'accs',
 }
 
-export const registeredModules: ContractFormula<Array<Module>> = {
+export const listRegisteredModules: ContractFormula<Array<Module>> = {
   compute: async ({ contractAddress, getMap }) => {
     const registeredModulesMap =
       (await getMap<string, VersionControlTypes.ModuleReference>(
@@ -186,9 +144,9 @@ export const module: ContractFormula<
     if (!args || !args.namespace || !args.name) return undefined
     const moduleParam = args as ModuleInfoParameter
 
-    const registeredModuleList = await registeredModules.compute(env)
+    const registeredModules = await listRegisteredModules.compute(env)
 
-    const filteredModules = registeredModuleList.filter(
+    const filteredModules = registeredModules.filter(
       ({ info: { name, namespace } }) => {
         return namespace === moduleParam.namespace && name === moduleParam.name
       }
