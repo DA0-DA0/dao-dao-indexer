@@ -7,7 +7,7 @@ import {
   TotalPowerAtHeight,
   VotingPowerAtHeight,
 } from '../../types'
-import { isExpirationExpired } from '../../utils'
+import { isExpirationExpired, makeSimpleContractFormula } from '../../utils'
 import { info } from '../common'
 import { balance } from '../external/cw20'
 import { dao as daoPreProposeBaseDao } from '../prePropose/daoPreProposeBase'
@@ -65,24 +65,10 @@ export type SubDao = {
   charter?: string | null
 }
 
-export const config: ContractFormula<Config> = {
-  compute: async ({ contractAddress, getTransformationMatch, get }) => {
-    const config =
-      (await getTransformationMatch<Config>(contractAddress, 'config'))
-        ?.value ??
-      // Fallback to events.
-      // V2.
-      (await get<Config>(contractAddress, 'config_v2')) ??
-      // V1.
-      (await get<Config>(contractAddress, 'config'))
-
-    if (!config) {
-      throw new Error('failed to load config')
-    }
-
-    return config
-  },
-}
+export const config = makeSimpleContractFormula<Config>({
+  transformation: 'config',
+  fallbackKeys: ['config_v2', 'config'],
+})
 
 export const proposalModules: ContractFormula<ProposalModuleWithInfo[]> = {
   compute: async (env) => {

@@ -202,6 +202,7 @@ export const reverseProposals: ContractFormula<
 
 export const proposalCount = makeSimpleContractFormula<number>({
   key: 'proposal_count',
+  fallback: 0,
 })
 
 export const nextProposalId: ContractFormula<number> = {
