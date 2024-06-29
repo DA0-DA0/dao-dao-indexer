@@ -1,6 +1,7 @@
 import { ContractFormula } from '@/types'
 
 import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
+import { makeSimpleContractFormula } from '../../utils'
 
 interface StakerBalance {
   address: string
@@ -73,26 +74,23 @@ export const totalPower: ContractFormula<string> = {
   compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
-export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<string | undefined>(contractAddress, 'dao'))
-      ?.value,
-}
+export const dao = makeSimpleContractFormula<string>({
+  transformation: 'dao',
+})
 
-export const claims: ContractFormula<any[] | undefined, { address: string }> = {
+export const claims: ContractFormula<any[], { address: string }> = {
   compute: async ({ contractAddress, get, args: { address } }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return await get<any[]>(contractAddress, 'claims', address)
+    return (await get<any[]>(contractAddress, 'claims', address)) ?? []
   },
 }
 
-export const config: ContractFormula<Config | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value,
-}
+export const config = makeSimpleContractFormula<Config>({
+  transformation: 'config',
+})
 
 export const listStakers: ContractFormula<
   StakerBalance[],
@@ -125,9 +123,10 @@ type Staker = StakerBalance & {
   votingPowerPercent: number
 }
 
-export const topStakers: ContractFormula<Staker[] | undefined> = {
+export const topStakers: ContractFormula<Staker[]> = {
   compute: async (env) => {
     const { contractAddress, getMap } = env
+
     // Get stakers.
     const stakerBalances =
       (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}

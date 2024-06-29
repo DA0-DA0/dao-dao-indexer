@@ -5,21 +5,24 @@ import {
 } from '@/types'
 import { decodeGovProposal } from '@/utils'
 
-export const proposal: GenericFormula<
-  FormulaProposalObject | undefined,
-  { id: string }
-> = {
+export const proposal: GenericFormula<FormulaProposalObject, { id: string }> = {
   compute: async ({ getProposal, args: { id } }) => {
     if (!id) {
       throw new Error('missing `id`')
     }
 
-    return await getProposal(id)
+    const proposal = await getProposal(id)
+
+    if (!proposal) {
+      throw new Error('proposal not found')
+    }
+
+    return proposal
   },
 }
 
 export const decodedProposal: GenericFormula<
-  FormulaDecodedProposalObject | undefined,
+  FormulaDecodedProposalObject | null,
   { id: string }
 > = {
   compute: async ({ getProposal, args: { id } }) => {
@@ -29,7 +32,7 @@ export const decodedProposal: GenericFormula<
 
     const proposal = await getProposal(id)
     if (!proposal) {
-      return
+      throw new Error('proposal not found')
     }
 
     const {
@@ -39,19 +42,17 @@ export const decodedProposal: GenericFormula<
       status,
     } = decodeGovProposal(proposal.data)
 
-    return (
-      proposal && {
-        id: Number(proposal.id),
-        data: proposal.data,
-        title,
-        description,
-        status,
-        submitTime: decoded?.submitTime?.getTime(),
-        depositEndTime: decoded?.depositEndTime?.getTime(),
-        votingStartTime: decoded?.votingStartTime?.getTime(),
-        votingEndTime: decoded?.votingEndTime?.getTime(),
-      }
-    )
+    return {
+      id: Number(proposal.id),
+      data: proposal.data,
+      title,
+      description,
+      status,
+      submitTime: decoded?.submitTime?.getTime(),
+      depositEndTime: decoded?.depositEndTime?.getTime(),
+      votingStartTime: decoded?.votingStartTime?.getTime(),
+      votingEndTime: decoded?.votingEndTime?.getTime(),
+    }
   },
 }
 

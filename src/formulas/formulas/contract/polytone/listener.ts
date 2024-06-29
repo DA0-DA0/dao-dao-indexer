@@ -1,9 +1,10 @@
 import { ContractFormula } from '@/types'
 
-export const note: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get<string>(contractAddress, 'note'),
-}
+import { makeSimpleContractFormula } from '../../utils'
+
+export const note = makeSimpleContractFormula<string>({
+  key: 'note',
+})
 
 export const result: ContractFormula<
   any,
@@ -21,11 +22,15 @@ export const result: ContractFormula<
       throw new Error('Missing initiatorMsg')
     }
 
-    return await get<string>(
-      contractAddress,
-      'results',
-      initiator,
-      initiatorMsg
+    return (
+      (await get<string>(
+        contractAddress,
+        'results',
+        initiator,
+        initiatorMsg
+      )) ??
+      // Return null if no result found.
+      null
     )
   },
 }

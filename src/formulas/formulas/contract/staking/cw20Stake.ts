@@ -2,6 +2,8 @@ import { fromBech32 } from '@cosmjs/encoding'
 
 import { ContractFormula } from '@/types'
 
+import { makeSimpleContractFormula } from '../../utils'
+
 export type StakerBalance = {
   address: string
   balance: string
@@ -17,10 +19,9 @@ export type TotalStakedAtHeight = {
   height: number
 }
 
-export const config: ContractFormula<any | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'config'),
-}
+export const config = makeSimpleContractFormula<any>({
+  key: 'config',
+})
 
 export const stakedBalanceAtHeight: ContractFormula<
   StakedBalanceAtHeight,
@@ -143,8 +144,7 @@ export const totalStakedAtHeight: ContractFormula<
       keys.push(fromBech32(env.args.oraichainStakingToken).data)
     }
 
-    const total =
-      (await env.get<string | undefined>(contractAddress, ...keys)) || '0'
+    const total = (await env.get<string>(contractAddress, ...keys)) || '0'
 
     return {
       total,
@@ -190,18 +190,18 @@ export const stakedValue: ContractFormula<string, { address: string }> = {
   },
 }
 
-export const totalValue: ContractFormula<string> = {
-  compute: async ({ contractAddress, get }) =>
-    (await get<string | undefined>(contractAddress, 'balance')) || '0',
-}
+export const totalValue = makeSimpleContractFormula<string>({
+  key: 'balance',
+  fallback: '0',
+})
 
-export const claims: ContractFormula<any[] | undefined, { address: string }> = {
+export const claims: ContractFormula<any[], { address: string }> = {
   compute: async ({ contractAddress, get, args: { address } }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return await get<any[]>(contractAddress, 'claims', address)
+    return (await get<any[]>(contractAddress, 'claims', address)) ?? []
   },
 }
 

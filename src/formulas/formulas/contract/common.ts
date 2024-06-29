@@ -2,17 +2,32 @@ import { ContractFormula } from '@/types'
 
 import { ContractInfo } from '../types'
 
-export const info: ContractFormula<ContractInfo | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<ContractInfo>(contractAddress, 'info'))
-      ?.value,
+export const info: ContractFormula<ContractInfo> = {
+  compute: async ({ contractAddress, getTransformationMatch }) => {
+    const info = (
+      await getTransformationMatch<ContractInfo>(contractAddress, 'info')
+    )?.value
+
+    if (!info) {
+      throw new Error(`no contract info found for ${contractAddress}`)
+    }
+
+    return info
+  },
 }
 
-export const instantiatedAt: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getContract }) =>
-    (
+export const instantiatedAt: ContractFormula<string> = {
+  compute: async ({ contractAddress, getContract }) => {
+    const timestamp = (
       await getContract(contractAddress)
-    )?.instantiatedAt.timestamp.toISOString(),
+    )?.instantiatedAt.timestamp.toISOString()
+
+    if (!timestamp) {
+      throw new Error('contract not yet indexed')
+    }
+
+    return timestamp
+  },
 }
 
 // Access any state item. This is either a top-level item or an item

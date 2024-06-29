@@ -1,11 +1,10 @@
-import { ContractFormula } from '@/types'
+import { makeSimpleContractFormula } from '../../utils'
 
 type AdminList = {
   admins: string[]
   mutable: boolean
 }
 
-export const adminList: ContractFormula<AdminList | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get<AdminList>(contractAddress, 'admin_list'),
-}
+export const adminList = makeSimpleContractFormula<AdminList>({
+  key: 'admin_list',
+})

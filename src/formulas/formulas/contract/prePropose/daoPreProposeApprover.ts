@@ -1,14 +1,15 @@
 import { ContractFormula } from '@/types'
 
+import { makeSimpleContractFormula } from '../../utils'
+
 export * from './daoPreProposeBase'
 
-export const preProposeApprovalContract: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'pre_propose_approval_contract'),
-}
+export const preProposeApprovalContract = makeSimpleContractFormula<string>({
+  key: 'pre_propose_approval_contract',
+})
 
 export const preProposeApprovalIdForApproverProposalId: ContractFormula<
-  number | undefined,
+  number,
   { id: string }
 > = {
   compute: async ({ contractAddress, get, args: { id } }) => {
@@ -16,12 +17,22 @@ export const preProposeApprovalIdForApproverProposalId: ContractFormula<
       throw new Error('missing `id`')
     }
 
-    return await get(contractAddress, 'proposal_to_pre_propose', Number(id))
+    const proposalId = await get(
+      contractAddress,
+      'proposal_to_pre_propose',
+      Number(id)
+    )
+
+    if (typeof proposalId !== 'number') {
+      throw new Error('proposal not found')
+    }
+
+    return Number(id)
   },
 }
 
 export const approverProposalIdForPreProposeApprovalId: ContractFormula<
-  number | undefined,
+  number,
   { id: string }
 > = {
   compute: async ({ contractAddress, get, args: { id } }) => {
@@ -29,6 +40,16 @@ export const approverProposalIdForPreProposeApprovalId: ContractFormula<
       throw new Error('missing `id`')
     }
 
-    return await get(contractAddress, 'pre_propose_to_proposal', Number(id))
+    const proposalId = await get(
+      contractAddress,
+      'pre_propose_to_proposal',
+      Number(id)
+    )
+
+    if (typeof proposalId !== 'number') {
+      throw new Error('proposal not found')
+    }
+
+    return Number(id)
   },
 }

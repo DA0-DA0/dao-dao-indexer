@@ -92,14 +92,14 @@ export const allMembers: ContractFormula<
   },
 }
 
-export const listMembers: ContractFormula<DaoMember[] | undefined> = {
+export const listMembers: ContractFormula<DaoMember[]> = {
   compute: async (env) => {
     const { contractMatchesCodeIdKeys } = env
 
     // Get members.
     const votingModuleAddress = await votingModule.compute(env)
     if (!votingModuleAddress) {
-      return
+      throw new Error('missing `votingModuleAddress`')
     }
 
     if (
@@ -191,11 +191,13 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
         }))
       }
     }
+
+    throw new Error('voting module passthrough not supported for this DAO')
   },
 }
 
 // Date membership was last updated for a member-based DAO.
-export const lastMembershipChange: ContractFormula<string | undefined> = {
+export const lastMembershipChange: ContractFormula<string | null> = {
   compute: async (env) => {
     // Get members.
     const votingModuleAddress = await votingModule.compute(env)
@@ -224,6 +226,6 @@ export const lastMembershipChange: ContractFormula<string | undefined> = {
       .sort()
       .pop()
 
-    return lastChanged ? new Date(lastChanged).toISOString() : undefined
+    return lastChanged ? new Date(lastChanged).toISOString() : null
   },
 }

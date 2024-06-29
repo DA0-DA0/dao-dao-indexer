@@ -3,6 +3,7 @@ import { fromBech32 } from '@cosmjs/encoding'
 import { ContractFormula } from '@/types'
 
 import { Expiration } from '../../types'
+import { makeSimpleContractFormula } from '../../utils'
 import { dao } from '../voting/daoVotingCw20Staked'
 
 interface TokenInfo {
@@ -64,34 +65,22 @@ export const balance: ContractFormula<string, { address: string }> = {
   },
 }
 
-export const tokenInfo: ContractFormula<TokenInfo | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) => {
-    const tokenInfoResponse = (
-      await getTransformationMatch<TokenInfoResponse>(
-        contractAddress,
-        'tokenInfo'
-      )
-    )?.value
+export const tokenInfo = makeSimpleContractFormula<TokenInfo>({
+  transformation: 'tokenInfo',
+  transform: (r) => ({
+    ...r,
+    // Not present in normal TokenInfoResponse.
+    mint: undefined,
+  }),
+})
 
-    return (
-      tokenInfoResponse && {
-        ...tokenInfoResponse,
-        // Not present in normal TokenInfoResponse.
-        mint: undefined,
-      }
-    )
-  },
-}
-
-export const minter: ContractFormula = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (
-      await getTransformationMatch<TokenInfoResponse>(
-        contractAddress,
-        'tokenInfo'
-      )
-    )?.value?.mint,
-}
+export const minter = makeSimpleContractFormula<
+  TokenInfoResponse,
+  Required<TokenInfoResponse>['mint'] | null
+>({
+  transformation: 'tokenInfo',
+  transform: ({ mint }) => mint || null,
+})
 
 export const allowance: ContractFormula<
   AllowanceResponse,
@@ -241,18 +230,20 @@ export const topAccountBalances: ContractFormula<
   },
 }
 
-export const marketingInfo: ContractFormula = {
-  compute: async ({ contractAddress, get }) =>
-    (await get(contractAddress, 'marketing_info')) ?? {},
-}
+export const marketingInfo = makeSimpleContractFormula({
+  key: 'marketing_info',
+  fallback: {},
+})
 
-// Returns undefined if no logo URL found.
-export const logoUrl: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) => {
-    const logo = await get<{ url: string | never }>(contractAddress, 'logo')
-    return logo && 'url' in logo ? logo.url : undefined
-  },
-}
+// Returns null if no logo URL found.
+export const logoUrl = makeSimpleContractFormula<
+  { url: string | undefined | null },
+  string | null
+>({
+  key: 'logo',
+  fallback: null,
+  transform: (logo) => (logo && 'url' in logo && logo.url) || null,
+})
 
 // Get DAOs that use this cw20 as their governance token.
 export const daos: ContractFormula<string[]> = {

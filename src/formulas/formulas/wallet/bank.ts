@@ -1,12 +1,18 @@
 import { WalletFormula } from '@/types'
 
-export const balance: WalletFormula<string | undefined, { denom: string }> = {
+export const balance: WalletFormula<string, { denom: string }> = {
   compute: async ({ walletAddress, getBalance, args: { denom } }) => {
     if (!denom) {
       throw new Error('missing `denom`')
     }
 
-    return await getBalance(walletAddress, denom)
+    const balance = await getBalance(walletAddress, denom)
+
+    if (!balance) {
+      throw new Error('missing balance')
+    }
+
+    return balance
   },
 }
 

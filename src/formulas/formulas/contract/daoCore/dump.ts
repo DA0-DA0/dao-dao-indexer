@@ -44,7 +44,7 @@ export type DumpState = {
   hideFromSearch?: boolean
 }
 
-export const dumpState: ContractFormula<DumpState | undefined> = {
+export const dumpState: ContractFormula<DumpState> = {
   compute: async (env) => {
     const [
       adminResponse,
@@ -74,7 +74,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       })),
       // V2
       env
-        .getTransformationMatch<number | undefined>(
+        .getTransformationMatch<number>(
           env.contractAddress,
           'activeProposalModuleCount'
         )
@@ -82,13 +82,10 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
           (transformation) =>
             transformation?.value ??
             // Fallback to events.
-            env.get<number | undefined>(
-              env.contractAddress,
-              'active_proposal_module_count'
-            )
+            env.get<number>(env.contractAddress, 'active_proposal_module_count')
         ),
       env
-        .getTransformationMatch<number | undefined>(
+        .getTransformationMatch<number>(
           env.contractAddress,
           'totalProposalModuleCount'
         )
@@ -96,10 +93,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
           (transformation) =>
             transformation?.value ??
             // Fallback to events.
-            env.get<number | undefined>(
-              env.contractAddress,
-              'total_proposal_module_count'
-            )
+            env.get<number>(env.contractAddress, 'total_proposal_module_count')
         ),
       // Extra.
       instantiatedAt.compute(env),
@@ -112,11 +106,6 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
         },
       }),
     ])
-
-    // If no config, this must not be a DAO core contract.
-    if (!configResponse) {
-      return undefined
-    }
 
     // Load admin info if admin is a DAO core contract.
     let adminConfig: Config | undefined | null = null

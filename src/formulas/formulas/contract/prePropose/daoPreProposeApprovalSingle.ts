@@ -1,5 +1,7 @@
 import { ContractEnv, ContractFormula } from '@/types'
 
+import { makeSimpleContractFormula } from '../../utils'
+
 export * from './daoPreProposeBase'
 
 type ProposalStatus =
@@ -26,15 +28,11 @@ type Proposal = {
   completedAt?: string
 }
 
-export const approver: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'approver'),
-}
+export const approver = makeSimpleContractFormula<string>({
+  key: 'approver',
+})
 
-export const proposalCreatedAt: ContractFormula<
-  string | undefined,
-  { id: string }
-> = {
+export const proposalCreatedAt: ContractFormula<string, { id: string }> = {
   compute: async ({
     contractAddress,
     getDateFirstTransformed,
@@ -45,7 +43,7 @@ export const proposalCreatedAt: ContractFormula<
       throw new Error('missing `id`')
     }
 
-    return (
+    const date = (
       (await getDateFirstTransformed(
         contractAddress,
         `pendingProposal:${id}`
@@ -57,13 +55,16 @@ export const proposalCreatedAt: ContractFormula<
         Number(id)
       ))
     )?.toISOString()
+
+    if (!date) {
+      throw new Error('failed to load proposal creation date')
+    }
+
+    return date
   },
 }
 
-export const proposalCompletedAt: ContractFormula<
-  string | undefined,
-  { id: string }
-> = {
+export const proposalCompletedAt: ContractFormula<string, { id: string }> = {
   compute: async ({
     contractAddress,
     getDateFirstTransformed,
@@ -74,7 +75,7 @@ export const proposalCompletedAt: ContractFormula<
       throw new Error('missing `id`')
     }
 
-    return (
+    const date = (
       (await getDateFirstTransformed(
         contractAddress,
         `completedProposal:${id}`
@@ -86,10 +87,16 @@ export const proposalCompletedAt: ContractFormula<
         Number(id)
       ))
     )?.toISOString()
+
+    if (!date) {
+      throw new Error('failed to load proposal completion date')
+    }
+
+    return date
   },
 }
 
-export const proposal: ContractFormula<Proposal | undefined, { id: string }> = {
+export const proposal: ContractFormula<Proposal, { id: string }> = {
   compute: async (env) => {
     const {
       contractAddress,
@@ -119,7 +126,11 @@ export const proposal: ContractFormula<Proposal | undefined, { id: string }> = {
       (await get<Proposal>(contractAddress, 'completed_proposals', idNum)) ||
       (await get<Proposal>(contractAddress, 'pending_proposals', idNum))
 
-    return proposal && (await withMetadata(env, proposal))
+    if (!proposal) {
+      throw new Error('proposal not found')
+    }
+
+    return await withMetadata(env, proposal)
   },
 }
 
@@ -308,7 +319,7 @@ export const reverseCompletedProposals: ContractFormula<
 }
 
 export const completedProposalIdForCreatedProposalId: ContractFormula<
-  number | undefined,
+  number,
   {
     id: string
   }
@@ -323,7 +334,7 @@ export const completedProposalIdForCreatedProposalId: ContractFormula<
       throw new Error('missing `id`')
     }
 
-    return (
+    const proposalId =
       (
         await getTransformationMatch<number>(
           contractAddress,
@@ -336,7 +347,12 @@ export const completedProposalIdForCreatedProposalId: ContractFormula<
         'created_to_completed_proposal',
         Number(id)
       ))
-    )
+
+    if (typeof proposalId !== 'number') {
+      throw new Error('failed to get proposal ID')
+    }
+
+    return proposalId
   },
 }
 

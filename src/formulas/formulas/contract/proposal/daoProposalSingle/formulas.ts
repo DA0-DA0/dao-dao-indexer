@@ -3,7 +3,11 @@ import { Op } from 'sequelize'
 import { ContractEnv, ContractFormula } from '@/types'
 
 import { VoteCast, VoteInfo } from '../../../types'
-import { expirationPlusDuration, isExpirationExpired } from '../../../utils'
+import {
+  expirationPlusDuration,
+  isExpirationExpired,
+  makeSimpleContractFormula,
+} from '../../../utils'
 import { item, proposalModules } from '../../daoCore/base'
 import { ListProposalFilter, ProposalResponse, StatusEnum } from '../types'
 import { isPassed, isRejected } from './status'
@@ -11,19 +15,17 @@ import { Ballot, Config, SingleChoiceProposal } from './types'
 
 export * from '../base'
 
-export const config: ContractFormula<Config | undefined> = {
-  compute: async ({ contractAddress, get, getTransformationMatch }) =>
-    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value ??
-    (await get<Config>(contractAddress, 'config_v2')) ??
-    (await get<Config>(contractAddress, 'config')),
-}
+export const config = makeSimpleContractFormula<Config>({
+  transformation: 'config',
+  fallbackKeys: ['config_v2', 'config'],
+})
 
-export const dao: ContractFormula<string | undefined> = {
-  compute: async (env) => (await config.compute(env))?.dao,
+export const dao: ContractFormula<string> = {
+  compute: async (env) => (await config.compute(env)).dao,
 }
 
 export const proposal: ContractFormula<
-  ProposalResponse<SingleChoiceProposal> | undefined,
+  ProposalResponse<SingleChoiceProposal> | null,
   { id: string }
 > = {
   // This formula depends on the block height/time to check expiration.
@@ -90,18 +92,20 @@ export const proposal: ContractFormula<
       }
     }
 
-    return (
-      proposal && {
-        ...(await intoResponse(env, proposal, idNum, { v2 })),
-        ...(daoAddress && {
-          hideFromSearch: !!hideFromSearch,
-          dao: daoAddress,
-          ...(proposalModulePrefix && {
-            daoProposalId: `${proposalModulePrefix}${id}`,
-          }),
+    if (!proposal) {
+      return null
+    }
+
+    return {
+      ...(await intoResponse(env, proposal, idNum, { v2 })),
+      ...(daoAddress && {
+        hideFromSearch: !!hideFromSearch,
+        dao: daoAddress,
+        ...(proposalModulePrefix && {
+          daoProposalId: `${proposalModulePrefix}${id}`,
         }),
-      }
-    )
+      }),
+    }
   },
 }
 
@@ -251,18 +255,18 @@ export const reverseProposals: ContractFormula<
   },
 }
 
-export const proposalCount: ContractFormula<number> = {
-  compute: async ({ contractAddress, get }) =>
-    // V1 may have no proposal_count set, so default to 0.
-    (await get(contractAddress, 'proposal_count')) ?? 0,
-}
+export const proposalCount = makeSimpleContractFormula<number>({
+  key: 'proposal_count',
+  // V1 may have no proposal_count set, so default to 0.
+  fallback: 0,
+})
 
 export const nextProposalId: ContractFormula<number> = {
   compute: async (env) => (await proposalCount.compute(env)) + 1,
 }
 
 export const vote: ContractFormula<
-  VoteInfo<Ballot> | undefined,
+  VoteInfo<Ballot> | null,
   { proposalId: string; voter: string }
 > = {
   compute: async ({
@@ -313,13 +317,15 @@ export const vote: ContractFormula<
       }
     }
 
-    return (
-      voteCast && {
-        voter,
-        ...voteCast.vote,
-        votedAt: voteCast.votedAt,
-      }
-    )
+    if (!voteCast) {
+      return null
+    }
+
+    return {
+      voter,
+      ...voteCast.vote,
+      votedAt: voteCast.votedAt,
+    }
   },
 }
 
@@ -403,10 +409,7 @@ export const listVotes: ContractFormula<
   },
 }
 
-export const proposalCreatedAt: ContractFormula<
-  string | undefined,
-  { id: string }
-> = {
+export const proposalCreatedAt: ContractFormula<string, { id: string }> = {
   compute: async ({
     contractAddress,
     getDateFirstTransformed,
@@ -417,12 +420,18 @@ export const proposalCreatedAt: ContractFormula<
       throw new Error('missing `id`')
     }
 
-    return (
+    const date = (
       (await getDateFirstTransformed(contractAddress, `proposal:${id}`)) ??
       // Fallback to events.
       (await getDateKeyFirstSet(contractAddress, 'proposals_v2', Number(id))) ??
       (await getDateKeyFirstSet(contractAddress, 'proposals', Number(id)))
     )?.toISOString()
+
+    if (!date) {
+      throw new Error('failed to get proposal creation date')
+    }
+
+    return date
   },
 }
 

@@ -1,6 +1,7 @@
 import { ContractFormula } from '@/types'
 
 import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
+import { makeSimpleContractFormula } from '../../utils'
 import {
   StakerBalance,
   topStakers as cw20StakeTopStakers,
@@ -12,20 +13,15 @@ const CODE_IDS_KEYS = ['dao-voting-cw20-staked']
 
 export { activeThreshold } from './common'
 
-export const tokenContract: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'token'))?.value ??
-    // Fallback to events.
-    (await get<string>(contractAddress, 'token')),
-}
+export const tokenContract = makeSimpleContractFormula<string>({
+  transformation: 'token',
+  fallbackKeys: ['token'],
+})
 
-export const stakingContract: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'stakingContract'))
-      ?.value ??
-    // Fallback to events.
-    (await get<string>(contractAddress, 'staking_contract')),
-}
+export const stakingContract = makeSimpleContractFormula<string>({
+  transformation: 'stakingContract',
+  fallbackKeys: ['staking_contract'],
+})
 
 export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
@@ -69,12 +65,9 @@ export const votingPowerAtHeight: ContractFormula<
   },
 }
 
-export const votingPower: ContractFormula<
-  string | undefined,
-  { address: string }
-> = {
+export const votingPower: ContractFormula<string, { address: string }> = {
   filter: votingPowerAtHeight.filter,
-  compute: async (env) => (await votingPowerAtHeight.compute(env))?.power,
+  compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
 export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
@@ -103,22 +96,20 @@ export const totalPower: ContractFormula<string> = {
   compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
-export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'dao'))?.value ??
-    // Fallback to events.
-    (await get<string>(contractAddress, 'dao')),
-}
+export const dao = makeSimpleContractFormula<string>({
+  transformation: 'dao',
+  fallbackKeys: ['dao'],
+})
 
 type Staker = StakerBalance & {
   votingPowerPercent: number
 }
 
-export const topStakers: ContractFormula<Staker[] | undefined> = {
+export const topStakers: ContractFormula<Staker[]> = {
   compute: async (env) => {
     const stakingContractAddress = await stakingContract.compute(env)
     if (!stakingContractAddress) {
-      return
+      throw new Error('missing `stakingContractAddress`')
     }
 
     // Validate staking contract code ID matches filter.

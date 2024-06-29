@@ -126,10 +126,12 @@ export const vetoableProposals: WalletFormula<VetoableProposalDaos[]> = {
                       return
                     }
 
-                    const config = await configFormula.compute({
-                      ...env,
-                      contractAddress: proposalModule.address,
-                    })
+                    const config = await configFormula
+                      .compute({
+                        ...env,
+                        contractAddress: proposalModule.address,
+                      })
+                      .catch(() => undefined)
 
                     if (!config?.veto) {
                       return
@@ -157,7 +159,8 @@ export const vetoableProposals: WalletFormula<VetoableProposalDaos[]> = {
                       ).filter(
                         (proposal): proposal is ProposalResponse<any> =>
                           !!proposal &&
-                          // Only include open proposals if early execute enabled.
+                          // Only include open proposals if early execute
+                          // enabled.
                           ((proposal.proposal.status === StatusEnum.Open &&
                             config.veto?.early_execute) ||
                             // Include all veto timelock proposals.
@@ -184,10 +187,9 @@ export const vetoableProposals: WalletFormula<VetoableProposalDaos[]> = {
 // Map contract name to config formula.
 const PROPOSAL_MODULE_CONFIG_MAP: Record<
   string,
-  ContractFormula<Config | undefined> | undefined
+  ContractFormula<Config> | undefined
 > = {
-  // Single choice
-  // V1
+  // Single choice V1
   'cw-govmod-single': singleChoiceConfig,
   'cw-proposal-single': singleChoiceConfig,
   // V2+
@@ -205,14 +207,12 @@ const PROPOSAL_MODULE_CONFIG_MAP: Record<
 const PROPOSAL_MAP: Record<
   string,
   | ContractFormula<
-      | ProposalResponse<SingleChoiceProposal | MultipleChoiceProposal>
-      | undefined,
+      ProposalResponse<SingleChoiceProposal | MultipleChoiceProposal> | null,
       { id: string }
     >
   | undefined
 > = {
-  // Single choice
-  // V1
+  // Single choice V1
   'cw-govmod-single': singleChoiceProposal,
   'cw-proposal-single': singleChoiceProposal,
   // V2+

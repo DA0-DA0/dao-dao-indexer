@@ -1,7 +1,7 @@
 import { ContractFormula } from '@/types'
 
 export const remoteAddress: ContractFormula<
-  string | undefined,
+  string | null,
   { address: string }
 > = {
   compute: async ({
@@ -11,7 +11,7 @@ export const remoteAddress: ContractFormula<
     args: { address },
   }) => {
     if (!address) {
-      throw new Error('Missing address')
+      throw new Error('missing `address`')
     }
 
     return (
@@ -21,7 +21,8 @@ export const remoteAddress: ContractFormula<
           `remoteAddress:${contractAddress}`
         )
       )?.value ??
-      (await get<string>(contractAddress, 'polytone-account-map', address))
+      (await get<string>(contractAddress, 'polytone-account-map', address)) ??
+      null
     )
   },
 }

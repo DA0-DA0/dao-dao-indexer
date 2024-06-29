@@ -1,6 +1,7 @@
 import { ContractFormula } from '@/types'
 import { dbKeyToKeys } from '@/utils'
 
+import { makeSimpleContractFormula } from '../../utils'
 import { AUCTIONS_MANAGER_ADDR, REBALANCER_ADDR } from './constants'
 import {
   AccountResponse,
@@ -12,12 +13,11 @@ import {
   RebalancerConfigResponse,
 } from './types'
 
-export const admin: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'admin'),
-}
+export const admin = makeSimpleContractFormula<string>({
+  key: 'admin',
+})
 
-export const data: ContractFormula<AccountResponse | undefined> = {
+export const data: ContractFormula<AccountResponse> = {
   compute: async (env) => ({
     admin: await admin.compute(env),
     rebalancerConfig: await rebalancerConfig.compute(env),

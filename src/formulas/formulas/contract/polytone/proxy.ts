@@ -1,6 +1,5 @@
-import { ContractFormula } from '@/types'
+import { makeSimpleContractFormula } from '../../utils'
 
-export const instantiator: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get<string>(contractAddress, 'owner'),
-}
+export const instantiator = makeSimpleContractFormula<string>({
+  key: 'owner',
+})

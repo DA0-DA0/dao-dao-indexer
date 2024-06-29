@@ -1,6 +1,7 @@
 import { ContractFormula } from '@/types'
 
 import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
+import { makeSimpleContractFormula } from '../../utils'
 import * as cw4Group from '../external/cw4Group'
 
 const CODE_IDS_KEYS = ['dao-voting-cw4']
@@ -80,18 +81,12 @@ export const totalPower: ContractFormula<string> = {
   compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
-export const groupContract: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch, get }) =>
-    (await getTransformationMatch<string>(contractAddress, 'groupContract'))
-      ?.value ??
-    // Fallback to events.
-    (await get<string>(contractAddress, 'group_contract')),
-}
+export const groupContract = makeSimpleContractFormula<string>({
+  transformation: 'groupContract',
+  fallbackKeys: ['group_contract'],
+})
 
-export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch, get }) =>
-    (await getTransformationMatch<string>(contractAddress, 'daoAddress'))
-      ?.value ??
-    // Fallback to events.
-    (await get<string>(contractAddress, 'dao_address')),
-}
+export const dao = makeSimpleContractFormula<string>({
+  transformation: 'daoAddress',
+  fallbackKeys: ['dao_address'],
+})

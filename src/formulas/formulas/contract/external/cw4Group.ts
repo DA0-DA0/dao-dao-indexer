@@ -1,5 +1,7 @@
 import { ContractFormula } from '@/types'
 
+import { makeSimpleContractFormula } from '../../utils'
+
 interface Member {
   addr: string
   weight: number
@@ -42,12 +44,13 @@ export const listMembers: ContractFormula<
   },
 }
 
-export const totalWeight: ContractFormula<number> = {
-  compute: async ({ contractAddress, get }) =>
-    (await get<number>(contractAddress, 'total')) ?? 0,
-}
+export const totalWeight = makeSimpleContractFormula<number>({
+  key: 'total',
+  fallback: 0,
+})
 
-export const admin: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get<string>(contractAddress, 'admin'),
-}
+export const admin = makeSimpleContractFormula<string | null>({
+  key: 'admin',
+  // Null if no admin exists.
+  fallback: null,
+})

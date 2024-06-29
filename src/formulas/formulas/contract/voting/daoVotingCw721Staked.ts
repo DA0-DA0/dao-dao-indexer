@@ -1,6 +1,7 @@
 import { ContractFormula } from '@/types'
 
 import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
+import { makeSimpleContractFormula } from '../../utils'
 
 type Config = {
   owner?: string | null
@@ -12,21 +13,19 @@ const CODE_IDS_KEYS = ['dao-voting-cw721-staked']
 
 export { activeThreshold } from './common'
 
-export const config: ContractFormula<Config | undefined> = {
+export const config = makeSimpleContractFormula<Config>({
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value,
-}
+  transformation: 'config',
+})
 
-export const dao: ContractFormula<string | undefined> = {
+export const dao = makeSimpleContractFormula<string>({
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'dao'))?.value,
-}
+  transformation: 'dao',
+})
 
 export const nftClaims: ContractFormula<any[], { address: string }> = {
   compute: async ({ contractAddress, get, args: { address } }) => {
@@ -131,30 +130,33 @@ export const stakedNfts: ContractFormula<
   },
 }
 
-export const staker: ContractFormula<string | undefined, { tokenId: string }> =
-  {
-    filter: {
-      codeIdsKeys: CODE_IDS_KEYS,
-    },
-    compute: async ({
-      contractAddress,
-      getTransformationMatch,
-      args: { tokenId },
-    }) => {
-      if (!tokenId) {
-        throw new Error('missing `tokenId`')
-      }
+export const staker: ContractFormula<string, { tokenId: string }> = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { tokenId },
+  }) => {
+    if (!tokenId) {
+      throw new Error('missing `tokenId`')
+    }
 
-      const owner = (
-        await getTransformationMatch<string>(
-          contractAddress,
-          `stakedNftOwner:${tokenId}`
-        )
-      )?.value
+    const owner = (
+      await getTransformationMatch<string>(
+        contractAddress,
+        `stakedNftOwner:${tokenId}`
+      )
+    )?.value
 
-      return owner
-    },
-  }
+    if (!owner) {
+      throw new Error('token ID not found')
+    }
+
+    return owner
+  },
+}
 
 type Staker = {
   address: string
