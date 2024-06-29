@@ -306,7 +306,7 @@ export const daoUri: ContractFormula<string> = {
 }
 
 const VOTING_POWER_AT_HEIGHT_FORMULAS: ContractFormula<
-  VotingPowerAtHeight | undefined,
+  VotingPowerAtHeight,
   { address: string }
 >[] = [
   daoVotingCw4VotingPowerAtHeight,
@@ -317,26 +317,30 @@ const VOTING_POWER_AT_HEIGHT_FORMULAS: ContractFormula<
 ]
 
 export const votingPowerAtHeight: ContractFormula<
-  VotingPowerAtHeight | undefined,
+  VotingPowerAtHeight,
   { address: string }
 > = {
   compute: async (env) => {
     const votingModuleAddress = (await votingModule.compute(env)) ?? ''
     if (!votingModuleAddress) {
-      return
+      throw new Error('missing `votingModuleAddress`')
     }
 
     const codeIdKey = await env.getCodeIdKeyForContract(votingModuleAddress)
     // Unrecognized contract.
     if (!codeIdKey) {
-      return
+      throw new Error('unrecognized voting module')
     }
 
     // Find formula matching code ID key.
     const votingPowerAtHeightFormula = VOTING_POWER_AT_HEIGHT_FORMULAS.find(
       (formula) => formula.filter?.codeIdsKeys?.includes(codeIdKey)
     )
-    return await votingPowerAtHeightFormula?.compute({
+    if (!votingPowerAtHeightFormula) {
+      throw new Error(`no voting module passthrough found for ${codeIdKey}`)
+    }
+
+    return await votingPowerAtHeightFormula.compute({
       ...env,
       contractAddress: votingModuleAddress,
     })
@@ -364,20 +368,24 @@ export const totalPowerAtHeight: ContractFormula<
   compute: async (env) => {
     const votingModuleAddress = (await votingModule.compute(env)) ?? ''
     if (!votingModuleAddress) {
-      return
+      throw new Error('missing `votingModuleAddress`')
     }
 
     const codeIdKey = await env.getCodeIdKeyForContract(votingModuleAddress)
     // Unrecognized contract.
     if (!codeIdKey) {
-      return
+      throw new Error('unrecognized voting module')
     }
 
     // Find formula matching code ID key.
     const totalPowerAtHeightFormula = TOTAL_POWER_AT_HEIGHT_FORMULAS.find(
       (formula) => formula.filter?.codeIdsKeys?.includes(codeIdKey)
     )
-    return await totalPowerAtHeightFormula?.compute({
+    if (!totalPowerAtHeightFormula) {
+      throw new Error(`no voting module passthrough found for ${codeIdKey}`)
+    }
+
+    return await totalPowerAtHeightFormula.compute({
       ...env,
       contractAddress: votingModuleAddress,
     })

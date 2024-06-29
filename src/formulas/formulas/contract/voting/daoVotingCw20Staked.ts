@@ -28,7 +28,7 @@ export const stakingContract: ContractFormula<string | undefined> = {
 }
 
 export const votingPowerAtHeight: ContractFormula<
-  VotingPowerAtHeight | undefined,
+  VotingPowerAtHeight,
   { address: string }
 > = {
   // Filter by code ID since someone may modify the contract. This is also used
@@ -43,7 +43,7 @@ export const votingPowerAtHeight: ContractFormula<
 
     const stakingContractAddress = await stakingContract.compute(env)
     if (!stakingContractAddress) {
-      return
+      throw new Error('missing `stakingContractAddress`')
     }
 
     // Unrecognized contract.
@@ -53,7 +53,7 @@ export const votingPowerAtHeight: ContractFormula<
         ...(stakedBalance.filter?.codeIdsKeys ?? [])
       ))
     ) {
-      return
+      throw new Error(`unsupported staking contract: ${stakingContractAddress}`)
     }
 
     const power =
