@@ -13,6 +13,8 @@ type Config = {
 
 const CODE_IDS_KEYS = ['dao-voting-native-staked']
 
+export { activeThreshold } from './common'
+
 export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
   { address: string }

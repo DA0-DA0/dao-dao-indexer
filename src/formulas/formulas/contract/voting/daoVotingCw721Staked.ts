@@ -10,6 +10,8 @@ type Config = {
 
 const CODE_IDS_KEYS = ['dao-voting-cw721-staked']
 
+export { activeThreshold } from './common'
+
 export const config: ContractFormula<Config | undefined> = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
