@@ -113,10 +113,14 @@ export const dumpState: ContractFormula<DumpState> = {
     let adminRegisteredSubDao: boolean | undefined
     const adminInfo =
       adminResponse && adminResponse !== env.contractAddress
-        ? await info.compute({
-            ...env,
-            contractAddress: adminResponse,
-          })
+        ? await info
+            .compute({
+              ...env,
+              contractAddress: adminResponse,
+            })
+            // If fail to fetch contract info, ignore. This may be a wallet or
+            // the chain x/gov module account instead of a DAO/contract.
+            .catch(() => undefined)
         : undefined
     if (
       adminResponse &&
