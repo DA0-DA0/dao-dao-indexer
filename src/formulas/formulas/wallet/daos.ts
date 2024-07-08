@@ -83,8 +83,9 @@ export const memberOf: WalletFormula<
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
-    // dao-voting-cw721-staked contracts where the address has staked NFTs.
-    const daoVotingCw721StakedContracts =
+    // dao-voting-cw721-staked and dao-voting-onft-staked contracts where the
+    // address has staked NFTs.
+    const daoVotingNftStakedContracts =
       (
         await getTransformationMatches(
           undefined,
@@ -92,7 +93,7 @@ export const memberOf: WalletFormula<
           {
             [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '0' }],
           },
-          getCodeIdsForKeys('dao-voting-cw721-staked')
+          getCodeIdsForKeys('dao-voting-cw721-staked', 'dao-voting-onft-staked')
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
@@ -118,7 +119,7 @@ export const memberOf: WalletFormula<
       await Promise.all(
         [
           ...daoVotingCw20StakedContracts,
-          ...daoVotingCw721StakedContracts,
+          ...daoVotingNftStakedContracts,
           ...daoVotingTokenStakedContracts,
         ].map((contractAddress) =>
           getTransformationMatch(contractAddress, 'dao')

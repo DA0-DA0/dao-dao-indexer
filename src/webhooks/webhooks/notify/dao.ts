@@ -6,6 +6,7 @@ import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 const CW20_STAKE_CODE_IDS_KEY = 'cw20-stake'
 const DAO_VOTING_CW4_CODE_IDS_KEY = 'dao-voting-cw4'
 const DAO_VOTING_CW721_STAKED_CODE_IDS_KEY = 'dao-voting-cw721-staked'
+const DAO_VOTING_ONFT_STAKED_CODE_IDS_KEY = 'dao-voting-onft-staked'
 const DAO_VOTING_NATIVE_STAKED_CODE_IDS_KEY = 'dao-voting-native-staked'
 const DAO_VOTING_TOKEN_STAKED_CODE_IDS_KEY = 'dao-voting-token-staked'
 
@@ -13,7 +14,7 @@ const DAO_VOTING_TOKEN_STAKED_CODE_IDS_KEY = 'dao-voting-token-staked'
 const KEY_PREFIX_STAKED_BALANCES = dbKeyForKeys('staked_balances', '')
 // dao-voting-cw4
 const KEY_PREFIX_USER_WEIGHTS = dbKeyForKeys('user_weights', '')
-// dao-voting-cw721-staked
+// dao-voting-cw721-staked/dao-voting-onft-staked
 const KEY_PREFIX_NB = dbKeyForKeys('nb', '')
 
 // Fire webhook when a user becomes a member of a DAO.
@@ -27,6 +28,7 @@ export const makeInboxJoinedDao: WebhookMaker<WasmStateEvent> = (
       CW20_STAKE_CODE_IDS_KEY,
       DAO_VOTING_CW4_CODE_IDS_KEY,
       DAO_VOTING_CW721_STAKED_CODE_IDS_KEY,
+      DAO_VOTING_ONFT_STAKED_CODE_IDS_KEY,
       DAO_VOTING_NATIVE_STAKED_CODE_IDS_KEY,
       DAO_VOTING_TOKEN_STAKED_CODE_IDS_KEY,
     ],
@@ -94,12 +96,13 @@ export const makeInboxJoinedDao: WebhookMaker<WasmStateEvent> = (
 
       daoAddress = typeof dao === 'string' && !!dao ? dao : undefined
     }
-    // If dao-voting-cw721-staked, dao-voting-native-staked, or
-    // dao-voting-token-staked...
+    // If dao-voting-cw721-staked, dao-voting-onft-staked,
+    // dao-voting-native-staked, or dao-voting-token-staked...
     else if (
       env
         .getCodeIdsForKeys(
           DAO_VOTING_CW721_STAKED_CODE_IDS_KEY,
+          DAO_VOTING_ONFT_STAKED_CODE_IDS_KEY,
           DAO_VOTING_NATIVE_STAKED_CODE_IDS_KEY,
           DAO_VOTING_TOKEN_STAKED_CODE_IDS_KEY
         )

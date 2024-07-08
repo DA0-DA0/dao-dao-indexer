@@ -8,6 +8,7 @@ import { topStakers as topCw20Stakers } from '../voting/daoVotingCw20Staked'
 import { groupContract } from '../voting/daoVotingCw4'
 import { topStakers as topCw721Stakers } from '../voting/daoVotingCw721Staked'
 import { topStakers as topNativeStakers } from '../voting/daoVotingNativeStaked'
+import { topStakers as topOnftStakers } from '../voting/daoVotingOnftStaked'
 import { topStakers as topTokenStakers } from '../voting/daoVotingTokenStaked'
 import { config, votingModule } from './base'
 import { getUniqueSubDaosInTree } from './utils'
@@ -148,6 +149,21 @@ export const listMembers: ContractFormula<DaoMember[]> = {
       )
     ) {
       const stakers = await topCw721Stakers.compute({
+        ...env,
+        contractAddress: votingModuleAddress,
+      })
+
+      return stakers.map(({ address, votingPowerPercent }) => ({
+        address,
+        votingPowerPercent,
+      }))
+    } else if (
+      await contractMatchesCodeIdKeys(
+        votingModuleAddress,
+        'dao-voting-onft-staked'
+      )
+    ) {
+      const stakers = await topOnftStakers.compute({
         ...env,
         contractAddress: votingModuleAddress,
       })
