@@ -28,6 +28,10 @@ import {
   votingPowerAtHeight as daoVotingNativeStakedVotingPowerAtHeight,
 } from '../voting/daoVotingNativeStaked'
 import {
+  totalPowerAtHeight as daoVotingOnftStakedTotalPowerAtHeight,
+  votingPowerAtHeight as daoVotingOnftStakedVotingPowerAtHeight,
+} from '../voting/daoVotingOnftStaked'
+import {
   totalPowerAtHeight as daoVotingTokenStakedTotalPowerAtHeight,
   votingPowerAtHeight as daoVotingTokenStakedVotingPowerAtHeight,
 } from '../voting/daoVotingTokenStaked'
@@ -316,6 +320,7 @@ const VOTING_POWER_AT_HEIGHT_FORMULAS: ContractFormula<
   daoVotingCw721StakedVotingPowerAtHeight,
   daoVotingNativeStakedVotingPowerAtHeight,
   daoVotingTokenStakedVotingPowerAtHeight,
+  daoVotingOnftStakedVotingPowerAtHeight,
 ]
 
 export const votingPowerAtHeight: ContractFormula<
@@ -359,6 +364,7 @@ const TOTAL_POWER_AT_HEIGHT_FORMULAS: ContractFormula<TotalPowerAtHeight>[] = [
   daoVotingCw721StakedTotalPowerAtHeight,
   daoVotingNativeStakedTotalPowerAtHeight,
   daoVotingTokenStakedTotalPowerAtHeight,
+  daoVotingOnftStakedTotalPowerAtHeight,
 ]
 
 export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
