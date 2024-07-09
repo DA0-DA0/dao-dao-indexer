@@ -9,6 +9,10 @@ import { groupContract } from '../voting/daoVotingCw4'
 import { topStakers as topCw721Stakers } from '../voting/daoVotingCw721Staked'
 import { topStakers as topNativeStakers } from '../voting/daoVotingNativeStaked'
 import { topStakers as topOnftStakers } from '../voting/daoVotingOnftStaked'
+import {
+  listVoters as listSgCommunityNftVoters,
+  votingPowerAtHeight as sgCommunityNftVotingPower,
+} from '../voting/daoVotingSgCommunityNft'
 import { topStakers as topTokenStakers } from '../voting/daoVotingTokenStaked'
 import { config, votingModule } from './base'
 import { getUniqueSubDaosInTree } from './utils'
@@ -206,6 +210,33 @@ export const listMembers: ContractFormula<DaoMember[]> = {
           votingPowerPercent,
         }))
       }
+    } else if (
+      await contractMatchesCodeIdKeys(
+        votingModuleAddress,
+        'dao-voting-sg-community-nft'
+      )
+    ) {
+      const { voters } = await listSgCommunityNftVoters.compute({
+        ...env,
+        contractAddress: votingModuleAddress,
+      })
+
+      return await Promise.all(
+        voters.map(async (address) => ({
+          address,
+          votingPowerPercent: Number(
+            (
+              await sgCommunityNftVotingPower.compute({
+                ...env,
+                contractAddress: votingModuleAddress,
+                args: {
+                  address,
+                },
+              })
+            ).power
+          ),
+        }))
+      )
     }
 
     throw new Error('voting module passthrough not supported for this DAO')

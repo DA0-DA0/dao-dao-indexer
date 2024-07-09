@@ -114,13 +114,32 @@ export const memberOf: WalletFormula<
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
+    // dao-voting-sg-community-nft contracts where the address has voting power.
+    const sgCommunityNftCodeIds = getCodeIdsForKeys(
+      'dao-voting-sg-community-nft'
+    )
+    const daoVotingSgCommunityNftContracts =
+      sgCommunityNftCodeIds.length > 0
+        ? (
+            await getTransformationMatches(
+              undefined,
+              `vp:${walletAddress}`,
+              {
+                [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '0' }],
+              },
+              sgCommunityNftCodeIds
+            )
+          )?.map(({ contractAddress }) => contractAddress) ?? []
+        : []
+
     // DAO addresses for all the contracts above.
-    const tokenStakedBalancesDaoAddresses = (
+    const daoAddresses = (
       await Promise.all(
         [
           ...daoVotingCw20StakedContracts,
           ...daoVotingNftStakedContracts,
           ...daoVotingTokenStakedContracts,
+          ...daoVotingSgCommunityNftContracts,
         ].map((contractAddress) =>
           getTransformationMatch(contractAddress, 'dao')
         )
@@ -163,9 +182,7 @@ export const memberOf: WalletFormula<
       typeof match?.value === 'string' && match.value ? [match.value] : []
     )
 
-    const daos = Array.from(
-      new Set([...tokenStakedBalancesDaoAddresses, ...cw4DaoAddresses])
-    )
+    const daos = Array.from(new Set([...daoAddresses, ...cw4DaoAddresses]))
     const daoStates = await Promise.all(
       daos.map((daoAddress) =>
         Promise.all([
