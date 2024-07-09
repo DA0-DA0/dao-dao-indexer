@@ -131,3 +131,54 @@ export const listVoters: ContractFormula<
     }
   },
 }
+
+type Voter = {
+  address: string
+  weight: number
+  votingPowerPercent: number
+}
+
+export const allVotersWithVotingPower: ContractFormula<
+  Voter[],
+  {
+    limit?: string
+  }
+> = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async (env) => {
+    const {
+      contractAddress,
+      getTransformationMap,
+      args: { limit },
+    } = env
+    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+
+    const voterMap =
+      (await getTransformationMap<string, string>(contractAddress, 'vp')) ?? {}
+    const voterEntries = Object.entries(voterMap)
+      // Ascending by voter address.
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(0, limitNum)
+
+    // Get total power.
+    const totalVotingPower = Number(
+      (await totalPowerAtHeight.compute(env)).power
+    )
+
+    // Compute voting power percent for each voter.
+    const voters = voterEntries.map(
+      ([address, weight]): Voter => ({
+        address,
+        weight: Number(weight),
+        votingPowerPercent:
+          totalVotingPower === 0
+            ? 0
+            : (Number(weight) / totalVotingPower) * 100,
+      })
+    )
+
+    return voters
+  },
+}

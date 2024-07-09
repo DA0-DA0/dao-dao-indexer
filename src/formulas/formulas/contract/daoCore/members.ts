@@ -9,11 +9,7 @@ import { groupContract } from '../voting/daoVotingCw4'
 import { topStakers as topCw721Stakers } from '../voting/daoVotingCw721Staked'
 import { topStakers as topNativeStakers } from '../voting/daoVotingNativeStaked'
 import { topStakers as topOnftStakers } from '../voting/daoVotingOnftStaked'
-import {
-  listVoters as listSgCommunityNftVoters,
-  totalPowerAtHeight as sgCommunityNftTotalPower,
-  votingPowerAtHeight as sgCommunityNftVotingPower,
-} from '../voting/daoVotingSgCommunityNft'
+import { allVotersWithVotingPower as sgCommunityAllVoters } from '../voting/daoVotingSgCommunityNft'
 import { topStakers as topTokenStakers } from '../voting/daoVotingTokenStaked'
 import { config, votingModule } from './base'
 import { getUniqueSubDaosInTree } from './utils'
@@ -217,40 +213,15 @@ export const listMembers: ContractFormula<DaoMember[]> = {
         'dao-voting-sg-community-nft'
       )
     ) {
-      const [{ voters }, { power: totalPower }] = await Promise.all([
-        listSgCommunityNftVoters.compute({
-          ...env,
-          contractAddress: votingModuleAddress,
-        }),
-        sgCommunityNftTotalPower.compute({
-          ...env,
-          contractAddress: votingModuleAddress,
-        }),
-      ])
+      const voters = await sgCommunityAllVoters.compute({
+        ...env,
+        contractAddress: votingModuleAddress,
+      })
 
-      const totalPowerNum = Number(totalPower)
-
-      return await Promise.all(
-        voters.map(async (address) => ({
-          address,
-          votingPowerPercent:
-            totalPowerNum === 0
-              ? 0
-              : (Number(
-                  (
-                    await sgCommunityNftVotingPower.compute({
-                      ...env,
-                      contractAddress: votingModuleAddress,
-                      args: {
-                        address,
-                      },
-                    })
-                  ).power
-                ) /
-                  totalPowerNum) *
-                100,
-        }))
-      )
+      return voters.map(({ address, votingPowerPercent }) => ({
+        address,
+        votingPowerPercent,
+      }))
     }
 
     throw new Error('voting module passthrough not supported for this DAO')
