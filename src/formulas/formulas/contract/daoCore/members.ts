@@ -11,6 +11,7 @@ import { topStakers as topNativeStakers } from '../voting/daoVotingNativeStaked'
 import { topStakers as topOnftStakers } from '../voting/daoVotingOnftStaked'
 import {
   listVoters as listSgCommunityNftVoters,
+  totalPowerAtHeight as sgCommunityNftTotalPower,
   votingPowerAtHeight as sgCommunityNftVotingPower,
 } from '../voting/daoVotingSgCommunityNft'
 import { topStakers as topTokenStakers } from '../voting/daoVotingTokenStaked'
@@ -216,25 +217,38 @@ export const listMembers: ContractFormula<DaoMember[]> = {
         'dao-voting-sg-community-nft'
       )
     ) {
-      const { voters } = await listSgCommunityNftVoters.compute({
-        ...env,
-        contractAddress: votingModuleAddress,
-      })
+      const [{ voters }, { power: totalPower }] = await Promise.all([
+        listSgCommunityNftVoters.compute({
+          ...env,
+          contractAddress: votingModuleAddress,
+        }),
+        sgCommunityNftTotalPower.compute({
+          ...env,
+          contractAddress: votingModuleAddress,
+        }),
+      ])
+
+      const totalPowerNum = Number(totalPower)
 
       return await Promise.all(
         voters.map(async (address) => ({
           address,
-          votingPowerPercent: Number(
-            (
-              await sgCommunityNftVotingPower.compute({
-                ...env,
-                contractAddress: votingModuleAddress,
-                args: {
-                  address,
-                },
-              })
-            ).power
-          ),
+          votingPowerPercent:
+            totalPowerNum === 0
+              ? 0
+              : (Number(
+                  (
+                    await sgCommunityNftVotingPower.compute({
+                      ...env,
+                      contractAddress: votingModuleAddress,
+                      args: {
+                        address,
+                      },
+                    })
+                  ).power
+                ) /
+                  totalPowerNum) *
+                100,
         }))
       )
     }
