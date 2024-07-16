@@ -82,6 +82,8 @@ func main() {
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	ms.MountStoreWithDB(storeKey, types.StoreTypeIAVL, nil)
 
+	fmt.Println("Loading store...")
+
 	err = ms.LoadLatestVersion()
 	if err != nil {
 		panic(err)
@@ -92,6 +94,8 @@ func main() {
 		panic("Store is nil")
 	}
 
+	fmt.Println("Iterating...")
+
 	iter := store.Iterator(nil, nil)
 
 	// Dump all keys as write operations.
@@ -101,7 +105,7 @@ func main() {
 		key := iter.Key()
 
 		processed++
-		if processed%100000 == 0 {
+		if processed%25000 == 0 {
 			fmt.Printf("Processed %d keys\n", processed)
 		}
 
