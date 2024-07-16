@@ -95,9 +95,15 @@ func main() {
 	iter := store.Iterator(nil, nil)
 
 	// Dump all keys as write operations.
-	count := 0
+	exported := 0
+	processed := 0
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
+
+		processed++
+		if processed%100000 == 0 {
+			fmt.Printf("Processed %d keys\n", processed)
+		}
 
 		// Make sure key is for the given address. Different stores have the address
 		// in a different position.
@@ -156,11 +162,14 @@ func main() {
 			panic(err)
 		}
 
-		count++
-		if count%5000 == 0 {
-			fmt.Println("Exported", count, "keys")
+		exported++
+		if exported == 1 {
+			fmt.Println("Exported first key")
+		}
+		if exported%5000 == 0 {
+			fmt.Println("Exported", exported, "keys")
 		}
 	}
 
-	fmt.Println("Exported", count, "keys")
+	fmt.Println("Exported", exported, "keys")
 }
