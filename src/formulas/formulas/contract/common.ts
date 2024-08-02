@@ -1,6 +1,7 @@
 import { ContractFormula } from '@/types'
 
 import { ContractInfo } from '../types'
+import { makeSimpleContractFormula } from '../utils'
 
 export const info: ContractFormula<ContractInfo> = {
   compute: async ({ contractAddress, getTransformationMatch }) => {
@@ -15,6 +16,12 @@ export const info: ContractFormula<ContractInfo> = {
     return info
   },
 }
+
+// cw-ownership
+export const ownership = makeSimpleContractFormula({
+  transformation: 'ownership',
+  fallbackKeys: ['ownership'],
+})
 
 export const instantiatedAt: ContractFormula<string> = {
   compute: async ({ contractAddress, getContract }) => {

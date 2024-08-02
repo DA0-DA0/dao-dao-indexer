@@ -1,4 +1,4 @@
-import { ContractFormula, Env, KeyInput } from '@/types'
+import { Block, ContractFormula, Env, KeyInput } from '@/types'
 
 import { Duration, Expiration } from './types'
 
@@ -44,7 +44,11 @@ export const expirationPlusDuration = (
 /**
  * Make a simple contract formula with some common error/fallback handling.
  */
-export const makeSimpleContractFormula = <T = unknown, R = T>({
+export const makeSimpleContractFormula = <
+  T = unknown,
+  R = T,
+  Args extends Record<string, string> = {}
+>({
   filter,
   fallback,
   transform = (data: T) => data as unknown as R,
@@ -62,7 +66,8 @@ export const makeSimpleContractFormula = <T = unknown, R = T>({
        */
       transformation: string
       /**
-       * Fallback state key to load from WasmStateEvents table.
+       * Fallback state key(s) to load from WasmStateEvents table, fetched in
+       * order.
        */
       fallbackKeys?: KeyInput[]
     }
@@ -79,10 +84,22 @@ export const makeSimpleContractFormula = <T = unknown, R = T>({
   /**
    * Optionally transform the data before returning it.
    */
-  transform?: (data: T) => R
-}): ContractFormula<R> => ({
+  transform?: (
+    data: T,
+    options: {
+      args: Partial<Args>
+      block: Block
+    }
+  ) => R
+}): ContractFormula<R, Args> => ({
   filter,
-  compute: async ({ contractAddress, get, getTransformationMatch }) => {
+  compute: async ({
+    contractAddress,
+    args,
+    block,
+    get,
+    getTransformationMatch,
+  }) => {
     const value =
       'key' in source
         ? await get<T>(contractAddress, ...[source.key].flat())
@@ -113,6 +130,9 @@ export const makeSimpleContractFormula = <T = unknown, R = T>({
       throw new Error('failed to load')
     }
 
-    return transform(value)
+    return transform(value, {
+      args,
+      block,
+    })
   },
 })
