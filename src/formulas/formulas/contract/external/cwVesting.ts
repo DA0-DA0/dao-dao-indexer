@@ -4,7 +4,7 @@ import { ContractFormula } from '@/types'
 import { dbKeyToKeys } from '@/utils'
 
 import { makeSimpleContractFormula } from '../../utils'
-import { Vest } from './cwVesting.types'
+import { NullableUint64, Vest } from './cwVesting.types'
 
 type ValidatorStake = {
   validator: string
@@ -134,6 +134,27 @@ export const totalToVest: ContractFormula<Uint128> = makeSimpleContractFormula<
         .map(([_, y]) => BigInt(y))
         .reduce((acc, y) => (y > acc ? y : acc), 0n)
       return maxY.toString()
+    } else {
+      throw new Error('Invalid curve')
+    }
+  },
+})
+
+export const vestDuration = makeSimpleContractFormula<Vest, NullableUint64>({
+  transformation: 'vesting',
+  fallbackKeys: ['vesting'],
+  transform: ({ vested }) => {
+    if ('constant' in vested) {
+      return null
+    } else if ('saturating_linear' in vested) {
+      const start = BigInt(vested.saturating_linear.min_x)
+      const end = BigInt(vested.saturating_linear.max_x)
+      return (end - start).toString()
+    } else if ('piecewise_linear' in vested) {
+      const steps = vested.piecewise_linear.steps
+      const start = steps[0][0]
+      const end = steps[steps.length - 1][0]
+      return (end - start).toString()
     } else {
       throw new Error('Invalid curve')
     }
