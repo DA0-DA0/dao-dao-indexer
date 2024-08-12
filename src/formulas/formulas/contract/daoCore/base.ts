@@ -271,21 +271,30 @@ export const cw721List: ContractFormula<string[]> = {
 
 export const cw20Balances: ContractFormula<Cw20Balance[]> = {
   compute: async (env) => {
+    // cw20 addresses stored in contract list. backwards compatibility as the
+    // frontend doesn't use this anymore.
     const cw20Addresses = (await cw20List.compute(env)) ?? []
+    // cw20 addresses stored in items, formatted as `cw20:[address]`
+    const cw20ItemAddresses = (await listItems.compute(env)).flatMap(
+      ([key, value]) =>
+        key.startsWith('cw20:') && value === '1' ? key.substring(5) : []
+    )
 
     return await Promise.all(
-      cw20Addresses.map(async (addr): Promise<Cw20Balance> => {
-        const balanceResponse = await balance.compute({
-          ...env,
-          contractAddress: addr,
-          args: { address: env.contractAddress },
-        })
+      Array.from(new Set([...cw20Addresses, ...cw20ItemAddresses])).map(
+        async (addr): Promise<Cw20Balance> => {
+          const balanceResponse = await balance.compute({
+            ...env,
+            contractAddress: addr,
+            args: { address: env.contractAddress },
+          })
 
-        return {
-          addr,
-          balance: balanceResponse,
+          return {
+            addr,
+            balance: balanceResponse,
+          }
         }
-      })
+      )
     )
   },
 }
