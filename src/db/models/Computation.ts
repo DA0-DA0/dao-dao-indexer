@@ -147,7 +147,9 @@ export class Computation extends Model {
             await Promise.all(
               getDependableEventModels().map(async (DependableEventModel) => {
                 const namespacedKeys = this.dependencies.filter(({ key }) =>
-                  key.startsWith(DependableEventModel.dependentKeyNamespace)
+                  key.startsWith(
+                    DependableEventModel.dependentKeyNamespace + ':'
+                  )
                 )
                 if (namespacedKeys.length === 0) {
                   return null

@@ -5,17 +5,17 @@ import {
   getImageUrlForChainId,
 } from '@dao-dao/utils'
 
-import { GovStateEvent } from '@/db'
+import { GovProposal } from '@/db'
 import { WebhookMaker, WebhookType } from '@/types'
 import { decodeGovProposal } from '@/utils'
 
 // Fire webhook when a gov proposal is created.
-export const makeInboxGovProposalCreated: WebhookMaker<GovStateEvent> = (
+export const makeInboxGovProposalCreated: WebhookMaker<GovProposal> = (
   config,
   state
 ) => ({
   filter: {
-    EventType: GovStateEvent,
+    EventType: GovProposal,
   },
   endpoint: {
     type: WebhookType.Url,
@@ -64,12 +64,12 @@ export const makeInboxGovProposalCreated: WebhookMaker<GovStateEvent> = (
 })
 
 // Fire webhook when a gov proposal is passed (or passed + execution failed).
-export const makeInboxGovProposalPassed: WebhookMaker<GovStateEvent> = (
+export const makeInboxGovProposalPassed: WebhookMaker<GovProposal> = (
   config,
   state
 ) => ({
   filter: {
-    EventType: GovStateEvent,
+    EventType: GovProposal,
   },
   endpoint: {
     type: WebhookType.Url,
@@ -122,12 +122,12 @@ export const makeInboxGovProposalPassed: WebhookMaker<GovStateEvent> = (
 })
 
 // Fire webhook when a gov proposal is rejected.
-export const makeInboxGovProposalRejected: WebhookMaker<GovStateEvent> = (
+export const makeInboxGovProposalRejected: WebhookMaker<GovProposal> = (
   config,
   state
 ) => ({
   filter: {
-    EventType: GovStateEvent,
+    EventType: GovProposal,
   },
   endpoint: {
     type: WebhookType.Url,

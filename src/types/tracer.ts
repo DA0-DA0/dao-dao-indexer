@@ -80,13 +80,28 @@ export type WasmExportData =
       }
     }
 
-export type ParsedGovStateEvent = {
-  proposalId: string
-  blockHeight: string
-  blockTimeUnixMs: string
-  blockTimestamp: Date
-  data: string
-}
+export type ParsedGovStateEvent =
+  | {
+      type: 'proposal'
+      data: {
+        proposalId: string
+        blockHeight: string
+        blockTimeUnixMs: string
+        blockTimestamp: Date
+        data: string
+      }
+    }
+  | {
+      type: 'vote'
+      data: {
+        proposalId: string
+        voterAddress: string
+        blockHeight: string
+        blockTimeUnixMs: string
+        blockTimestamp: Date
+        data: string
+      }
+    }
 
 export type ParsedDistributionCommunityPoolStateEvent = {
   blockHeight: string

@@ -4,7 +4,8 @@ import {
   BankStateEvent,
   Contract,
   DistributionCommunityPoolStateEvent,
-  GovStateEvent,
+  GovProposal,
+  GovProposalVote,
   StakingSlashEvent,
   WasmStateEvent,
   WasmStateEventTransformation,
@@ -32,6 +33,10 @@ import {
   FormulaProposalCountGetter,
   FormulaProposalGetter,
   FormulaProposalObject,
+  FormulaProposalVoteCountGetter,
+  FormulaProposalVoteGetter,
+  FormulaProposalVoteObject,
+  FormulaProposalVotesGetter,
   FormulaProposalsGetter,
   FormulaQuerier,
   FormulaSlashEventsGetter,
@@ -1119,7 +1124,7 @@ export const getEnv = ({
 
   const getProposal: FormulaProposalGetter = async (proposalId) => {
     const dependentKey = getDependentKey(
-      GovStateEvent.dependentKeyNamespace,
+      GovProposal.dependentKeyNamespace,
       proposalId
     )
     dependentKeys?.push({
@@ -1134,7 +1139,7 @@ export const getEnv = ({
       // either it exists or it doesn't (null).
       cachedEvent !== undefined
         ? cachedEvent?.[0]
-        : await GovStateEvent.findOne({
+        : await GovProposal.findOne({
             where: {
               proposalId,
               blockHeight: blockHeightFilter,
@@ -1144,7 +1149,7 @@ export const getEnv = ({
 
     // Type-check. Should never happen assuming dependent key namespaces are
     // unique across different event types.
-    if (event && !(event instanceof GovStateEvent)) {
+    if (event && !(event instanceof GovProposal)) {
       throw new Error('Incorrect event type.')
     }
 
@@ -1173,7 +1178,7 @@ export const getEnv = ({
     offset = 0
   ) => {
     const dependentKey =
-      getDependentKey(GovStateEvent.dependentKeyNamespace) + ':'
+      getDependentKey(GovProposal.dependentKeyNamespace) + ':'
     dependentKeys?.push({
       key: dependentKey,
       prefix: true,
@@ -1186,11 +1191,11 @@ export const getEnv = ({
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
       cachedEvents !== undefined
-        ? ((cachedEvents ?? []) as GovStateEvent[])
+        ? ((cachedEvents ?? []) as GovProposal[])
         : // Only load ID, proposal ID, and block height, so we can filter
           // properly before loading all data. This must match the query in
           // `getProposalCount` since it uses the same cache key.
-          await GovStateEvent.findAll({
+          await GovProposal.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -1216,7 +1221,7 @@ export const getEnv = ({
 
     // Type-check. Should never happen assuming dependent key namespaces are
     // unique across different event types.
-    if (events.some((event) => !(event instanceof GovStateEvent))) {
+    if (events.some((event) => !(event instanceof GovProposal))) {
       throw new Error('Incorrect event type.')
     }
 
@@ -1234,7 +1239,7 @@ export const getEnv = ({
       )
       .slice(offset, limit === undefined ? undefined : offset + limit)
 
-    const eventsWithData = await GovStateEvent.findAll({
+    const eventsWithData = await GovProposal.findAll({
       where: {
         id: filteredEvents.map((event) => event.id),
       },
@@ -1259,7 +1264,7 @@ export const getEnv = ({
 
   const getProposalCount: FormulaProposalCountGetter = async () => {
     const dependentKey =
-      getDependentKey(GovStateEvent.dependentKeyNamespace) + ':'
+      getDependentKey(GovProposal.dependentKeyNamespace) + ':'
     dependentKeys?.push({
       key: dependentKey,
       prefix: true,
@@ -1272,11 +1277,11 @@ export const getEnv = ({
       // If undefined, we haven't tried to fetch them yet. If not undefined,
       // either they exist or they don't (null).
       cachedEvents !== undefined
-        ? ((cachedEvents ?? []) as GovStateEvent[])
+        ? ((cachedEvents ?? []) as GovProposal[])
         : // Only load ID, proposal ID, and block height, so we can filter
           // properly. This must match the query in `getProposals` since it uses
           // the same cache key.
-          await GovStateEvent.findAll({
+          await GovProposal.findAll({
             attributes: [
               // DISTINCT ON is not directly supported by Sequelize, so we need
               // to cast to unknown and back to string to insert this at the
@@ -1302,7 +1307,223 @@ export const getEnv = ({
 
     // Type-check. Should never happen assuming dependent key namespaces are
     // unique across different event types.
-    if (events.some((event) => !(event instanceof GovStateEvent))) {
+    if (events.some((event) => !(event instanceof GovProposal))) {
+      throw new Error('Incorrect event type.')
+    }
+
+    // Cache events, null if nonexistent.
+    if (cachedEvents === undefined) {
+      cache.events[dependentKey] = events.length ? events : null
+    }
+
+    // Call hook.
+    await onFetch?.(events)
+
+    return events.length
+  }
+
+  const getProposalVote: FormulaProposalVoteGetter = async (
+    proposalId,
+    voterAddress
+  ) => {
+    const dependentKey = getDependentKey(
+      GovProposalVote.dependentKeyNamespace,
+      proposalId,
+      voterAddress
+    )
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: false,
+    })
+
+    // Check cache.
+    const cachedEvent = cache.events[dependentKey]
+    const event =
+      // If undefined, we haven't tried to fetch it yet. If not undefined,
+      // either it exists or it doesn't (null).
+      cachedEvent !== undefined
+        ? cachedEvent?.[0]
+        : await GovProposalVote.findOne({
+            where: {
+              proposalId,
+              voterAddress,
+              blockHeight: blockHeightFilter,
+            },
+            order: [['blockHeight', 'DESC']],
+          })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (event && !(event instanceof GovProposalVote)) {
+      throw new Error('Incorrect event type.')
+    }
+
+    // Cache event, null if nonexistent.
+    if (cachedEvent === undefined) {
+      cache.events[dependentKey] = event ? [event] : null
+    }
+
+    // If no event found, return undefined.
+    if (!event) {
+      return
+    }
+
+    // Call hook.
+    await onFetch?.([event])
+
+    return {
+      id: event.proposalId,
+      voter: event.voterAddress,
+      data: event.data,
+    }
+  }
+
+  const getProposalVotes: FormulaProposalVotesGetter = async (
+    proposalId,
+    ascending = false,
+    limit = undefined,
+    offset = 0
+  ) => {
+    const dependentKey =
+      getDependentKey(GovProposalVote.dependentKeyNamespace, proposalId) + ':'
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: true,
+    })
+
+    // Check cache.
+    const cachedEvents = cache.events[dependentKey]
+
+    const events =
+      // If undefined, we haven't tried to fetch them yet. If not undefined,
+      // either they exist or they don't (null).
+      cachedEvents !== undefined
+        ? ((cachedEvents ?? []) as GovProposalVote[])
+        : // Only load ID, proposal ID, voter address, and block height, so we
+          // can filter properly before loading all data. This must match the
+          // query in `getProposalVoteCount` since it uses the same cache key.
+          await GovProposalVote.findAll({
+            attributes: [
+              // DISTINCT ON is not directly supported by Sequelize, so we need
+              // to cast to unknown and back to string to insert this at the
+              // beginning of the query. This ensures we use the most recent
+              // version of each proposal.
+              Sequelize.literal(
+                'DISTINCT ON("proposalId", "voterAddress") \'\''
+              ) as unknown as string,
+              'proposalId',
+              'voterAddress',
+              'id',
+              'blockHeight',
+              'blockTimeUnixMs',
+            ],
+            where: {
+              proposalId,
+              blockHeight: blockHeightFilter,
+            },
+            order: [
+              // Needs to be first so we can use DISTINCT ON.
+              ['proposalId', 'ASC'],
+              ['voterAddress', 'ASC'],
+              ['blockHeight', 'DESC'],
+            ],
+          })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (events.some((event) => !(event instanceof GovProposalVote))) {
+      throw new Error('Incorrect event type.')
+    }
+
+    // Cache events, null if nonexistent.
+    if (cachedEvents === undefined) {
+      cache.events[dependentKey] = events.length ? events : null
+    }
+
+    // Filter events before fetching data.
+    const filteredEvents = events
+      .sort(
+        ascending
+          ? (a, b) => Number(a.blockHeight) - Number(b.blockHeight)
+          : (a, b) => Number(b.blockHeight) - Number(a.blockHeight)
+      )
+      .slice(offset, limit === undefined ? undefined : offset + limit)
+
+    const eventsWithData = await GovProposalVote.findAll({
+      where: {
+        id: filteredEvents.map((event) => event.id),
+      },
+      order: [['blockHeight', ascending ? 'ASC' : 'DESC']],
+    })
+
+    // If no events found, return undefined.
+    if (!eventsWithData.length) {
+      return
+    }
+
+    // Call hook.
+    await onFetch?.(eventsWithData)
+
+    return eventsWithData.map(
+      ({ proposalId, voterAddress, data }): FormulaProposalVoteObject => ({
+        id: proposalId,
+        voter: voterAddress,
+        data,
+      })
+    )
+  }
+
+  const getProposalVoteCount: FormulaProposalVoteCountGetter = async (
+    proposalId
+  ) => {
+    const dependentKey =
+      getDependentKey(GovProposalVote.dependentKeyNamespace, proposalId) + ':'
+    dependentKeys?.push({
+      key: dependentKey,
+      prefix: true,
+    })
+
+    // Check cache.
+    const cachedEvents = cache.events[dependentKey]
+
+    const events =
+      // If undefined, we haven't tried to fetch them yet. If not undefined,
+      // either they exist or they don't (null).
+      cachedEvents !== undefined
+        ? ((cachedEvents ?? []) as GovProposalVote[])
+        : // Only load ID, proposal ID, voter address, and block height, so we
+          // can filter properly before loading all data. This must match the
+          // query in `getProposalVoteCount` since it uses the same cache key.
+          await GovProposalVote.findAll({
+            attributes: [
+              // DISTINCT ON is not directly supported by Sequelize, so we need
+              // to cast to unknown and back to string to insert this at the
+              // beginning of the query. This ensures we use the most recent
+              // version of each proposal.
+              Sequelize.literal(
+                'DISTINCT ON("proposalId", "voterAddress") \'\''
+              ) as unknown as string,
+              'proposalId',
+              'voterAddress',
+              'id',
+              'blockHeight',
+              'blockTimeUnixMs',
+            ],
+            where: {
+              proposalId,
+              blockHeight: blockHeightFilter,
+            },
+            order: [
+              // Needs to be first so we can use DISTINCT ON.
+              ['proposalId', 'ASC'],
+              ['voterAddress', 'ASC'],
+              ['blockHeight', 'DESC'],
+            ],
+          })
+
+    // Type-check. Should never happen assuming dependent key namespaces are
+    // unique across different event types.
+    if (events.some((event) => !(event instanceof GovProposalVote))) {
       throw new Error('Incorrect event type.')
     }
 
@@ -1408,6 +1629,9 @@ export const getEnv = ({
     getProposal,
     getProposals,
     getProposalCount,
+    getProposalVote,
+    getProposalVotes,
+    getProposalVoteCount,
 
     getCommunityPoolBalances,
 

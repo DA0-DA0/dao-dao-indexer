@@ -30,7 +30,7 @@ export type Webhook<
     /**
      * Required to filter events by type. This should be set to the class itself
      * of the type of event to consider. This can be any class that extends
-     * DependableEventModel, such as WasmStateEvent or GovStateEvent.
+     * DependableEventModel, such as WasmStateEvent or GovProposal.
      */
     EventType: new (...args: any) => Event
   } & Partial<{

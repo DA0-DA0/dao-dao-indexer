@@ -2,8 +2,12 @@ import { fromBase64 } from '@cosmjs/encoding'
 import {
   ProposalStatus,
   Proposal as ProposalV1,
+  Vote as VoteV1,
 } from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1/gov'
-import { Proposal as ProposalV1Beta1 } from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1beta1/gov'
+import {
+  Proposal as ProposalV1Beta1,
+  Vote as VoteV1Beta1,
+} from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1beta1/gov'
 
 /**
  * Potentially decode a base64 string for a gov proposal.
@@ -47,4 +51,22 @@ export const decodeGovProposal = (
     description,
     status,
   }
+}
+
+/**
+ * Potentially decode a base64 string for a gov proposal vote.
+ */
+export const decodeGovProposalVote = (
+  base64Data: string
+): VoteV1 | VoteV1Beta1 | undefined => {
+  let decoded: VoteV1 | VoteV1Beta1 | undefined
+  try {
+    decoded = VoteV1.decode(fromBase64(base64Data))
+  } catch {
+    try {
+      decoded = VoteV1Beta1.decode(fromBase64(base64Data))
+    } catch {}
+  }
+
+  return decoded
 }

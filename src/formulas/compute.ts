@@ -246,7 +246,7 @@ export const computeRange = async ({
         await Promise.all(
           getDependableEventModels().map(async (DependableEventModel) => {
             const namespacedDependentKeys = newDependentKeys.filter(({ key }) =>
-              key.startsWith(DependableEventModel.dependentKeyNamespace)
+              key.startsWith(DependableEventModel.dependentKeyNamespace + ':')
             )
             if (namespacedDependentKeys.length === 0) {
               return []

@@ -1,4 +1,8 @@
-import { ProposalStatus } from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1/gov'
+import {
+  ProposalStatus,
+  VoteOption,
+  WeightedVoteOption,
+} from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1/gov'
 import { BindOrReplacements, WhereOptions } from 'sequelize'
 
 import type { Contract, StakingSlashEvent, WasmTxEvent } from '@/db'
@@ -189,6 +193,30 @@ export type FormulaDecodedProposalObject = {
   votingEndTime?: number
 }
 
+export type FormulaProposalVoteObject = {
+  id: string
+  voter: string
+  data: string
+}
+
+export type FormulaDecodedProposalVoteObject = {
+  id: number
+  voter: string
+  data: string
+  /**
+   * If only one full-weight vote cast, this will be the chosen option.
+   */
+  vote?: VoteOption
+  /**
+   * All weighted votes.
+   */
+  weightedOptions: WeightedVoteOption[]
+  /**
+   * V1 votes may have metadata attached.
+   */
+  metadata?: string
+}
+
 export type FormulaProposalGetter = (
   proposalId: string
 ) => Promise<FormulaProposalObject | undefined>
@@ -200,6 +228,22 @@ export type FormulaProposalsGetter = (
 ) => Promise<FormulaProposalObject[] | undefined>
 
 export type FormulaProposalCountGetter = () => Promise<number>
+
+export type FormulaProposalVoteGetter = (
+  proposalId: string,
+  voter: string
+) => Promise<FormulaProposalVoteObject | undefined>
+
+export type FormulaProposalVotesGetter = (
+  proposalId: string,
+  ascending?: boolean,
+  limit?: number,
+  offset?: number
+) => Promise<FormulaProposalVoteObject[] | undefined>
+
+export type FormulaProposalVoteCountGetter = (
+  proposalId: string
+) => Promise<number>
 
 export type FormulaQuerier = (
   query: string,
@@ -241,6 +285,9 @@ export type Env<Args extends Record<string, string> = {}> = {
   getProposal: FormulaProposalGetter
   getProposals: FormulaProposalsGetter
   getProposalCount: FormulaProposalCountGetter
+  getProposalVote: FormulaProposalVoteGetter
+  getProposalVotes: FormulaProposalVotesGetter
+  getProposalVoteCount: FormulaProposalVoteCountGetter
   getCommunityPoolBalances: FormulaCommunityPoolBalancesGetter
 
   /**

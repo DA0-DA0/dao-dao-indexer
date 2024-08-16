@@ -1,6 +1,6 @@
 import { getConfiguredChainConfig } from '@dao-dao/utils'
 
-import { GovStateEvent, State, WasmStateEvent } from '@/db'
+import { GovProposal, State, WasmStateEvent } from '@/db'
 import { activeProposalModules } from '@/formulas/formulas/contract/daoCore/base'
 import { Webhook, WebhookMaker, WebhookType } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys, decodeGovProposal } from '@/utils'
@@ -144,13 +144,13 @@ export const makeDaoProposalStatusChanged: WebhookMaker<WasmStateEvent> = (
 
 // Broadcast to WebSockets when a gov proposal status changes, including
 // creation.
-export const makeGovProposalStatusChanged: WebhookMaker<GovStateEvent> = (
+export const makeGovProposalStatusChanged: WebhookMaker<GovProposal> = (
   config,
   state
 ) =>
   config.soketi && {
     filter: {
-      EventType: GovStateEvent,
+      EventType: GovProposal,
     },
     endpoint: {
       type: WebhookType.Soketi,

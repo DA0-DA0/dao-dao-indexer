@@ -27,6 +27,7 @@ export const setupMeilisearch = async () => {
     sortableAttributes,
   } of meilisearchIndexers) {
     const indexName = getMeilisearchIndexName(state, index)
+
     // Find or create index, and make sure its primary key is `id`.
     try {
       const clientIndex = await client.getIndex(indexName)
