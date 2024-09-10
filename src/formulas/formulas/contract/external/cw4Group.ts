@@ -54,3 +54,10 @@ export const admin = makeSimpleContractFormula<string | null>({
   // Null if no admin exists.
   fallback: null,
 })
+
+export const hooks = makeSimpleContractFormula<string[], { hooks: string[] }>({
+  transformation: 'hooks',
+  fallbackKeys: ['cw4-hooks'],
+  fallback: { hooks: [] },
+  transform: (hooks) => ({ hooks }),
+})

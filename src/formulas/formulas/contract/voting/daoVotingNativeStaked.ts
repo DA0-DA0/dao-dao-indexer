@@ -152,3 +152,13 @@ export const topStakers: ContractFormula<Staker[]> = {
     return stakers
   },
 }
+
+export const getHooks = makeSimpleContractFormula<
+  string[],
+  { hooks: string[] }
+>({
+  transformation: 'hooks',
+  fallbackKeys: ['hooks'],
+  fallback: { hooks: [] },
+  transform: (hooks) => ({ hooks }),
+})

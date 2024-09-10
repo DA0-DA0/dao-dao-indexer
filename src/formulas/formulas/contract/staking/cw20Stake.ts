@@ -302,3 +302,13 @@ export const topStakers: ContractFormula<
     }))
   },
 }
+
+export const getHooks = makeSimpleContractFormula<
+  string[],
+  { hooks: string[] }
+>({
+  transformation: 'hooks',
+  fallbackKeys: ['hooks'],
+  fallback: { hooks: [] },
+  transform: (hooks) => ({ hooks }),
+})

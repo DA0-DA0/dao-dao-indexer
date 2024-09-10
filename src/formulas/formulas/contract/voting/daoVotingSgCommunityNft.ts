@@ -182,3 +182,10 @@ export const allVotersWithVotingPower: ContractFormula<
     return voters
   },
 }
+
+export const hooks = makeSimpleContractFormula<string[], { hooks: string[] }>({
+  transformation: 'hooks',
+  fallbackKeys: ['hooks'],
+  fallback: { hooks: [] },
+  transform: (hooks) => ({ hooks }),
+})

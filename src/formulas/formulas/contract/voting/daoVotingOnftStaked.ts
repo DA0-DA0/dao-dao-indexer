@@ -263,3 +263,9 @@ export const ownersOfStakedNfts: ContractFormula<Record<string, string>> = {
     )
   },
 }
+export const hooks = makeSimpleContractFormula<string[], { hooks: string[] }>({
+  transformation: 'hooks',
+  fallbackKeys: ['hooks'],
+  fallback: { hooks: [] },
+  transform: (hooks) => ({ hooks }),
+})

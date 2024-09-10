@@ -19,4 +19,6 @@ const owner: Transformer = {
   getValue: (event) => event.valueJson.owner,
 }
 
-export default [info, ownership, owner]
+const hooks: Transformer = makeTransformer([], 'hooks')
+
+export default [info, ownership, owner, hooks]
