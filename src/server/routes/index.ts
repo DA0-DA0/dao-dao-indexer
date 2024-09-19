@@ -1,7 +1,11 @@
+import path from 'path'
+
 import Router from '@koa/router'
 import Koa from 'koa'
 import auth from 'koa-basic-auth'
 import mount from 'koa-mount'
+import serve from 'koa-static'
+import { koaSwagger } from 'koa2-swagger-ui'
 
 import { Config } from '@/types'
 
@@ -40,6 +44,18 @@ export const setupRouter = (
     )
     bullApp.use(makeBullBoardJobsMiddleware('/jobs'))
     app.use(mount('/jobs', bullApp))
+
+    // Swagger UI. This gets compiled to `/dist/server/serve.js`, so the
+    // relative path must be from there instead of `/dist/server/routes/`.
+    app.use(serve(path.join(__dirname, '../../static')))
+    app.use(
+      koaSwagger({
+        routePrefix: '/swagger',
+        swaggerOptions: {
+          url: '/swagger.json',
+        },
+      })
+    )
 
     // Indexer API.
     router.use(indexerRouter.routes(), indexerRouter.allowedMethods())
