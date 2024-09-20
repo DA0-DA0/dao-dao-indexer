@@ -29,10 +29,23 @@ type Proposal = {
 }
 
 export const approver = makeSimpleContractFormula<string>({
+  docs: {
+    description: 'retrieves the approver address for the pre-propose module',
+  },
   key: 'approver',
 })
 
 export const proposalCreatedAt: ContractFormula<string, { id: string }> = {
+  docs: {
+    description: 'retrieves the creation date of a proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getDateFirstTransformed,
@@ -65,6 +78,16 @@ export const proposalCreatedAt: ContractFormula<string, { id: string }> = {
 }
 
 export const proposalCompletedAt: ContractFormula<string, { id: string }> = {
+  docs: {
+    description: 'retrieves the completion date of a proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getDateFirstTransformed,
@@ -97,6 +120,16 @@ export const proposalCompletedAt: ContractFormula<string, { id: string }> = {
 }
 
 export const proposal: ContractFormula<Proposal, { id: string }> = {
+  docs: {
+    description: 'retrieves a proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal',
+        required: true,
+      },
+    ],
+  },
   compute: async (env) => {
     const {
       contractAddress,
@@ -141,6 +174,21 @@ export const pendingProposals: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of pending proposals',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'ID to start after when paginating',
+        required: false,
+      },
+    ],
+  },
   compute: async (env) => {
     const {
       contractAddress,
@@ -187,6 +235,21 @@ export const reversePendingProposals: ContractFormula<
     startBefore?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of pending proposals in reverse order',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+      },
+      {
+        name: 'startBefore',
+        description: 'ID to start before when paginating',
+        required: false,
+      },
+    ],
+  },
   compute: async (env) => {
     const {
       contractAddress,
@@ -233,6 +296,21 @@ export const completedProposals: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of completed proposals',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'ID to start after when paginating',
+        required: false,
+      },
+    ],
+  },
   compute: async (env) => {
     const {
       contractAddress,
@@ -279,6 +357,21 @@ export const reverseCompletedProposals: ContractFormula<
     startBefore?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of completed proposals in reverse order',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+      },
+      {
+        name: 'startBefore',
+        description: 'ID to start before when paginating',
+        required: false,
+      },
+    ],
+  },
   compute: async (env) => {
     const {
       contractAddress,
@@ -324,6 +417,17 @@ export const completedProposalIdForCreatedProposalId: ContractFormula<
     id: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the completed proposal ID for a given created proposal ID',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the created proposal',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,

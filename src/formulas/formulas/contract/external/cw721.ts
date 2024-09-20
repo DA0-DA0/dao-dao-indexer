@@ -24,14 +24,30 @@ type NftInfo = Pick<TokenInfo, 'token_uri' | 'extension'>
 type OwnerOfInfo = Pick<TokenInfo, 'owner' | 'approvals'>
 
 export const minter = makeSimpleContractFormula<string>({
+  docs: {
+    description: 'retrieves the minter address for the NFT contract',
+  },
   transformation: 'minter',
 })
 
 export const contractInfo = makeSimpleContractFormula<ContractInfo>({
+  docs: {
+    description: 'retrieves the contract info for the NFT contract',
+  },
   transformation: 'nftInfo',
 })
 
 export const nftInfo: ContractFormula<NftInfo, { tokenId: string }> = {
+  docs: {
+    description: 'retrieves the NFT info for a specific token ID',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to retrieve info for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -60,6 +76,16 @@ export const nftInfo: ContractFormula<NftInfo, { tokenId: string }> = {
 }
 
 export const ownerOf: ContractFormula<OwnerOfInfo, { tokenId: string }> = {
+  docs: {
+    description: 'retrieves the owner and approvals for a specific token ID',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to retrieve owner info for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -91,6 +117,17 @@ export const allNftInfo: ContractFormula<
   { access: OwnerOfInfo; info: NftInfo },
   { tokenId: string }
 > = {
+  docs: {
+    description:
+      'retrieves both NFT info and owner info for a specific token ID',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to retrieve all info for',
+        required: true,
+      },
+    ],
+  },
   compute: async (env) => {
     const access = await ownerOf.compute(env)
     const info = await nftInfo.compute(env)
@@ -110,6 +147,26 @@ export const allOperators: ContractFormula<
   Approval[],
   { owner: string; limit?: string; startAfter?: string }
 > = {
+  docs: {
+    description: 'retrieves all operators for a specific owner',
+    args: [
+      {
+        name: 'owner',
+        description: 'address of the owner to retrieve operators for',
+        required: true,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of operators to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'operator address to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -142,6 +199,9 @@ export const allOperators: ContractFormula<
 }
 
 export const numTokens: ContractFormula<number> = {
+  docs: {
+    description: 'retrieves the total number of tokens in the NFT contract',
+  },
   compute: async ({ contractAddress, getTransformationMatch }) =>
     (await getTransformationMatch<number>(contractAddress, 'numTokens'))
       ?.value ?? 0,
@@ -151,6 +211,26 @@ export const tokens: ContractFormula<
   string[],
   { owner: string; limit?: string; startAfter?: string }
 > = {
+  docs: {
+    description: 'retrieves all tokens owned by a specific address',
+    args: [
+      {
+        name: 'owner',
+        description: 'address of the owner to retrieve tokens for',
+        required: true,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of tokens to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'token ID to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMap,
@@ -184,6 +264,21 @@ export const allTokens: ContractFormula<
   string[],
   { limit?: string; startAfter?: string }
 > = {
+  docs: {
+    description: 'retrieves all tokens in the NFT contract',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of tokens to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'token ID to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMap,
@@ -210,6 +305,21 @@ export const approvalsForSpender: ContractFormula<
   Approval[],
   { tokenId: string; spender: string }
 > = {
+  docs: {
+    description: 'retrieves approvals for a specific spender on a token',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to check approvals for',
+        required: true,
+      },
+      {
+        name: 'spender',
+        description: 'address of the spender to check approvals for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -250,6 +360,16 @@ export const approvalsForSpender: ContractFormula<
 }
 
 export const approvals: ContractFormula<Approval[], { tokenId: string }> = {
+  docs: {
+    description: 'retrieves all approvals for a specific token',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to retrieve approvals for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,

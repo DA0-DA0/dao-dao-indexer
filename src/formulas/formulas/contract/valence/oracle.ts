@@ -4,6 +4,9 @@ import { dbKeyToKeys } from '@/utils'
 import { Pair, Price, PriceResponse } from './types'
 
 export const allPrices: ContractFormula<PriceResponse[] | undefined> = {
+  docs: {
+    description: 'retrieves all price pairs from the oracle',
+  },
   compute: async ({ contractAddress, getMap }) => {
     const pairMap = (await getMap(contractAddress, 'prices', {
       keyType: 'raw',
@@ -24,6 +27,17 @@ export const price: ContractFormula<
   PriceResponse | undefined,
   { pair: string }
 > = {
+  docs: {
+    description: 'retrieves the price for a specific pair from the oracle',
+    args: [
+      {
+        name: 'pair',
+        description:
+          'comma-separated pair of token denominations to get the price for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args }) => {
     if (!args.pair) {
       throw new Error('Must include the pair argument')
@@ -53,6 +67,16 @@ export const pricesOfDenom: ContractFormula<
     base_denom: string
   }
 > = {
+  docs: {
+    description: 'retrieves all prices for a specific base token',
+    args: [
+      {
+        name: 'base_denom',
+        description: 'base token denomination to get prices for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args }) => {
     if (!args.base_denom) {
       throw new Error('Must include the pair argument')

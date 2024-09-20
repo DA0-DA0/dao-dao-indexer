@@ -45,6 +45,10 @@ export type DumpState = {
 }
 
 export const dumpState: ContractFormula<DumpState> = {
+  docs: {
+    description:
+      'retrieves a lot of high-level information about a DAO, including its voting and proposal modules',
+  },
   compute: async (env) => {
     const [
       adminResponse,

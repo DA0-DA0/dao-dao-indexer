@@ -22,6 +22,9 @@ type JunoHomeMetadata = {
 // opposed to based on the current time, like the proposal status. Since we
 // ignore proposal status, this is fine.
 export const junoHomeMetadata: ContractFormula<JunoHomeMetadata> = {
+  docs: {
+    description: 'retrieves specific DAO metadata for the Juno website',
+  },
   filter: {
     codeIdsKeys: ['dao-core'],
   },

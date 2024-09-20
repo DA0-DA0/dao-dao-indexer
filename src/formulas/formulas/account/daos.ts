@@ -16,6 +16,10 @@ export const memberOf: AccountFormula<
     proposalCount: number
   }[]
 > = {
+  docs: {
+    description: 'retrieves DAOs where the account is a member',
+    args: [],
+  },
   compute: async (env) => {
     const {
       address: walletAddress,
@@ -210,6 +214,9 @@ export const memberOf: AccountFormula<
 }
 
 export const adminOf: AccountFormula<string[]> = {
+  docs: {
+    description: 'retrieves DAOs where the account is the admin',
+  },
   compute: async ({
     address: walletAddress,
     getTransformationMatches,

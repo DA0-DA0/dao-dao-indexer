@@ -39,6 +39,16 @@ interface AccountBalance {
 }
 
 export const balance: ContractFormula<string, { address: string }> = {
+  docs: {
+    description: 'retrieves the balance of a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check the balance for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     get,
@@ -66,6 +76,9 @@ export const balance: ContractFormula<string, { address: string }> = {
 }
 
 export const tokenInfo = makeSimpleContractFormula<TokenInfo>({
+  docs: {
+    description: 'retrieves the token info',
+  },
   transformation: 'tokenInfo',
   transform: (r) => ({
     ...r,
@@ -78,6 +91,9 @@ export const minter = makeSimpleContractFormula<
   TokenInfoResponse,
   Required<TokenInfoResponse>['mint'] | null
 >({
+  docs: {
+    description: 'retrieves the minter info',
+  },
   transformation: 'tokenInfo',
   transform: ({ mint }) => mint || null,
 })
@@ -86,6 +102,21 @@ export const allowance: ContractFormula<
   AllowanceResponse,
   { owner: string; spender: string }
 > = {
+  docs: {
+    description: 'retrieves the allowance for a spender from an owner',
+    args: [
+      {
+        name: 'owner',
+        description: 'address of the token owner',
+        required: true,
+      },
+      {
+        name: 'spender',
+        description: 'address of the spender',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { owner, spender } }) => {
     if (!owner) {
       throw new Error('missing `owner`')
@@ -116,6 +147,26 @@ export const ownerAllowances: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all allowances granted by an owner',
+    args: [
+      {
+        name: 'owner',
+        description: 'address of the token owner',
+        required: true,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of allowances to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -155,6 +206,26 @@ export const spenderAllowances: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all allowances granted to a spender',
+    args: [
+      {
+        name: 'spender',
+        description: 'address of the spender',
+        required: true,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of allowances to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -193,6 +264,21 @@ export const allAccounts: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all accounts that hold this token',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of accounts to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
@@ -213,6 +299,16 @@ export const topAccountBalances: ContractFormula<
     limit?: string
   }
 > = {
+  docs: {
+    description: 'retrieves the top account balances',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of account balances to return',
+        required: false,
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args: { limit } }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
@@ -231,6 +327,9 @@ export const topAccountBalances: ContractFormula<
 }
 
 export const marketingInfo = makeSimpleContractFormula({
+  docs: {
+    description: 'retrieves the marketing info',
+  },
   key: 'marketing_info',
   fallback: {},
 })
@@ -240,6 +339,9 @@ export const logoUrl = makeSimpleContractFormula<
   { url: string | undefined | null },
   string | null
 >({
+  docs: {
+    description: 'retrieves the logo URL',
+  },
   key: 'logo',
   fallback: null,
   transform: (logo) => (logo && 'url' in logo && logo.url) || null,
@@ -247,6 +349,10 @@ export const logoUrl = makeSimpleContractFormula<
 
 // Get DAOs that use this cw20 as their governance token.
 export const daos: ContractFormula<string[]> = {
+  docs: {
+    description:
+      'retrieves the DAOs that use this token as their governance token',
+  },
   compute: async (env) => {
     const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
 

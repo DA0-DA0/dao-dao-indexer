@@ -20,6 +20,22 @@ export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
   { address: string }
 > = {
+  docs: {
+    description:
+      'retrieves the voting power for an address at a specific block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to get voting power for',
+        required: true,
+      },
+      {
+        name: 'block',
+        description: 'block height to get voting power at',
+        required: true,
+      },
+    ],
+  },
   // Filter by code ID since someone may modify the contract. This is also used
   // in DAO core to match the voting module and pass the query through.
   filter: {
@@ -49,11 +65,32 @@ export const votingPowerAtHeight: ContractFormula<
 }
 
 export const votingPower: ContractFormula<string, { address: string }> = {
+  docs: {
+    description:
+      'retrieves the voting power for an address at the current block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to get voting power for',
+        required: true,
+      },
+    ],
+  },
   filter: votingPowerAtHeight.filter,
   compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
 export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+  docs: {
+    description: 'retrieves the total voting power at a specific block height',
+    args: [
+      {
+        name: 'block',
+        description: 'block height to get total power at',
+        required: true,
+      },
+    ],
+  },
   // Filter by code ID since someone may modify the contract. This is also used
   // in DAO core to match the voting module and pass the query through.
   filter: {
@@ -70,15 +107,31 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
 }
 
 export const totalPower: ContractFormula<string> = {
+  docs: {
+    description: 'retrieves the total voting power at the current block height',
+  },
   filter: totalPowerAtHeight.filter,
   compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
 export const dao = makeSimpleContractFormula<string>({
+  docs: {
+    description: 'retrieves the DAO address associated with the contract',
+  },
   transformation: 'dao',
 })
 
 export const claims: ContractFormula<any[], { address: string }> = {
+  docs: {
+    description: 'retrieves the claims for a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to get claims for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { address } }) => {
     if (!address) {
       throw new Error('missing `address`')
@@ -89,6 +142,9 @@ export const claims: ContractFormula<any[], { address: string }> = {
 }
 
 export const config = makeSimpleContractFormula<Config>({
+  docs: {
+    description: 'retrieves the configuration for the contract',
+  },
   transformation: 'config',
 })
 
@@ -99,6 +155,21 @@ export const listStakers: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of stakers with their balances',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of stakers to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after in ascending order',
+        required: false,
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
@@ -124,6 +195,9 @@ type Staker = StakerBalance & {
 }
 
 export const topStakers: ContractFormula<Staker[]> = {
+  docs: {
+    description: 'retrieves the top stakers sorted by voting power',
+  },
   compute: async (env) => {
     const { contractAddress, getMap } = env
 
@@ -157,6 +231,9 @@ export const getHooks = makeSimpleContractFormula<
   string[],
   { hooks: string[] }
 >({
+  docs: {
+    description: 'retrieves the hooks for the contract',
+  },
   transformation: 'hooks',
   fallbackKeys: ['hooks'],
   fallback: { hooks: [] },

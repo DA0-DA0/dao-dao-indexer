@@ -8,6 +8,9 @@ export const created: AccountFormula<
       proposalId: number
     }[]
 > = {
+  docs: {
+    description: 'retrieves proposals created by the account',
+  },
   compute: async ({ address: walletAddress, getTransformationMatches }) => {
     // Proposals for v1/v2 dao-proposal-single and v2 dao-proposal-multiple.
     const proposedTransformations =
@@ -30,6 +33,9 @@ export const votesCast: AccountFormula<
       proposalId: number
     } & Omit<VoteCast, 'voter'>)[]
 > = {
+  docs: {
+    description: 'retrieves votes cast by the account',
+  },
   compute: async ({ address: walletAddress, getTransformationMatches }) => {
     // Votes for dao-proposal-single and dao-proposal-multiple.
     const voteCastTransformations =
@@ -53,6 +59,10 @@ export const stats: AccountFormula<{
   created: number
   votesCast: number
 }> = {
+  docs: {
+    description:
+      'retrieves statistics about proposals created and votes cast by the account',
+  },
   compute: async (env) => {
     const [createdResponse, votesCastResponse] = await Promise.all([
       created.compute(env),

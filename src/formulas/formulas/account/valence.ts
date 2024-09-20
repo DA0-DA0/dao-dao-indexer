@@ -1,6 +1,9 @@
 import { AccountFormula } from '@/types'
 
 export const accounts: AccountFormula<string[]> = {
+  docs: {
+    description: 'retrieves valence accounts owned by this account',
+  },
   compute: async (env) => {
     const { address, getTransformationMatches, getCodeIdsForKeys } = env
 

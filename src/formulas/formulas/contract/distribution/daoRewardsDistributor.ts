@@ -8,6 +8,16 @@ export const distribution: ContractFormula<
     id: string
   }
 > = {
+  docs: {
+    description: 'retrieves a distribution',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the distribution to retrieve',
+        required: true,
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
@@ -41,6 +51,21 @@ export const distributions: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of distributions',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of distributions to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'ID to start listing distributions after',
+        required: false,
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },

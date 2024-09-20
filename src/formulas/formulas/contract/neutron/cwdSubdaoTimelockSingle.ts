@@ -3,10 +3,23 @@ import { ContractFormula } from '@/types'
 import { makeSimpleContractFormula } from '../../utils'
 
 export const config = makeSimpleContractFormula({
+  docs: {
+    description: 'retrieves the configuration of the contract',
+  },
   key: 'config',
 })
 
 export const proposal: ContractFormula<any, { id: string }> = {
+  docs: {
+    description: 'retrieves a proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal to retrieve',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { id } }) => {
     if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
@@ -29,6 +42,21 @@ export const listProposals: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of proposals',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'ID to start listing proposals after',
+        required: false,
+      },
+    ],
+  },
   compute: async (env) => {
     const {
       contractAddress,
@@ -57,6 +85,16 @@ export const listProposals: ContractFormula<
 }
 
 export const proposalExecutionError: ContractFormula<any, { id: string }> = {
+  docs: {
+    description: 'retrieves the execution error for a specific proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal to retrieve the execution error for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { id } }) => {
     if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')

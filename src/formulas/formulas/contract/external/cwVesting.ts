@@ -16,6 +16,9 @@ type ValidatorStake = {
 export { ownership } from '../common'
 
 export const info: ContractFormula<Vest> = makeSimpleContractFormula({
+  docs: {
+    description: 'retrieves vesting information',
+  },
   transformation: 'vesting',
   fallbackKeys: ['vesting'],
 })
@@ -30,6 +33,17 @@ export const vested: ContractFormula = makeSimpleContractFormula<
     t: string
   }
 >({
+  docs: {
+    description: 'calculates the vested amount at a given timestamp',
+    args: [
+      {
+        name: 't',
+        description:
+          'nanosecond timestamp to calculate vested amount at, defaulting to the current block',
+        required: false,
+      },
+    ],
+  },
   transformation: 'vesting',
   fallbackKeys: ['vesting'],
   transform: ({ vested, start_time }, { args: { t }, block }) => {
@@ -120,6 +134,9 @@ export const totalToVest: ContractFormula<Uint128> = makeSimpleContractFormula<
   Vest,
   Uint128
 >({
+  docs: {
+    description: 'calculates the total amount to be vested',
+  },
   transformation: 'vesting',
   fallbackKeys: ['vesting'],
   transform: ({ vested }) => {
@@ -141,6 +158,9 @@ export const totalToVest: ContractFormula<Uint128> = makeSimpleContractFormula<
 })
 
 export const vestDuration = makeSimpleContractFormula<Vest, NullableUint64>({
+  docs: {
+    description: 'calculates the duration of the vesting period',
+  },
   transformation: 'vesting',
   fallbackKeys: ['vesting'],
   transform: ({ vested }) => {
@@ -163,12 +183,19 @@ export const vestDuration = makeSimpleContractFormula<Vest, NullableUint64>({
 
 export const unbondingDurationSeconds: ContractFormula =
   makeSimpleContractFormula({
+    docs: {
+      description: 'calculates the unbonding duration in seconds',
+    },
     transformation: 'ubs',
     fallbackKeys: ['ubs'],
   })
 
 // The amount staked and unstaking for each validator over time.
 export const validatorStakes: ContractFormula<ValidatorStake[]> = {
+  docs: {
+    description:
+      'retrieves the amount staked and unstaking for each validator over time',
+  },
   compute: async ({ contractAddress, getMap }) => {
     const validatorsMap =
       (await getMap(contractAddress, 'validator', {

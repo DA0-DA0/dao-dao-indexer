@@ -4,6 +4,16 @@ export const remoteAddress: ContractFormula<
   string | null,
   { address: string }
 > = {
+  docs: {
+    description: 'retrieves the remote address for a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to get the remote address for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,

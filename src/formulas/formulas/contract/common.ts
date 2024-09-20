@@ -4,6 +4,9 @@ import { ContractInfo } from '../types'
 import { makeSimpleContractFormula } from '../utils'
 
 export const info: ContractFormula<ContractInfo> = {
+  docs: {
+    description: 'retrieves the contract info (name and version)',
+  },
   compute: async ({ contractAddress, getTransformationMatch }) => {
     const info = (
       await getTransformationMatch<ContractInfo>(contractAddress, 'info')
@@ -17,13 +20,20 @@ export const info: ContractFormula<ContractInfo> = {
   },
 }
 
-// cw-ownership
+// cw-ownable
 export const ownership = makeSimpleContractFormula({
+  docs: {
+    description:
+      'retrieves the contract ownership defined by the cw-ownable crate',
+  },
   transformation: 'ownership',
   fallbackKeys: ['ownership'],
 })
 
 export const instantiatedAt: ContractFormula<string> = {
+  docs: {
+    description: 'retrieves the contract instantiation timestamp',
+  },
   compute: async ({ contractAddress, getContract }) => {
     const timestamp = (
       await getContract(contractAddress)
@@ -42,6 +52,37 @@ export const instantiatedAt: ContractFormula<string> = {
 // keys="map_namespace":"key_in_map" or keys="map_namespace":1 depending on the
 // type of the key.
 export const item: ContractFormula<any, { key: string; keys: string }> = {
+  docs: {
+    description:
+      'retrieves a value stored in the contract state at the given key',
+    args: [
+      {
+        name: 'key',
+        description: '`Item` key to retrieve',
+        required: false,
+      },
+      {
+        name: 'keys',
+        description:
+          '`Map` key to retrieve (by joining JSON-stringified keys with a colon)',
+        required: false,
+        examples: {
+          simple: {
+            summary: 'access a string-keyed map',
+            value: '"map_namespace":"key_in_map"',
+          },
+          numeric: {
+            summary: 'access a numeric-keyed map',
+            value: '"map_namespace":1',
+          },
+          tuple: {
+            summary: 'access a map with a tuple key',
+            value: '"map_namespace":"address":1:"another_key"',
+          },
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { key, keys } }) => {
     if (key) {
       return await get(contractAddress, key)
@@ -71,6 +112,39 @@ export const map: ContractFormula<
   any,
   { key: string; keys: string; numeric: string }
 > = {
+  docs: {
+    description:
+      'retrieves a map stored in the contract state at the given key. if the map has a tuple key, you can access the map at any degree by omitting a suffix of the tuple key',
+    args: [
+      {
+        name: 'key',
+        description: '`Map` namespace to retrieve',
+        required: false,
+      },
+      {
+        name: 'keys',
+        description:
+          '`Map` namespace to retrieve (by joining JSON-stringified keys with a colon)',
+        required: false,
+        examples: {
+          simple: {
+            summary: 'access a normal map',
+            value: '"map_namespace"',
+          },
+          tuple: {
+            summary: 'access a map with a tuple namespace',
+            value: '"map_namespace":"address":1',
+          },
+        },
+      },
+      {
+        name: 'numeric',
+        description:
+          "whether or not the map's keys are numbers (otherwise treated as strings)",
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,

@@ -16,11 +16,18 @@ import { Ballot, Config, MultipleChoiceProposal } from './types'
 export * from '../base'
 
 export const config = makeSimpleContractFormula<Config>({
+  docs: {
+    description: 'retrieves the configuration of the proposal module',
+  },
   transformation: 'config',
   fallbackKeys: ['config'],
 })
 
 export const dao: ContractFormula<string> = {
+  docs: {
+    description:
+      'retrieves the DAO address associated with the proposal module',
+  },
   compute: async (env) => (await config.compute(env)).dao,
 }
 
@@ -28,6 +35,16 @@ export const proposal: ContractFormula<
   ProposalResponse<MultipleChoiceProposal> | null,
   { id: string }
 > = {
+  docs: {
+    description: 'retrieves a proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'proposal ID to retrieve',
+        required: true,
+      },
+    ],
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -99,6 +116,28 @@ export const listProposals: ContractFormula<
     filter?: ListProposalFilter
   }
 > = {
+  docs: {
+    description: 'retrieves a list of proposals',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'proposal ID to start after',
+        required: false,
+      },
+      // Filter by status.
+      {
+        name: 'filter',
+        description:
+          'set to `passed` to filter by proposals that were passed, including those that were executed',
+        required: false,
+      },
+    ],
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -157,6 +196,21 @@ export const reverseProposals: ContractFormula<
     startBefore?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of proposals in reverse order',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+      },
+      {
+        name: 'startBefore',
+        description: 'proposal ID to start before',
+        required: false,
+      },
+    ],
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -201,11 +255,17 @@ export const reverseProposals: ContractFormula<
 }
 
 export const proposalCount = makeSimpleContractFormula<number>({
+  docs: {
+    description: 'retrieves the number of proposals',
+  },
   key: 'proposal_count',
   fallback: 0,
 })
 
 export const nextProposalId: ContractFormula<number> = {
+  docs: {
+    description: 'retrieves the next proposal ID',
+  },
   compute: async (env) => (await proposalCount.compute(env)) + 1,
 }
 
@@ -213,6 +273,21 @@ export const vote: ContractFormula<
   VoteInfo<Ballot> | null,
   { proposalId: string; voter: string }
 > = {
+  docs: {
+    description: 'retrieves the vote for a given proposal and voter',
+    args: [
+      {
+        name: 'proposalId',
+        description: 'ID of the proposal',
+        required: true,
+      },
+      {
+        name: 'voter',
+        description: 'address of the voter',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -281,6 +356,26 @@ export const listVotes: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of votes for a given proposal',
+    args: [
+      {
+        name: 'proposalId',
+        description: 'ID of the proposal',
+        required: true,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of votes to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'voter address to start after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatches,
@@ -354,6 +449,16 @@ export const listVotes: ContractFormula<
 }
 
 export const proposalCreatedAt: ContractFormula<string, { id: string }> = {
+  docs: {
+    description: 'retrieves the creation date of a proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getDateFirstTransformed,
@@ -384,6 +489,16 @@ export const openProposals: ContractFormula<
   (ProposalResponse<MultipleChoiceProposal> & { voted?: boolean })[],
   { address?: string }
 > = {
+  docs: {
+    description: 'retrieves a list of open proposals',
+    args: [
+      {
+        name: 'address',
+        description: 'optional address to check if they have voted',
+        required: false,
+      },
+    ],
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {

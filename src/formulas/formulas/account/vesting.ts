@@ -3,6 +3,10 @@ import { Op } from 'sequelize'
 import { AccountFormula } from '@/types'
 
 export const ownerOf: AccountFormula<string[]> = {
+  docs: {
+    description:
+      'retrieves the addresses of cw-vesting contracts owned by the account or by cw1-whitelist contracts where the account is an admin',
+  },
   compute: async (env) => {
     const { address, getTransformationMatches, getCodeIdsForKeys } = env
 

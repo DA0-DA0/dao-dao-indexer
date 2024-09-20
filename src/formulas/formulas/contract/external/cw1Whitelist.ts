@@ -6,5 +6,8 @@ type AdminList = {
 }
 
 export const adminList = makeSimpleContractFormula<AdminList>({
+  docs: {
+    description: 'retrieves the list of addresses',
+  },
   key: 'admin_list',
 })

@@ -76,7 +76,7 @@ export const makeSimpleContractFormula = <
   /**
    * Docs for the formula.
    */
-  docs?: Formula['docs']
+  docs: Formula['docs']
   /**
    * Filter to apply.
    */

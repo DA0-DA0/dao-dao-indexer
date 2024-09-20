@@ -49,12 +49,13 @@ const flatten = (
   Object.keys(obj).reduce((acc, k) => {
     const pre = prefix.length ? prefix + '/' : ''
     if (
+      obj[k] &&
       typeof obj[k] === 'object' &&
       obj[k] !== null &&
       !Array.isArray(obj[k]) &&
       // formula objects have a compute function. if compute exists, do not
       // recurse, so that values are the formula objects.
-      !('compute' in obj[k] && typeof obj[k].compute === 'function')
+      !('compute' in obj[k]! && typeof obj[k]!.compute === 'function')
     ) {
       acc = {
         ...acc,

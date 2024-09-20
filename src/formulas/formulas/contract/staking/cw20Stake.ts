@@ -20,6 +20,9 @@ export type TotalStakedAtHeight = {
 }
 
 export const config = makeSimpleContractFormula<any>({
+  docs: {
+    description: 'retrieves the configuration of the staking contract',
+  },
   key: 'config',
 })
 
@@ -31,6 +34,22 @@ export const stakedBalanceAtHeight: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the staked balance object of an address at a specific block height, defaulting to the current block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check the staked balance for',
+        required: true,
+      },
+      {
+        name: 'block',
+        description: 'block height to get the staked balance at',
+        required: false,
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: [
       'cw20-stake',
@@ -99,6 +118,22 @@ export const stakedBalance: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the staked balance string of an address at a specific block height, defaulting to the current block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check the staked balance for',
+        required: true,
+      },
+      {
+        name: 'block',
+        description: 'block height to get the staked balance at',
+        required: false,
+      },
+    ],
+  },
   filter: stakedBalanceAtHeight.filter,
   compute: async (env) => (await stakedBalanceAtHeight.compute(env)).balance,
 }
@@ -110,6 +145,17 @@ export const totalStakedAtHeight: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the total staked amount at a specific block height, defaulting to the current block height',
+    args: [
+      {
+        name: 'block',
+        description: 'block height to get the total staked amount at',
+        required: false,
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: [
       'cw20-stake',
@@ -160,11 +206,32 @@ export const totalStaked: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the total staked amount at a specific block height, defaulting to the current block height',
+    args: [
+      {
+        name: 'block',
+        description: 'block height to get the total staked amount at',
+        required: false,
+      },
+    ],
+  },
   filter: totalStakedAtHeight.filter,
   compute: async (env) => (await totalStakedAtHeight.compute(env)).total,
 }
 
 export const stakedValue: ContractFormula<string, { address: string }> = {
+  docs: {
+    description: 'calculates the value of staked tokens for an address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to calculate the staked value for',
+        required: true,
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: ['cw20-stake'],
   },
@@ -193,9 +260,22 @@ export const stakedValue: ContractFormula<string, { address: string }> = {
 export const totalValue = makeSimpleContractFormula<string>({
   key: 'balance',
   fallback: '0',
+  docs: {
+    description: 'retrieves the total value of the staking contract',
+  },
 })
 
 export const claims: ContractFormula<any[], { address: string }> = {
+  docs: {
+    description: 'retrieves the claims for an address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to retrieve claims for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { address } }) => {
     if (!address) {
       throw new Error('missing `address`')
@@ -212,6 +292,21 @@ export const listStakers: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'lists stakers and their balances',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of stakers to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
@@ -240,6 +335,21 @@ export const topStakers: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description: 'retrieves the top stakers by balance',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of top stakers to return',
+        required: false,
+      },
+      {
+        name: 'oraichainStakingToken',
+        description: 'token address for oraichain-cw20-staking contract',
+        required: false,
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: [
       'cw20-stake',
@@ -307,6 +417,9 @@ export const getHooks = makeSimpleContractFormula<
   string[],
   { hooks: string[] }
 >({
+  docs: {
+    description: 'retrieves the hooks associated with the staking contract',
+  },
   transformation: 'hooks',
   fallbackKeys: ['hooks'],
   fallback: { hooks: [] },

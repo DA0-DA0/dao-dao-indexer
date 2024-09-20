@@ -12,16 +12,18 @@ type CollectionWithTokens = {
 }
 
 export const collections: AccountFormula<CollectionWithTokens[]> = {
+  docs: {
+    description:
+      'retrieves NFT collections with their NFTs owned by the account',
+    args: [],
+  },
   compute: async (env) => {
-    const { address: walletAddress, getTransformationMatches } = env
+    const { address, getTransformationMatches } = env
 
     // Potential NFT contracts where the wallet address has tokens.
     const matchingContracts =
       (
-        await getTransformationMatches(
-          undefined,
-          `tokenOwner:${walletAddress}:*`
-        )
+        await getTransformationMatches(undefined, `tokenOwner:${address}:*`)
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
     const uniqueAddresses = Array.from(new Set(matchingContracts))
@@ -49,7 +51,7 @@ export const collections: AccountFormula<CollectionWithTokens[]> = {
             ...env,
             contractAddress: collectionAddress,
             args: {
-              owner: walletAddress,
+              owner: address,
             },
           }),
         })
@@ -61,8 +63,13 @@ export const collections: AccountFormula<CollectionWithTokens[]> = {
 }
 
 export const stakedWithDaos: AccountFormula<CollectionWithTokens[]> = {
+  docs: {
+    description:
+      'retrieves NFT collections with their NFTs staked by the account with DAOs',
+    args: [],
+  },
   compute: async (env) => {
-    const { address: walletAddress, getTransformationMatches, getCodeIdsForKeys } = env
+    const { address, getTransformationMatches, getCodeIdsForKeys } = env
 
     // NFT voting contracts where the wallet address has staked tokens.
     const daoVotingCw721StakedCodeIds = getCodeIdsForKeys(
@@ -72,7 +79,7 @@ export const stakedWithDaos: AccountFormula<CollectionWithTokens[]> = {
       (
         await getTransformationMatches(
           undefined,
-          `stakedNft:${walletAddress}:*`,
+          `stakedNft:${address}:*`,
           undefined,
           daoVotingCw721StakedCodeIds.length > 0
             ? daoVotingCw721StakedCodeIds
@@ -80,7 +87,7 @@ export const stakedWithDaos: AccountFormula<CollectionWithTokens[]> = {
         )
       )?.map(({ contractAddress, name }) => ({
         votingContract: contractAddress,
-        tokenId: name.replace(`stakedNft:${walletAddress}:`, ''),
+        tokenId: name.replace(`stakedNft:${address}:`, ''),
       })) ?? []
 
     const uniqueVotingContracts = Array.from(

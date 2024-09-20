@@ -1,6 +1,9 @@
 import { ContractFormula } from '@/types'
 
 export const status: ContractFormula = {
+  docs: {
+    description: 'retrieves the status of the token swap',
+  },
   compute: async ({ contractAddress, get, prefetch }) => {
     await prefetch(contractAddress, 'counterparty_one', 'counterparty_two')
 

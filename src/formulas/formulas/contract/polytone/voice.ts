@@ -7,6 +7,16 @@ type SenderInfo = {
 }
 
 export const remoteController: ContractFormula<string, { address: string }> = {
+  docs: {
+    description: 'retrieves the remote controller for a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to get the remote controller for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -35,6 +45,16 @@ export const senderInfoForProxy: ContractFormula<
   SenderInfo,
   { address: string }
 > = {
+  docs: {
+    description: 'retrieves sender information for a proxy address',
+    args: [
+      {
+        name: 'address',
+        description: 'proxy address to get sender information for',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,

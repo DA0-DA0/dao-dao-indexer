@@ -10,6 +10,21 @@ export const listVestingContracts: ContractFormula<
   VestingContract[],
   { limit?: string; startAfter?: string }
 > = {
+  docs: {
+    description: 'lists vesting contracts',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of contracts to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'contract address to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
@@ -30,6 +45,21 @@ export const listVestingContractsReverse: ContractFormula<
   VestingContract[],
   { limit?: string; startBefore?: string }
 > = {
+  docs: {
+    description: 'lists vesting contracts in reverse order',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of contracts to return',
+        required: false,
+      },
+      {
+        name: 'startBefore',
+        description: 'contract address to start listing before',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -54,6 +84,26 @@ export const listVestingContractsByInstantiator: ContractFormula<
   VestingContract[],
   { instantiator: string; limit?: string; startAfter?: string }
 > = {
+  docs: {
+    description: 'lists vesting contracts by instantiator',
+    args: [
+      {
+        name: 'instantiator',
+        description: 'address of the instantiator',
+        required: true,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of contracts to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'contract address to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -83,6 +133,26 @@ export const listVestingContractsByInstantiatorReverse: ContractFormula<
   VestingContract[],
   { instantiator: string; limit?: string; startBefore?: string }
 > = {
+  docs: {
+    description: 'lists vesting contracts by instantiator in reverse order',
+    args: [
+      {
+        name: 'instantiator',
+        description: 'address of the instantiator',
+        required: true,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of contracts to return',
+        required: false,
+      },
+      {
+        name: 'startBefore',
+        description: 'contract address to start listing before',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -112,6 +182,26 @@ export const listVestingContractsByRecipient: ContractFormula<
   VestingContract[],
   { recipient: string; limit?: string; startAfter?: string }
 > = {
+  docs: {
+    description: 'lists vesting contracts by recipient',
+    args: [
+      {
+        name: 'recipient',
+        description: 'address of the recipient',
+        required: true,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of contracts to return',
+        required: false,
+      },
+      {
+        name: 'startAfter',
+        description: 'contract address to start listing after',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -141,6 +231,26 @@ export const listVestingContractsByRecipientReverse: ContractFormula<
   VestingContract[],
   { recipient: string; limit?: string; startBefore?: string }
 > = {
+  docs: {
+    description: 'lists vesting contracts by recipient in reverse order',
+    args: [
+      {
+        name: 'recipient',
+        description: 'address of the recipient',
+        required: true,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of contracts to return',
+        required: false,
+      },
+      {
+        name: 'startBefore',
+        description: 'contract address to start listing before',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -167,11 +277,18 @@ export const listVestingContractsByRecipientReverse: ContractFormula<
 }
 
 export const ownership: ContractFormula = {
+  docs: {
+    description: 'retrieves the ownership information of the contract',
+  },
   compute: async ({ contractAddress, get }) =>
     await get(contractAddress, 'ownership'),
 }
 
 export const codeId: ContractFormula = {
+  docs: {
+    description:
+      'retrieves the code ID of the cw-vesting contract that gets created by this factory',
+  },
   compute: async ({ contractAddress, get }) =>
     await get(contractAddress, 'pci'),
 }

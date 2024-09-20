@@ -3,6 +3,10 @@ import { ContractFormula } from '@/types'
 import { makeSimpleContractFormula } from '../../utils'
 
 export const note = makeSimpleContractFormula<string>({
+  docs: {
+    description:
+      'retrieves the note contract address this listener is listening to',
+  },
   key: 'note',
 })
 
@@ -10,6 +14,22 @@ export const result: ContractFormula<
   any,
   { initiator: string; initiatorMsg: string }
 > = {
+  docs: {
+    description:
+      'retrieves the result for a given initiator and initiator message',
+    args: [
+      {
+        name: 'initiator',
+        description: 'address of the initiator',
+        required: true,
+      },
+      {
+        name: 'initiatorMsg',
+        description: 'message (identifier) that was passed during execution',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     get,

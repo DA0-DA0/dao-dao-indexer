@@ -27,6 +27,17 @@ export const memberCount: ContractFormula<
     recursive?: string
   }
 > = {
+  docs: {
+    description:
+      'count of unique members in the DAO and optionally its SubDAOs',
+    args: [
+      {
+        name: 'recursive',
+        description: 'whether or not to recurse into SubDAOs. defaults to true',
+        required: false,
+      },
+    ],
+  },
   compute: async (env) => {
     const memberTree = await allMembers.compute(env)
     const uniqueMembers = new Set(
@@ -52,6 +63,16 @@ export const allMembers: ContractFormula<
     recursive?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all members of the DAO and optionally its SubDAOs',
+    args: [
+      {
+        name: 'recursive',
+        description: 'whether or not to recurse into SubDAOs. defaults to true',
+        required: false,
+      },
+    ],
+  },
   compute: async (env) => {
     const daos = [
       env.contractAddress,
@@ -95,6 +116,10 @@ export const allMembers: ContractFormula<
 }
 
 export const listMembers: ContractFormula<DaoMember[]> = {
+  docs: {
+    description:
+      'lists all members of the DAO with their voting power percentages',
+  },
   compute: async (env) => {
     const { contractMatchesCodeIdKeys } = env
 
@@ -230,6 +255,10 @@ export const listMembers: ContractFormula<DaoMember[]> = {
 
 // Date membership was last updated for a member-based DAO.
 export const lastMembershipChange: ContractFormula<string | null> = {
+  docs: {
+    description:
+      'retrieves the date membership was last updated for a member-based DAO',
+  },
   compute: async (env) => {
     // Get members.
     const votingModuleAddress = await votingModule.compute(env)

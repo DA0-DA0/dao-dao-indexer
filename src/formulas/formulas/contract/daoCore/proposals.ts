@@ -30,6 +30,17 @@ export const openProposals: ContractFormula<
   OpenProposal[],
   { address?: string }
 > = {
+  docs: {
+    description:
+      'retrieves open proposals and optionally voting status for a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'optional address to check voting status for',
+        required: false,
+      },
+    ],
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -99,6 +110,10 @@ const OPEN_PROPOSALS_MAP: Record<
 }
 
 export const proposalCount: ContractFormula<number> = {
+  docs: {
+    description:
+      'retrieves the total number of proposals across all active proposal modules',
+  },
   compute: async (env) => {
     const proposalModules = await activeProposalModules.compute(env)
 
@@ -157,6 +172,21 @@ export const allProposals: ContractFormula<
     recursive?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all proposals, optionally including SubDAOs',
+    args: [
+      {
+        name: 'filter',
+        description: 'filter to apply to the proposal list',
+        required: false,
+      },
+      {
+        name: 'recursive',
+        description: 'whether to recurse into SubDAOs (defaults to true)',
+        required: false,
+      },
+    ],
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -236,6 +266,10 @@ const LIST_PROPOSALS_MAP: Record<
 
 // Get date of most recent proposal event, either completion or creation.
 export const lastActivity: ContractFormula<string | null> = {
+  docs: {
+    description:
+      'retrieves the date of the most recent proposal event (completion or creation)',
+  },
   compute: async (env) => {
     const lastProposalAction = ((await allProposals.compute(env)) ?? [])
       .map(({ createdAt, completedAt }) =>

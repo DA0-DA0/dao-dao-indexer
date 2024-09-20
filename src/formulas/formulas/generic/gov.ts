@@ -8,6 +8,16 @@ import {
 import { decodeGovProposal, decodeGovProposalVote } from '@/utils'
 
 export const proposal: GenericFormula<FormulaProposalObject, { id: string }> = {
+  docs: {
+    description: 'retrieves a chain governance proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal to retrieve',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ getProposal, args: { id } }) => {
     if (!id) {
       throw new Error('missing `id`')
@@ -27,6 +37,16 @@ export const decodedProposal: GenericFormula<
   FormulaDecodedProposalObject,
   { id: string }
 > = {
+  docs: {
+    description: 'retrieves and decodes a chain governance proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal to retrieve and decode',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ getProposal, args: { id } }) => {
     if (!id) {
       throw new Error('missing `id`')
@@ -68,6 +88,22 @@ export const proposals: GenericFormula<
     limit?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves a list of chain governance proposals in ascending order',
+    args: [
+      {
+        name: 'offset',
+        description: 'number of proposals to skip',
+        required: false,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     getProposals,
     getProposalCount,
@@ -106,6 +142,22 @@ export const reverseProposals: GenericFormula<
     limit?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves a list of chain governance proposals in descending order',
+    args: [
+      {
+        name: 'offset',
+        description: 'number of proposals to skip',
+        required: false,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     getProposals,
     getProposalCount,
@@ -141,6 +193,22 @@ export const vote: GenericFormula<
     voter: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves a vote for a specific chain governance proposal and voter',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal',
+        required: true,
+      },
+      {
+        name: 'voter',
+        description: 'address of the voter',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ getProposalVote, args: { id, voter } }) => {
     if (!id) {
       throw new Error('missing `id`')
@@ -166,6 +234,22 @@ export const decodedVote: GenericFormula<
     voter: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves and decodes a vote for a specific chain governance proposal and voter',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal',
+        required: true,
+      },
+      {
+        name: 'voter',
+        description: 'address of the voter',
+        required: true,
+      },
+    ],
+  },
   compute: async ({ getProposalVote, args: { id, voter } }) => {
     if (!id) {
       throw new Error('missing `id`')
@@ -204,6 +288,27 @@ export const votes: GenericFormula<
     limit?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves a list of votes for a specific chain governance proposal in ascending order',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal',
+        required: true,
+      },
+      {
+        name: 'offset',
+        description: 'number of votes to skip',
+        required: false,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of votes to return',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     getProposalVotes,
     getProposalVoteCount,
@@ -247,6 +352,27 @@ export const reverseVotes: GenericFormula<
     limit?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves a list of votes for a specific chain governance proposal in descending order',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal',
+        required: true,
+      },
+      {
+        name: 'offset',
+        description: 'number of votes to skip',
+        required: false,
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of votes to return',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     getProposalVotes,
     getProposalVoteCount,

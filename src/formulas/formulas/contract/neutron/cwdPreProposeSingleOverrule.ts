@@ -9,6 +9,22 @@ export const overruleProposalId: ContractFormula<
     subdaoProposalId: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the overrule proposal ID for a given subDAO proposal ID and timelock address',
+    args: [
+      {
+        name: 'timelockAddress',
+        description: 'the address of the timelock contract',
+        required: true,
+      },
+      {
+        name: 'subdaoProposalId',
+        description: 'the ID of the subDAO proposal',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     get,

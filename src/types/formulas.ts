@@ -342,11 +342,11 @@ export type Formula<R = any, E extends Env = Env> = {
   /**
    * Docs for the formula.
    */
-  docs?: {
+  docs: {
     /**
      * Formula description.
      */
-    description?: string
+    description: string
     /**
      * Argument definitions.
      */

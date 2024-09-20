@@ -11,6 +11,9 @@
 // }
 
 // export const slashes: ValidatorFormula<Slash[]> = {
+//   docs: {
+//     description: 'retrieves slash events for a validator',
+//   },
 //   compute: async ({ validatorOperatorAddress, getSlashEvents }) =>
 //     ((await getSlashEvents(validatorOperatorAddress)) ?? []).map(
 //       ({

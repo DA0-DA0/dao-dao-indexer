@@ -74,11 +74,17 @@ export type SubDao = {
 }
 
 export const config = makeSimpleContractFormula<Config>({
+  docs: {
+    description: 'retrieves the DAO configuration',
+  },
   transformation: 'config',
   fallbackKeys: ['config_v2', 'config'],
 })
 
 export const proposalModules: ContractFormula<ProposalModuleWithInfo[]> = {
+  docs: {
+    description: 'retrieves all proposal modules for the DAO',
+  },
   compute: async (env) => {
     const { contractAddress, getTransformationMap, getMap } = env
 
@@ -148,6 +154,10 @@ export const proposalModules: ContractFormula<ProposalModuleWithInfo[]> = {
 
 export const activeProposalModules: ContractFormula<ProposalModuleWithInfo[]> =
   {
+    docs: {
+      description:
+        'retrieves all active (enabled) proposal modules for the DAO',
+    },
     compute: async (env) => {
       const modules = await proposalModules.compute(env)
       return modules.filter(
@@ -157,6 +167,9 @@ export const activeProposalModules: ContractFormula<ProposalModuleWithInfo[]> =
   }
 
 export const pauseInfo: ContractFormula<PauseInfoResponse> = {
+  docs: {
+    description: 'retrieves the pause status of the DAO',
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -178,6 +191,9 @@ export const pauseInfo: ContractFormula<PauseInfoResponse> = {
 export const paused = pauseInfo
 
 export const admin: ContractFormula<string | null> = {
+  docs: {
+    description: 'retrieves the admin address of the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMatch, get }) => {
     return (
       (await getTransformationMatch<string>(contractAddress, 'admin'))?.value ??
@@ -192,6 +208,9 @@ export const admin: ContractFormula<string | null> = {
 }
 
 export const adminNomination: ContractFormula<string | null> = {
+  docs: {
+    description: 'retrieves the nominated admin address of the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMatch, get }) =>
     (await getTransformationMatch<string>(contractAddress, 'nominatedAdmin'))
       ?.value ??
@@ -202,6 +221,9 @@ export const adminNomination: ContractFormula<string | null> = {
 }
 
 export const votingModule: ContractFormula<string> = {
+  docs: {
+    description: 'retrieves the voting module address of the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMatch, get }) => {
     const votingModule =
       (await getTransformationMatch<string>(contractAddress, 'votingModule'))
@@ -218,6 +240,16 @@ export const votingModule: ContractFormula<string> = {
 }
 
 export const item: ContractFormula<string | null, { key: string }> = {
+  docs: {
+    description: "retrieves a specific item from the DAO's storage",
+    args: [
+      {
+        name: 'key',
+        description: 'key of the item to retrieve',
+        required: true,
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -240,6 +272,9 @@ export const item: ContractFormula<string | null, { key: string }> = {
 }
 
 export const listItems: ContractFormula<[string, string][]> = {
+  docs: {
+    description: 'retrieves all items stored in the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMap, getMap }) =>
     Object.entries(
       (await getTransformationMap<string>(contractAddress, 'item')) ??
@@ -250,6 +285,10 @@ export const listItems: ContractFormula<[string, string][]> = {
 }
 
 export const cw20List: ContractFormula<string[]> = {
+  docs: {
+    description:
+      'retrieves the list of CW20 token addresses associated with the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMap, getMap }) =>
     Object.keys(
       (await getTransformationMap<string>(contractAddress, 'cw20')) ??
@@ -260,6 +299,10 @@ export const cw20List: ContractFormula<string[]> = {
 }
 
 export const cw721List: ContractFormula<string[]> = {
+  docs: {
+    description:
+      'retrieves the list of CW721 NFT addresses associated with the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMap, getMap }) =>
     Object.keys(
       (await getTransformationMap<string>(contractAddress, 'cw721')) ??
@@ -270,6 +313,9 @@ export const cw721List: ContractFormula<string[]> = {
 }
 
 export const cw20Balances: ContractFormula<Cw20Balance[]> = {
+  docs: {
+    description: 'retrieves the CW20 token balances for the DAO',
+  },
   compute: async (env) => {
     // cw20 addresses stored in contract list. backwards compatibility as the
     // frontend doesn't use this anymore.
@@ -300,6 +346,9 @@ export const cw20Balances: ContractFormula<Cw20Balance[]> = {
 }
 
 export const listSubDaos: ContractFormula<SubDao[]> = {
+  docs: {
+    description: 'retrieves the list of subDAOs recognized by the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMap, getMap }) => {
     // V2. V1 doesn't have sub DAOs; use empty map if undefined.
     const subDaoMap =
@@ -319,6 +368,9 @@ export const listSubDaos: ContractFormula<SubDao[]> = {
 }
 
 export const daoUri: ContractFormula<{ dao_uri: string | null }> = {
+  docs: {
+    description: 'retrieves the URI of the DAO',
+  },
   compute: async (env) => ({
     dao_uri: (await config.compute(env)).dao_uri ?? null,
   }),
@@ -341,6 +393,22 @@ export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
   { address: string }
 > = {
+  docs: {
+    description:
+      'retrieves the voting power at a specific block height for a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check voting power for',
+        required: true,
+      },
+      {
+        name: 'block',
+        description: 'block height to check voting power at',
+        required: true,
+      },
+    ],
+  },
   compute: async (env) => {
     const votingModuleAddress = (await votingModule.compute(env)) ?? ''
     if (!votingModuleAddress) {
@@ -369,6 +437,17 @@ export const votingPowerAtHeight: ContractFormula<
 }
 
 export const votingPower: ContractFormula<string, { address: string }> = {
+  docs: {
+    description:
+      'retrieves the voting power for a given address at the current block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check voting power for',
+        required: true,
+      },
+    ],
+  },
   compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
@@ -383,6 +462,16 @@ const TOTAL_POWER_AT_HEIGHT_FORMULAS: ContractFormula<TotalPowerAtHeight>[] = [
 ]
 
 export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+  docs: {
+    description: 'retrieves the total voting power at a specific block height',
+    args: [
+      {
+        name: 'block',
+        description: 'block height to check voting power at',
+        required: true,
+      },
+    ],
+  },
   compute: async (env) => {
     const votingModuleAddress = (await votingModule.compute(env)) ?? ''
     if (!votingModuleAddress) {
@@ -411,23 +500,36 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
 }
 
 export const totalPower: ContractFormula<string, { address: string }> = {
+  docs: {
+    description: 'retrieves the total voting power at the current block height',
+  },
   compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
-// Returns contracts with an admin state key set to this DAO. Hopefully these
-// are mostly DAO contracts.
+// Returns DAO contracts with an admin state key set to this DAO.
 export const potentialSubDaos: ContractFormula<
   {
     contractAddress: string
     info: ContractInfo | undefined
   }[]
 > = {
+  docs: {
+    description:
+      'retrieves potential subDAOs, which are DAOs whose admin state key is set to this DAO. these may or may not be recognized by the DAO',
+  },
   compute: async (env) => {
-    const { contractAddress, getTransformationMatches } = env
+    const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
+
+    const daoCodeIds = getCodeIdsForKeys('dao-core')
 
     const contractsWithAdmin =
       (
-        await getTransformationMatches(undefined, 'admin', contractAddress)
+        await getTransformationMatches(
+          undefined,
+          'admin',
+          contractAddress,
+          daoCodeIds
+        )
       )?.map((match) => match.contractAddress) ?? []
 
     const infos = await Promise.all(
@@ -448,6 +550,9 @@ export const potentialSubDaos: ContractFormula<
 
 // Map polytone note contract to the proxy contract for this DAO.
 export const polytoneProxies: ContractFormula<Record<string, string>> = {
+  docs: {
+    description: 'retrieves polytone proxies for the DAO',
+  },
   compute: async (env) => {
     const { contractAddress, getTransformationMatches } = env
     const notesWithRemoteAddress =
@@ -474,6 +579,10 @@ type ApprovalDao = {
 // Get all DAOs with dao-pre-propose-approval-single contracts that have this
 // DAO set as the approver.
 export const approvalDaos: ContractFormula<ApprovalDao[]> = {
+  docs: {
+    description:
+      'retrieves DAOs that have a pre-propose-approval contract whose approver is set to this DAO',
+  },
   compute: async (env) => {
     const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
 

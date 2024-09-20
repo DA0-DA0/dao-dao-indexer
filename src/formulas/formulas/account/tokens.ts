@@ -9,6 +9,9 @@ type ContractWithBalance = {
 }
 
 export const list: AccountFormula<ContractWithBalance[]> = {
+  docs: {
+    description: 'retrieves a list of CW20 token balances for the account',
+  },
   compute: async (env) => {
     const { address, getTransformationMatches } = env
 

@@ -8,6 +8,10 @@ export const featuredDaos: GenericFormula<
     order: number
   }[]
 > = {
+  docs: {
+    description:
+      'retrieves a list of featured DAOs for the current chain, with the order number from the entire featured list',
+  },
   dynamic: true,
   compute: async (env) =>
     allFeaturedDaos

@@ -12,6 +12,17 @@ export const ownedBy: AccountFormula<
     key?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves contracts (that use cw-ownable to manage ownership) where the account is the owner',
+    args: [
+      {
+        name: 'key',
+        description: 'optional code ID key to filter by',
+        required: false,
+      },
+    ],
+  },
   compute: async ({
     address,
     args: { key },

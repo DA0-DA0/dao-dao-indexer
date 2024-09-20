@@ -33,6 +33,10 @@ type VetoableProposalDaos = {
 }
 
 export const vetoableProposals: AccountFormula<VetoableProposalDaos[]> = {
+  docs: {
+    description:
+      'retrieves all proposals this account has the authority to veto',
+  },
   compute: async (env) => {
     const { address, getTransformationMatches, getCodeIdsForKeys } = env
 
