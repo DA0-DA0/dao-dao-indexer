@@ -1,6 +1,13 @@
 import { Options as PusherOptions } from 'pusher'
 import { SequelizeOptions } from 'sequelize-typescript'
 
+// env should be enum which support only dev prod and test
+export enum Environment {
+  Dev = 'dev',
+  Prod = 'prod',
+  Test = 'test',
+}
+
 type DB = { uri?: string } & Pick<
   SequelizeOptions,
   | 'dialect'
@@ -20,7 +27,9 @@ type DB = { uri?: string } & Pick<
 >
 
 export type Config = {
+  env: Environment
   home: string
+  traceFileName: string
   rpc: string
   bech32Prefix: string
   db: {

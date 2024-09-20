@@ -1,5 +1,4 @@
 import * as fs from 'fs'
-import path from 'path'
 
 import * as Sentry from '@sentry/node'
 import retry from 'async-await-retry'
@@ -18,7 +17,12 @@ import {
   setUpWebSocketNewBlockListener,
 } from '@/tracer'
 import { DbType, TracedEvent, TracedEventWithBlockTime } from '@/types'
-import { getCosmWasmClient, objectMatchesStructure } from '@/utils'
+import {
+  getCosmWasmClient,
+  getTraceFilePath,
+  objectMatchesStructure,
+  verifyTraceFile,
+} from '@/utils'
 
 const MAX_QUEUE_SIZE = 5000
 const MAX_BATCH_SIZE = 5000
@@ -55,21 +59,11 @@ if (config.sentryDsn) {
   })
 }
 
-const traceFile = path.join(config.home, 'trace.pipe')
+const traceFile = getTraceFilePath(config)
 
 const main = async () => {
-  // Ensure trace file exists.
-  if (!fs.existsSync(traceFile)) {
-    throw new Error(
-      `Trace file not found: ${traceFile}. Create it with "mkfifo ${traceFile}".`
-    )
-  }
-
-  // Verify trace file is FIFOs.
-  const stat = fs.statSync(traceFile)
-  if (!stat.isFIFO()) {
-    throw new Error(`Trace file is not a FIFO: ${traceFile}.`)
-  }
+  // Verify trace file exists and is a FIFO.
+  await verifyTraceFile(config, traceFile)
 
   // Read from trace file.
   await trace()

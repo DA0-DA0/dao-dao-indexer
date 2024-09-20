@@ -1,4 +1,6 @@
 {
+  "env": "test",
+  "traceFileName": "trace.pipe",
   "redis": {
     "host": "redis"
   },

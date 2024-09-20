@@ -1,6 +1,8 @@
 {
+  "env": "dev",
   "ignoreApiKey": true,
   "home": "./fake",
+  "traceFileName": "trace.txt",
   "rpc": "https://juno-testnet-rpc.polkachu.com",
   "bech32Prefix": "juno",
   "redis": {

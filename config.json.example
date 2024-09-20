@@ -1,5 +1,7 @@
 {
+  "env": "prod",
   "home": "~/.juno/indexer",
+  "traceFileName": "trace.pipe",
   "rpc": "https://juno-testnet-rpc.polkachu.com",
   "bech32Prefix": "juno",
   "redis": {

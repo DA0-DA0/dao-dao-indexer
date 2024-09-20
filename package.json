@@ -21,6 +21,7 @@
     "db:migrate:accounts": "MIGRATING_DB=true sequelize-cli db:migrate --env accounts",
     "clear-cache": "node dist/scripts/clearCache.js",
     "tracer": "node dist/scripts/tracer.js",
+    "tracer:populate": "node dist/scripts/populateTraceFile.js",
     "workers": "node dist/scripts/workers.js",
     "export:prod": "npm install && npm run build; pm2 delete all; npm run db:migrate:data && pm2 start ecosystem.config.js --only tracer,workers && pm2 save",
     "accountWebhooks": "node dist/scripts/accountWebhooks.js",
