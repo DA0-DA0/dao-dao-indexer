@@ -10,7 +10,7 @@ import { closeDb, loadDb } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
 import { DbType } from '@/types'
 
-import { setupRouter } from './routes'
+import { setUpRouter } from './routes'
 import { captureSentryException } from './sentry'
 
 // Parse arguments.
@@ -67,7 +67,7 @@ app.use(async (ctx, next) => {
 })
 
 // Add routes.
-setupRouter(app, {
+setUpRouter(app, {
   config,
   accounts,
 })

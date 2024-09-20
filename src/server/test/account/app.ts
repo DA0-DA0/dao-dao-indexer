@@ -2,11 +2,11 @@ import Koa from 'koa'
 
 import { loadConfig } from '@/config'
 
-import { setupRouter } from '../../routes'
+import { setUpRouter } from '../../routes'
 
 export const app = new Koa()
 
-setupRouter(app, {
+setUpRouter(app, {
   config: loadConfig(),
   accounts: true,
 })
