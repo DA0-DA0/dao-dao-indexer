@@ -11,6 +11,6 @@ describe('openapi', () => {
   })
 
   it('renders', async () => {
-    await request(app.callback()).get('/openapi').expect(200)
+    await request(app.callback()).get('/swagger').expect(200)
   })
 })

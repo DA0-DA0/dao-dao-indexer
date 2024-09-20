@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "version": "0.0.1",
-    "description": "This indexer API powers DAO DAO's frontend and various other services.",
-    "title": "DAO DAO Indexer",
+    "description": "The DAO DAO API is the primary interface for our custom-built state indexer. It replaces smart contract queries by making blockchain state readily available, and enhances [daodao.zone](https://daodao.zone) with features like real-time page updates, notifications, and search capabilities. This service both reduces our dependence on blockchain nodes and enables the creation of meta-queries that aggregate information across multiple contracts.",
+    "title": "DAO DAO API",
     "license": {
       "name": "GNU Affero General Public License v3.0 only",
       "identifier": "AGPL-3.0-only",
@@ -11,10 +11,6 @@
     }
   },
   "host": "indexer.daodao.zone",
-  "externalDocs": {
-    "description": "daodao.zone",
-    "url": "http://daodao.zone"
-  },
   "tags": [
     {
       "name": "contract",

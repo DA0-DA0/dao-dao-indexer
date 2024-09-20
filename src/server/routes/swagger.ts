@@ -24,9 +24,13 @@ export const setUpSwagger = (app: Koa) => {
   // Swagger UI.
   app.use(
     koaSwagger({
+      title: 'DAO DAO API',
+      hideTopbar: true,
       routePrefix: '/swagger',
+      favicon: 'https://daodao.zone/daodao.png',
       swaggerOptions: {
         url: './openapi.json',
+        deepLinking: true,
       },
     })
   )
