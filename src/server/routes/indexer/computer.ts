@@ -15,7 +15,7 @@ import {
   compute,
   computeRange,
   getTypedFormula,
-  typeIsFormulaType,
+  typeIsFormulaTypeOrWallet,
 } from '@/formulas'
 import { WasmCodeService } from '@/services/wasm-codes'
 import { Block, FormulaType, FormulaTypeValues } from '@/types'
@@ -55,19 +55,21 @@ export const computer: Router.Middleware = async (ctx) => {
   // Validate type, which may be one of the first two path items.
 
   // /:type/:address/:formula
-  if (typeIsFormulaType(paths[0])) {
+  if (typeIsFormulaTypeOrWallet(paths[0])) {
     key =
       typeof ctx.headers['x-api-key'] === 'string'
         ? ctx.headers['x-api-key']
         : undefined
-    type = paths[0]
+    // Backwards compatibility for deprecated wallet type.
+    type = paths[0] === 'wallet' ? FormulaType.Account : paths[0]
     address = paths[1]
     formulaName = paths.slice(2).join('/')
   }
   // /:key/:type/:address/:formula
-  else if (typeIsFormulaType(paths[1])) {
+  else if (typeIsFormulaTypeOrWallet(paths[1])) {
     key = paths[0]
-    type = paths[1]
+    // Backwards compatibility for deprecated wallet type.
+    type = paths[1] === 'wallet' ? FormulaType.Account : paths[1]
     address = paths[2]
     formulaName = paths.slice(3).join('/')
   } else {
@@ -76,31 +78,33 @@ export const computer: Router.Middleware = async (ctx) => {
     return
   }
 
-  // Validate API key.
-  if (!key) {
-    ctx.status = 401
-    ctx.body = 'missing API key'
-    return
-  }
+  // Validate API key when not on localhost.
+  let accountKey: AccountKey | null = null
+  if (ctx.hostname !== 'localhost') {
+    if (!key) {
+      ctx.status = 401
+      ctx.body = 'missing API key'
+      return
+    }
 
-  let accountKey
-  try {
-    accountKey = await AccountKey.findForKey(key)
-  } catch (err) {
-    console.error(err)
-    ctx.status = 500
-    ctx.body = 'internal server error'
-    return
-  }
+    try {
+      accountKey = await AccountKey.findForKey(key)
+    } catch (err) {
+      console.error(err)
+      ctx.status = 500
+      ctx.body = 'internal server error'
+      return
+    }
 
-  if (!accountKey) {
-    ctx.status = 401
-    ctx.body = 'invalid API key'
-    return
+    if (!accountKey) {
+      ctx.status = 401
+      ctx.body = 'invalid API key'
+      return
+    }
   }
 
   // If test account key, apply CORS and rate limit.
-  if (accountKey.isTest) {
+  if (accountKey?.isTest) {
     // CORS.
     if (ctx.req.headers['origin'] === 'http://localhost:3000') {
       ctx.set('Access-Control-Allow-Origin', 'http://localhost:3000')
@@ -352,7 +356,7 @@ export const computer: Router.Middleware = async (ctx) => {
     }
 
     // If times passed, compute blocks that correlate with those times.
-    if (times && !accountKey.isTest) {
+    if (times && !accountKey?.isTest) {
       // If times are negative, subtract from current time.
       if (times[0] < 0) {
         times[0] += BigInt(currentTime)
@@ -380,14 +384,15 @@ export const computer: Router.Middleware = async (ctx) => {
     // formula output that's valid at the provided start block depends on key
     // events that happened in the past. Each computation in the range indicates
     // what block it was first valid at, so the first one should too.
-    if (blocks && !accountKey.isTest) {
+    if (blocks && !accountKey?.isTest) {
       // Cap end block at latest block.
       if (blocks[1].height > BigInt(state.latestBlockHeight)) {
         blocks[1] = state.latestBlock
       }
 
-      // Use account credit, failing if unavailable.
+      // Use account credit, ignoring/failing if unavailable.
       if (
+        accountKey &&
         !(await accountKey.useCredit(
           AccountKeyCredit.creditsForBlockInterval(
             // Add 1n because both blocks are inclusive.
@@ -658,8 +663,8 @@ export const computer: Router.Middleware = async (ctx) => {
     } else {
       // Otherwise compute for single block.
 
-      // Use account credit, failing if unavailable.
-      if (!(await accountKey.useCredit())) {
+      // Use account credit, ignoring/failing if unavailable.
+      if (accountKey && !(await accountKey.useCredit())) {
         ctx.status = 402
         ctx.body = 'insufficient credits'
         return

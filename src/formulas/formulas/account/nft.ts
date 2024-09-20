@@ -1,6 +1,6 @@
 import groupBy from 'lodash.groupby'
 
-import { WalletFormula } from '@/types'
+import { AccountFormula } from '@/types'
 
 import { info } from '../contract/common'
 import { tokens } from '../contract/external/cw721'
@@ -11,9 +11,9 @@ type CollectionWithTokens = {
   tokens: string[]
 }
 
-export const collections: WalletFormula<CollectionWithTokens[]> = {
+export const collections: AccountFormula<CollectionWithTokens[]> = {
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches } = env
+    const { address: walletAddress, getTransformationMatches } = env
 
     // Potential NFT contracts where the wallet address has tokens.
     const matchingContracts =
@@ -60,9 +60,9 @@ export const collections: WalletFormula<CollectionWithTokens[]> = {
   },
 }
 
-export const stakedWithDaos: WalletFormula<CollectionWithTokens[]> = {
+export const stakedWithDaos: AccountFormula<CollectionWithTokens[]> = {
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches, getCodeIdsForKeys } = env
+    const { address: walletAddress, getTransformationMatches, getCodeIdsForKeys } = env
 
     // NFT voting contracts where the wallet address has staked tokens.
     const daoVotingCw721StakedCodeIds = getCodeIdsForKeys(

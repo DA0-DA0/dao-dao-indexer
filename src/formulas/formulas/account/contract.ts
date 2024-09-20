@@ -1,9 +1,9 @@
-import { WalletFormula } from '@/types'
+import { AccountFormula } from '@/types'
 
 /**
  * Get all contracts with the cw-ownable owner set to this address.
  */
-export const ownedBy: WalletFormula<
+export const ownedBy: AccountFormula<
   string[],
   {
     /**
@@ -13,7 +13,7 @@ export const ownedBy: WalletFormula<
   }
 > = {
   compute: async ({
-    walletAddress,
+    address,
     args: { key },
     getTransformationMatches,
     getCodeIdsForKeys,
@@ -22,7 +22,7 @@ export const ownedBy: WalletFormula<
       await getTransformationMatches(
         undefined,
         'owner',
-        walletAddress,
+        address,
         key ? getCodeIdsForKeys(key) : undefined
       )
     )?.map(({ contractAddress }) => contractAddress) ?? [],

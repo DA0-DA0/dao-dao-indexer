@@ -85,9 +85,8 @@ type Env = {
 
 For `contract` formulas, the address is passed in via the environment under the
 `contractAddress` key. For `validator` formulas, the address is passed in via
-the environment under the `validatorOperatorAddress` key. And for `wallet`
-formulas, the address is passed in via the environment under the `walletAddress`
-key.
+the environment under the `validatorOperatorAddress` key. And for `account`
+formulas, the address is passed in via the environment under the `address` key.
 
 ## How to write a formula
 
@@ -194,7 +193,7 @@ export const walletBalance: ContractFormula<number, { wallet: string }> = {
     }
 
     return await get(contractAddress, 'balance', wallet)
-  }
+  },
 }
 ```
 
@@ -289,21 +288,21 @@ export const paused: ContractFormula<PausedResponse> = {
 }
 ```
 
-Here's a complicated wallet formula that calls contract formulas and returns the
-list of all cw20 tokens that the wallet has a balance of. It uses transformed
-state to efficiently perform the query. Read the [transformers
+Here's a complicated account formula that calls contract formulas and returns
+the list of all cw20 tokens that the account has a balance of. It uses
+transformed state to efficiently perform the query. Read the [transformers
 docs](./transformers.md) for more information on how this works.
 
 ```ts
-export const list: WalletFormula<ContractWithBalance[]> = {
+export const list: AccountFormula<ContractWithBalance[]> = {
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches } = env
+    const { address, getTransformationMatches } = env
 
-    // Potential cw20 contracts where the wallet address has tokens.
+    // Potential cw20 contracts where the address has tokens.
     const matchingContracts =
       (await getTransformationMatches(
         undefined,
-        `hasBalance:${walletAddress}`,
+        `hasBalance:${address}`,
         true
       )) ?? []
 
@@ -322,7 +321,7 @@ export const list: WalletFormula<ContractWithBalance[]> = {
           ...env,
           contractAddress,
           args: {
-            address: env.walletAddress,
+            address: env.address,
           },
         })
       )

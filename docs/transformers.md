@@ -202,7 +202,7 @@ address has a balance, like so:
 ```ts
 const contractsWithBalance = await getTransformationMatches(
   undefined,
-  `hasBalance:${walletAddress}`,
+  `hasBalance:${address}`,
   true
 )
 ```

@@ -1,10 +1,10 @@
 import { Op } from 'sequelize'
 
-import { WalletFormula } from '@/types'
+import { AccountFormula } from '@/types'
 
-export const ownerOf: WalletFormula<string[]> = {
+export const ownerOf: AccountFormula<string[]> = {
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches, getCodeIdsForKeys } = env
+    const { address, getTransformationMatches, getCodeIdsForKeys } = env
 
     const cwVestingCodeIds = getCodeIdsForKeys('cw-vesting')
     if (!cwVestingCodeIds.length) {
@@ -18,7 +18,7 @@ export const ownerOf: WalletFormula<string[]> = {
           undefined,
           'admins',
           {
-            [Op.contains]: walletAddress,
+            [Op.contains]: address,
           },
           cw1WhitelistCodeIds
         )) ?? []
@@ -31,7 +31,7 @@ export const ownerOf: WalletFormula<string[]> = {
         undefined,
         'owner',
         [
-          walletAddress,
+          address,
           ...cw1WhitelistContracts.map(
             ({ contractAddress }) => contractAddress
           ),

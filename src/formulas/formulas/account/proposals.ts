@@ -1,14 +1,14 @@
-import { WalletFormula } from '@/types'
+import { AccountFormula } from '@/types'
 
 import { VoteCast } from '../types'
 
-export const created: WalletFormula<
+export const created: AccountFormula<
   | {
       proposalModule: string
       proposalId: number
     }[]
 > = {
-  compute: async ({ walletAddress, getTransformationMatches }) => {
+  compute: async ({ address: walletAddress, getTransformationMatches }) => {
     // Proposals for v1/v2 dao-proposal-single and v2 dao-proposal-multiple.
     const proposedTransformations =
       (await getTransformationMatches<{
@@ -24,13 +24,13 @@ export const created: WalletFormula<
   },
 }
 
-export const votesCast: WalletFormula<
+export const votesCast: AccountFormula<
   | ({
       proposalModule: string
       proposalId: number
     } & Omit<VoteCast, 'voter'>)[]
 > = {
-  compute: async ({ walletAddress, getTransformationMatches }) => {
+  compute: async ({ address: walletAddress, getTransformationMatches }) => {
     // Votes for dao-proposal-single and dao-proposal-multiple.
     const voteCastTransformations =
       (await getTransformationMatches<VoteCast>(
@@ -49,7 +49,7 @@ export const votesCast: WalletFormula<
   },
 }
 
-export const stats: WalletFormula<{
+export const stats: AccountFormula<{
   created: number
   votesCast: number
 }> = {

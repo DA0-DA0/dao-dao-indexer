@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { ContractFormula, WalletFormula } from '@/types'
+import { AccountFormula, ContractFormula } from '@/types'
 
 import {
   ProposalModuleWithInfo,
@@ -32,9 +32,9 @@ type VetoableProposalDaos = {
   proposalsWithModule: VetoableProposalsWithModule[]
 }
 
-export const vetoableProposals: WalletFormula<VetoableProposalDaos[]> = {
+export const vetoableProposals: AccountFormula<VetoableProposalDaos[]> = {
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches, getCodeIdsForKeys } = env
+    const { address, getTransformationMatches, getCodeIdsForKeys } = env
 
     // Get all cw1-whitelist contracts with this wallet as an admin.
     const cw1WhitelistCodeIds = getCodeIdsForKeys('cw1-whitelist')
@@ -43,7 +43,7 @@ export const vetoableProposals: WalletFormula<VetoableProposalDaos[]> = {
           undefined,
           'admins',
           {
-            [Op.contains]: walletAddress,
+            [Op.contains]: address,
           },
           cw1WhitelistCodeIds
         )) ?? []
@@ -54,10 +54,7 @@ export const vetoableProposals: WalletFormula<VetoableProposalDaos[]> = {
     const proposalsWithThisVetoer =
       (
         await Promise.all([
-          getTransformationMatches(
-            undefined,
-            `proposalVetoer:${walletAddress}:*`
-          ),
+          getTransformationMatches(undefined, `proposalVetoer:${address}:*`),
           ...cw1WhitelistContracts.map(({ contractAddress }) =>
             getTransformationMatches(
               undefined,

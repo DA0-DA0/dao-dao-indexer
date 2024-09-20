@@ -1,4 +1,4 @@
-import { WalletFormula } from '@/types'
+import { AccountFormula } from '@/types'
 
 import { info } from '../contract/common'
 import { balance } from '../contract/external/cw20'
@@ -8,15 +8,15 @@ type ContractWithBalance = {
   balance: string
 }
 
-export const list: WalletFormula<ContractWithBalance[]> = {
+export const list: AccountFormula<ContractWithBalance[]> = {
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches } = env
+    const { address, getTransformationMatches } = env
 
-    // Potential cw20 contracts where the wallet address has tokens.
+    // Potential cw20 contracts where the address has tokens.
     const matchingContracts =
       (await getTransformationMatches(
         undefined,
-        `hasBalance:${walletAddress}`,
+        `hasBalance:${address}`,
         true
       )) ?? []
 
@@ -35,7 +35,7 @@ export const list: WalletFormula<ContractWithBalance[]> = {
             ...env,
             contractAddress,
             args: {
-              address: env.walletAddress,
+              address: env.address,
             },
           })
         )

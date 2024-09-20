@@ -48,7 +48,7 @@ export const tvl: ContractFormula<
 
     // const cw20s = await cw20Balances.compute({
     //   ...env,
-    //   walletAddress: env.contractAddress,
+    //   address: env.contractAddress,
     // })
     // totalTvl += (
     //   await Promise.all(

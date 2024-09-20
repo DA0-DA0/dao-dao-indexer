@@ -1,13 +1,13 @@
 import { Op } from 'sequelize'
 
-import { WalletFormula } from '@/types'
+import { AccountFormula } from '@/types'
 
 import { info } from '../contract'
 import { config, votingModule } from '../contract/daoCore/base'
 import { proposalCount } from '../contract/daoCore/proposals'
 import { ContractInfo } from '../types'
 
-export const memberOf: WalletFormula<
+export const memberOf: AccountFormula<
   {
     dao: string
     info: ContractInfo
@@ -18,7 +18,7 @@ export const memberOf: WalletFormula<
 > = {
   compute: async (env) => {
     const {
-      walletAddress,
+      address: walletAddress,
       getTransformationMatches,
       getTransformationMatch,
       getCodeIdsForKeys,
@@ -209,9 +209,9 @@ export const memberOf: WalletFormula<
   },
 }
 
-export const adminOf: WalletFormula<string[]> = {
+export const adminOf: AccountFormula<string[]> = {
   compute: async ({
-    walletAddress,
+    address: walletAddress,
     getTransformationMatches,
     getCodeIdsForKeys,
   }) => {

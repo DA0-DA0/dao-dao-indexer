@@ -1,4 +1,5 @@
 import {
+  AccountFormula,
   ContractFormula,
   FormulaType,
   FormulaTypeValues,
@@ -6,14 +7,13 @@ import {
   NestedFormulaMap,
   TypedFormula,
   ValidatorFormula,
-  WalletFormula,
 } from '@/types'
 
 import {
+  accountFormulas,
   contractFormulas,
   genericFormulas,
   validatorFormulas,
-  walletFormulas,
 } from './formulas'
 
 const makeGetFormula =
@@ -44,17 +44,22 @@ const makeGetFormula =
       : undefined
   }
 
+const getAccountFormula = makeGetFormula<AccountFormula>(accountFormulas)
 const getContractFormula = makeGetFormula<ContractFormula>(contractFormulas)
 const getGenericFormula = makeGetFormula<GenericFormula>(genericFormulas)
 const getValidatorFormula = makeGetFormula<ValidatorFormula>(validatorFormulas)
-const getWalletFormula = makeGetFormula<WalletFormula>(walletFormulas)
 
 export const getTypedFormula = (
   type: FormulaType,
   formulaName: string
 ): TypedFormula => {
   const typeAndFormula =
-    type === FormulaType.Contract
+    type === FormulaType.Account
+      ? {
+          type,
+          formula: getAccountFormula(formulaName),
+        }
+      : type === FormulaType.Contract
       ? {
           type,
           formula: getContractFormula(formulaName),
@@ -69,11 +74,6 @@ export const getTypedFormula = (
           type,
           formula: getValidatorFormula(formulaName),
         }
-      : type === FormulaType.Wallet
-      ? {
-          type,
-          formula: getWalletFormula(formulaName),
-        }
       : undefined
 
   if (!typeAndFormula?.formula) {
@@ -86,5 +86,9 @@ export const getTypedFormula = (
   } as TypedFormula
 }
 
-export const typeIsFormulaType = (type: string): type is FormulaType =>
-  FormulaTypeValues.includes(type as FormulaType)
+export const typeIsFormulaTypeOrWallet = (
+  type: string
+): type is FormulaType | 'wallet' =>
+  FormulaTypeValues.includes(type as FormulaType) ||
+  // Backwards compatibility for deprecated wallet type.
+  type === 'wallet'
