@@ -18,15 +18,15 @@ Formulas are defined in the `data/formulas` directory.
 
 There are four types of formulas:
 
+- `account`
 - `contract`
 - `generic`
 - `validator`
-- `wallet`
 
 `generic` takes no address, whereas the others take an address. They are
 differentiated because they are expected to work slightly differently, though
 under the hood they are processed the same way. When using `generic` formulas,
-any address can be passed in, but it is ignored.
+any address can be passed in, and it is ignored.
 
 ## Formula Structure
 
@@ -80,6 +80,15 @@ type Env = {
   getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
   getSlashEvents: FormulaSlashEventsGetter
   getTxEvents: FormulaTxEventsGetter
+  getBalance: FormulaBalanceGetter
+  getBalances: FormulaBalancesGetter
+  getProposal: FormulaProposalGetter
+  getProposals: FormulaProposalsGetter
+  getProposalCount: FormulaProposalCountGetter
+  getProposalVote: FormulaProposalVoteGetter
+  getProposalVotes: FormulaProposalVotesGetter
+  getProposalVoteCount: FormulaProposalVoteCountGetter
+  getCommunityPoolBalances: FormulaCommunityPoolBalancesGetter
 }
 ```
 

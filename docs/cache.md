@@ -1,6 +1,11 @@
 # Cache
 
-The indexer relies heavily on caching to speed up queries. This document
+> _NOTE_: The cache is currently inefficient, and while it speeds up queries
+> significantly, the invalidation and revalidation logic causes the indexer to
+> fall behind. The indexer is quite fast without the cache, so we disabled it
+> for now. Fixing this would be awesome.
+
+The indexer utilizes caching to avoid unnecessary queries. This document
 explains how the cache works. The cache is represented by the
 [`Computation`](../src/db/models/Computation.ts) model in the database.
 
