@@ -1,7 +1,7 @@
-# wasmd-indexer
+# dao-dao-indexer
 
-A state-based indexer and API builder for the Cosmos SDK, primarily focusing on
-x/wasm.
+A state-based indexer and API builder for the Cosmos SDK built by and for [DAO
+DAO](https://daodao.zone).
 
 ## Setup
 
