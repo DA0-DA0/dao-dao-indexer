@@ -4,9 +4,9 @@ import Koa from 'koa'
 import { Config } from '@/types'
 
 import { accountRouter } from './account'
+import { setUpDocs } from './docs'
 import { indexerRouter } from './indexer'
 import { setUpBullBoard } from './jobs'
-import { setUpSwagger } from './swagger'
 
 export type SetupRouterOptions = {
   config: Config
@@ -34,7 +34,7 @@ export const setUpRouter = (
     setUpBullBoard(app, config)
 
     // Swagger API docs.
-    setUpSwagger(app)
+    setUpDocs(app)
 
     // Indexer API.
     router.use(indexerRouter.routes(), indexerRouter.allowedMethods())

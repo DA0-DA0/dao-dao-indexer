@@ -2,8 +2,8 @@ import request from 'supertest'
 
 import { app } from './app'
 
-describe('openapi', () => {
-  it('JSON file exists', async () => {
+describe('docs', () => {
+  it('OpenAPI JSON file exists', async () => {
     await request(app.callback())
       .get('/openapi.json')
       .expect(200)
@@ -11,6 +11,6 @@ describe('openapi', () => {
   })
 
   it('renders', async () => {
-    await request(app.callback()).get('/swagger').expect(200)
+    await request(app.callback()).get('/docs').expect(200)
   })
 })

@@ -4,7 +4,7 @@ import Koa from 'koa'
 import serve from 'koa-static'
 import { koaSwagger } from 'koa2-swagger-ui'
 
-export const setUpSwagger = (app: Koa) => {
+export const setUpDocs = (app: Koa) => {
   // Serve static folder, which contains the OpenAPI spec rendered by Swagger.
   app.use(
     serve(
@@ -26,7 +26,7 @@ export const setUpSwagger = (app: Koa) => {
     koaSwagger({
       title: 'DAO DAO API',
       hideTopbar: true,
-      routePrefix: '/swagger',
+      routePrefix: '/docs',
       favicon: 'https://daodao.zone/daodao.png',
       swaggerOptions: {
         url: './openapi.json',
