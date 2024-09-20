@@ -55,20 +55,20 @@ export const loadBankTests = (options: ComputerTestOptions) => {
 
       it('returns correct balance response for a single block', async () => {
         await request(app.callback())
-          .get('/wallet/address/bank/balance?block=1:1&denom=utest')
+          .get('/account/address/bank/balance?block=1:1&denom=utest')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect('"1000"')
 
         await request(app.callback())
-          .get('/wallet/address/bank/balance?block=3:3&denom=utest')
+          .get('/account/address/bank/balance?block=3:3&denom=utest')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect('"2000"')
 
         // Returns latest if no block.
         await request(app.callback())
-          .get('/wallet/address/bank/balance?denom=utest')
+          .get('/account/address/bank/balance?denom=utest')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect('"2000"')
@@ -76,7 +76,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
 
       it('returns correct balance response for multiple blocks', async () => {
         await request(app.callback())
-          .get('/wallet/address/bank/balance?blocks=1:1..3:3&denom=utest')
+          .get('/account/address/bank/balance?blocks=1:1..3:3&denom=utest')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -94,7 +94,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
 
         await request(app.callback())
           .get(
-            '/wallet/address/bank/balance?blocks=1:1..3:3&blockStep=2&denom=utest'
+            '/account/address/bank/balance?blocks=1:1..3:3&blockStep=2&denom=utest'
           )
           .set('x-api-key', options.apiKey)
           .expect(200)
@@ -116,7 +116,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
 
       it('returns correct balance response for multiple times', async () => {
         await request(app.callback())
-          .get('/wallet/address/bank/balance?times=1..3&denom=utest')
+          .get('/account/address/bank/balance?times=1..3&denom=utest')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -133,7 +133,9 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           ])
 
         await request(app.callback())
-          .get('/wallet/address/bank/balance?times=1..3&timeStep=2&denom=utest')
+          .get(
+            '/account/address/bank/balance?times=1..3&timeStep=2&denom=utest'
+          )
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -154,7 +156,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
 
       it('returns correct balances response for a single block', async () => {
         await request(app.callback())
-          .get('/wallet/address/bank/balances?block=1:1')
+          .get('/account/address/bank/balances?block=1:1')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect({
@@ -162,7 +164,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           })
 
         await request(app.callback())
-          .get('/wallet/address/bank/balances?block=3:3')
+          .get('/account/address/bank/balances?block=3:3')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect({
@@ -172,7 +174,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
 
         // Returns latest if no block.
         await request(app.callback())
-          .get('/wallet/address/bank/balances')
+          .get('/account/address/bank/balances')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect({
@@ -184,7 +186,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
 
       it('returns correct balances response for multiple blocks', async () => {
         await request(app.callback())
-          .get('/wallet/address/bank/balances?blocks=1:1..3:3')
+          .get('/account/address/bank/balances?blocks=1:1..3:3')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -213,7 +215,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           ])
 
         await request(app.callback())
-          .get('/wallet/address/bank/balances?blocks=1:1..3:3&blockStep=2')
+          .get('/account/address/bank/balances?blocks=1:1..3:3&blockStep=2')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -239,7 +241,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
 
       it('returns correct balances response for multiple times', async () => {
         await request(app.callback())
-          .get('/wallet/address/bank/balances?times=1..3')
+          .get('/account/address/bank/balances?times=1..3')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -268,7 +270,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           ])
 
         await request(app.callback())
-          .get('/wallet/address/bank/balances?times=1..3&timeStep=2')
+          .get('/account/address/bank/balances?times=1..3&timeStep=2')
           .set('x-api-key', options.apiKey)
           .expect(200)
           .expect([
@@ -348,7 +350,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
       it('returns correct balance response for a block range', async () => {
         await request(app.callback())
           .get(
-            '/wallet/juno10h0hc64jv006rr8qy0zhlu4jsxct8qwa0vtaleayh0ujz0zynf2s2r7v8q/bank/balances?times=1700544956761..1701717323952'
+            '/account/juno10h0hc64jv006rr8qy0zhlu4jsxct8qwa0vtaleayh0ujz0zynf2s2r7v8q/bank/balances?times=1700544956761..1701717323952'
           )
           .set('x-api-key', options.apiKey)
           .expect(200)

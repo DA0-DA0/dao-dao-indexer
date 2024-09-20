@@ -1,4 +1,5 @@
 {
+  "ignoreApiKey": true,
   "home": "./fake",
   "rpc": "https://uni-rpc.reece.sh",
   "bech32Prefix": "juno",

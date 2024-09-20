@@ -1,6 +1,7 @@
 import Router from '@koa/router'
 import { Op } from 'sequelize'
 
+import { loadConfig } from '@/config'
 import {
   AccountKey,
   AccountKeyCredit,
@@ -28,6 +29,8 @@ const testRateLimit = new Map<string, number>()
 const testCooldownSeconds = 10
 
 export const computer: Router.Middleware = async (ctx) => {
+  const { ignoreApiKey } = loadConfig()
+
   const {
     block: _block,
     blocks: _blocks,
@@ -78,9 +81,9 @@ export const computer: Router.Middleware = async (ctx) => {
     return
   }
 
-  // Validate API key when not on localhost.
+  // Validate API key.
   let accountKey: AccountKey | null = null
-  if (ctx.hostname !== 'localhost') {
+  if (!ignoreApiKey) {
     if (!key) {
       ctx.status = 401
       ctx.body = 'missing API key'

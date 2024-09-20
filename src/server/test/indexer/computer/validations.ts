@@ -35,7 +35,7 @@ export const loadValidationsTests = (options: ComputerTestOptions) => {
       await request(app.callback())
         .get('/no/type/here')
         .expect(400)
-        .expect('type must be one of: contract, generic, validator, wallet')
+        .expect('type must be one of: account, contract, generic, validator')
 
       // All types should be valid.
       await Promise.all(
@@ -45,7 +45,7 @@ export const loadValidationsTests = (options: ComputerTestOptions) => {
             .get(`/${type}/no/params`)
             .set('x-api-key', options.apiKey)
           expect(text1).not.toBe(
-            'type must be one of: contract, generic, validator, wallet'
+            'type must be one of: account, contract, generic, validator'
           )
 
           // Test valid when API key in path.
@@ -53,7 +53,7 @@ export const loadValidationsTests = (options: ComputerTestOptions) => {
             `/${options.apiKey}/${type}/no/params`
           )
           expect(text2).not.toBe(
-            'type must be one of: contract, generic, validator, wallet'
+            'type must be one of: account, contract, generic, validator'
           )
         })
       )
@@ -86,7 +86,7 @@ export const loadValidationsTests = (options: ComputerTestOptions) => {
 
     it('validates API key in path', async () => {
       await request(app.callback())
-        .get('//contract/address/formula')
+        .get('/contract/address/formula')
         .expect(401)
         .expect('missing API key')
 

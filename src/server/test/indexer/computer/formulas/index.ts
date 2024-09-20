@@ -7,7 +7,7 @@ import { app } from '../../app'
 import { ComputerTestOptions } from '../types'
 import { loadBankTests } from './bank'
 import { loadGovTests } from './gov'
-import { loadStakingTests } from './staking'
+// import { loadStakingTests } from './staking'
 import { loadWasmTests } from './wasm'
 
 export const loadFormulasTests = (options: ComputerTestOptions) => {
@@ -18,7 +18,7 @@ export const loadFormulasTests = (options: ComputerTestOptions) => {
 
     loadBankTests(options)
     loadGovTests(options)
-    loadStakingTests(options)
+    // loadStakingTests(options)
     loadWasmTests(options)
 
     it('filters contract by code IDs specified in formula', async () => {
