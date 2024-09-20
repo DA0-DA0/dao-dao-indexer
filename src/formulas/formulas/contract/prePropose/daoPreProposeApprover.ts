@@ -22,6 +22,9 @@ export const preProposeApprovalIdForApproverProposalId: ContractFormula<
         name: 'id',
         description: 'approver proposal ID',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -55,6 +58,9 @@ export const approverProposalIdForPreProposeApprovalId: ContractFormula<
         name: 'id',
         description: 'approval proposal ID',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

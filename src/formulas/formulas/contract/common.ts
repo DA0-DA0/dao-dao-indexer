@@ -60,12 +60,18 @@ export const item: ContractFormula<any, { key: string; keys: string }> = {
         name: 'key',
         description: '`Item` key to retrieve',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'keys',
         description:
           '`Map` key to retrieve (by joining JSON-stringified keys with a colon)',
         required: false,
+        schema: {
+          type: 'string',
+        },
         examples: {
           simple: {
             summary: 'access a string-keyed map',
@@ -120,12 +126,18 @@ export const map: ContractFormula<
         name: 'key',
         description: '`Map` namespace to retrieve',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'keys',
         description:
           '`Map` namespace to retrieve (by joining JSON-stringified keys with a colon)',
         required: false,
+        schema: {
+          type: 'string',
+        },
         examples: {
           simple: {
             summary: 'access a normal map',
@@ -142,6 +154,9 @@ export const map: ContractFormula<
         description:
           "whether or not the map's keys are numbers (otherwise treated as strings)",
         required: false,
+        schema: {
+          type: 'boolean',
+        },
       },
     ],
   },

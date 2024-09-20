@@ -13,6 +13,9 @@ export const daos: GenericFormula<string[], { denom: string }> = {
         name: 'denom',
         description: 'native token denomination',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

@@ -14,6 +14,9 @@ export const remoteController: ContractFormula<string, { address: string }> = {
         name: 'address',
         description: 'address to get the remote controller for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -52,6 +55,9 @@ export const senderInfoForProxy: ContractFormula<
         name: 'address',
         description: 'proxy address to get sender information for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

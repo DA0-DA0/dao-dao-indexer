@@ -22,11 +22,17 @@ export const result: ContractFormula<
         name: 'initiator',
         description: 'address of the initiator',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'initiatorMsg',
         description: 'message (identifier) that was passed during execution',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

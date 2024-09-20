@@ -46,6 +46,9 @@ export const balance: ContractFormula<string, { address: string }> = {
         name: 'address',
         description: 'address to check the balance for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -109,11 +112,17 @@ export const allowance: ContractFormula<
         name: 'owner',
         description: 'address of the token owner',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'spender',
         description: 'address of the spender',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -154,16 +163,25 @@ export const ownerAllowances: ContractFormula<
         name: 'owner',
         description: 'address of the token owner',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of allowances to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'address to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -213,16 +231,25 @@ export const spenderAllowances: ContractFormula<
         name: 'spender',
         description: 'address of the spender',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of allowances to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'address to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -271,11 +298,17 @@ export const allAccounts: ContractFormula<
         name: 'limit',
         description: 'maximum number of accounts to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'address to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -306,6 +339,9 @@ export const topAccountBalances: ContractFormula<
         name: 'limit',
         description: 'maximum number of account balances to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

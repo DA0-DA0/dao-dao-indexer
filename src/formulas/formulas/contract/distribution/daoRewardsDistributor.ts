@@ -15,6 +15,9 @@ export const distribution: ContractFormula<
         name: 'id',
         description: 'ID of the distribution to retrieve',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -58,11 +61,17 @@ export const distributions: ContractFormula<
         name: 'limit',
         description: 'maximum number of distributions to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'ID to start listing distributions after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

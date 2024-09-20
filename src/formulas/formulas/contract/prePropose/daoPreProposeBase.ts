@@ -31,6 +31,9 @@ export const depositInfo: ContractFormula<any, { proposalId: string }> = {
         name: 'proposalId',
         description: 'ID of the proposal to retrieve deposit information for',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

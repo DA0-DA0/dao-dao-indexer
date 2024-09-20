@@ -15,7 +15,6 @@ export const collections: AccountFormula<CollectionWithTokens[]> = {
   docs: {
     description:
       'retrieves NFT collections with their NFTs owned by the account',
-    args: [],
   },
   compute: async (env) => {
     const { address, getTransformationMatches } = env
@@ -66,7 +65,6 @@ export const stakedWithDaos: AccountFormula<CollectionWithTokens[]> = {
   docs: {
     description:
       'retrieves NFT collections with their NFTs staked by the account with DAOs',
-    args: [],
   },
   compute: async (env) => {
     const { address, getTransformationMatches, getCodeIdsForKeys } = env

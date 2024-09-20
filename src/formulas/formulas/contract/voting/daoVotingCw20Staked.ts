@@ -41,11 +41,17 @@ export const votingPowerAtHeight: ContractFormula<
         name: 'address',
         description: 'address to get voting power for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'block',
         description: 'block height to get voting power at',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -96,6 +102,9 @@ export const votingPower: ContractFormula<string, { address: string }> = {
         name: 'address',
         description: 'address to get voting power for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -111,6 +120,9 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
         name: 'block',
         description: 'block height to get total power at',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

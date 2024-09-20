@@ -35,6 +35,9 @@ export const memberCount: ContractFormula<
         name: 'recursive',
         description: 'whether or not to recurse into SubDAOs. defaults to true',
         required: false,
+        schema: {
+          type: 'boolean',
+        },
       },
     ],
   },
@@ -70,6 +73,9 @@ export const allMembers: ContractFormula<
         name: 'recursive',
         description: 'whether or not to recurse into SubDAOs. defaults to true',
         required: false,
+        schema: {
+          type: 'boolean',
+        },
       },
     ],
   },

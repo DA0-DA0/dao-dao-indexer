@@ -15,6 +15,9 @@ export const daos: GenericFormula<
         name: 'daysAgo',
         description: 'optionally only return results for the last N days',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -60,6 +63,9 @@ export const proposals: GenericFormula<
         name: 'daysAgo',
         description: 'optionally only return results for the last N days',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -102,6 +108,9 @@ export const votes: GenericFormula<
         name: 'daysAgo',
         description: 'optionally only return results for the last N days',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -144,6 +153,9 @@ export const uniqueVoters: GenericFormula<
         name: 'daysAgo',
         description: 'optionally only return results for the last N days',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

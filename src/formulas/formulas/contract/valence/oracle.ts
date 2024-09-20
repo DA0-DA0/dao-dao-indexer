@@ -35,6 +35,9 @@ export const price: ContractFormula<
         description:
           'comma-separated pair of token denominations to get the price for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -74,6 +77,9 @@ export const pricesOfDenom: ContractFormula<
         name: 'base_denom',
         description: 'base token denomination to get prices for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

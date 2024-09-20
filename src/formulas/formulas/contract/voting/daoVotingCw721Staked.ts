@@ -41,6 +41,9 @@ export const nftClaims: ContractFormula<any[], { address: string }> = {
         name: 'address',
         description: 'address to get NFT claims for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -65,11 +68,17 @@ export const votingPowerAtHeight: ContractFormula<
         name: 'address',
         description: 'address to get voting power for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'block',
         description: 'block height to get voting power at',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -110,6 +119,9 @@ export const votingPower: ContractFormula<string, { address: string }> = {
         name: 'address',
         description: 'address to get voting power for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -125,6 +137,9 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
         name: 'block',
         description: 'block height to get total power at',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -164,16 +179,25 @@ export const stakedNfts: ContractFormula<
         name: 'address',
         description: 'address to get staked NFTs for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of NFTs to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'token ID to start after in the list',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -214,6 +238,9 @@ export const staker: ContractFormula<string, { tokenId: string }> = {
         name: 'tokenId',
         description: 'token ID to get staker for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -263,6 +290,9 @@ export const topStakers: ContractFormula<
         name: 'limit',
         description: 'maximum number of stakers to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

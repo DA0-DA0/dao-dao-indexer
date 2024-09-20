@@ -41,6 +41,9 @@ export const vested: ContractFormula = makeSimpleContractFormula<
         description:
           'nanosecond timestamp to calculate vested amount at, defaulting to the current block',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

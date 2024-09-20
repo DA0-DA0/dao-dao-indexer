@@ -42,11 +42,17 @@ export const stakedBalanceAtHeight: ContractFormula<
         name: 'address',
         description: 'address to check the staked balance for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'block',
         description: 'block height to get the staked balance at',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -126,11 +132,17 @@ export const stakedBalance: ContractFormula<
         name: 'address',
         description: 'address to check the staked balance for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'block',
         description: 'block height to get the staked balance at',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -153,6 +165,9 @@ export const totalStakedAtHeight: ContractFormula<
         name: 'block',
         description: 'block height to get the total staked amount at',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -214,6 +229,9 @@ export const totalStaked: ContractFormula<
         name: 'block',
         description: 'block height to get the total staked amount at',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -229,6 +247,9 @@ export const stakedValue: ContractFormula<string, { address: string }> = {
         name: 'address',
         description: 'address to calculate the staked value for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -273,6 +294,9 @@ export const claims: ContractFormula<any[], { address: string }> = {
         name: 'address',
         description: 'address to retrieve claims for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -299,11 +323,17 @@ export const listStakers: ContractFormula<
         name: 'limit',
         description: 'maximum number of stakers to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'address to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -342,11 +372,9 @@ export const topStakers: ContractFormula<
         name: 'limit',
         description: 'maximum number of top stakers to return',
         required: false,
-      },
-      {
-        name: 'oraichainStakingToken',
-        description: 'token address for oraichain-cw20-staking contract',
-        required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

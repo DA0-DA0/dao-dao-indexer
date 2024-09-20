@@ -38,6 +38,9 @@ export const openProposals: ContractFormula<
         name: 'address',
         description: 'optional address to check voting status for',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -177,13 +180,20 @@ export const allProposals: ContractFormula<
     args: [
       {
         name: 'filter',
-        description: 'filter to apply to the proposal list',
+        description:
+          'set to `passed` to filter by proposals that were passed, including those that were executed',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'recursive',
         description: 'whether to recurse into SubDAOs (defaults to true)',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

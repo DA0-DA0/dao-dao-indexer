@@ -20,6 +20,9 @@ export const ownedBy: AccountFormula<
         name: 'key',
         description: 'optional code ID key to filter by',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

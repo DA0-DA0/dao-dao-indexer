@@ -28,11 +28,17 @@ export const votingPowerAtHeight: ContractFormula<
         name: 'address',
         description: 'address to get voting power for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'block',
         description: 'block height to get voting power at',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -73,6 +79,9 @@ export const votingPower: ContractFormula<string, { address: string }> = {
         name: 'address',
         description: 'address to get voting power for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -88,6 +97,9 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
         name: 'block',
         description: 'block height to get total power at',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -129,6 +141,9 @@ export const claims: ContractFormula<any[], { address: string }> = {
         name: 'address',
         description: 'address to get claims for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -162,11 +177,17 @@ export const listStakers: ContractFormula<
         name: 'limit',
         description: 'maximum number of stakers to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'address to start listing after in ascending order',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

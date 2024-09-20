@@ -8,6 +8,9 @@ export const balance: AccountFormula<string, { denom: string }> = {
         name: 'denom',
         description: 'denomination of the token to retrieve the balance for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

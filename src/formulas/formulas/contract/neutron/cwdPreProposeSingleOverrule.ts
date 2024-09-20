@@ -17,11 +17,17 @@ export const overruleProposalId: ContractFormula<
         name: 'timelockAddress',
         description: 'the address of the timelock contract',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'subdaoProposalId',
         description: 'the ID of the subDAO proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

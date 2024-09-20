@@ -18,7 +18,6 @@ export const memberOf: AccountFormula<
 > = {
   docs: {
     description: 'retrieves DAOs where the account is a member',
-    args: [],
   },
   compute: async (env) => {
     const {

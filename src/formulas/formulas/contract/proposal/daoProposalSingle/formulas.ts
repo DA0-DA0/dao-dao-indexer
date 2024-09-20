@@ -42,6 +42,9 @@ export const proposal: ContractFormula<
         name: 'id',
         description: 'proposal ID to retrieve',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -142,17 +145,26 @@ export const listProposals: ContractFormula<
         name: 'limit',
         description: 'maximum number of proposals to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'proposal ID to start after',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'filter',
         description:
           'set to `passed` to filter by proposals that were passed, including those that were executed',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -239,11 +251,17 @@ export const reverseProposals: ContractFormula<
         name: 'limit',
         description: 'maximum number of proposals to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startBefore',
         description: 'proposal ID to start before',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -335,11 +353,17 @@ export const vote: ContractFormula<
         name: 'proposalId',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'voter',
         description: 'address of the voter',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -418,16 +442,25 @@ export const listVotes: ContractFormula<
         name: 'proposalId',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of votes to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'voter address to start after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -511,6 +544,9 @@ export const proposalCreatedAt: ContractFormula<string, { id: string }> = {
         name: 'id',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -552,6 +588,9 @@ export const openProposals: ContractFormula<
         name: 'address',
         description: 'optional address to check if they have voted',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

@@ -88,7 +88,9 @@ const makeFormulaDoc = (
                   in: 'path',
                   description: `${type} address`,
                   required: true,
-                  type: 'string',
+                  schema: {
+                    type: 'string' as const,
+                  },
                 },
               ]
             : []),

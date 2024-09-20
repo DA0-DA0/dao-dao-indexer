@@ -247,6 +247,9 @@ export const item: ContractFormula<string | null, { key: string }> = {
         name: 'key',
         description: 'key of the item to retrieve',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -401,11 +404,17 @@ export const votingPowerAtHeight: ContractFormula<
         name: 'address',
         description: 'address to check voting power for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'block',
         description: 'block height to check voting power at',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -445,6 +454,9 @@ export const votingPower: ContractFormula<string, { address: string }> = {
         name: 'address',
         description: 'address to check voting power for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -469,6 +481,9 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
         name: 'block',
         description: 'block height to check voting power at',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

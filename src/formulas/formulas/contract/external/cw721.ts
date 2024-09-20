@@ -45,6 +45,9 @@ export const nftInfo: ContractFormula<NftInfo, { tokenId: string }> = {
         name: 'tokenId',
         description: 'ID of the token to retrieve info for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -83,6 +86,9 @@ export const ownerOf: ContractFormula<OwnerOfInfo, { tokenId: string }> = {
         name: 'tokenId',
         description: 'ID of the token to retrieve owner info for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -125,6 +131,9 @@ export const allNftInfo: ContractFormula<
         name: 'tokenId',
         description: 'ID of the token to retrieve all info for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -154,16 +163,25 @@ export const allOperators: ContractFormula<
         name: 'owner',
         description: 'address of the owner to retrieve operators for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of operators to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'operator address to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -218,16 +236,25 @@ export const tokens: ContractFormula<
         name: 'owner',
         description: 'address of the owner to retrieve tokens for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of tokens to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'token ID to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -271,11 +298,17 @@ export const allTokens: ContractFormula<
         name: 'limit',
         description: 'maximum number of tokens to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'token ID to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -312,11 +345,17 @@ export const approvalsForSpender: ContractFormula<
         name: 'tokenId',
         description: 'ID of the token to check approvals for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'spender',
         description: 'address of the spender to check approvals for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -367,6 +406,9 @@ export const approvals: ContractFormula<Approval[], { tokenId: string }> = {
         name: 'tokenId',
         description: 'ID of the token to retrieve approvals for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

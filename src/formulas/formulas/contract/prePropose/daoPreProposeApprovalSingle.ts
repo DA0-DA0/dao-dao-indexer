@@ -43,6 +43,9 @@ export const proposalCreatedAt: ContractFormula<string, { id: string }> = {
         name: 'id',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -85,6 +88,9 @@ export const proposalCompletedAt: ContractFormula<string, { id: string }> = {
         name: 'id',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -127,6 +133,9 @@ export const proposal: ContractFormula<Proposal, { id: string }> = {
         name: 'id',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -181,11 +190,17 @@ export const pendingProposals: ContractFormula<
         name: 'limit',
         description: 'maximum number of proposals to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'ID to start after when paginating',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -242,11 +257,17 @@ export const reversePendingProposals: ContractFormula<
         name: 'limit',
         description: 'maximum number of proposals to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startBefore',
         description: 'ID to start before when paginating',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -303,11 +324,17 @@ export const completedProposals: ContractFormula<
         name: 'limit',
         description: 'maximum number of proposals to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'ID to start after when paginating',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -364,11 +391,17 @@ export const reverseCompletedProposals: ContractFormula<
         name: 'limit',
         description: 'maximum number of proposals to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startBefore',
         description: 'ID to start before when paginating',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -425,6 +458,9 @@ export const completedProposalIdForCreatedProposalId: ContractFormula<
         name: 'id',
         description: 'ID of the created proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

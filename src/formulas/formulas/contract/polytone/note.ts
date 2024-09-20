@@ -11,6 +11,9 @@ export const remoteAddress: ContractFormula<
         name: 'address',
         description: 'address to get the remote address for',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

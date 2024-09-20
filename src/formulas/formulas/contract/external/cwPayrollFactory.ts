@@ -17,11 +17,17 @@ export const listVestingContracts: ContractFormula<
         name: 'limit',
         description: 'maximum number of contracts to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'contract address to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -52,11 +58,17 @@ export const listVestingContractsReverse: ContractFormula<
         name: 'limit',
         description: 'maximum number of contracts to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startBefore',
         description: 'contract address to start listing before',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -91,16 +103,25 @@ export const listVestingContractsByInstantiator: ContractFormula<
         name: 'instantiator',
         description: 'address of the instantiator',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of contracts to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'contract address to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -140,16 +161,25 @@ export const listVestingContractsByInstantiatorReverse: ContractFormula<
         name: 'instantiator',
         description: 'address of the instantiator',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of contracts to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startBefore',
         description: 'contract address to start listing before',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -189,16 +219,25 @@ export const listVestingContractsByRecipient: ContractFormula<
         name: 'recipient',
         description: 'address of the recipient',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of contracts to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'contract address to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -238,16 +277,25 @@ export const listVestingContractsByRecipientReverse: ContractFormula<
         name: 'recipient',
         description: 'address of the recipient',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of contracts to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startBefore',
         description: 'contract address to start listing before',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

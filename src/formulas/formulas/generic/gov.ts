@@ -15,6 +15,9 @@ export const proposal: GenericFormula<FormulaProposalObject, { id: string }> = {
         name: 'id',
         description: 'ID of the proposal to retrieve',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -44,6 +47,9 @@ export const decodedProposal: GenericFormula<
         name: 'id',
         description: 'ID of the proposal to retrieve and decode',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -96,11 +102,17 @@ export const proposals: GenericFormula<
         name: 'offset',
         description: 'number of proposals to skip',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of proposals to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -150,11 +162,17 @@ export const reverseProposals: GenericFormula<
         name: 'offset',
         description: 'number of proposals to skip',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of proposals to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -201,11 +219,17 @@ export const vote: GenericFormula<
         name: 'id',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'voter',
         description: 'address of the voter',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -242,11 +266,17 @@ export const decodedVote: GenericFormula<
         name: 'id',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'voter',
         description: 'address of the voter',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -296,16 +326,25 @@ export const votes: GenericFormula<
         name: 'id',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'offset',
         description: 'number of votes to skip',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of votes to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -360,16 +399,25 @@ export const reverseVotes: GenericFormula<
         name: 'id',
         description: 'ID of the proposal',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'offset',
         description: 'number of votes to skip',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'limit',
         description: 'maximum number of votes to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },

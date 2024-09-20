@@ -15,6 +15,9 @@ export const member: ContractFormula<number, { address: string }> = {
         name: 'address',
         description: 'address of the member to query',
         required: true,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },
@@ -41,11 +44,17 @@ export const listMembers: ContractFormula<
         name: 'limit',
         description: 'maximum number of members to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'address to start listing after',
         required: false,
+        schema: {
+          type: 'string',
+        },
       },
     ],
   },

@@ -17,6 +17,9 @@ export const proposal: ContractFormula<any, { id: string }> = {
         name: 'id',
         description: 'ID of the proposal to retrieve',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -49,11 +52,17 @@ export const listProposals: ContractFormula<
         name: 'limit',
         description: 'maximum number of proposals to return',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
       {
         name: 'startAfter',
         description: 'ID to start listing proposals after',
         required: false,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
@@ -92,6 +101,9 @@ export const proposalExecutionError: ContractFormula<any, { id: string }> = {
         name: 'id',
         description: 'ID of the proposal to retrieve the execution error for',
         required: true,
+        schema: {
+          type: 'integer',
+        },
       },
     ],
   },
