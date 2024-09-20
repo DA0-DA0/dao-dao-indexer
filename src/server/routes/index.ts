@@ -45,9 +45,21 @@ export const setupRouter = (
     bullApp.use(makeBullBoardJobsMiddleware('/jobs'))
     app.use(mount('/jobs', bullApp))
 
-    // Swagger UI. This gets compiled to `/dist/server/serve.js`, so the
-    // relative path must be from there instead of `/dist/server/routes/`.
-    app.use(serve(path.join(__dirname, '../../static')))
+    // Swagger UI.
+    app.use(
+      serve(
+        path.join(
+          __dirname,
+          process.env.NODE_ENV === 'test'
+            ? '../../../static'
+            : // This gets compiled to `/dist/server/serve.js`, so the
+              // relative path must be from there instead of
+              // `/dist/server/routes/`. Tests run the TypeScript directly, so
+              // they need the real path above.
+              '../../static'
+        )
+      )
+    )
     app.use(
       koaSwagger({
         routePrefix: '/openapi',

@@ -12,6 +12,7 @@
     "coverage": "npm run test -- --coverage",
     "build": "tsup",
     "build:watch": "tsup --watch",
+    "postbuild": "npm run autodoc",
     "db:setup": "node dist/scripts/db/setup.js",
     "db:seed": "node dist/scripts/db/seed.js",
     "db:seed:dev": "node dist/scripts/db/seedDev.js",
