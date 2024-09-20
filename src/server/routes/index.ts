@@ -50,9 +50,9 @@ export const setupRouter = (
     app.use(serve(path.join(__dirname, '../../static')))
     app.use(
       koaSwagger({
-        routePrefix: '/swagger',
+        routePrefix: '/openapi',
         swaggerOptions: {
-          url: '/swagger.json',
+          url: '/openapi.json',
         },
       })
     )
