@@ -101,13 +101,13 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO readonly_use
 ### Find the code IDs for a given Event key
 
 ```sql
-SELECT DISTINCT ON("codeId") "codeId", "value" FROM "Events" INNER JOIN "Contracts" ON "Contracts"."address" = "Events"."contractAddress" WHERE "key" = '' ORDER BY "codeId" ASC;
+SELECT DISTINCT ON("codeId") "codeId", "value" FROM "WasmStateEvents" INNER JOIN "Contracts" ON "Contracts"."address" = "WasmStateEvents"."contractAddress" WHERE "key" = '' ORDER BY "codeId" ASC;
 ```
 
 Find by contract name (key is `contract_info`)
 
 ```sql
-SELECT DISTINCT ON("codeId") "codeId", "value" FROM "Events" INNER JOIN "Contracts" ON "Contracts"."address" = "Events"."contractAddress" WHERE "key" = '99,111,110,116,114,97,99,116,95,105,110,102,111' AND value LIKE '%CONTRACT_NAME%' ORDER BY "codeId" ASC;
+SELECT DISTINCT ON("codeId") "codeId", "value" FROM "WasmStateEvents" INNER JOIN "Contracts" ON "Contracts"."address" = "WasmStateEvents"."contractAddress" WHERE "key" = '99,111,110,116,114,97,99,116,95,105,110,102,111' AND value LIKE '%CONTRACT_NAME%' ORDER BY "codeId" ASC;
 ```
 
 ## Attribution

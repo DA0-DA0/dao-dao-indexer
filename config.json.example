@@ -1,6 +1,6 @@
 {
-  "home": "/Users/noah/.juno/indexer",
-  "rpc": "https://uni-rpc.reece.sh",
+  "home": "~/.juno/indexer",
+  "rpc": "https://juno-testnet-rpc.polkachu.com",
   "bech32Prefix": "juno",
   "redis": {
     "host": "127.0.0.1",
@@ -22,21 +22,7 @@
   },
   "meilisearch": {
     "host": "http://localhost:7700",
-    "apiKey": "masterKey",
-    "indexes": [
-      {
-        "index": "daos",
-        "filterableAttributes": [
-          "value.config.name",
-          "value.config.description",
-          "value.proposalCount",
-          "value.polytoneProxies"
-        ],
-        "sortableAttributes": ["value.proposalCount"],
-        "formula": "daoCore/dumpState",
-        "codeIdsKeys": ["dao-core"]
-      }
-    ]
+    "apiKey": "masterKey"
   },
   "codeIds": {
     "cw20-stake": [155],
