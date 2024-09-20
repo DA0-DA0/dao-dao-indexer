@@ -64,7 +64,7 @@ export const setupRouter = (
       koaSwagger({
         routePrefix: '/openapi',
         swaggerOptions: {
-          url: '/openapi.json',
+          url: './openapi.json',
         },
       })
     )
