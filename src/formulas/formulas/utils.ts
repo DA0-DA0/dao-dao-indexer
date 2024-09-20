@@ -1,4 +1,4 @@
-import { Block, ContractFormula, Env, KeyInput } from '@/types'
+import { Block, ContractFormula, Env, Formula, KeyInput } from '@/types'
 
 import { Duration, Expiration } from './types'
 
@@ -49,6 +49,7 @@ export const makeSimpleContractFormula = <
   R = T,
   Args extends Record<string, string> = {}
 >({
+  docs,
   filter,
   fallback,
   transform = (data: T) => data as unknown as R,
@@ -73,6 +74,10 @@ export const makeSimpleContractFormula = <
     }
 ) & {
   /**
+   * Docs for the formula.
+   */
+  docs?: Formula['docs']
+  /**
    * Filter to apply.
    */
   filter?: ContractFormula['filter']
@@ -92,6 +97,7 @@ export const makeSimpleContractFormula = <
     }
   ) => R
 }): ContractFormula<R, Args> => ({
+  docs,
   filter,
   compute: async ({
     contractAddress,
