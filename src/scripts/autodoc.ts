@@ -75,12 +75,22 @@ const makeFormulaDoc = (
   const hasAddress = type !== FormulaType.Generic
 
   return [
-    `/${type}/${hasAddress ? '{address}' : '_'}/${path}`,
+    `/{chainId}/${type}/${hasAddress ? '{address}' : '_'}/${path}`,
     {
       get: {
         tags: [type],
+        summary: path.split('/').join(' > '),
         description: formula.docs?.description || '`' + path + '`',
         parameters: [
+          {
+            name: 'chainId',
+            in: 'path',
+            description: 'chain ID',
+            required: true,
+            schema: {
+              type: 'string' as const,
+            },
+          },
           ...(hasAddress
             ? [
                 {

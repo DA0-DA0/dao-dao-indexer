@@ -31,6 +31,21 @@ const testCooldownSeconds = 10
 export const computer: Router.Middleware = async (ctx) => {
   const { ignoreApiKey } = loadConfig()
 
+  let state
+  try {
+    state = await State.getSingleton()
+    if (!state) {
+      ctx.status = 500
+      ctx.body = 'state not found'
+      return
+    }
+  } catch (err) {
+    console.error(err)
+    ctx.status = 500
+    ctx.body = 'internal server error'
+    return
+  }
+
   const {
     block: _block,
     blocks: _blocks,
@@ -48,6 +63,13 @@ export const computer: Router.Middleware = async (ctx) => {
   let type: FormulaType | undefined
   let address: string | undefined
   let formulaName: string | undefined
+
+  // if paths[0] is the current chainId, ignore it. this allows for development
+  // backwards compatibility based on production proxy paths (since
+  // indexer.daodao.zone/CHAIN_ID proxies to a different API-server per-chain).
+  if (paths.length > 0 && paths[0] === state.chainId) {
+    paths.shift()
+  }
 
   if (paths.length < 3) {
     ctx.status = 400
@@ -280,13 +302,6 @@ export const computer: Router.Middleware = async (ctx) => {
   }
 
   try {
-    const state = await State.getSingleton()
-    if (!state) {
-      ctx.status = 500
-      ctx.body = 'state not found'
-      return
-    }
-
     // If type is "contract"...
     if (typedFormula.type === FormulaType.Contract) {
       const contract = await Contract.findByPk(address)
