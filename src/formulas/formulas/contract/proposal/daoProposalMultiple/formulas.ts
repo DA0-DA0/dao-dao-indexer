@@ -78,9 +78,9 @@ export const proposal: ContractFormula<
           }),
         ])
       : [undefined, undefined]
-    const proposalModulePrefix = daoProposalModules?.find(
+    const proposalModule = daoProposalModules?.find(
       (m) => m.address === contractAddress
-    )?.prefix
+    )
 
     const idNum = Number(id)
     const proposal =
@@ -99,12 +99,13 @@ export const proposal: ContractFormula<
 
     return {
       ...(await intoResponse(env, proposal, idNum)),
+      ...(proposalModule && {
+        proposalModule,
+        daoProposalId: `${proposalModule.prefix}${id}`,
+      }),
       ...(daoAddress && {
-        hideFromSearch: !!hideFromSearch,
         dao: daoAddress,
-        ...(proposalModulePrefix && {
-          daoProposalId: `${proposalModulePrefix}${id}`,
-        }),
+        hideFromSearch: !!hideFromSearch,
       }),
     }
   },
