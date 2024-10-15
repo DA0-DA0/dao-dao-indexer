@@ -79,11 +79,16 @@ export const makeProposalCreated: WebhookMaker<WasmStateEvent> = (
     const [, proposalNum] = dbKeyToKeys(event.key, [false, true])
     const proposalId = `${proposalModule.prefix}${proposalNum}`
 
+    const daoUrl = config.daoDaoBase + `/dao/${daoAddress}`
+
     return {
       apiKey: config.telegramNotifierApiKey,
       daoName: daoConfig.name,
+      proposalTitle: event.valueJson.title,
+      proposalDescription: event.valueJson.description,
       proposalId,
-      url: config.daoDaoBase + `/dao/${daoAddress}/proposals/${proposalId}`,
+      daoUrl,
+      url: daoUrl + `/proposals/${proposalId}`,
     }
   },
 })
