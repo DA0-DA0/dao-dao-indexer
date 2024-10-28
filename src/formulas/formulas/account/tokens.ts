@@ -23,43 +23,46 @@ export const list: AccountFormula<ContractWithBalance[]> = {
         true
       )) ?? []
 
-    const [contractInfos, balances] = await Promise.all([
-      Promise.all(
-        matchingContracts.map(({ contractAddress }) =>
-          info.compute({
-            ...env,
+    const contractsWithBalance = (
+      await Promise.all(
+        matchingContracts.map(
+          async ({
             contractAddress,
-          })
-        )
-      ),
-      Promise.all(
-        matchingContracts.map(({ contractAddress }) =>
-          balance.compute({
-            ...env,
-            contractAddress,
-            args: {
-              address: env.address,
-            },
-          })
-        )
-      ),
-    ])
+          }): Promise<ContractWithBalance | undefined> => {
+            const [_contractInfo, _balance] = await Promise.allSettled([
+              info.compute({
+                ...env,
+                contractAddress,
+              }),
+              balance.compute({
+                ...env,
+                contractAddress,
+                args: {
+                  address: env.address,
+                },
+              }),
+            ])
 
-    const contractsWithBalance = matchingContracts
-      // Filter by those with cw20 in the contract name and with a >0 balance.
-      .map(({ contractAddress }, index): ContractWithBalance | undefined =>
-        contractInfos[index]?.contract?.includes('cw20') &&
-        balances[index] !== '0'
-          ? {
-              contractAddress,
-              balance: balances[index],
-            }
-          : undefined
+            const contractName =
+              _contractInfo.status === 'fulfilled'
+                ? _contractInfo.value.contract
+                : undefined
+            const tokenBalance =
+              _balance.status === 'fulfilled' ? _balance.value : '0'
+
+            // Filter by those with cw20 in the contract name (or no name at
+            // all) and with a >0 balance.
+            return (!contractName || contractName.includes('cw20')) &&
+              tokenBalance !== '0'
+              ? {
+                  contractAddress,
+                  balance: tokenBalance,
+                }
+              : undefined
+          }
+        )
       )
-      .filter(
-        (contractWithBalance): contractWithBalance is ContractWithBalance =>
-          !!contractWithBalance
-      )
+    ).flatMap((result) => result || [])
 
     return contractsWithBalance
   },

@@ -7,10 +7,10 @@ export const info: ContractFormula<ContractInfo> = {
   docs: {
     description: 'retrieves the contract info (name and version)',
   },
-  compute: async ({ contractAddress, getTransformationMatch }) => {
-    const info = (
-      await getTransformationMatch<ContractInfo>(contractAddress, 'info')
-    )?.value
+  compute: async ({ contractAddress, getTransformationMatch, get }) => {
+    const info =
+      (await getTransformationMatch<ContractInfo>(contractAddress, 'info'))
+        ?.value || (await get(contractAddress, 'contract_info'))
 
     if (!info) {
       throw new Error(`no contract info found for ${contractAddress}`)
