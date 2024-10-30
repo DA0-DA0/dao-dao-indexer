@@ -186,16 +186,18 @@ export const memberOf: AccountFormula<
     )
 
     const daos = Array.from(new Set([...daoAddresses, ...cw4DaoAddresses]))
-    const daoStates = await Promise.all(
-      daos.map((daoAddress) =>
-        Promise.all([
-          info.compute({ ...env, contractAddress: daoAddress }),
-          config.compute({ ...env, contractAddress: daoAddress }),
-          votingModule.compute({ ...env, contractAddress: daoAddress }),
-          proposalCount.compute({ ...env, contractAddress: daoAddress }),
-        ])
+    const daoStates = (
+      await Promise.allSettled(
+        daos.map((daoAddress) =>
+          Promise.all([
+            info.compute({ ...env, contractAddress: daoAddress }),
+            config.compute({ ...env, contractAddress: daoAddress }),
+            votingModule.compute({ ...env, contractAddress: daoAddress }),
+            proposalCount.compute({ ...env, contractAddress: daoAddress }),
+          ])
+        )
       )
-    )
+    ).flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
 
     return daoStates.flatMap(
       ([info, config, votingModule, proposalCount], index) =>
