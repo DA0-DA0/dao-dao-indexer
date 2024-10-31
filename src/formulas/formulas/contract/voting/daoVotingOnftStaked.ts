@@ -1,6 +1,10 @@
 import { ContractFormula } from '@/types'
 
-import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
+import {
+  Expiration,
+  TotalPowerAtHeight,
+  VotingPowerAtHeight,
+} from '../../types'
 import { makeSimpleContractFormula } from '../../utils'
 
 type Config = {
@@ -43,7 +47,12 @@ export const dao = makeSimpleContractFormula<string>({
   transformation: 'dao',
 })
 
-export const nftClaims: ContractFormula<any[], { address: string }> = {
+type NftClaim = {
+  token_id: string
+  release_at: Expiration
+}
+
+export const nftClaims: ContractFormula<NftClaim[], { address: string }> = {
   docs: {
     description: 'retrieves the NFT claims for a given address',
     args: [
@@ -57,12 +66,32 @@ export const nftClaims: ContractFormula<any[], { address: string }> = {
       },
     ],
   },
-  compute: async ({ contractAddress, get, args: { address } }) => {
+  compute: async ({
+    contractAddress,
+    get,
+    getTransformationMap,
+    args: { address },
+  }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return (await get(contractAddress, 'nft_claims', address)) ?? []
+    const legacyClaims =
+      (await get<NftClaim[]>(contractAddress, 'nft_claims', address)) ?? []
+
+    const claims = Object.entries(
+      (await getTransformationMap<string, Expiration>(
+        contractAddress,
+        `claim:${address}`
+      )) ?? {}
+    ).map(
+      ([token_id, release_at]): NftClaim => ({
+        token_id,
+        release_at,
+      })
+    )
+
+    return [...legacyClaims, ...claims]
   },
 }
 

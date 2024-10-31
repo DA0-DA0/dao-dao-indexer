@@ -7,6 +7,7 @@ const CODE_IDS_KEYS = ['dao-voting-onft-staked']
 
 const KEY_PREFIX_SNPW = dbKeyForKeys('snpw', '')
 const KEY_PREFIX_NB = dbKeyForKeys('nb', '')
+const KEY_PREFIX_NC = dbKeyForKeys('nc', '')
 
 const config = makeTransformer(CODE_IDS_KEYS, 'config')
 const dao = makeTransformer(CODE_IDS_KEYS, 'dao')
@@ -16,6 +17,19 @@ const activeThreshold = makeTransformer(
   'activeThreshold',
   'active_threshold'
 )
+
+const claim: Transformer = {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+    matches: (event) => event.key.startsWith(KEY_PREFIX_NC),
+  },
+  name: (event) => {
+    // "nc", address, tokenId
+    const [, address, tokenId] = dbKeyToKeys(event.key, [false, false, false])
+    return `claim:${address}:${tokenId}`
+  },
+  getValue: (event) => event.valueJson,
+}
 
 const stakedNftPerOwner: Transformer = {
   filter: {
@@ -69,4 +83,5 @@ export default [
   stakedNftOwner,
   stakedCount,
   activeThreshold,
+  claim,
 ]
