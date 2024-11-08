@@ -50,6 +50,7 @@ export const dao = makeSimpleContractFormula<string>({
 type NftClaim = {
   token_id: string
   release_at: Expiration
+  legacy: boolean
 }
 
 export const nftClaims: ContractFormula<NftClaim[], { address: string }> = {
@@ -76,8 +77,16 @@ export const nftClaims: ContractFormula<NftClaim[], { address: string }> = {
       throw new Error('missing `address`')
     }
 
-    const legacyClaims =
-      (await get<NftClaim[]>(contractAddress, 'nft_claims', address)) ?? []
+    const legacyClaims = (
+      (await get<Omit<NftClaim, 'legacy'>[]>(
+        contractAddress,
+        'nft_claims',
+        address
+      )) ?? []
+    ).map((claim) => ({
+      ...claim,
+      legacy: true,
+    }))
 
     const claims = Object.entries(
       (await getTransformationMap<string, Expiration>(
@@ -88,6 +97,7 @@ export const nftClaims: ContractFormula<NftClaim[], { address: string }> = {
       ([token_id, release_at]): NftClaim => ({
         token_id,
         release_at,
+        legacy: false,
       })
     )
 
