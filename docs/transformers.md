@@ -120,7 +120,10 @@ For example, to unify the `config` from both v1 and v2 of the DAO core contract,
 this transformer merges them into a single `config` transformation.
 
 ```ts
-const config = makeTransformer(['dao-core'], 'config', ['config_v2', 'config'])
+const config = makeTransformer(['dao-dao-core'], 'config', [
+  'config_v2',
+  'config',
+])
 ```
 
 ### `makeTransformerForMap`
@@ -131,7 +134,7 @@ This takes all items in the `sub_daos` state `Map` and saves them under a
 transformation with names that are prefixed with `subDao:`:
 
 ```ts
-const subDaos = makeTransformerForMap(['dao-core'], 'subDao', 'sub_daos')
+const subDaos = makeTransformerForMap(['dao-dao-core'], 'subDao', 'sub_daos')
 ```
 
 In a formula, this map can be accessed with the following:

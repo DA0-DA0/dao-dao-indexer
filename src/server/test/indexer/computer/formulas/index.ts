@@ -23,12 +23,12 @@ export const loadFormulasTests = (options: ComputerTestOptions) => {
 
     it('filters contract by code IDs specified in formula', async () => {
       WasmCodeService.getInstance().addDefaultWasmCodes(
-        new WasmCode('dao-core', [1, 2])
+        new WasmCode('dao-dao-core', [1, 2])
       )
 
       options.mockFormula({
         filter: {
-          codeIdsKeys: ['not-dao-core'],
+          codeIdsKeys: ['not-dao-dao-core'],
         },
       })
       await request(app.callback())
@@ -41,7 +41,7 @@ export const loadFormulasTests = (options: ComputerTestOptions) => {
 
       options.mockFormula({
         filter: {
-          codeIdsKeys: ['dao-core'],
+          codeIdsKeys: ['dao-dao-core'],
         },
       })
       const response = await request(app.callback())

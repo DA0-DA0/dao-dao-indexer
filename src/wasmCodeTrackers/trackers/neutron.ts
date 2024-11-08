@@ -2,7 +2,7 @@ import { WasmCodeTracker } from '@/types'
 
 export const neutronDaoDaoCore: WasmCodeTracker = {
   chainId: 'neutron-1',
-  codeKey: 'dao-core',
+  codeKey: 'dao-dao-core',
   contractAddresses: new Set([
     'neutron1suhgf5svhu4usrurvxzlgn54ksxmn8gljarjtxqnapv8kjnp4nrstdxvff',
   ]),

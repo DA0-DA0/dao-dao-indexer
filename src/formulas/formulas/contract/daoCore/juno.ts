@@ -26,7 +26,7 @@ export const junoHomeMetadata: ContractFormula<JunoHomeMetadata> = {
     description: 'retrieves specific DAO metadata for the Juno website',
   },
   filter: {
-    codeIdsKeys: ['dao-core'],
+    codeIdsKeys: ['dao-dao-core'],
   },
   compute: async (env) => {
     const [config, cover, founded, proposalCount, lastActivity, memberCount] =

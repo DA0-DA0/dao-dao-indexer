@@ -238,7 +238,7 @@ formulas rely on more than just state.
 ## Examples
 
 This formula returns the config for a
-[DAO](https://github.com/DA0-DA0/dao-contracts/tree/main/contracts/dao-core).
+[DAO](https://github.com/DA0-DA0/dao-contracts/tree/main/contracts/dao-dao-core).
 You can see it supports both V1 and V2 of the contract, which happen to be
 stored under different state keys in the different versions of the contract. The
 indexer unifies the API and allows you to query the same formula for both

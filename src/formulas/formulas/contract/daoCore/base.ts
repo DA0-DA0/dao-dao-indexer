@@ -535,7 +535,7 @@ export const potentialSubDaos: ContractFormula<
   compute: async (env) => {
     const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
 
-    const daoCodeIds = getCodeIdsForKeys('dao-core')
+    const daoCodeIds = getCodeIdsForKeys('dao-dao-core')
 
     const contractsWithAdmin =
       (

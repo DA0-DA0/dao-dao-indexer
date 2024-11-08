@@ -228,7 +228,7 @@ export const adminOf: AccountFormula<string[]> = {
       undefined,
       'admin',
       walletAddress,
-      getCodeIdsForKeys('dao-core')
+      getCodeIdsForKeys('dao-dao-core')
     )
 
     return daoCoreContracts?.map(({ contractAddress }) => contractAddress) ?? []
