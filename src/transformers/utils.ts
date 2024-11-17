@@ -51,3 +51,43 @@ export const makeTransformerForMap = <V = any>(
     getValue: getValue || defaultGetValue,
   }
 }
+
+/**
+ * Transform Map<K, ()>, which is just efficient list storage with empty values,
+ * to an actual list.
+ */
+export const makeTransformerForMapList = (
+  codeIdsKeys: string[],
+  name: string,
+  mapKey: string
+): Transformer<any[]> => {
+  const prefix = dbKeyForKeys(mapKey, '')
+
+  return {
+    filter: {
+      codeIdsKeys,
+      matches: (event) => event.key.startsWith(prefix),
+    },
+    name,
+    getValue: async (event, getLastValue) => {
+      const value = (await getLastValue()) || []
+      if (!Array.isArray(value)) {
+        throw new Error(`Expected array, got ${typeof value}`)
+      }
+
+      const [, key] = dbKeyToKeys(event.key, [false, false])
+
+      const curr = [...value]
+      if (event.delete) {
+        const index = curr.indexOf(key)
+        if (index !== -1) {
+          curr.splice(index, 1)
+        }
+      } else {
+        curr.push(key)
+      }
+
+      return curr
+    },
+  }
+}

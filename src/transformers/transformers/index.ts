@@ -10,6 +10,7 @@ import {
 
 import common from './common'
 import dao from './dao'
+import delegation from './delegation'
 import distribution from './distribution'
 import external from './external'
 import polytone from './polytone'
@@ -32,6 +33,7 @@ export const getProcessedTransformers = (
       // Add transformers here.
       ...common,
       ...dao,
+      ...delegation,
       ...distribution,
       ...external,
       ...polytone,
