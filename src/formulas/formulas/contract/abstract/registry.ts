@@ -20,29 +20,32 @@
 
 import semver from 'semver/preload'
 
-import { Module } from '@/formulas/formulas/contract/abstract/types/versionControl'
+import { Module } from '@/formulas/formulas/contract/abstract/types/registry'
 import { ContractFormula } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 
-import { VersionControlTypes } from './types'
+import { RegistryTypes } from './types'
 
-const VersionControlStorageKeys = {
+const RegistryStorageKeys = {
   CONFIG: 'cfg',
-  PENDING_MODULES: 'pendm',
-  REGISTERED_MODULES: 'lib',
-  STANDALONE_INFOS: 'stli',
-  YANKED_MODULES: 'yknd',
-  MODULE_CONFIG: 'cfg',
-  MODULE_DEFAULT_CONFIG: 'dcfg',
-  ACCOUNT_ADDRESSES: 'accs',
+  PENDING_MODULES: 'ca',
+  REGISTERED_MODULES: 'cb',
+  STANDALONE_INFOS: 'cd',
+  YANKED_MODULES: 'ce',
+  MODULE_CONFIG: 'cf',
+  MODULE_DEFAULT_CONFIG: 'cg',
+  ACCOUNT_ADDRESSES: 'ch',
 }
 
 export const listRegisteredModules: ContractFormula<Array<Module>> = {
+  docs: {
+    description: 'Lists registered modules in registry',
+  },
   compute: async ({ contractAddress, getMap }) => {
     const registeredModulesMap =
-      (await getMap<string, VersionControlTypes.ModuleReference>(
+      (await getMap<string, RegistryTypes.ModuleReference>(
         contractAddress,
-        VersionControlStorageKeys.REGISTERED_MODULES,
+        RegistryStorageKeys.REGISTERED_MODULES,
         { keyType: 'raw' }
       )) ?? {}
 
@@ -53,7 +56,7 @@ export const listRegisteredModules: ContractFormula<Array<Module>> = {
         false,
       ]) as string[]
 
-      const info: VersionControlTypes.ModuleInfo = {
+      const info: RegistryTypes.ModuleInfo = {
         namespace,
         name,
         version: { version },
@@ -70,7 +73,7 @@ const moduleInfoToKey = ({
   namespace,
   name,
   version,
-}: VersionControlTypes.ModuleInfo | ModuleInfoParameter): string => {
+}: RegistryTypes.ModuleInfo | ModuleInfoParameter): string => {
   const versionKey = version
     ? typeof version === 'string'
       ? version
@@ -79,31 +82,34 @@ const moduleInfoToKey = ({
   return dbKeyForKeys(namespace, name, versionKey)
 }
 
-const DEFAULT_MODULE_CONFIG: VersionControlTypes.ModuleConfiguration = {
+const DEFAULT_MODULE_CONFIG: RegistryTypes.ModuleConfiguration = {
   monetization: 'none',
   instantiation_funds: [],
 }
 
-type ModuleInfoParameter = Omit<VersionControlTypes.ModuleInfo, 'version'> & {
+type ModuleInfoParameter = Omit<RegistryTypes.ModuleInfo, 'version'> & {
   version?: string
 }
 
 export const moduleConfig: ContractFormula<
-  VersionControlTypes.ModuleConfiguration | undefined,
+  RegistryTypes.ModuleConfiguration | undefined,
   ModuleInfoParameter
 > = {
+  docs: {
+    description: 'Configuration of the module installation',
+  },
   compute: async ({ contractAddress, getMap, args }) => {
     if (!args || !args.name || !args.namespace) return undefined
-    const moduleInfo: VersionControlTypes.ModuleInfo = {
+    const moduleInfo: RegistryTypes.ModuleInfo = {
       namespace: args.namespace,
       name: args.name,
       version: args.version ? { version: args.version } : 'latest',
     }
 
     const versionedConfigMap =
-      (await getMap<string, VersionControlTypes.ModuleConfiguration>(
+      (await getMap<string, RegistryTypes.ModuleConfiguration>(
         contractAddress,
-        VersionControlStorageKeys.CONFIG,
+        RegistryStorageKeys.CONFIG,
         {
           keyType: 'raw',
         }
@@ -119,7 +125,7 @@ export const moduleConfig: ContractFormula<
     const defaultConfigMap =
       (await getMap<string, { metadata: string }>(
         contractAddress,
-        VersionControlStorageKeys.MODULE_DEFAULT_CONFIG,
+        RegistryStorageKeys.MODULE_DEFAULT_CONFIG,
         {
           keyType: 'raw',
         }
@@ -136,9 +142,12 @@ export const moduleConfig: ContractFormula<
 }
 
 export const module: ContractFormula<
-  VersionControlTypes.ModuleResponse | undefined,
+  RegistryTypes.ModuleResponse | undefined,
   ModuleInfoParameter
 > = {
+  docs: {
+    description: 'Module info',
+  },
   compute: async (env) => {
     const { args } = env
     if (!args || !args.namespace || !args.name) return undefined

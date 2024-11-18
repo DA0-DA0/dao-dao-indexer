@@ -1,7 +1,8 @@
 import { ContractFormula } from '@/types'
 
 import * as Common from '../common'
-import { ManagerTypes } from './types'
+import { AccountTypes } from './types'
+import { Addr, GovernanceDetailsForString } from './types/account'
 
 /*
     /// Suspension status
@@ -26,86 +27,90 @@ import { ManagerTypes } from './types'
 }
  */
 
-const ManagerStorageKeys = {
-  CONFIG: 'config',
-  INFO: 'info',
+const AccountStorageKeys = {
+  SUSPENSION_STATUS: 'aa',
+  INFO: 'ab',
+  ACCOUNT_MODULES: 'ac',
+  DEPENDENTS: 'ad',
+  SUB_ACCOUNTS: 'ae',
+  WHITELISTED_MODULES: 'af',
+  ACCOUNT_ID: 'ag',
   OWNER: 'ownership',
-  ACCOUNT_MODULES: 'modules',
-  SUB_ACCOUNTS: 'sub_accs',
-  IS_SUSPENDED: 'is_suspended',
-  ACCOUNT_ID: 'acc_id',
 }
 
-export const owner: ContractFormula<string | undefined> = {
+export const owner: ContractFormula<GovernanceDetailsForString | undefined> = {
+  docs: {
+    description: '',
+  },
   compute: async ({ contractAddress, get }) => {
     return (
       (
-        await get<ManagerTypes.OwnershipForString>(
+        await get<AccountTypes.OwnershipForString>(
           contractAddress,
-          ManagerStorageKeys.OWNER
+          AccountStorageKeys.OWNER
         )
       )?.owner ?? undefined
     )
   },
 }
 
-export const accountId: ContractFormula<ManagerTypes.AccountId | undefined> = {
+export const accountId: ContractFormula<AccountTypes.AccountId | undefined> = {
+  docs: {
+    description: '',
+  },
   compute: async ({ contractAddress, get }) => {
-    return await get<ManagerTypes.AccountId>(
+    return await get<AccountTypes.AccountId>(
       contractAddress,
-      ManagerStorageKeys.ACCOUNT_ID
+      AccountStorageKeys.ACCOUNT_ID
     )
   },
 }
 
 export const suspensionStatus: ContractFormula<boolean | undefined> = {
-  compute: async ({ contractAddress, get }) => {
-    return await get<boolean>(contractAddress, ManagerStorageKeys.IS_SUSPENDED)
+  docs: {
+    description: '',
   },
-}
-
-export const info: ContractFormula<
-  ManagerTypes.AccountInfoForAddr | undefined
-> = {
   compute: async ({ contractAddress, get }) => {
-    return await get<ManagerTypes.AccountInfoForAddr>(
+    return await get<boolean>(
       contractAddress,
-      ManagerStorageKeys.INFO
+      AccountStorageKeys.SUSPENSION_STATUS
     )
   },
 }
 
-export const config: ContractFormula<ManagerTypes.ConfigResponse | undefined> =
-  {
-    compute: async (env) => {
-      const { contractAddress, get } = env
-      const accId = await accountId.compute(env)
-      const isSuspended = await suspensionStatus.compute(env)
+export const info: ContractFormula<AccountTypes.AccountInfo | undefined> = {
+  docs: {
+    description: '',
+  },
+  compute: async ({ contractAddress, get }) => {
+    return await get<AccountTypes.AccountInfo>(
+      contractAddress,
+      AccountStorageKeys.INFO
+    )
+  },
+}
 
-      const config = await get<
-        Pick<
-          ManagerTypes.ConfigResponse,
-          'version_control_address' | 'module_factory_address'
-        >
-      >(contractAddress, 'config')
+export const whitelistedModules: ContractFormula<Array<Addr> | undefined> = {
+  docs: {
+    description: '',
+  },
+  compute: async ({ contractAddress, get }) => {
+    return await get<Array<Addr>>(
+      contractAddress,
+      AccountStorageKeys.WHITELISTED_MODULES
+    )
+  },
+}
 
-      return (
-        accId &&
-        config && {
-          account_id: accId,
-          is_suspended: isSuspended ?? false,
-          ...config,
-        }
-      )
-    },
-  }
-
-export const subAccountIds: ContractFormula<ManagerTypes.AccountId[]> = {
+export const subAccountIds: ContractFormula<AccountTypes.AccountId[]> = {
+  docs: {
+    description: '',
+  },
   compute: async ({ contractAddress, getMap }) => {
     const subAccountsMap =
       (await getMap<number, {}>(
         contractAddress,
-        ManagerStorageKeys.SUB_ACCOUNTS,
+        AccountStorageKeys.SUB_ACCOUNTS,
         {
           keyType: 'number',
         }
@@ -121,24 +126,26 @@ export const subAccountIds: ContractFormula<ManagerTypes.AccountId[]> = {
 export const moduleInfos: ContractFormula<
   Array<
     Omit<
-      ManagerTypes.ModuleInfosResponse['module_infos'][number],
+      AccountTypes.ModuleInfosResponse['module_infos'][number],
       'version'
     > & { version: string | undefined }
   >
 > = {
+  docs: {
+    description: '',
+  },
   compute: async (env) => {
     const { contractAddress, getMap, get } = env
 
-    const versionControlAddr = await config
-      .compute(env)
-      .then((res) => res?.version_control_address)
+    // TODO:
+    const RegistryAddr = undefined
 
-    if (!versionControlAddr) return []
+    if (!RegistryAddr) return []
 
     const moduleAddressesMap =
-      (await getMap<string, ManagerTypes.Addr>(
+      (await getMap<string, AccountTypes.Addr>(
         contractAddress,
-        ManagerStorageKeys.ACCOUNT_MODULES
+        AccountStorageKeys.ACCOUNT_MODULES
       )) ?? {}
 
     // Query the info from
@@ -157,4 +164,8 @@ export const moduleInfos: ContractFormula<
       })
     )
   },
+}
+
+type State = {
+  modules: string[]
 }
