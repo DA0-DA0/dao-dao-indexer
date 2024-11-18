@@ -1,2 +1,2 @@
-export * as AccountTypes from './account';
-export * as RegistryTypes from './registry';
+export * as AccountTypes from './account'
+export * as RegistryTypes from './registry'
