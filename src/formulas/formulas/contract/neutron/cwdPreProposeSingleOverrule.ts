@@ -3,12 +3,34 @@ import { ContractFormula } from '@/types'
 export * from '../prePropose/daoPreProposeBase'
 
 export const overruleProposalId: ContractFormula<
-  number | undefined,
+  number,
   {
     timelockAddress: string
     subdaoProposalId: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the overrule proposal ID for a given subDAO proposal ID and timelock address',
+    args: [
+      {
+        name: 'timelockAddress',
+        description: 'the address of the timelock contract',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'subdaoProposalId',
+        description: 'the ID of the subDAO proposal',
+        required: true,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     get,
@@ -21,11 +43,17 @@ export const overruleProposalId: ContractFormula<
       throw new Error('missing `subdaoProposalId`')
     }
 
-    return await get(
+    const id = await get(
       contractAddress,
       'overrule_proposals',
       Number(subdaoProposalId),
       timelockAddress
     )
+
+    if (typeof id !== 'number') {
+      throw new Error('faled to get overrule proposal id')
+    }
+
+    return id
   },
 }

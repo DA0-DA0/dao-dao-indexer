@@ -10,8 +10,8 @@ type JunoHomeMetadata = {
   founded?: string
   image?: string
   description?: string
-  cover?: string
-  lastActivity?: string
+  cover?: string | null
+  lastActivity?: string | null
   proposalCount?: number
   memberCount?: number
 }
@@ -22,21 +22,32 @@ type JunoHomeMetadata = {
 // opposed to based on the current time, like the proposal status. Since we
 // ignore proposal status, this is fine.
 export const junoHomeMetadata: ContractFormula<JunoHomeMetadata> = {
+  docs: {
+    description: 'retrieves specific DAO metadata for the Juno website',
+  },
   filter: {
-    codeIdsKeys: ['dao-core'],
+    codeIdsKeys: ['dao-dao-core'],
   },
   compute: async (env) => {
-    const config = await configFormula.compute(env)
-    const cover = await item.compute({
-      ...env,
-      args: {
-        key: 'cover',
-      },
-    })
-    const founded = await instantiatedAt.compute(env)
-    const proposalCount = ((await allProposals.compute(env)) ?? []).length
-    const lastActivity = await lastActivityFormula.compute(env)
-    const memberCount = await memberCountFormula.compute(env)
+    const [config, cover, founded, proposalCount, lastActivity, memberCount] =
+      await Promise.all([
+        configFormula.compute(env).catch(() => undefined),
+        item
+          .compute({
+            ...env,
+            args: {
+              key: 'cover',
+            },
+          })
+          .catch(() => undefined),
+        instantiatedAt.compute(env).catch(() => undefined),
+        allProposals
+          .compute(env)
+          .then((proposals) => proposals?.length || 0)
+          .catch(() => undefined),
+        lastActivityFormula.compute(env).catch(() => undefined),
+        memberCountFormula.compute(env).catch(() => undefined),
+      ])
 
     return {
       name: config?.name,

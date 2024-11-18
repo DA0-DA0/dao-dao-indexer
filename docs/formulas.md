@@ -18,15 +18,15 @@ Formulas are defined in the `data/formulas` directory.
 
 There are four types of formulas:
 
+- `account`
 - `contract`
 - `generic`
 - `validator`
-- `wallet`
 
 `generic` takes no address, whereas the others take an address. They are
 differentiated because they are expected to work slightly differently, though
 under the hood they are processed the same way. When using `generic` formulas,
-any address can be passed in, but it is ignored.
+any address can be passed in, and it is ignored.
 
 ## Formula Structure
 
@@ -80,14 +80,22 @@ type Env = {
   getCodeIdKeyForContract: FormulaCodeIdKeyForContractGetter
   getSlashEvents: FormulaSlashEventsGetter
   getTxEvents: FormulaTxEventsGetter
+  getBalance: FormulaBalanceGetter
+  getBalances: FormulaBalancesGetter
+  getProposal: FormulaProposalGetter
+  getProposals: FormulaProposalsGetter
+  getProposalCount: FormulaProposalCountGetter
+  getProposalVote: FormulaProposalVoteGetter
+  getProposalVotes: FormulaProposalVotesGetter
+  getProposalVoteCount: FormulaProposalVoteCountGetter
+  getCommunityPoolBalances: FormulaCommunityPoolBalancesGetter
 }
 ```
 
 For `contract` formulas, the address is passed in via the environment under the
 `contractAddress` key. For `validator` formulas, the address is passed in via
-the environment under the `validatorOperatorAddress` key. And for `wallet`
-formulas, the address is passed in via the environment under the `walletAddress`
-key.
+the environment under the `validatorOperatorAddress` key. And for `account`
+formulas, the address is passed in via the environment under the `address` key.
 
 ## How to write a formula
 
@@ -194,7 +202,7 @@ export const walletBalance: ContractFormula<number, { wallet: string }> = {
     }
 
     return await get(contractAddress, 'balance', wallet)
-  }
+  },
 }
 ```
 
@@ -230,7 +238,7 @@ formulas rely on more than just state.
 ## Examples
 
 This formula returns the config for a
-[DAO](https://github.com/DA0-DA0/dao-contracts/tree/main/contracts/dao-core).
+[DAO](https://github.com/DA0-DA0/dao-contracts/tree/main/contracts/dao-dao-core).
 You can see it supports both V1 and V2 of the contract, which happen to be
 stored under different state keys in the different versions of the contract. The
 indexer unifies the API and allows you to query the same formula for both
@@ -289,21 +297,21 @@ export const paused: ContractFormula<PausedResponse> = {
 }
 ```
 
-Here's a complicated wallet formula that calls contract formulas and returns the
-list of all cw20 tokens that the wallet has a balance of. It uses transformed
-state to efficiently perform the query. Read the [transformers
+Here's a complicated account formula that calls contract formulas and returns
+the list of all cw20 tokens that the account has a balance of. It uses
+transformed state to efficiently perform the query. Read the [transformers
 docs](./transformers.md) for more information on how this works.
 
 ```ts
-export const list: WalletFormula<ContractWithBalance[]> = {
+export const list: AccountFormula<ContractWithBalance[]> = {
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches } = env
+    const { address, getTransformationMatches } = env
 
-    // Potential cw20 contracts where the wallet address has tokens.
+    // Potential cw20 contracts where the address has tokens.
     const matchingContracts =
       (await getTransformationMatches(
         undefined,
-        `hasBalance:${walletAddress}`,
+        `hasBalance:${address}`,
         true
       )) ?? []
 
@@ -322,7 +330,7 @@ export const list: WalletFormula<ContractWithBalance[]> = {
           ...env,
           contractAddress,
           args: {
-            address: env.walletAddress,
+            address: env.address,
           },
         })
       )

@@ -9,6 +9,9 @@ interface Token {
 }
 
 export const summary: ContractFormula = {
+  docs: {
+    description: 'retrieves summary information about the pool',
+  },
   compute: async (env) => {
     const { contractAddress, get } = env
 
@@ -66,6 +69,10 @@ export const summary: ContractFormula = {
 }
 
 export const price: ContractFormula = {
+  docs: {
+    description:
+      'calculates the price ratio between the two tokens in the pool',
+  },
   compute: async (env) => {
     const { contractAddress, get } = env
 

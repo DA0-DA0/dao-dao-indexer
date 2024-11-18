@@ -19,7 +19,8 @@ export enum DependentKeyNamespace {
   WasmTxEvent = 'wasm_tx',
   StakingSlash = 'staking_slash',
   BankStateEvent = 'bank_state',
-  GovStateEvent = 'gov_state',
+  GovProposal = 'gov_proposal',
+  GovProposalVote = 'gov_proposal_vote',
   DistributionCommunityPoolStateEvent = 'distribution_community_pool_state',
 }
 

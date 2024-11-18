@@ -1,8 +1,11 @@
-import { WalletFormula } from '@/types'
+import { AccountFormula } from '@/types'
 
-export const accounts: WalletFormula<string[]> = {
+export const accounts: AccountFormula<string[]> = {
+  docs: {
+    description: 'retrieves valence accounts owned by this account',
+  },
   compute: async (env) => {
-    const { walletAddress, getTransformationMatches, getCodeIdsForKeys } = env
+    const { address, getTransformationMatches, getCodeIdsForKeys } = env
 
     const codeIds = getCodeIdsForKeys('valence-account')
     if (!codeIds.length) {
@@ -12,7 +15,7 @@ export const accounts: WalletFormula<string[]> = {
     const valenceAccounts =
       (await getTransformationMatches(
         undefined,
-        `admin:${walletAddress}`,
+        `admin:${address}`,
         undefined,
         codeIds
       )) ?? []

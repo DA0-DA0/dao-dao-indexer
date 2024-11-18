@@ -3,7 +3,8 @@ import { ComputationDependentKey, DependableEventModel } from '@/types'
 import {
   BankStateEvent,
   DistributionCommunityPoolStateEvent,
-  GovStateEvent,
+  GovProposal,
+  GovProposalVote,
   StakingSlashEvent,
   WasmStateEvent,
   WasmStateEventTransformation,
@@ -16,7 +17,8 @@ export const getDependableEventModels = (): typeof DependableEventModel[] => [
   WasmTxEvent,
   StakingSlashEvent,
   BankStateEvent,
-  GovStateEvent,
+  GovProposal,
+  GovProposalVote,
   DistributionCommunityPoolStateEvent,
 ]
 

@@ -1,13 +1,12 @@
 import Router from '@koa/router'
 import Koa from 'koa'
-import auth from 'koa-basic-auth'
-import mount from 'koa-mount'
 
 import { Config } from '@/types'
 
 import { accountRouter } from './account'
+import { setUpDocs } from './docs'
 import { indexerRouter } from './indexer'
-import { makeBullBoardJobsMiddleware } from './indexer/bull'
+import { setUpBullBoard } from './jobs'
 
 export type SetupRouterOptions = {
   config: Config
@@ -15,9 +14,9 @@ export type SetupRouterOptions = {
   accounts: boolean
 }
 
-export const setupRouter = (
+export const setUpRouter = (
   app: Koa,
-  { config: { exporterDashboardPassword }, accounts }: SetupRouterOptions
+  { config, accounts }: SetupRouterOptions
 ) => {
   const router = new Router()
 
@@ -31,15 +30,11 @@ export const setupRouter = (
     // Account API.
     router.use(accountRouter.routes(), accountRouter.allowedMethods())
   } else {
-    const bullApp = new Koa()
-    bullApp.use(
-      auth({
-        name: 'exporter',
-        pass: exporterDashboardPassword || 'exporter',
-      })
-    )
-    bullApp.use(makeBullBoardJobsMiddleware('/jobs'))
-    app.use(mount('/jobs', bullApp))
+    // Background jobs dashboard.
+    setUpBullBoard(app, config)
+
+    // Swagger API docs.
+    setUpDocs(app)
 
     // Indexer API.
     router.use(indexerRouter.routes(), indexerRouter.allowedMethods())

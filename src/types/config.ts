@@ -36,6 +36,7 @@ export type Config = {
     host: string
     apiKey?: string
   }
+  ignoreApiKey?: boolean
 
   /**
    * Map some arbitary string to a list of code IDs.

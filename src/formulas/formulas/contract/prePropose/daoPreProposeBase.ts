@@ -1,24 +1,42 @@
 import { ContractFormula } from '@/types'
 
-export const proposalModule: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'proposal_module'),
-}
+import { makeSimpleContractFormula } from '../../utils'
 
-export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'dao'),
-}
+export const proposalModule = makeSimpleContractFormula<string>({
+  docs: {
+    description: 'retrieves the proposal module address',
+  },
+  key: 'proposal_module',
+})
 
-export const config: ContractFormula<any | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'config'),
-}
+export const dao = makeSimpleContractFormula<string>({
+  docs: {
+    description: 'retrieves the DAO address',
+  },
+  key: 'dao',
+})
 
-export const depositInfo: ContractFormula<
-  any | undefined,
-  { proposalId: string }
-> = {
+export const config = makeSimpleContractFormula<any>({
+  docs: {
+    description: 'retrieves the configuration for the pre-propose module',
+  },
+  key: 'config',
+})
+
+export const depositInfo: ContractFormula<any, { proposalId: string }> = {
+  docs: {
+    description: 'retrieves deposit information for a given proposal ID',
+    args: [
+      {
+        name: 'proposalId',
+        description: 'ID of the proposal to retrieve deposit information for',
+        required: true,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { proposalId } }) => {
     if (!proposalId) {
       throw new Error('missing `proposalId`')
@@ -31,7 +49,7 @@ export const depositInfo: ContractFormula<
     )
 
     if (!data || !Array.isArray(data) || data.length !== 2) {
-      return
+      throw new Error('invalid proposal ID or deposit info')
     }
 
     return {

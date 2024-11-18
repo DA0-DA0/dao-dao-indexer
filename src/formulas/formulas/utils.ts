@@ -1,4 +1,4 @@
-import { Env } from '@/types'
+import { Block, ContractFormula, Env, Formula, KeyInput } from '@/types'
 
 import { Duration, Expiration } from './types'
 
@@ -40,3 +40,105 @@ export const expirationPlusDuration = (
   // Should never happen.
   throw new Error('expiration duration units mismatch')
 }
+
+/**
+ * Make a simple contract formula with some common error/fallback handling.
+ */
+export const makeSimpleContractFormula = <
+  T = unknown,
+  R = T,
+  Args extends Record<string, string> = {}
+>({
+  docs,
+  filter,
+  fallback,
+  transform = (data: T) => data as unknown as R,
+  ...source
+}: (
+  | {
+      /**
+       * State key to load from WasmStateEvents table.
+       */
+      key: KeyInput | KeyInput[]
+    }
+  | {
+      /**
+       * Transformation name to load from WasmStateEventTransformations table.
+       */
+      transformation: string
+      /**
+       * Fallback state key(s) to load from WasmStateEvents table, fetched in
+       * order.
+       */
+      fallbackKeys?: KeyInput[]
+    }
+) & {
+  /**
+   * Docs for the formula.
+   */
+  docs: Formula['docs']
+  /**
+   * Filter to apply.
+   */
+  filter?: ContractFormula['filter']
+  /**
+   * Optional fallback value if no data is found. If undefined, an error is
+   * thrown.
+   */
+  fallback?: R
+  /**
+   * Optionally transform the data before returning it.
+   */
+  transform?: (
+    data: T,
+    options: {
+      args: Partial<Args>
+      block: Block
+    }
+  ) => R
+}): ContractFormula<R, Args> => ({
+  docs,
+  filter,
+  compute: async ({
+    contractAddress,
+    args,
+    block,
+    get,
+    getTransformationMatch,
+  }) => {
+    const value =
+      'key' in source
+        ? await get<T>(contractAddress, ...[source.key].flat())
+        : (
+            await getTransformationMatch<T>(
+              contractAddress,
+              source.transformation
+            )
+          )?.value ??
+          // Fallback to events if fallback keys provided.
+          (source.fallbackKeys
+            ? // Try each fallback key in order, stopping when a value is found.
+              await source.fallbackKeys.reduce(async (promise, fallbackKey) => {
+                const value = await promise
+                if (value !== undefined) {
+                  return value
+                } else {
+                  return await get<T>(contractAddress, fallbackKey)
+                }
+              }, Promise.resolve<T | undefined>(undefined) as Promise<T | undefined>)
+            : undefined)
+
+    if (!value) {
+      if (fallback !== undefined) {
+        return fallback
+      }
+
+      throw new Error('failed to load')
+    }
+
+    return transform(value, {
+      args,
+      block,
+    })
+  },
+})

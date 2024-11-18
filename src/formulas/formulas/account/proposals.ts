@@ -1,21 +1,24 @@
-import { WalletFormula } from '@/types'
+import { AccountFormula } from '@/types'
 
 import { VoteCast } from '../types'
 
-export const created: WalletFormula<
+export const created: AccountFormula<
   | {
       proposalModule: string
       proposalId: number
     }[]
-  | undefined
 > = {
-  compute: async ({ walletAddress, getTransformationMatches }) => {
+  docs: {
+    description: 'retrieves proposals created by the account',
+  },
+  compute: async ({ address: walletAddress, getTransformationMatches }) => {
     // Proposals for v1/v2 dao-proposal-single and v2 dao-proposal-multiple.
-    const proposedTransformations = await getTransformationMatches<{
-      proposalId: number
-    }>(undefined, `proposed:${walletAddress}:*`)
+    const proposedTransformations =
+      (await getTransformationMatches<{
+        proposalId: number
+      }>(undefined, `proposed:${walletAddress}:*`)) ?? []
 
-    return proposedTransformations?.map(
+    return proposedTransformations.map(
       ({ contractAddress, value: { proposalId } }) => ({
         proposalModule: contractAddress,
         proposalId,
@@ -24,21 +27,24 @@ export const created: WalletFormula<
   },
 }
 
-export const votesCast: WalletFormula<
+export const votesCast: AccountFormula<
   | ({
       proposalModule: string
       proposalId: number
     } & Omit<VoteCast, 'voter'>)[]
-  | undefined
 > = {
-  compute: async ({ walletAddress, getTransformationMatches }) => {
+  docs: {
+    description: 'retrieves votes cast by the account',
+  },
+  compute: async ({ address: walletAddress, getTransformationMatches }) => {
     // Votes for dao-proposal-single and dao-proposal-multiple.
-    const voteCastTransformations = await getTransformationMatches<VoteCast>(
-      undefined,
-      `voteCast:${walletAddress}:*`
-    )
+    const voteCastTransformations =
+      (await getTransformationMatches<VoteCast>(
+        undefined,
+        `voteCast:${walletAddress}:*`
+      )) ?? []
 
-    return voteCastTransformations?.map(
+    return voteCastTransformations.map(
       ({ contractAddress, name, value: { vote, votedAt } }) => ({
         proposalModule: contractAddress,
         proposalId: Number(name.split(':')[2]),
@@ -49,10 +55,14 @@ export const votesCast: WalletFormula<
   },
 }
 
-export const stats: WalletFormula<{
+export const stats: AccountFormula<{
   created: number
   votesCast: number
 }> = {
+  docs: {
+    description:
+      'retrieves statistics about proposals created and votes cast by the account',
+  },
   compute: async (env) => {
     const [createdResponse, votesCastResponse] = await Promise.all([
       created.compute(env),

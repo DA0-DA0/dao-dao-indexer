@@ -1,10 +1,11 @@
-import { ContractFormula } from '@/types'
-
+import { makeSimpleContractFormula } from '../../utils'
 import { ProposalCreationPolicy } from './types'
 
-export const creationPolicy: ContractFormula<
-  ProposalCreationPolicy | undefined
-> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'creation_policy'),
-}
+export const creationPolicy = makeSimpleContractFormula<ProposalCreationPolicy>(
+  {
+    docs: {
+      description: 'retrieves the proposal creation policy',
+    },
+    key: 'creation_policy',
+  }
+)

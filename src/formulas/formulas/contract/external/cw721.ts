@@ -1,6 +1,7 @@
 import { ContractFormula } from '@/types'
 
 import { Expiration } from '../../types'
+import { makeSimpleContractFormula } from '../../utils'
 
 interface ContractInfo {
   name: string
@@ -22,21 +23,34 @@ interface TokenInfo {
 type NftInfo = Pick<TokenInfo, 'token_uri' | 'extension'>
 type OwnerOfInfo = Pick<TokenInfo, 'owner' | 'approvals'>
 
-export const minter: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<string>(contractAddress, 'minter'))?.value,
-}
+export const minter = makeSimpleContractFormula<string>({
+  docs: {
+    description: 'retrieves the minter address for the NFT contract',
+  },
+  transformation: 'minter',
+})
 
-export const contractInfo: ContractFormula<ContractInfo | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<ContractInfo>(contractAddress, 'nftInfo'))
-      ?.value,
-}
+export const contractInfo = makeSimpleContractFormula<ContractInfo>({
+  docs: {
+    description: 'retrieves the contract info for the NFT contract',
+  },
+  transformation: 'nftInfo',
+})
 
-export const nftInfo: ContractFormula<
-  NftInfo | undefined,
-  { tokenId: string }
-> = {
+export const nftInfo: ContractFormula<NftInfo, { tokenId: string }> = {
+  docs: {
+    description: 'retrieves the NFT info for a specific token ID',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to retrieve info for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -53,19 +67,31 @@ export const nftInfo: ContractFormula<
       )
     )?.value
 
-    return (
-      info && {
-        token_uri: info.token_uri,
-        extension: info.extension,
-      }
-    )
+    if (!info) {
+      throw new Error('token ID not found')
+    }
+
+    return {
+      token_uri: info.token_uri,
+      extension: info.extension,
+    }
   },
 }
 
-export const ownerOf: ContractFormula<
-  OwnerOfInfo | undefined,
-  { tokenId: string }
-> = {
+export const ownerOf: ContractFormula<OwnerOfInfo, { tokenId: string }> = {
+  docs: {
+    description: 'retrieves the owner and approvals for a specific token ID',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to retrieve owner info for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -82,30 +108,47 @@ export const ownerOf: ContractFormula<
       )
     )?.value
 
-    return (
-      info && {
-        owner: info.owner,
-        approvals: info.approvals,
-      }
-    )
+    if (!info) {
+      throw new Error('token ID not found')
+    }
+
+    return {
+      owner: info.owner,
+      approvals: info.approvals,
+    }
   },
 }
 
 export const allNftInfo: ContractFormula<
-  { access: OwnerOfInfo; info: NftInfo } | undefined,
+  { access: OwnerOfInfo; info: NftInfo },
   { tokenId: string }
 > = {
+  docs: {
+    description:
+      'retrieves both NFT info and owner info for a specific token ID',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to retrieve all info for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async (env) => {
     const access = await ownerOf.compute(env)
     const info = await nftInfo.compute(env)
 
-    return (
-      access &&
-      info && {
-        access,
-        info,
-      }
-    )
+    if (!access || !info) {
+      throw new Error('token ID not found')
+    }
+
+    return {
+      access,
+      info,
+    }
   },
 }
 
@@ -113,6 +156,35 @@ export const allOperators: ContractFormula<
   Approval[],
   { owner: string; limit?: string; startAfter?: string }
 > = {
+  docs: {
+    description: 'retrieves all operators for a specific owner',
+    args: [
+      {
+        name: 'owner',
+        description: 'address of the owner to retrieve operators for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of operators to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+      {
+        name: 'startAfter',
+        description: 'operator address to start listing after',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -145,6 +217,9 @@ export const allOperators: ContractFormula<
 }
 
 export const numTokens: ContractFormula<number> = {
+  docs: {
+    description: 'retrieves the total number of tokens in the NFT contract',
+  },
   compute: async ({ contractAddress, getTransformationMatch }) =>
     (await getTransformationMatch<number>(contractAddress, 'numTokens'))
       ?.value ?? 0,
@@ -154,6 +229,35 @@ export const tokens: ContractFormula<
   string[],
   { owner: string; limit?: string; startAfter?: string }
 > = {
+  docs: {
+    description: 'retrieves all tokens owned by a specific address',
+    args: [
+      {
+        name: 'owner',
+        description: 'address of the owner to retrieve tokens for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of tokens to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+      {
+        name: 'startAfter',
+        description: 'token ID to start listing after',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMap,
@@ -187,6 +291,27 @@ export const allTokens: ContractFormula<
   string[],
   { limit?: string; startAfter?: string }
 > = {
+  docs: {
+    description: 'retrieves all tokens in the NFT contract',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of tokens to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+      {
+        name: 'startAfter',
+        description: 'token ID to start listing after',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMap,
@@ -210,9 +335,30 @@ export const allTokens: ContractFormula<
 }
 
 export const approvalsForSpender: ContractFormula<
-  Approval[] | undefined,
+  Approval[],
   { tokenId: string; spender: string }
 > = {
+  docs: {
+    description: 'retrieves approvals for a specific spender on a token',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to check approvals for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'spender',
+        description: 'address of the spender to check approvals for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -232,7 +378,7 @@ export const approvalsForSpender: ContractFormula<
       )
     )?.value
     if (!info) {
-      return
+      throw new Error('token ID not found')
     }
 
     if (info.owner === spender) {
@@ -252,10 +398,20 @@ export const approvalsForSpender: ContractFormula<
   },
 }
 
-export const approvals: ContractFormula<
-  Approval[] | undefined,
-  { tokenId: string }
-> = {
+export const approvals: ContractFormula<Approval[], { tokenId: string }> = {
+  docs: {
+    description: 'retrieves all approvals for a specific token',
+    args: [
+      {
+        name: 'tokenId',
+        description: 'ID of the token to retrieve approvals for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -272,7 +428,11 @@ export const approvals: ContractFormula<
       )
     )?.value
 
-    return info?.approvals
+    if (!info) {
+      throw new Error('token ID not found')
+    }
+
+    return info.approvals
   },
 }
 

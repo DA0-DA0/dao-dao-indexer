@@ -1,6 +1,7 @@
 import { ContractFormula } from '@/types'
 import { dbKeyToKeys } from '@/utils'
 
+import { makeSimpleContractFormula } from '../../utils'
 import { AUCTIONS_MANAGER_ADDR, REBALANCER_ADDR } from './constants'
 import {
   AccountResponse,
@@ -12,12 +13,17 @@ import {
   RebalancerConfigResponse,
 } from './types'
 
-export const admin: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'admin'),
-}
+export const admin = makeSimpleContractFormula<string>({
+  docs: {
+    description: 'retrieves the admin address of the contract',
+  },
+  key: 'admin',
+})
 
-export const data: ContractFormula<AccountResponse | undefined> = {
+export const data: ContractFormula<AccountResponse> = {
+  docs: {
+    description: 'retrieves account data (admin and rebalancer config)',
+  },
   compute: async (env) => ({
     admin: await admin.compute(env),
     rebalancerConfig: await rebalancerConfig.compute(env),
@@ -27,6 +33,9 @@ export const data: ContractFormula<AccountResponse | undefined> = {
 export const rebalancerConfig: ContractFormula<
   RebalancerConfigResponse | undefined
 > = {
+  docs: {
+    description: 'retrieves the rebalancer configuration for the account',
+  },
   compute: async ({ contractAddress: accountAddr, get }) => {
     // TODO: modify to transformer
     const config = await get<RebalancerConfig>(
@@ -59,6 +68,9 @@ export const rebalancerConfig: ContractFormula<
 }
 
 export const rebalancerTargets: ContractFormula<ParsedTarget[] | undefined> = {
+  docs: {
+    description: 'retrieves the rebalancer targets',
+  },
   compute: async ({ contractAddress: accountAddr, get }) => {
     // TODO: modify to transformer
     const config = await get<RebalancerConfig>(
@@ -74,6 +86,10 @@ export const rebalancerTargets: ContractFormula<ParsedTarget[] | undefined> = {
 export const fundsInAuction: ContractFormula<
   FundsInAuctionsResponse[] | undefined
 > = {
+  docs: {
+    description:
+      'retrieves information about funds currently in auction for the account',
+  },
   compute: async ({ contractAddress: accountAddr, get, getMap }) => {
     const pairMap =
       (await getMap(AUCTIONS_MANAGER_ADDR, 'pairs', {

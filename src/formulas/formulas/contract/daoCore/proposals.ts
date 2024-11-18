@@ -27,9 +27,23 @@ export type OpenProposal = {
 // Return open proposals and whether or not the given address voted. If no
 // address provided, just return open proposals.
 export const openProposals: ContractFormula<
-  OpenProposal[] | undefined,
+  OpenProposal[],
   { address?: string }
 > = {
+  docs: {
+    description:
+      'retrieves open proposals and optionally voting status for a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'optional address to check voting status for',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -37,7 +51,7 @@ export const openProposals: ContractFormula<
     const proposalModules = await activeProposalModules.compute(env)
 
     if (!proposalModules) {
-      return undefined
+      return []
     }
 
     return (
@@ -98,12 +112,13 @@ const OPEN_PROPOSALS_MAP: Record<
   'dao-proposal-multiple': multipleChoiceOpenProposals,
 }
 
-export const proposalCount: ContractFormula<number | undefined> = {
+export const proposalCount: ContractFormula<number> = {
+  docs: {
+    description:
+      'retrieves the total number of proposals across all active proposal modules',
+  },
   compute: async (env) => {
     const proposalModules = await activeProposalModules.compute(env)
-    if (!proposalModules) {
-      return undefined
-    }
 
     // Get proposal count for each proposal module.
     const proposalCounts = await Promise.all(
@@ -152,7 +167,7 @@ type Proposal = ProposalResponse<any> & {
 }
 
 export const allProposals: ContractFormula<
-  Proposal[] | undefined,
+  Proposal[],
   {
     filter?: ListProposalFilter
     // Whether or not to recurse into SubDAOs. Defaults to true. `true` or `1`
@@ -160,6 +175,28 @@ export const allProposals: ContractFormula<
     recursive?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all proposals, optionally including SubDAOs',
+    args: [
+      {
+        name: 'filter',
+        description:
+          'set to `passed` to filter by proposals that were passed, including those that were executed',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'recursive',
+        description: 'whether to recurse into SubDAOs (defaults to true)',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -238,7 +275,11 @@ const LIST_PROPOSALS_MAP: Record<
 }
 
 // Get date of most recent proposal event, either completion or creation.
-export const lastActivity: ContractFormula<string | undefined> = {
+export const lastActivity: ContractFormula<string | null> = {
+  docs: {
+    description:
+      'retrieves the date of the most recent proposal event (completion or creation)',
+  },
   compute: async (env) => {
     const lastProposalAction = ((await allProposals.compute(env)) ?? [])
       .map(({ createdAt, completedAt }) =>
@@ -254,6 +295,6 @@ export const lastActivity: ContractFormula<string | undefined> = {
 
     return lastProposalAction
       ? new Date(lastProposalAction).toISOString()
-      : undefined
+      : null
   },
 }

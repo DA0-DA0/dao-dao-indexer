@@ -8,6 +8,8 @@ const info: Transformer = makeTransformer([], 'info', 'contract_info')
 
 // Transform for all contracts. cw-ownable ownership
 const KEY_OWNERSHIP = dbKeyForKeys('ownership')
+
+const ownership: Transformer = makeTransformer([], 'ownership')
 const owner: Transformer = {
   filter: {
     codeIdsKeys: [],
@@ -17,4 +19,6 @@ const owner: Transformer = {
   getValue: (event) => event.valueJson.owner,
 }
 
-export default [info, owner]
+const hooks: Transformer = makeTransformer([], 'hooks')
+
+export default [info, ownership, owner, hooks]

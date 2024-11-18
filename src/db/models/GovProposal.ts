@@ -34,7 +34,7 @@ import { getDependentKey } from '@/utils'
     },
   ],
 })
-export class GovStateEvent extends DependableEventModel {
+export class GovProposal extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare proposalId: string
@@ -64,16 +64,16 @@ export class GovStateEvent extends DependableEventModel {
   }
 
   get dependentKey(): string {
-    return getDependentKey(GovStateEvent.dependentKeyNamespace, this.proposalId)
+    return getDependentKey(GovProposal.dependentKeyNamespace, this.proposalId)
   }
 
   // Get the previous event for this proposalId. If this is the first event for
   // this proposalId, return null. Cache the result so it can be reused since
   // this shouldn't change.
-  previousEvent?: GovStateEvent | null
-  async getPreviousEvent(cache = true): Promise<GovStateEvent | null> {
+  previousEvent?: GovProposal | null
+  async getPreviousEvent(cache = true): Promise<GovProposal | null> {
     if (this.previousEvent === undefined || !cache) {
-      this.previousEvent = await GovStateEvent.findOne({
+      this.previousEvent = await GovProposal.findOne({
         where: {
           proposalId: this.proposalId,
           blockHeight: {
@@ -87,7 +87,7 @@ export class GovStateEvent extends DependableEventModel {
     return this.previousEvent
   }
 
-  static dependentKeyNamespace = DependentKeyNamespace.GovStateEvent
+  static dependentKeyNamespace = DependentKeyNamespace.GovProposal
   static blockHeightKey: string = 'blockHeight'
   static blockTimeUnixMsKey: string = 'blockTimeUnixMs'
 

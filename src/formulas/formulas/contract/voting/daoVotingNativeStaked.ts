@@ -1,6 +1,7 @@
 import { ContractFormula } from '@/types'
 
 import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
+import { makeSimpleContractFormula } from '../../utils'
 
 interface StakerBalance {
   address: string
@@ -13,10 +14,34 @@ type Config = {
 
 const CODE_IDS_KEYS = ['dao-voting-native-staked']
 
+export { activeThreshold } from './common'
+
 export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
   { address: string }
 > = {
+  docs: {
+    description:
+      'retrieves the voting power for an address at a specific block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to get voting power for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'block',
+        description: 'block height to get voting power at',
+        required: true,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   // Filter by code ID since someone may modify the contract. This is also used
   // in DAO core to match the voting module and pass the query through.
   filter: {
@@ -46,11 +71,38 @@ export const votingPowerAtHeight: ContractFormula<
 }
 
 export const votingPower: ContractFormula<string, { address: string }> = {
+  docs: {
+    description:
+      'retrieves the voting power for an address at the current block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to get voting power for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   filter: votingPowerAtHeight.filter,
   compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
 export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+  docs: {
+    description: 'retrieves the total voting power at a specific block height',
+    args: [
+      {
+        name: 'block',
+        description: 'block height to get total power at',
+        required: true,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   // Filter by code ID since someone may modify the contract. This is also used
   // in DAO core to match the voting module and pass the query through.
   filter: {
@@ -67,30 +119,49 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
 }
 
 export const totalPower: ContractFormula<string> = {
+  docs: {
+    description: 'retrieves the total voting power at the current block height',
+  },
   filter: totalPowerAtHeight.filter,
   compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
-export const dao: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<string | undefined>(contractAddress, 'dao'))
-      ?.value,
-}
+export const dao = makeSimpleContractFormula<string>({
+  docs: {
+    description: 'retrieves the DAO address associated with the contract',
+  },
+  transformation: 'dao',
+})
 
-export const claims: ContractFormula<any[] | undefined, { address: string }> = {
+export const claims: ContractFormula<any[], { address: string }> = {
+  docs: {
+    description: 'retrieves the claims for a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to get claims for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { address } }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return await get<any[]>(contractAddress, 'claims', address)
+    return (await get<any[]>(contractAddress, 'claims', address)) ?? []
   },
 }
 
-export const config: ContractFormula<Config | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value,
-}
+export const config = makeSimpleContractFormula<Config>({
+  docs: {
+    description: 'retrieves the configuration for the contract',
+  },
+  transformation: 'config',
+})
 
 export const listStakers: ContractFormula<
   StakerBalance[],
@@ -99,6 +170,27 @@ export const listStakers: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of stakers with their balances',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of stakers to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after in ascending order',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
@@ -123,9 +215,13 @@ type Staker = StakerBalance & {
   votingPowerPercent: number
 }
 
-export const topStakers: ContractFormula<Staker[] | undefined> = {
+export const topStakers: ContractFormula<Staker[]> = {
+  docs: {
+    description: 'retrieves the top stakers sorted by voting power',
+  },
   compute: async (env) => {
     const { contractAddress, getMap } = env
+
     // Get stakers.
     const stakerBalances =
       (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
@@ -151,3 +247,16 @@ export const topStakers: ContractFormula<Staker[] | undefined> = {
     return stakers
   },
 }
+
+export const getHooks = makeSimpleContractFormula<
+  string[],
+  { hooks: string[] }
+>({
+  docs: {
+    description: 'retrieves the hooks for the contract',
+  },
+  transformation: 'hooks',
+  fallbackKeys: ['hooks'],
+  fallback: { hooks: [] },
+  transform: (hooks) => ({ hooks }),
+})

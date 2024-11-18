@@ -6,7 +6,7 @@ import {
   AccountKey,
   AccountKeyCredit,
   AccountKeyCreditPaymentSource,
-  GovStateEvent,
+  GovProposal,
   State,
   loadDb,
 } from '@/db'
@@ -67,7 +67,7 @@ export const main = async () => {
 
   // Add gov.
   const blockTimestamp = new Date()
-  await GovStateEvent.bulkCreate([
+  await GovProposal.bulkCreate([
     {
       proposalId: '1',
       blockHeight: 1,

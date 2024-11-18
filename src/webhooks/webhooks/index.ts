@@ -4,9 +4,10 @@ import { State, WasmStateEvent } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
 import { Config, ProcessedWebhook, Webhook, WebhookMaker } from '@/types'
 
-import * as discordNotifier from './discordNotifier'
+import * as discord from './discord'
 import * as indexerCwReceipt from './indexerCwReceipt'
 import * as notify from './notify'
+import * as telegram from './telegram'
 import * as websockets from './websockets'
 
 let processedWebhooks: ProcessedWebhook<any, any>[] | undefined
@@ -17,7 +18,8 @@ export const getProcessedWebhooks = (
   if (!processedWebhooks) {
     const webhookMakers: WebhookMaker<any, any>[] = [
       // Add webhook makers here.
-      ...Object.values(discordNotifier),
+      ...Object.values(discord),
+      ...Object.values(telegram),
       ...Object.values(indexerCwReceipt),
       ...Object.values(notify),
       ...Object.values(websockets),

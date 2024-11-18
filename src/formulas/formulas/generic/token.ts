@@ -5,6 +5,20 @@ import { dao as tokenDao } from '../contract/voting/daoVotingTokenStaked'
 
 // Get DAOs that use a native token denom as their governance token.
 export const daos: GenericFormula<string[], { denom: string }> = {
+  docs: {
+    description:
+      'retrieves DAOs that use a native token as their governance token',
+    args: [
+      {
+        name: 'denom',
+        description: 'native token denomination',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async (env) => {
     const {
       args: { denom },
@@ -13,7 +27,7 @@ export const daos: GenericFormula<string[], { denom: string }> = {
     } = env
 
     if (!denom) {
-      throw new Error('Missing denom')
+      throw new Error('missing `denom`')
     }
 
     // Get dao-voting-native-staked contracts that use this denom.

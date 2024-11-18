@@ -1,4 +1,9 @@
-import { ProposalStatus } from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1/gov'
+import {
+  ProposalStatus,
+  VoteOption,
+  WeightedVoteOption,
+} from '@dao-dao/types/protobuf/codegen/cosmos/gov/v1/gov'
+import { OpenAPIV3_1 } from 'openapi-types'
 import { BindOrReplacements, WhereOptions } from 'sequelize'
 
 import type { Contract, StakingSlashEvent, WasmTxEvent } from '@/db'
@@ -189,6 +194,30 @@ export type FormulaDecodedProposalObject = {
   votingEndTime?: number
 }
 
+export type FormulaProposalVoteObject = {
+  id: string
+  voter: string
+  data: string
+}
+
+export type FormulaDecodedProposalVoteObject = {
+  id: number
+  voter: string
+  data: string
+  /**
+   * If only one full-weight vote cast, this will be the chosen option.
+   */
+  vote?: VoteOption
+  /**
+   * All weighted votes.
+   */
+  weightedOptions: WeightedVoteOption[]
+  /**
+   * V1 votes may have metadata attached.
+   */
+  metadata?: string
+}
+
 export type FormulaProposalGetter = (
   proposalId: string
 ) => Promise<FormulaProposalObject | undefined>
@@ -200,6 +229,22 @@ export type FormulaProposalsGetter = (
 ) => Promise<FormulaProposalObject[] | undefined>
 
 export type FormulaProposalCountGetter = () => Promise<number>
+
+export type FormulaProposalVoteGetter = (
+  proposalId: string,
+  voter: string
+) => Promise<FormulaProposalVoteObject | undefined>
+
+export type FormulaProposalVotesGetter = (
+  proposalId: string,
+  ascending?: boolean,
+  limit?: number,
+  offset?: number
+) => Promise<FormulaProposalVoteObject[] | undefined>
+
+export type FormulaProposalVoteCountGetter = (
+  proposalId: string
+) => Promise<number>
 
 export type FormulaQuerier = (
   query: string,
@@ -241,6 +286,9 @@ export type Env<Args extends Record<string, string> = {}> = {
   getProposal: FormulaProposalGetter
   getProposals: FormulaProposalsGetter
   getProposalCount: FormulaProposalCountGetter
+  getProposalVote: FormulaProposalVoteGetter
+  getProposalVotes: FormulaProposalVotesGetter
+  getProposalVoteCount: FormulaProposalVoteCountGetter
   getCommunityPoolBalances: FormulaCommunityPoolBalancesGetter
 
   /**
@@ -265,44 +313,63 @@ export type EnvOptions = {
   cache?: Partial<Cache>
 }
 
+export type AccountEnv<Args extends Record<string, string> = {}> = Env<Args> & {
+  address: string
+}
+
 export type ContractEnv<Args extends Record<string, string> = {}> =
   Env<Args> & {
     contractAddress: string
   }
-
-export type WalletEnv<Args extends Record<string, string> = {}> = Env<Args> & {
-  walletAddress: string
-}
 
 export type ValidatorEnv<Args extends Record<string, string> = {}> =
   Env<Args> & {
     validatorOperatorAddress: string
   }
 
-// Formulas compute a value for the state at one block height.
+/**
+ * Formulas compute a value for the state at one block height.
+ */
 export type Formula<R = any, E extends Env = Env> = {
   compute: (env: E) => Promise<R>
-  // If true, the formula is non-deterministic within the same block, so it
-  // cannot be cached. This likely means that some expiration is being checked
-  // based on the latest time, which affects the output of the formula without
-  // any state changing.
+  /**
+   * If true, the formula is non-deterministic within the same block, so it
+   * cannot be cached. This likely means that some expiration is being checked
+   * based on the latest time, which affects the output of the formula without
+   * any state changing.
+   */
   dynamic?: boolean
+  /**
+   * Docs for the formula.
+   */
+  docs: {
+    /**
+     * Formula description.
+     */
+    description: string
+    /**
+     * Argument definitions.
+     */
+    args?: Omit<OpenAPIV3_1.ParameterObject, 'in'>[]
+  }
 }
+
+export type AccountFormula<
+  R = any,
+  Args extends Record<string, string> = {}
+> = Formula<R, AccountEnv<Args>>
 
 export type ContractFormula<
   R = any,
   Args extends Record<string, string> = {}
 > = Formula<R, ContractEnv<Args>> & {
-  // If filters not satisfied, returns a 405 status.
+  /**
+   * If filters not satisfied, returns a 405 status.
+   */
   filter?: RequireAtLeastOne<{
     codeIdsKeys: string[]
   }>
 }
-
-export type WalletFormula<
-  R = any,
-  Args extends Record<string, string> = {}
-> = Formula<R, WalletEnv<Args>>
 
 export type GenericFormula<
   R = any,
@@ -315,22 +382,22 @@ export type ValidatorFormula<
 > = Formula<R, ValidatorEnv<Args>>
 
 export enum FormulaType {
+  Account = 'account',
   Contract = 'contract',
   Generic = 'generic',
   Validator = 'validator',
-  Wallet = 'wallet',
 }
 
 export const FormulaTypeValues = Object.values(FormulaType)
 
 export type TypedFormula = { name: string } & (
   | {
-      type: FormulaType.Contract
-      formula: ContractFormula
+      type: FormulaType.Account
+      formula: AccountFormula
     }
   | {
-      type: FormulaType.Wallet
-      formula: WalletFormula
+      type: FormulaType.Contract
+      formula: ContractFormula
     }
   | {
       type: FormulaType.Generic

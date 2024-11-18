@@ -67,10 +67,10 @@ export const compute = async ({
           ...env,
           validatorOperatorAddress: targetAddress,
         })
-      : options.type === FormulaType.Wallet
+      : options.type === FormulaType.Account
       ? await options.formula.compute({
           ...env,
-          walletAddress: targetAddress,
+          address: targetAddress,
         })
       : await options.formula.compute(env)
 
@@ -162,7 +162,12 @@ export const computeRange = async ({
       cache: initialCache,
     })
     const value =
-      options.type === FormulaType.Contract
+      options.type === FormulaType.Account
+        ? await options.formula.compute({
+            ...env,
+            address: targetAddress,
+          })
+        : options.type === FormulaType.Contract
         ? await options.formula.compute({
             ...env,
             contractAddress: targetAddress,
@@ -171,11 +176,6 @@ export const computeRange = async ({
         ? await options.formula.compute({
             ...env,
             validatorOperatorAddress: targetAddress,
-          })
-        : options.type === FormulaType.Wallet
-        ? await options.formula.compute({
-            ...env,
-            walletAddress: targetAddress,
           })
         : await options.formula.compute(env)
 
@@ -246,7 +246,7 @@ export const computeRange = async ({
         await Promise.all(
           getDependableEventModels().map(async (DependableEventModel) => {
             const namespacedDependentKeys = newDependentKeys.filter(({ key }) =>
-              key.startsWith(DependableEventModel.dependentKeyNamespace)
+              key.startsWith(DependableEventModel.dependentKeyNamespace + ':')
             )
             if (namespacedDependentKeys.length === 0) {
               return []

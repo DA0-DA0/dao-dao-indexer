@@ -1,17 +1,40 @@
 import { ContractFormula } from '@/types'
 
-export const config: ContractFormula = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'config'),
-}
+import { makeSimpleContractFormula } from '../../utils'
+
+export const config = makeSimpleContractFormula({
+  docs: {
+    description: 'retrieves the configuration of the contract',
+  },
+  key: 'config',
+})
 
 export const proposal: ContractFormula<any, { id: string }> = {
+  docs: {
+    description: 'retrieves a proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal to retrieve',
+        required: true,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { id } }) => {
     if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 
-    return await get(contractAddress, 'proposals', Number(id))
+    const proposal = await get(contractAddress, 'proposals', Number(id))
+
+    if (!proposal) {
+      throw new Error('proposal not found')
+    }
+
+    return proposal
   },
 }
 
@@ -22,6 +45,27 @@ export const listProposals: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves a list of proposals',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of proposals to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+      {
+        name: 'startAfter',
+        description: 'ID to start listing proposals after',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   compute: async (env) => {
     const {
       contractAddress,
@@ -50,11 +94,27 @@ export const listProposals: ContractFormula<
 }
 
 export const proposalExecutionError: ContractFormula<any, { id: string }> = {
+  docs: {
+    description: 'retrieves the execution error for a specific proposal',
+    args: [
+      {
+        name: 'id',
+        description: 'ID of the proposal to retrieve the execution error for',
+        required: true,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { id } }) => {
     if (!id || isNaN(Number(id)) || Number(id) < 0) {
       throw new Error('missing `id`')
     }
 
-    return await get(contractAddress, 'proposal_execution_errors', Number(id))
+    return (
+      (await get(contractAddress, 'proposal_execution_errors', Number(id))) ??
+      null
+    )
   },
 }

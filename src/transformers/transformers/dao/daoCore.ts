@@ -3,7 +3,7 @@ import { dbKeyToKeys } from '@/utils'
 
 import { makeTransformer, makeTransformerForMap } from '../../utils'
 
-const CODE_IDS_KEYS = ['dao-core']
+const CODE_IDS_KEYS = ['dao-dao-core']
 
 const config = makeTransformer(CODE_IDS_KEYS, 'config', ['config_v2', 'config'])
 const paused = makeTransformer(CODE_IDS_KEYS, 'paused')

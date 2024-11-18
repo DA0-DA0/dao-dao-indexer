@@ -10,6 +10,7 @@ import {
 
 import common from './common'
 import dao from './dao'
+import distribution from './distribution'
 import external from './external'
 import polytone from './polytone'
 import prePropose from './prePropose'
@@ -31,6 +32,7 @@ export const getProcessedTransformers = (
       // Add transformers here.
       ...common,
       ...dao,
+      ...distribution,
       ...external,
       ...polytone,
       ...prePropose,

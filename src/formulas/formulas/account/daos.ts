@@ -1,13 +1,13 @@
 import { Op } from 'sequelize'
 
-import { WalletFormula } from '@/types'
+import { AccountFormula } from '@/types'
 
 import { info } from '../contract'
 import { config, votingModule } from '../contract/daoCore/base'
 import { proposalCount } from '../contract/daoCore/proposals'
 import { ContractInfo } from '../types'
 
-export const memberOf: WalletFormula<
+export const memberOf: AccountFormula<
   {
     dao: string
     info: ContractInfo
@@ -16,9 +16,12 @@ export const memberOf: WalletFormula<
     proposalCount: number
   }[]
 > = {
+  docs: {
+    description: 'retrieves DAOs where the account is a member',
+  },
   compute: async (env) => {
     const {
-      walletAddress,
+      address: walletAddress,
       getTransformationMatches,
       getTransformationMatch,
       getCodeIdsForKeys,
@@ -83,8 +86,9 @@ export const memberOf: WalletFormula<
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
-    // dao-voting-cw721-staked contracts where the address has staked NFTs.
-    const daoVotingCw721StakedContracts =
+    // dao-voting-cw721-staked and dao-voting-onft-staked contracts where the
+    // address has staked NFTs.
+    const daoVotingNftStakedContracts =
       (
         await getTransformationMatches(
           undefined,
@@ -92,7 +96,7 @@ export const memberOf: WalletFormula<
           {
             [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '0' }],
           },
-          getCodeIdsForKeys('dao-voting-cw721-staked')
+          getCodeIdsForKeys('dao-voting-cw721-staked', 'dao-voting-onft-staked')
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
@@ -113,13 +117,32 @@ export const memberOf: WalletFormula<
         )
       )?.map(({ contractAddress }) => contractAddress) ?? []
 
+    // dao-voting-sg-community-nft contracts where the address has voting power.
+    const sgCommunityNftCodeIds = getCodeIdsForKeys(
+      'dao-voting-sg-community-nft'
+    )
+    const daoVotingSgCommunityNftContracts =
+      sgCommunityNftCodeIds.length > 0
+        ? (
+            await getTransformationMatches(
+              undefined,
+              `vp:${walletAddress}`,
+              {
+                [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '0' }],
+              },
+              sgCommunityNftCodeIds
+            )
+          )?.map(({ contractAddress }) => contractAddress) ?? []
+        : []
+
     // DAO addresses for all the contracts above.
-    const tokenStakedBalancesDaoAddresses = (
+    const daoAddresses = (
       await Promise.all(
         [
           ...daoVotingCw20StakedContracts,
-          ...daoVotingCw721StakedContracts,
+          ...daoVotingNftStakedContracts,
           ...daoVotingTokenStakedContracts,
+          ...daoVotingSgCommunityNftContracts,
         ].map((contractAddress) =>
           getTransformationMatch(contractAddress, 'dao')
         )
@@ -162,19 +185,19 @@ export const memberOf: WalletFormula<
       typeof match?.value === 'string' && match.value ? [match.value] : []
     )
 
-    const daos = Array.from(
-      new Set([...tokenStakedBalancesDaoAddresses, ...cw4DaoAddresses])
-    )
-    const daoStates = await Promise.all(
-      daos.map((daoAddress) =>
-        Promise.all([
-          info.compute({ ...env, contractAddress: daoAddress }),
-          config.compute({ ...env, contractAddress: daoAddress }),
-          votingModule.compute({ ...env, contractAddress: daoAddress }),
-          proposalCount.compute({ ...env, contractAddress: daoAddress }),
-        ])
+    const daos = Array.from(new Set([...daoAddresses, ...cw4DaoAddresses]))
+    const daoStates = (
+      await Promise.allSettled(
+        daos.map((daoAddress) =>
+          Promise.all([
+            info.compute({ ...env, contractAddress: daoAddress }),
+            config.compute({ ...env, contractAddress: daoAddress }),
+            votingModule.compute({ ...env, contractAddress: daoAddress }),
+            proposalCount.compute({ ...env, contractAddress: daoAddress }),
+          ])
+        )
       )
-    )
+    ).flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
 
     return daoStates.flatMap(
       ([info, config, votingModule, proposalCount], index) =>
@@ -191,9 +214,12 @@ export const memberOf: WalletFormula<
   },
 }
 
-export const adminOf: WalletFormula<string[]> = {
+export const adminOf: AccountFormula<string[]> = {
+  docs: {
+    description: 'retrieves DAOs where the account is the admin',
+  },
   compute: async ({
-    walletAddress,
+    address: walletAddress,
     getTransformationMatches,
     getCodeIdsForKeys,
   }) => {
@@ -202,7 +228,7 @@ export const adminOf: WalletFormula<string[]> = {
       undefined,
       'admin',
       walletAddress,
-      getCodeIdsForKeys('dao-core')
+      getCodeIdsForKeys('dao-dao-core')
     )
 
     return daoCoreContracts?.map(({ contractAddress }) => contractAddress) ?? []

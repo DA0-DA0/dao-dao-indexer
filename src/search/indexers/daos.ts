@@ -27,7 +27,7 @@ export const daos: MeilisearchIndexer = {
       return
     }
 
-    let daoAddress = event.contract?.matchesCodeIdKeys('dao-core')
+    let daoAddress = event.contract?.matchesCodeIdKeys('dao-dao-core')
       ? event.contractAddress
       : undefined
 
@@ -60,7 +60,7 @@ export const daos: MeilisearchIndexer = {
   },
   getBulkUpdates: async () => {
     const codeIds =
-      WasmCodeService.getInstance().findWasmCodeIdsByKeys('dao-core')
+      WasmCodeService.getInstance().findWasmCodeIdsByKeys('dao-dao-core')
     if (!codeIds.length) {
       return []
     }

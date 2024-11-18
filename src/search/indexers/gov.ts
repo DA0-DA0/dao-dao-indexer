@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize'
 
-import { GovStateEvent } from '@/db'
+import { GovProposal, GovProposalVote } from '@/db'
 import {
   FormulaType,
   MeilisearchIndexUpdate,
@@ -25,7 +25,7 @@ export const govProposals: MeilisearchIndexer = {
     'value.votingEndTime',
   ],
   matches: ({ event }) => {
-    if (!(event instanceof GovStateEvent)) {
+    if (!(event instanceof GovProposal)) {
       return
     }
 
@@ -42,7 +42,7 @@ export const govProposals: MeilisearchIndexer = {
     }
   },
   getBulkUpdates: async () => {
-    const events = await GovStateEvent.findAll({
+    const events = await GovProposal.findAll({
       attributes: [
         // DISTINCT ON is not directly supported by Sequelize, so we need to
         // cast to unknown and back to string to insert this at the beginning of
@@ -68,6 +68,73 @@ export const govProposals: MeilisearchIndexer = {
           targetAddress: '_',
           args: {
             id: proposalId,
+          },
+        },
+      })
+    )
+  },
+}
+
+export const govProposalVotes: MeilisearchIndexer = {
+  id: 'gov-proposal-votes',
+  index: 'gov-proposal-votes',
+  automatic: true,
+  filterableAttributes: [
+    'value.id',
+    'value.voter',
+    'value.vote',
+    'value.weightedOptions',
+    'value.metadata',
+  ],
+  sortableAttributes: ['value.id', 'value.voter'],
+  matches: ({ event }) => {
+    if (!(event instanceof GovProposalVote)) {
+      return
+    }
+
+    return {
+      id: [event.proposalId, event.voterAddress].join('_'),
+      formula: {
+        type: FormulaType.Generic,
+        name: 'gov/decodedVote',
+        targetAddress: '_',
+        args: {
+          id: event.proposalId,
+          voter: event.voterAddress,
+        },
+      },
+    }
+  },
+  getBulkUpdates: async () => {
+    const events = await GovProposalVote.findAll({
+      attributes: [
+        // DISTINCT ON is not directly supported by Sequelize, so we need to
+        // cast to unknown and back to string to insert this at the beginning of
+        // the query. This ensures we use the most recent version of the name
+        // for each contract.
+        Sequelize.literal(
+          'DISTINCT ON("proposalId", "voterAddress") \'\''
+        ) as unknown as string,
+        'proposalId',
+        'voterAddress',
+      ],
+      order: [
+        // Needs to be first so we can use DISTINCT ON.
+        ['proposalId', 'ASC'],
+        ['voterAddress', 'ASC'],
+      ],
+    })
+
+    return events.map(
+      ({ proposalId, voterAddress }): MeilisearchIndexUpdate => ({
+        id: [proposalId, voterAddress].join('_'),
+        formula: {
+          type: FormulaType.Generic,
+          name: 'gov/decodedVote',
+          targetAddress: '_',
+          args: {
+            id: proposalId,
+            voter: voterAddress,
           },
         },
       })

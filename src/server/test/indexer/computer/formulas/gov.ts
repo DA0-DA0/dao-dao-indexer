@@ -1,17 +1,17 @@
 import request from 'supertest'
 
-import { GovStateEvent, State } from '@/db'
+import { GovProposal, GovProposalVote, State } from '@/db'
 
 import { app } from '../../app'
 import { ComputerTestOptions } from '../types'
 
 export const loadGovTests = (options: ComputerTestOptions) => {
   describe('gov', () => {
-    describe('basic', () => {
+    describe('proposals', () => {
       beforeEach(async () => {
         // Set up gov.
         const blockTimestamp = new Date()
-        await GovStateEvent.bulkCreate([
+        await GovProposal.bulkCreate([
           {
             proposalId: '1',
             blockHeight: 1,
@@ -414,6 +414,430 @@ export const loadGovTests = (options: ComputerTestOptions) => {
               },
               blockHeight: 3,
               blockTimeUnixMs: 3,
+            },
+          ])
+      })
+    })
+
+    describe('votes', () => {
+      beforeEach(async () => {
+        // Set up gov.
+        const blockTimestamp = new Date()
+        await GovProposalVote.bulkCreate([
+          {
+            proposalId: '1',
+            voterAddress: 'a',
+            blockHeight: 1,
+            blockTimeUnixMs: 1,
+            blockTimestamp,
+            data: '1-1',
+          },
+          {
+            proposalId: '1',
+            voterAddress: 'a',
+            blockHeight: 2,
+            blockTimeUnixMs: 2,
+            blockTimestamp,
+            data: '1-2',
+          },
+          {
+            proposalId: '1',
+            voterAddress: 'b',
+            blockHeight: 2,
+            blockTimeUnixMs: 2,
+            blockTimestamp,
+            data: '1-2',
+          },
+          {
+            proposalId: '2',
+            voterAddress: 'b',
+            blockHeight: 3,
+            blockTimeUnixMs: 3,
+            blockTimestamp,
+            data: '2-3',
+          },
+        ])
+
+        await (await State.getSingleton())!.update({
+          latestBlockHeight: 4,
+          latestBlockTimeUnixMs: 4,
+          lastGovBlockHeightExported: 4,
+        })
+      })
+
+      it('returns correct vote response for a single block', async () => {
+        await request(app.callback())
+          .get('/generic/_/gov/vote?id=1&voter=a&block=1:1')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect({
+            id: '1',
+            voter: 'a',
+            data: '1-1',
+          })
+
+        await request(app.callback())
+          .get('/generic/_/gov/vote?id=1&voter=a&block=3:3')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect({
+            id: '1',
+            voter: 'a',
+            data: '1-2',
+          })
+
+        await request(app.callback())
+          .get('/generic/_/gov/vote?id=1&voter=b&block=3:3')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect({
+            id: '1',
+            voter: 'b',
+            data: '1-2',
+          })
+
+        // Returns latest if no block.
+        await request(app.callback())
+          .get('/generic/_/gov/vote?id=1&voter=b')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect({
+            id: '1',
+            voter: 'b',
+            data: '1-2',
+          })
+      })
+
+      it('returns correct vote response for multiple blocks', async () => {
+        await request(app.callback())
+          .get('/generic/_/gov/vote?id=1&voter=a&blocks=1:1..3:3')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect([
+            {
+              value: {
+                id: '1',
+                voter: 'a',
+                data: '1-1',
+              },
+              blockHeight: 1,
+              blockTimeUnixMs: 1,
+            },
+            {
+              value: {
+                id: '1',
+                voter: 'a',
+                data: '1-2',
+              },
+              blockHeight: 2,
+              blockTimeUnixMs: 2,
+            },
+          ])
+
+        await request(app.callback())
+          .get('/generic/_/gov/vote?id=1&voter=a&blocks=1:1..3:3&blockStep=2')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect([
+            {
+              at: '1',
+              value: {
+                id: '1',
+                voter: 'a',
+                data: '1-1',
+              },
+              blockHeight: 1,
+              blockTimeUnixMs: 1,
+            },
+            {
+              at: '3',
+              value: {
+                id: '1',
+                voter: 'a',
+                data: '1-2',
+              },
+              blockHeight: 2,
+              blockTimeUnixMs: 2,
+            },
+          ])
+      })
+
+      it('returns correct vote response for multiple times', async () => {
+        await request(app.callback())
+          .get('/generic/_/gov/vote?id=1&voter=a&times=1..3')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect([
+            {
+              value: {
+                id: '1',
+                voter: 'a',
+                data: '1-1',
+              },
+              blockHeight: 1,
+              blockTimeUnixMs: 1,
+            },
+            {
+              value: {
+                id: '1',
+                voter: 'a',
+                data: '1-2',
+              },
+              blockHeight: 2,
+              blockTimeUnixMs: 2,
+            },
+          ])
+
+        await request(app.callback())
+          .get('/generic/_/gov/vote?id=1&voter=a&times=1..3&timeStep=2')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect([
+            {
+              at: '1',
+              value: {
+                id: '1',
+                voter: 'a',
+                data: '1-1',
+              },
+              blockHeight: 1,
+              blockTimeUnixMs: 1,
+            },
+            {
+              at: '3',
+              value: {
+                id: '1',
+                voter: 'a',
+                data: '1-2',
+              },
+              blockHeight: 2,
+              blockTimeUnixMs: 2,
+            },
+          ])
+      })
+
+      it('returns correct votes response for a single block', async () => {
+        await request(app.callback())
+          .get('/generic/_/gov/votes?id=1&block=1:1')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect({
+            votes: [
+              {
+                id: '1',
+                voter: 'a',
+                data: '1-1',
+              },
+            ],
+            total: 1,
+          })
+
+        await request(app.callback())
+          .get('/generic/_/gov/votes?id=1&block=3:3')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect({
+            votes: [
+              {
+                id: '1',
+                voter: 'a',
+                data: '1-2',
+              },
+              {
+                id: '1',
+                voter: 'b',
+                data: '1-2',
+              },
+            ],
+            total: 2,
+          })
+
+        // Returns latest if no block.
+        await request(app.callback())
+          .get('/generic/_/gov/votes?id=1')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect({
+            votes: [
+              {
+                id: '1',
+                voter: 'a',
+                data: '1-2',
+              },
+              {
+                id: '1',
+                voter: 'b',
+                data: '1-2',
+              },
+            ],
+            total: 2,
+          })
+      })
+
+      it('returns correct votes response for multiple blocks', async () => {
+        await request(app.callback())
+          .get('/generic/_/gov/votes?id=1&blocks=1:1..3:3')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect([
+            {
+              value: {
+                votes: [
+                  {
+                    id: '1',
+                    voter: 'a',
+                    data: '1-1',
+                  },
+                ],
+                total: 1,
+              },
+              blockHeight: 1,
+              blockTimeUnixMs: 1,
+            },
+            {
+              value: {
+                votes: [
+                  {
+                    id: '1',
+                    voter: 'a',
+                    data: '1-2',
+                  },
+                  {
+                    id: '1',
+                    voter: 'b',
+                    data: '1-2',
+                  },
+                ],
+                total: 2,
+              },
+              blockHeight: 2,
+              blockTimeUnixMs: 2,
+            },
+          ])
+
+        await request(app.callback())
+          .get('/generic/_/gov/votes?id=1&blocks=1:1..3:3&blockStep=2')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect([
+            {
+              at: '1',
+              value: {
+                votes: [
+                  {
+                    id: '1',
+                    voter: 'a',
+                    data: '1-1',
+                  },
+                ],
+                total: 1,
+              },
+              blockHeight: 1,
+              blockTimeUnixMs: 1,
+            },
+            {
+              at: '3',
+              value: {
+                votes: [
+                  {
+                    id: '1',
+                    voter: 'a',
+                    data: '1-2',
+                  },
+                  {
+                    id: '1',
+                    voter: 'b',
+                    data: '1-2',
+                  },
+                ],
+                total: 2,
+              },
+              blockHeight: 2,
+              blockTimeUnixMs: 2,
+            },
+          ])
+      })
+
+      it('returns correct votes response for multiple times', async () => {
+        await request(app.callback())
+          .get('/generic/_/gov/votes?id=1&times=1..3')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect([
+            {
+              value: {
+                votes: [
+                  {
+                    id: '1',
+                    voter: 'a',
+                    data: '1-1',
+                  },
+                ],
+                total: 1,
+              },
+              blockHeight: 1,
+              blockTimeUnixMs: 1,
+            },
+            {
+              value: {
+                votes: [
+                  {
+                    id: '1',
+                    voter: 'a',
+                    data: '1-2',
+                  },
+                  {
+                    id: '1',
+                    voter: 'b',
+                    data: '1-2',
+                  },
+                ],
+                total: 2,
+              },
+              blockHeight: 2,
+              blockTimeUnixMs: 2,
+            },
+          ])
+
+        await request(app.callback())
+          .get('/generic/_/gov/votes?id=1&times=1..3&timeStep=2')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect([
+            {
+              at: '1',
+              value: {
+                votes: [
+                  {
+                    id: '1',
+                    voter: 'a',
+                    data: '1-1',
+                  },
+                ],
+                total: 1,
+              },
+              blockHeight: 1,
+              blockTimeUnixMs: 1,
+            },
+            {
+              at: '3',
+              value: {
+                votes: [
+                  {
+                    id: '1',
+                    voter: 'a',
+                    data: '1-2',
+                  },
+                  {
+                    id: '1',
+                    voter: 'b',
+                    data: '1-2',
+                  },
+                ],
+                total: 2,
+              },
+              blockHeight: 2,
+              blockTimeUnixMs: 2,
             },
           ])
       })

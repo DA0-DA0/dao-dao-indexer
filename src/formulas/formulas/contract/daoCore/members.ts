@@ -8,6 +8,8 @@ import { topStakers as topCw20Stakers } from '../voting/daoVotingCw20Staked'
 import { groupContract } from '../voting/daoVotingCw4'
 import { topStakers as topCw721Stakers } from '../voting/daoVotingCw721Staked'
 import { topStakers as topNativeStakers } from '../voting/daoVotingNativeStaked'
+import { topStakers as topOnftStakers } from '../voting/daoVotingOnftStaked'
+import { allVotersWithVotingPower as sgCommunityAllVoters } from '../voting/daoVotingSgCommunityNft'
 import { topStakers as topTokenStakers } from '../voting/daoVotingTokenStaked'
 import { config, votingModule } from './base'
 import { getUniqueSubDaosInTree } from './utils'
@@ -25,6 +27,20 @@ export const memberCount: ContractFormula<
     recursive?: string
   }
 > = {
+  docs: {
+    description:
+      'count of unique members in the DAO and optionally its SubDAOs',
+    args: [
+      {
+        name: 'recursive',
+        description: 'whether or not to recurse into SubDAOs. defaults to true',
+        required: false,
+        schema: {
+          type: 'boolean',
+        },
+      },
+    ],
+  },
   compute: async (env) => {
     const memberTree = await allMembers.compute(env)
     const uniqueMembers = new Set(
@@ -50,6 +66,19 @@ export const allMembers: ContractFormula<
     recursive?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all members of the DAO and optionally its SubDAOs',
+    args: [
+      {
+        name: 'recursive',
+        description: 'whether or not to recurse into SubDAOs. defaults to true',
+        required: false,
+        schema: {
+          type: 'boolean',
+        },
+      },
+    ],
+  },
   compute: async (env) => {
     const daos = [
       env.contractAddress,
@@ -92,14 +121,18 @@ export const allMembers: ContractFormula<
   },
 }
 
-export const listMembers: ContractFormula<DaoMember[] | undefined> = {
+export const listMembers: ContractFormula<DaoMember[]> = {
+  docs: {
+    description:
+      'lists all members of the DAO with their voting power percentages',
+  },
   compute: async (env) => {
     const { contractMatchesCodeIdKeys } = env
 
     // Get members.
     const votingModuleAddress = await votingModule.compute(env)
     if (!votingModuleAddress) {
-      return
+      throw new Error('missing `votingModuleAddress`')
     }
 
     if (
@@ -159,6 +192,21 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
     } else if (
       await contractMatchesCodeIdKeys(
         votingModuleAddress,
+        'dao-voting-onft-staked'
+      )
+    ) {
+      const stakers = await topOnftStakers.compute({
+        ...env,
+        contractAddress: votingModuleAddress,
+      })
+
+      return stakers.map(({ address, votingPowerPercent }) => ({
+        address,
+        votingPowerPercent,
+      }))
+    } else if (
+      await contractMatchesCodeIdKeys(
+        votingModuleAddress,
         'dao-voting-native-staked'
       )
     ) {
@@ -190,12 +238,33 @@ export const listMembers: ContractFormula<DaoMember[] | undefined> = {
           votingPowerPercent,
         }))
       }
+    } else if (
+      await contractMatchesCodeIdKeys(
+        votingModuleAddress,
+        'dao-voting-sg-community-nft'
+      )
+    ) {
+      const voters = await sgCommunityAllVoters.compute({
+        ...env,
+        contractAddress: votingModuleAddress,
+      })
+
+      return voters.map(({ address, votingPowerPercent }) => ({
+        address,
+        votingPowerPercent,
+      }))
     }
+
+    throw new Error('voting module passthrough not supported for this DAO')
   },
 }
 
 // Date membership was last updated for a member-based DAO.
-export const lastMembershipChange: ContractFormula<string | undefined> = {
+export const lastMembershipChange: ContractFormula<string | null> = {
+  docs: {
+    description:
+      'retrieves the date membership was last updated for a member-based DAO',
+  },
   compute: async (env) => {
     // Get members.
     const votingModuleAddress = await votingModule.compute(env)
@@ -224,6 +293,6 @@ export const lastMembershipChange: ContractFormula<string | undefined> = {
       .sort()
       .pop()
 
-    return lastChanged ? new Date(lastChanged).toISOString() : undefined
+    return lastChanged ? new Date(lastChanged).toISOString() : null
   },
 }

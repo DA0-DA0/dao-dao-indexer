@@ -7,7 +7,7 @@ import {
   TotalPowerAtHeight,
   VotingPowerAtHeight,
 } from '../../types'
-import { isExpirationExpired } from '../../utils'
+import { isExpirationExpired, makeSimpleContractFormula } from '../../utils'
 import { info } from '../common'
 import { balance } from '../external/cw20'
 import { dao as daoPreProposeBaseDao } from '../prePropose/daoPreProposeBase'
@@ -28,6 +28,14 @@ import {
   votingPowerAtHeight as daoVotingNativeStakedVotingPowerAtHeight,
 } from '../voting/daoVotingNativeStaked'
 import {
+  totalPowerAtHeight as daoVotingOnftStakedTotalPowerAtHeight,
+  votingPowerAtHeight as daoVotingOnftStakedVotingPowerAtHeight,
+} from '../voting/daoVotingOnftStaked'
+import {
+  totalPowerAtHeight as daoVotingSgCommunityNftTotalPowerAtHeight,
+  votingPowerAtHeight as daoVotingSgCommunityNftVotingPowerAtHeight,
+} from '../voting/daoVotingSgCommunityNft'
+import {
   totalPowerAtHeight as daoVotingTokenStakedTotalPowerAtHeight,
   votingPowerAtHeight as daoVotingTokenStakedVotingPowerAtHeight,
 } from '../voting/daoVotingTokenStaked'
@@ -45,14 +53,14 @@ export type ProposalModuleWithInfo = ProposalModule & {
   info?: ContractInfo
 }
 
-export type PausedResponse =
+export type PauseInfoResponse =
   | {
-      Paused: {
+      paused: {
         expiration: Expiration
       }
     }
   | {
-      Unpaused: {}
+      unpaused: {}
     }
 
 export type Cw20Balance = {
@@ -65,19 +73,18 @@ export type SubDao = {
   charter?: string | null
 }
 
-export const config: ContractFormula<Config | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch, get }) =>
-    (await getTransformationMatch<Config>(contractAddress, 'config'))?.value ??
-    // Fallback to events.
-    // V2.
-    (await get<Config>(contractAddress, 'config_v2')) ??
-    // V1.
-    (await get<Config>(contractAddress, 'config')),
-}
+export const config = makeSimpleContractFormula<Config>({
+  docs: {
+    description: 'retrieves the DAO configuration',
+  },
+  transformation: 'config',
+  fallbackKeys: ['config_v2', 'config'],
+})
 
-export const proposalModules: ContractFormula<
-  ProposalModuleWithInfo[] | undefined
-> = {
+export const proposalModules: ContractFormula<ProposalModuleWithInfo[]> = {
+  docs: {
+    description: 'retrieves all proposal modules for the DAO',
+  },
   compute: async (env) => {
     const { contractAddress, getTransformationMap, getMap } = env
 
@@ -121,7 +128,7 @@ export const proposalModules: ContractFormula<
 
     // If no proposal modules, this must not be a DAO core contract.
     if (!proposalModules.length) {
-      return undefined
+      throw new Error('failed to load proposal modules')
     }
 
     return await Promise.all(
@@ -145,18 +152,24 @@ export const proposalModules: ContractFormula<
   },
 }
 
-export const activeProposalModules: ContractFormula<
-  ProposalModuleWithInfo[] | undefined
-> = {
-  compute: async (env) => {
-    const modules = await proposalModules.compute(env)
-    return modules?.filter(
-      (module) => module.status === 'enabled' || module.status === 'Enabled'
-    )
-  },
-}
+export const activeProposalModules: ContractFormula<ProposalModuleWithInfo[]> =
+  {
+    docs: {
+      description:
+        'retrieves all active (enabled) proposal modules for the DAO',
+    },
+    compute: async (env) => {
+      const modules = await proposalModules.compute(env)
+      return modules.filter(
+        (module) => module.status === 'enabled' || module.status === 'Enabled'
+      )
+    },
+  }
 
-export const paused: ContractFormula<PausedResponse> = {
+export const pauseInfo: ContractFormula<PauseInfoResponse> = {
+  docs: {
+    description: 'retrieves the pause status of the DAO',
+  },
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
@@ -166,15 +179,21 @@ export const paused: ContractFormula<PausedResponse> = {
       (await getTransformationMatch<Expiration>(contractAddress, 'paused'))
         ?.value ??
       // Fallback to events.
-      (await get<Expiration | undefined>(contractAddress, 'paused'))
+      (await get<Expiration>(contractAddress, 'paused'))
 
     return !expiration || isExpirationExpired(env, expiration)
-      ? { Unpaused: {} }
-      : { Paused: { expiration } }
+      ? { unpaused: {} }
+      : { paused: { expiration } }
   },
 }
 
+// Backwards compatibility.
+export const paused = pauseInfo
+
 export const admin: ContractFormula<string | null> = {
+  docs: {
+    description: 'retrieves the admin address of the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMatch, get }) => {
     return (
       (await getTransformationMatch<string>(contractAddress, 'admin'))?.value ??
@@ -188,23 +207,52 @@ export const admin: ContractFormula<string | null> = {
   },
 }
 
-export const adminNomination: ContractFormula<string | undefined> = {
+export const adminNomination: ContractFormula<string | null> = {
+  docs: {
+    description: 'retrieves the nominated admin address of the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMatch, get }) =>
     (await getTransformationMatch<string>(contractAddress, 'nominatedAdmin'))
       ?.value ??
     // Fallback to events.
-    (await get<string>(contractAddress, 'nominated_admin')),
+    (await get<string>(contractAddress, 'nominated_admin')) ??
+    // Null if nothing found because no admin nominated.
+    null,
 }
 
-export const votingModule: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch, get }) =>
-    (await getTransformationMatch<string>(contractAddress, 'votingModule'))
-      ?.value ??
-    // Fallback to events.
-    (await get<string>(contractAddress, 'voting_module')),
+export const votingModule: ContractFormula<string> = {
+  docs: {
+    description: 'retrieves the voting module address of the DAO',
+  },
+  compute: async ({ contractAddress, getTransformationMatch, get }) => {
+    const votingModule =
+      (await getTransformationMatch<string>(contractAddress, 'votingModule'))
+        ?.value ??
+      // Fallback to events.
+      (await get<string>(contractAddress, 'voting_module'))
+
+    if (!votingModule) {
+      throw new Error('failed to load voting module')
+    }
+
+    return votingModule
+  },
 }
 
-export const item: ContractFormula<string | undefined, { key: string }> = {
+export const item: ContractFormula<string | null, { key: string }> = {
+  docs: {
+    description: "retrieves a specific item from the DAO's storage",
+    args: [
+      {
+        name: 'key',
+        description: 'key of the item to retrieve',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getTransformationMatch,
@@ -216,19 +264,20 @@ export const item: ContractFormula<string | undefined, { key: string }> = {
     }
 
     return (
-      (
-        await getTransformationMatch<string | undefined>(
-          contractAddress,
-          `item:${key}`
-        )
-      )?.value ??
+      (await getTransformationMatch<string>(contractAddress, `item:${key}`))
+        ?.value ??
       // Fallback to events.
-      (await get<string | undefined>(contractAddress, 'items', key))
+      (await get<string>(contractAddress, 'items', key)) ??
+      // Null if nothing found because no item set.
+      null
     )
   },
 }
 
 export const listItems: ContractFormula<[string, string][]> = {
+  docs: {
+    description: 'retrieves all items stored in the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMap, getMap }) =>
     Object.entries(
       (await getTransformationMap<string>(contractAddress, 'item')) ??
@@ -239,6 +288,10 @@ export const listItems: ContractFormula<[string, string][]> = {
 }
 
 export const cw20List: ContractFormula<string[]> = {
+  docs: {
+    description:
+      'retrieves the list of CW20 token addresses associated with the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMap, getMap }) =>
     Object.keys(
       (await getTransformationMap<string>(contractAddress, 'cw20')) ??
@@ -249,6 +302,10 @@ export const cw20List: ContractFormula<string[]> = {
 }
 
 export const cw721List: ContractFormula<string[]> = {
+  docs: {
+    description:
+      'retrieves the list of CW721 NFT addresses associated with the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMap, getMap }) =>
     Object.keys(
       (await getTransformationMap<string>(contractAddress, 'cw721')) ??
@@ -259,36 +316,51 @@ export const cw721List: ContractFormula<string[]> = {
 }
 
 export const cw20Balances: ContractFormula<Cw20Balance[]> = {
+  docs: {
+    description: 'retrieves the CW20 token balances for the DAO',
+  },
   compute: async (env) => {
+    // cw20 addresses stored in contract list. backwards compatibility as the
+    // frontend doesn't use this anymore.
     const cw20Addresses = (await cw20List.compute(env)) ?? []
+    // cw20 addresses stored in items, formatted as `cw20:[address]`
+    const cw20ItemAddresses = (await listItems.compute(env)).flatMap(
+      ([key, value]) =>
+        key.startsWith('cw20:') && value === '1' ? key.substring(5) : []
+    )
 
     return await Promise.all(
-      cw20Addresses.map(async (addr): Promise<Cw20Balance> => {
-        const balanceResponse = await balance.compute({
-          ...env,
-          contractAddress: addr,
-          args: { address: env.contractAddress },
-        })
+      Array.from(new Set([...cw20Addresses, ...cw20ItemAddresses])).map(
+        async (addr): Promise<Cw20Balance> => {
+          const balanceResponse = await balance.compute({
+            ...env,
+            contractAddress: addr,
+            args: { address: env.contractAddress },
+          })
 
-        return {
-          addr,
-          balance: balanceResponse,
+          return {
+            addr,
+            balance: balanceResponse,
+          }
         }
-      })
+      )
     )
   },
 }
 
 export const listSubDaos: ContractFormula<SubDao[]> = {
+  docs: {
+    description: 'retrieves the list of subDAOs recognized by the DAO',
+  },
   compute: async ({ contractAddress, getTransformationMap, getMap }) => {
     // V2. V1 doesn't have sub DAOs; use empty map if undefined.
     const subDaoMap =
-      (await getTransformationMap<string, string | undefined>(
+      (await getTransformationMap<string, string | null>(
         contractAddress,
         'subDao'
       )) ??
       // Fallback to events.
-      (await getMap<string, string | undefined>(contractAddress, 'sub_daos')) ??
+      (await getMap<string, string | null>(contractAddress, 'sub_daos')) ??
       {}
 
     return Object.entries(subDaoMap).map(([addr, charter]) => ({
@@ -298,12 +370,17 @@ export const listSubDaos: ContractFormula<SubDao[]> = {
   },
 }
 
-export const daoUri: ContractFormula<string> = {
-  compute: async (env) => (await config.compute(env))?.dao_uri ?? '',
+export const daoUri: ContractFormula<{ dao_uri: string | null }> = {
+  docs: {
+    description: 'retrieves the URI of the DAO',
+  },
+  compute: async (env) => ({
+    dao_uri: (await config.compute(env)).dao_uri ?? null,
+  }),
 }
 
 const VOTING_POWER_AT_HEIGHT_FORMULAS: ContractFormula<
-  VotingPowerAtHeight | undefined,
+  VotingPowerAtHeight,
   { address: string }
 >[] = [
   daoVotingCw4VotingPowerAtHeight,
@@ -311,40 +388,79 @@ const VOTING_POWER_AT_HEIGHT_FORMULAS: ContractFormula<
   daoVotingCw721StakedVotingPowerAtHeight,
   daoVotingNativeStakedVotingPowerAtHeight,
   daoVotingTokenStakedVotingPowerAtHeight,
+  daoVotingOnftStakedVotingPowerAtHeight,
+  daoVotingSgCommunityNftVotingPowerAtHeight,
 ]
 
 export const votingPowerAtHeight: ContractFormula<
-  VotingPowerAtHeight | undefined,
+  VotingPowerAtHeight,
   { address: string }
 > = {
+  docs: {
+    description:
+      'retrieves the voting power at a specific block height for a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check voting power for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'block',
+        description: 'block height to check voting power at',
+        required: true,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   compute: async (env) => {
     const votingModuleAddress = (await votingModule.compute(env)) ?? ''
     if (!votingModuleAddress) {
-      return
+      throw new Error('missing `votingModuleAddress`')
     }
 
     const codeIdKey = await env.getCodeIdKeyForContract(votingModuleAddress)
     // Unrecognized contract.
     if (!codeIdKey) {
-      return
+      throw new Error('unrecognized voting module')
     }
 
     // Find formula matching code ID key.
     const votingPowerAtHeightFormula = VOTING_POWER_AT_HEIGHT_FORMULAS.find(
       (formula) => formula.filter?.codeIdsKeys?.includes(codeIdKey)
     )
-    return await votingPowerAtHeightFormula?.compute({
+    if (!votingPowerAtHeightFormula) {
+      throw new Error(`no voting module passthrough found for ${codeIdKey}`)
+    }
+
+    return await votingPowerAtHeightFormula.compute({
       ...env,
       contractAddress: votingModuleAddress,
     })
   },
 }
 
-export const votingPower: ContractFormula<
-  string | undefined,
-  { address: string }
-> = {
-  compute: async (env) => (await votingPowerAtHeight.compute(env))?.power,
+export const votingPower: ContractFormula<string, { address: string }> = {
+  docs: {
+    description:
+      'retrieves the voting power for a given address at the current block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check voting power for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
+  compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
 const TOTAL_POWER_AT_HEIGHT_FORMULAS: ContractFormula<TotalPowerAtHeight>[] = [
@@ -353,55 +469,82 @@ const TOTAL_POWER_AT_HEIGHT_FORMULAS: ContractFormula<TotalPowerAtHeight>[] = [
   daoVotingCw721StakedTotalPowerAtHeight,
   daoVotingNativeStakedTotalPowerAtHeight,
   daoVotingTokenStakedTotalPowerAtHeight,
+  daoVotingOnftStakedTotalPowerAtHeight,
+  daoVotingSgCommunityNftTotalPowerAtHeight,
 ]
 
-export const totalPowerAtHeight: ContractFormula<
-  TotalPowerAtHeight | undefined
-> = {
+export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+  docs: {
+    description: 'retrieves the total voting power at a specific block height',
+    args: [
+      {
+        name: 'block',
+        description: 'block height to check voting power at',
+        required: true,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   compute: async (env) => {
     const votingModuleAddress = (await votingModule.compute(env)) ?? ''
     if (!votingModuleAddress) {
-      return
+      throw new Error('missing `votingModuleAddress`')
     }
 
     const codeIdKey = await env.getCodeIdKeyForContract(votingModuleAddress)
     // Unrecognized contract.
     if (!codeIdKey) {
-      return
+      throw new Error('unrecognized voting module')
     }
 
     // Find formula matching code ID key.
     const totalPowerAtHeightFormula = TOTAL_POWER_AT_HEIGHT_FORMULAS.find(
       (formula) => formula.filter?.codeIdsKeys?.includes(codeIdKey)
     )
-    return await totalPowerAtHeightFormula?.compute({
+    if (!totalPowerAtHeightFormula) {
+      throw new Error(`no voting module passthrough found for ${codeIdKey}`)
+    }
+
+    return await totalPowerAtHeightFormula.compute({
       ...env,
       contractAddress: votingModuleAddress,
     })
   },
 }
 
-export const totalPower: ContractFormula<
-  string | undefined,
-  { address: string }
-> = {
-  compute: async (env) => (await totalPowerAtHeight.compute(env))?.power,
+export const totalPower: ContractFormula<string, { address: string }> = {
+  docs: {
+    description: 'retrieves the total voting power at the current block height',
+  },
+  compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
-// Returns contracts with an admin state key set to this DAO. Hopefully these
-// are mostly DAO contracts.
+// Returns DAO contracts with an admin state key set to this DAO.
 export const potentialSubDaos: ContractFormula<
   {
     contractAddress: string
     info: ContractInfo | undefined
   }[]
 > = {
+  docs: {
+    description:
+      'retrieves potential subDAOs, which are DAOs whose admin state key is set to this DAO. these may or may not be recognized by the DAO',
+  },
   compute: async (env) => {
-    const { contractAddress, getTransformationMatches } = env
+    const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
+
+    const daoCodeIds = getCodeIdsForKeys('dao-dao-core')
 
     const contractsWithAdmin =
       (
-        await getTransformationMatches(undefined, 'admin', contractAddress)
+        await getTransformationMatches(
+          undefined,
+          'admin',
+          contractAddress,
+          daoCodeIds
+        )
       )?.map((match) => match.contractAddress) ?? []
 
     const infos = await Promise.all(
@@ -422,6 +565,9 @@ export const potentialSubDaos: ContractFormula<
 
 // Map polytone note contract to the proxy contract for this DAO.
 export const polytoneProxies: ContractFormula<Record<string, string>> = {
+  docs: {
+    description: 'retrieves polytone proxies for the DAO',
+  },
   compute: async (env) => {
     const { contractAddress, getTransformationMatches } = env
     const notesWithRemoteAddress =
@@ -448,6 +594,10 @@ type ApprovalDao = {
 // Get all DAOs with dao-pre-propose-approval-single contracts that have this
 // DAO set as the approver.
 export const approvalDaos: ContractFormula<ApprovalDao[]> = {
+  docs: {
+    description:
+      'retrieves DAOs that have a pre-propose-approval contract whose approver is set to this DAO',
+  },
   compute: async (env) => {
     const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
 

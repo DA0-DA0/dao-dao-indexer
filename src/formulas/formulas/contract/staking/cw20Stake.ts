@@ -2,6 +2,8 @@ import { fromBech32 } from '@cosmjs/encoding'
 
 import { ContractFormula } from '@/types'
 
+import { makeSimpleContractFormula } from '../../utils'
+
 export type StakerBalance = {
   address: string
   balance: string
@@ -17,10 +19,12 @@ export type TotalStakedAtHeight = {
   height: number
 }
 
-export const config: ContractFormula<any | undefined> = {
-  compute: async ({ contractAddress, get }) =>
-    await get(contractAddress, 'config'),
-}
+export const config = makeSimpleContractFormula<any>({
+  docs: {
+    description: 'retrieves the configuration of the staking contract',
+  },
+  key: 'config',
+})
 
 export const stakedBalanceAtHeight: ContractFormula<
   StakedBalanceAtHeight,
@@ -30,6 +34,28 @@ export const stakedBalanceAtHeight: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the staked balance object of an address at a specific block height, defaulting to the current block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check the staked balance for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'block',
+        description: 'block height to get the staked balance at',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: [
       'cw20-stake',
@@ -98,6 +124,28 @@ export const stakedBalance: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the staked balance string of an address at a specific block height, defaulting to the current block height',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check the staked balance for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'block',
+        description: 'block height to get the staked balance at',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   filter: stakedBalanceAtHeight.filter,
   compute: async (env) => (await stakedBalanceAtHeight.compute(env)).balance,
 }
@@ -109,6 +157,20 @@ export const totalStakedAtHeight: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the total staked amount at a specific block height, defaulting to the current block height',
+    args: [
+      {
+        name: 'block',
+        description: 'block height to get the total staked amount at',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: [
       'cw20-stake',
@@ -143,8 +205,7 @@ export const totalStakedAtHeight: ContractFormula<
       keys.push(fromBech32(env.args.oraichainStakingToken).data)
     }
 
-    const total =
-      (await env.get<string | undefined>(contractAddress, ...keys)) || '0'
+    const total = (await env.get<string>(contractAddress, ...keys)) || '0'
 
     return {
       total,
@@ -160,11 +221,38 @@ export const totalStaked: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description:
+      'retrieves the total staked amount at a specific block height, defaulting to the current block height',
+    args: [
+      {
+        name: 'block',
+        description: 'block height to get the total staked amount at',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   filter: totalStakedAtHeight.filter,
   compute: async (env) => (await totalStakedAtHeight.compute(env)).total,
 }
 
 export const stakedValue: ContractFormula<string, { address: string }> = {
+  docs: {
+    description: 'calculates the value of staked tokens for an address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to calculate the staked value for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: ['cw20-stake'],
   },
@@ -190,18 +278,34 @@ export const stakedValue: ContractFormula<string, { address: string }> = {
   },
 }
 
-export const totalValue: ContractFormula<string> = {
-  compute: async ({ contractAddress, get }) =>
-    (await get<string | undefined>(contractAddress, 'balance')) || '0',
-}
+export const totalValue = makeSimpleContractFormula<string>({
+  key: 'balance',
+  fallback: '0',
+  docs: {
+    description: 'retrieves the total value of the staking contract',
+  },
+})
 
-export const claims: ContractFormula<any[] | undefined, { address: string }> = {
+export const claims: ContractFormula<any[], { address: string }> = {
+  docs: {
+    description: 'retrieves the claims for an address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to retrieve claims for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { address } }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return await get<any[]>(contractAddress, 'claims', address)
+    return (await get<any[]>(contractAddress, 'claims', address)) ?? []
   },
 }
 
@@ -212,6 +316,27 @@ export const listStakers: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'lists stakers and their balances',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of stakers to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
@@ -240,6 +365,19 @@ export const topStakers: ContractFormula<
     oraichainStakingToken?: string
   }
 > = {
+  docs: {
+    description: 'retrieves the top stakers by balance',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of top stakers to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   filter: {
     codeIdsKeys: [
       'cw20-stake',
@@ -302,3 +440,16 @@ export const topStakers: ContractFormula<
     }))
   },
 }
+
+export const getHooks = makeSimpleContractFormula<
+  string[],
+  { hooks: string[] }
+>({
+  docs: {
+    description: 'retrieves the hooks associated with the staking contract',
+  },
+  transformation: 'hooks',
+  fallbackKeys: ['hooks'],
+  fallback: { hooks: [] },
+  transform: (hooks) => ({ hooks }),
+})

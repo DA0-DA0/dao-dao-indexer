@@ -44,7 +44,11 @@ export type DumpState = {
   hideFromSearch?: boolean
 }
 
-export const dumpState: ContractFormula<DumpState | undefined> = {
+export const dumpState: ContractFormula<DumpState> = {
+  docs: {
+    description:
+      'retrieves a lot of high-level information about a DAO, including its voting and proposal modules',
+  },
   compute: async (env) => {
     const [
       adminResponse,
@@ -74,7 +78,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       })),
       // V2
       env
-        .getTransformationMatch<number | undefined>(
+        .getTransformationMatch<number>(
           env.contractAddress,
           'activeProposalModuleCount'
         )
@@ -82,13 +86,10 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
           (transformation) =>
             transformation?.value ??
             // Fallback to events.
-            env.get<number | undefined>(
-              env.contractAddress,
-              'active_proposal_module_count'
-            )
+            env.get<number>(env.contractAddress, 'active_proposal_module_count')
         ),
       env
-        .getTransformationMatch<number | undefined>(
+        .getTransformationMatch<number>(
           env.contractAddress,
           'totalProposalModuleCount'
         )
@@ -96,10 +97,7 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
           (transformation) =>
             transformation?.value ??
             // Fallback to events.
-            env.get<number | undefined>(
-              env.contractAddress,
-              'total_proposal_module_count'
-            )
+            env.get<number>(env.contractAddress, 'total_proposal_module_count')
         ),
       // Extra.
       instantiatedAt.compute(env),
@@ -113,21 +111,20 @@ export const dumpState: ContractFormula<DumpState | undefined> = {
       }),
     ])
 
-    // If no config, this must not be a DAO core contract.
-    if (!configResponse) {
-      return undefined
-    }
-
     // Load admin info if admin is a DAO core contract.
     let adminConfig: Config | undefined | null = null
     let adminAdmin: string | null = null
     let adminRegisteredSubDao: boolean | undefined
     const adminInfo =
       adminResponse && adminResponse !== env.contractAddress
-        ? await info.compute({
-            ...env,
-            contractAddress: adminResponse,
-          })
+        ? await info
+            .compute({
+              ...env,
+              contractAddress: adminResponse,
+            })
+            // If fail to fetch contract info, ignore. This may be a wallet or
+            // the chain x/gov module account instead of a DAO/contract.
+            .catch(() => undefined)
         : undefined
     if (
       adminResponse &&

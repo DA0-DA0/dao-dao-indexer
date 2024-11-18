@@ -8,6 +8,19 @@ export const daos: GenericFormula<
     daysAgo?: string
   }
 > = {
+  docs: {
+    description: 'counts the number of DAOs created',
+    args: [
+      {
+        name: 'daysAgo',
+        description: 'optionally only return results for the last N days',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   dynamic: true,
   compute: async ({ query, date, args }) => {
     const daysAgo = args.daysAgo ? Number(args.daysAgo) : undefined
@@ -43,6 +56,19 @@ export const proposals: GenericFormula<
     daysAgo?: string
   }
 > = {
+  docs: {
+    description: 'counts the number of proposals created',
+    args: [
+      {
+        name: 'daysAgo',
+        description: 'optionally only return results for the last N days',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   dynamic: true,
   compute: async ({ query, date, args }) => {
     const daysAgo = args.daysAgo ? Number(args.daysAgo) : undefined
@@ -75,6 +101,19 @@ export const votes: GenericFormula<
     daysAgo?: string
   }
 > = {
+  docs: {
+    description: 'counts the number of votes cast',
+    args: [
+      {
+        name: 'daysAgo',
+        description: 'optionally only return results for the last N days',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   dynamic: true,
   compute: async ({ query, date, args }) => {
     const daysAgo = args.daysAgo ? Number(args.daysAgo) : undefined
@@ -107,6 +146,19 @@ export const uniqueVoters: GenericFormula<
     daysAgo?: string
   }
 > = {
+  docs: {
+    description: 'counts the number of unique voters',
+    args: [
+      {
+        name: 'daysAgo',
+        description: 'optionally only return results for the last N days',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   dynamic: true,
   compute: async ({ query, date, args }) => {
     const daysAgo = args.daysAgo ? Number(args.daysAgo) : undefined

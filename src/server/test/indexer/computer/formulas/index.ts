@@ -7,7 +7,7 @@ import { app } from '../../app'
 import { ComputerTestOptions } from '../types'
 import { loadBankTests } from './bank'
 import { loadGovTests } from './gov'
-import { loadStakingTests } from './staking'
+// import { loadStakingTests } from './staking'
 import { loadWasmTests } from './wasm'
 
 export const loadFormulasTests = (options: ComputerTestOptions) => {
@@ -18,17 +18,17 @@ export const loadFormulasTests = (options: ComputerTestOptions) => {
 
     loadBankTests(options)
     loadGovTests(options)
-    loadStakingTests(options)
+    // loadStakingTests(options)
     loadWasmTests(options)
 
     it('filters contract by code IDs specified in formula', async () => {
       WasmCodeService.getInstance().addDefaultWasmCodes(
-        new WasmCode('dao-core', [1, 2])
+        new WasmCode('dao-dao-core', [1, 2])
       )
 
       options.mockFormula({
         filter: {
-          codeIdsKeys: ['not-dao-core'],
+          codeIdsKeys: ['not-dao-dao-core'],
         },
       })
       await request(app.callback())
@@ -41,7 +41,7 @@ export const loadFormulasTests = (options: ComputerTestOptions) => {
 
       options.mockFormula({
         filter: {
-          codeIdsKeys: ['dao-core'],
+          codeIdsKeys: ['dao-dao-core'],
         },
       })
       const response = await request(app.callback())

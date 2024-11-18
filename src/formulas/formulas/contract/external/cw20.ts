@@ -3,6 +3,7 @@ import { fromBech32 } from '@cosmjs/encoding'
 import { ContractFormula } from '@/types'
 
 import { Expiration } from '../../types'
+import { makeSimpleContractFormula } from '../../utils'
 import { dao } from '../voting/daoVotingCw20Staked'
 
 interface TokenInfo {
@@ -38,6 +39,19 @@ interface AccountBalance {
 }
 
 export const balance: ContractFormula<string, { address: string }> = {
+  docs: {
+    description: 'retrieves the balance of a given address',
+    args: [
+      {
+        name: 'address',
+        description: 'address to check the balance for',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     get,
@@ -64,39 +78,54 @@ export const balance: ContractFormula<string, { address: string }> = {
   },
 }
 
-export const tokenInfo: ContractFormula<TokenInfo | undefined> = {
-  compute: async ({ contractAddress, getTransformationMatch }) => {
-    const tokenInfoResponse = (
-      await getTransformationMatch<TokenInfoResponse>(
-        contractAddress,
-        'tokenInfo'
-      )
-    )?.value
-
-    return (
-      tokenInfoResponse && {
-        ...tokenInfoResponse,
-        // Not present in normal TokenInfoResponse.
-        mint: undefined,
-      }
-    )
+export const tokenInfo = makeSimpleContractFormula<TokenInfo>({
+  docs: {
+    description: 'retrieves the token info',
   },
-}
+  transformation: 'tokenInfo',
+  transform: (r) => ({
+    ...r,
+    // Not present in normal TokenInfoResponse.
+    mint: undefined,
+  }),
+})
 
-export const minter: ContractFormula = {
-  compute: async ({ contractAddress, getTransformationMatch }) =>
-    (
-      await getTransformationMatch<TokenInfoResponse>(
-        contractAddress,
-        'tokenInfo'
-      )
-    )?.value?.mint,
-}
+export const minter = makeSimpleContractFormula<
+  TokenInfoResponse,
+  Required<TokenInfoResponse>['mint'] | null
+>({
+  docs: {
+    description: 'retrieves the minter info',
+  },
+  transformation: 'tokenInfo',
+  transform: ({ mint }) => mint || null,
+})
 
 export const allowance: ContractFormula<
   AllowanceResponse,
   { owner: string; spender: string }
 > = {
+  docs: {
+    description: 'retrieves the allowance for a spender from an owner',
+    args: [
+      {
+        name: 'owner',
+        description: 'address of the token owner',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'spender',
+        description: 'address of the spender',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, get, args: { owner, spender } }) => {
     if (!owner) {
       throw new Error('missing `owner`')
@@ -127,6 +156,35 @@ export const ownerAllowances: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all allowances granted by an owner',
+    args: [
+      {
+        name: 'owner',
+        description: 'address of the token owner',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of allowances to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -166,6 +224,35 @@ export const spenderAllowances: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all allowances granted to a spender',
+    args: [
+      {
+        name: 'spender',
+        description: 'address of the spender',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of allowances to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({
     contractAddress,
     getMap,
@@ -204,6 +291,27 @@ export const allAccounts: ContractFormula<
     startAfter?: string
   }
 > = {
+  docs: {
+    description: 'retrieves all accounts that hold this token',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of accounts to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+      {
+        name: 'startAfter',
+        description: 'address to start listing after',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
@@ -224,6 +332,19 @@ export const topAccountBalances: ContractFormula<
     limit?: string
   }
 > = {
+  docs: {
+    description: 'retrieves the top account balances',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of account balances to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
   compute: async ({ contractAddress, getMap, args: { limit } }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
@@ -241,21 +362,33 @@ export const topAccountBalances: ContractFormula<
   },
 }
 
-export const marketingInfo: ContractFormula = {
-  compute: async ({ contractAddress, get }) =>
-    (await get(contractAddress, 'marketing_info')) ?? {},
-}
-
-// Returns undefined if no logo URL found.
-export const logoUrl: ContractFormula<string | undefined> = {
-  compute: async ({ contractAddress, get }) => {
-    const logo = await get<{ url: string | never }>(contractAddress, 'logo')
-    return logo && 'url' in logo ? logo.url : undefined
+export const marketingInfo = makeSimpleContractFormula({
+  docs: {
+    description: 'retrieves the marketing info',
   },
-}
+  key: 'marketing_info',
+  fallback: {},
+})
+
+// Returns null if no logo URL found.
+export const logoUrl = makeSimpleContractFormula<
+  { url: string | undefined | null },
+  string | null
+>({
+  docs: {
+    description: 'retrieves the logo URL',
+  },
+  key: 'logo',
+  fallback: null,
+  transform: (logo) => (logo && 'url' in logo && logo.url) || null,
+})
 
 // Get DAOs that use this cw20 as their governance token.
 export const daos: ContractFormula<string[]> = {
+  docs: {
+    description:
+      'retrieves the DAOs that use this token as their governance token',
+  },
   compute: async (env) => {
     const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
 
