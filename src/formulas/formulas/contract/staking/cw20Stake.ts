@@ -420,10 +420,8 @@ export const topStakers: ContractFormula<
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     const stakers =
-      (await getTransformationMap<string, string>(
-        contractAddress,
-        keys.join(':')
-      )) ?? {}
+      (await getTransformationMap<string>(contractAddress, keys.join(':'))) ??
+      {}
     const stakes = Object.entries(stakers)
       // Remove invalid addresses that end in colons (not sure how these appear,
       // probably the snapshot map internals) and zero balances.

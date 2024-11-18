@@ -91,3 +91,181 @@ export const makeTransformerForMapList = (
     },
   }
 }
+
+/**
+ * Transform a cw-storage-plus Snapshot.
+ */
+export const makeTransformerForSnapshot = ({
+  codeIdsKeys,
+  name,
+  changelogKey,
+  numericKey = false,
+}: {
+  /**
+   * The code IDs to filter by.
+   */
+  codeIdsKeys: string[]
+  /**
+   * The name of the transformation.
+   */
+  name: string
+  /**
+   * The key of the changelog.
+   */
+  changelogKey: string
+  /**
+   * Whether or not the snapshot keys are numeric (integers). Defaults to
+   * false.
+   */
+  numericKey?: boolean
+}): Transformer => {
+  const changelogKeyPrefix = dbKeyForKeys(changelogKey, '')
+  const changelogNamePrefix = `${name}:changelog`
+
+  return {
+    filter: {
+      codeIdsKeys,
+      matches: (event) => event.key.startsWith(changelogKeyPrefix),
+    },
+    name: (event) => {
+      // map prefix, key, height
+      const [, key, height] = dbKeyToKeys(event.key, [false, numericKey, true])
+      return `${changelogNamePrefix}:${
+        numericKey ? BigInt(key).toString() : key
+      }:${BigInt(height).toString()}`
+    },
+    getValue: defaultGetValue,
+  }
+}
+
+/**
+ * Transform a cw-storage-plus SnapshotMap.
+ */
+export const makeTransformersForSnapshotMap = ({
+  codeIdsKeys,
+  name,
+  primaryKey,
+  changelogKey,
+  numericKey = false,
+}: {
+  /**
+   * The code IDs to filter by.
+   */
+  codeIdsKeys: string[]
+  /**
+   * The name of the transformation.
+   */
+  name: string
+  /**
+   * The primary key of the map.
+   */
+  primaryKey: string
+  /**
+   * The key of the changelog.
+   */
+  changelogKey: string
+  /**
+   * Whether or not the snapshot map keys are numeric (integers). Defaults to
+   * false.
+   */
+  numericKey?: boolean
+}): Transformer[] => {
+  const primaryTransformer = makeTransformerForMap(
+    codeIdsKeys,
+    name,
+    primaryKey,
+    { numericKey }
+  )
+
+  const snapshotTransformer = makeTransformerForSnapshot({
+    codeIdsKeys,
+    name,
+    changelogKey,
+    numericKey,
+  })
+
+  return [primaryTransformer, snapshotTransformer]
+}
+
+/**
+ * Transform a SnapshotVectorMap.
+ */
+export const makeTransformersForSnapshotVectorMap = ({
+  codeIdsKeys,
+  name,
+  itemsKey,
+  nextIdsKey,
+  activePrimaryKey,
+  activeChangelogKey,
+  numericKey = false,
+}: {
+  /**
+   * The code IDs to filter by.
+   */
+  codeIdsKeys: string[]
+  /**
+   * The name of the transformation.
+   */
+  name: string
+  /**
+   * The key of the items map.
+   */
+  itemsKey: string
+  /**
+   * The key of the next IDs map.
+   */
+  nextIdsKey: string
+  /**
+   * The key of the active SnapshotMap primary key.
+   */
+  activePrimaryKey: string
+  /**
+   * The key of the active SnapshotMap changelog.
+   */
+  activeChangelogKey: string
+  /**
+   * Whether or not the keys are numeric (integers). Defaults to false.
+   */
+  numericKey?: boolean
+}): Transformer[] => {
+  const itemsKeyPrefix = dbKeyForKeys(itemsKey, '')
+  const itemsNamePrefix = `${name}:items`
+
+  const itemsTransformer: Transformer = {
+    filter: {
+      codeIdsKeys,
+      matches: (event) => event.key.startsWith(itemsKeyPrefix),
+    },
+    name: (event) => {
+      // map prefix, key, ID
+      const [, key, id] = dbKeyToKeys(event.key, [false, numericKey, true])
+      return `${itemsNamePrefix}:${
+        numericKey ? BigInt(key).toString() : key
+      }:${BigInt(id).toString()}`
+    },
+    getValue: defaultGetValue,
+  }
+
+  const nextIdsTransformer = makeTransformerForMap(
+    codeIdsKeys,
+    `${name}:nextIds`,
+    nextIdsKey,
+    {
+      numericKey,
+    }
+  )
+
+  const activeSnapshotMapTransformers = makeTransformersForSnapshotMap({
+    codeIdsKeys,
+    name: `${name}:active`,
+    primaryKey: activePrimaryKey,
+    changelogKey: activeChangelogKey,
+    numericKey,
+  })
+
+  return [
+    itemsTransformer,
+    nextIdsTransformer,
+    ...activeSnapshotMapTransformers,
+  ]
+}

@@ -1,4 +1,11 @@
-import { Block, ContractFormula, Env, Formula, KeyInput } from '@/types'
+import {
+  Block,
+  ContractEnv,
+  ContractFormula,
+  Env,
+  Formula,
+  KeyInput,
+} from '@/types'
 
 import { Duration, Expiration } from './types'
 
@@ -142,3 +149,241 @@ export const makeSimpleContractFormula = <
     })
   },
 })
+
+/**
+ * Potentially load a value at a height from a transformed snapshot. Returns
+ * undefined if no value is found at the height, null if a change was found but
+ * the old value did not exist, and the old value otherwise.
+ *
+ * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/mod.rs#L151-L180
+ */
+export const snapshotMayLoadAtHeight = async <K extends string | number, V>({
+  env: { contractAddress, getTransformationMap },
+  name,
+  key,
+  height,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The height to load.
+   */
+  height: number
+}): Promise<V | null | undefined> => {
+  // Map of height to ChangeSet.
+  const changelogMap =
+    (await getTransformationMap(
+      contractAddress,
+      `${name}:changelog:${
+        typeof key === 'number' ? BigInt(key).toString() : key
+      }`
+    )) || {}
+
+  const start = BigInt(height)
+  const changelog = Object.entries(changelogMap)
+    // Sort ascending.
+    .sort(([a], [b]) => Number(BigInt(a) - BigInt(b)))
+    // Find first entry whose height is the start height or greater.
+    .find(([heightA]) => BigInt(heightA) >= start)
+
+  return changelog && (changelog[1]?.old ?? null)
+}
+
+/**
+ * Potentially load a value from a transformed snapshot map. Returns undefined
+ * if no value is found.
+ *
+ * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/map.rs#L148-L152
+ */
+export const snapshotMapMayLoad = async <K extends string | number, V>({
+  env: { contractAddress, getTransformationMatch },
+  name,
+  key,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot map to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+}): Promise<V | undefined> =>
+  (
+    await getTransformationMatch<V>(
+      contractAddress,
+      `${name}:${typeof key === 'number' ? BigInt(key).toString() : key}`
+    )
+  )?.value
+
+/**
+ * Potentially load a value at a height from a transformed snapshot map. Returns
+ * undefined if no old value is found at the height and no current value exists,
+ * null if a change was found but the old value did not exist, and the old value
+ * otherwise.
+ *
+ * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/map.rs#L154-L170
+ */
+export const snapshotMapMayLoadAtHeight = async <K extends string | number, V>({
+  env,
+  name,
+  key,
+  height,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot map to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The height to load.
+   */
+  height: number
+}): Promise<V | null | undefined> => {
+  const snapshot = await snapshotMayLoadAtHeight<K, V>({
+    env,
+    name,
+    key,
+    height,
+  })
+
+  return snapshot === undefined
+    ? // If no snapshot at height, return current value.
+      await snapshotMapMayLoad({
+        env,
+        name,
+        key,
+      })
+    : // Otherwise, return snapshot.
+      snapshot
+}
+
+/**
+ * Potentially load an item by key and ID from a transformed SnapshotVectorMap.
+ * Returns undefined if no item is found.
+ */
+export const snapshotVectorMapMayLoadItem = async <
+  K extends string | number,
+  V
+>({
+  env: { contractAddress, getTransformationMatch },
+  name,
+  key,
+  id,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot map to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The ID to load.
+   */
+  id: number
+}): Promise<V | undefined> =>
+  (
+    await getTransformationMatch<V>(
+      contractAddress,
+      `${name}:items:${
+        typeof key === 'number' ? BigInt(key).toString() : key
+      }:${BigInt(id).toString()}`
+    )
+  )?.value
+
+/**
+ * Loads paged items at the given block height that are not expired from a
+ * transformed SnapshotVectorMap.
+ */
+export const snapshotVectorMapLoad = async <K extends string | number, V>({
+  env,
+  name,
+  key,
+  height,
+  limit,
+  offset = 0,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot map to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The height to load.
+   */
+  height: number
+  /**
+   * Limit the number of items to load.
+   */
+  limit?: number
+  /**
+   * The offset to start loading from.
+   */
+  offset?: number
+}): Promise<
+  {
+    id: number
+    item: V | undefined
+    expiration: number | null
+  }[]
+> => {
+  const activeIds =
+    (await snapshotMapMayLoadAtHeight<K, [number, number | null][]>({
+      env,
+      name: `${name}:active`,
+      key,
+      height,
+    })) || []
+
+  const items = await Promise.all(
+    activeIds
+      .filter(([, exp]) => exp === null || exp > height)
+      .slice(offset, limit === undefined ? undefined : offset + limit)
+      .map(async ([id, expiration]) => ({
+        id,
+        item: await snapshotVectorMapMayLoadItem<K, V>({
+          env,
+          name,
+          key,
+          id,
+        }),
+        expiration,
+      }))
+  )
+
+  return items
+}

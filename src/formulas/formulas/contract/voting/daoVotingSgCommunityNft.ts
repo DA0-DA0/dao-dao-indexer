@@ -211,8 +211,7 @@ export const listVoters: ContractFormula<
   }) => {
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
-    const voterMap =
-      (await getTransformationMap<string, any>(contractAddress, 'vt')) ?? {}
+    const voterMap = (await getTransformationMap(contractAddress, 'vt')) ?? {}
     const voters = Object.keys(voterMap)
       // Ascending by voter address.
       .sort((a, b) => a.localeCompare(b))
@@ -262,7 +261,7 @@ export const allVotersWithVotingPower: ContractFormula<
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     const voterMap =
-      (await getTransformationMap<string, string>(contractAddress, 'vp')) ?? {}
+      (await getTransformationMap<string>(contractAddress, 'vp')) ?? {}
     const voterEntries = Object.entries(voterMap)
       // Ascending by voter address.
       .sort(([a], [b]) => a.localeCompare(b))

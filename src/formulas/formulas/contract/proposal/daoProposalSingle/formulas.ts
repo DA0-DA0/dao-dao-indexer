@@ -184,7 +184,7 @@ export const listProposals: ContractFormula<
       ? Math.max(0, Number(startAfter))
       : -Infinity
 
-    let proposals = await getTransformationMap<number, SingleChoiceProposal>(
+    let proposals = await getTransformationMap<SingleChoiceProposal>(
       contractAddress,
       'proposal'
     )
@@ -281,7 +281,7 @@ export const reverseProposals: ContractFormula<
       ? Math.max(0, Number(startBefore))
       : Infinity
 
-    let proposals = await getTransformationMap<number, SingleChoiceProposal>(
+    let proposals = await getTransformationMap<SingleChoiceProposal>(
       contractAddress,
       'proposal'
     )

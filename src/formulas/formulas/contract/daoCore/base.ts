@@ -90,7 +90,7 @@ export const proposalModules: ContractFormula<ProposalModuleWithInfo[]> = {
 
     const proposalModules: ProposalModule[] = []
 
-    const transformedMap = await getTransformationMap<string, ProposalModule>(
+    const transformedMap = await getTransformationMap<ProposalModule>(
       contractAddress,
       'proposalModule'
     )
@@ -355,10 +355,7 @@ export const listSubDaos: ContractFormula<SubDao[]> = {
   compute: async ({ contractAddress, getTransformationMap, getMap }) => {
     // V2. V1 doesn't have sub DAOs; use empty map if undefined.
     const subDaoMap =
-      (await getTransformationMap<string, string | null>(
-        contractAddress,
-        'subDao'
-      )) ??
+      (await getTransformationMap<string | null>(contractAddress, 'subDao')) ??
       // Fallback to events.
       (await getMap<string, string | null>(contractAddress, 'sub_daos')) ??
       {}

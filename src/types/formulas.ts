@@ -88,13 +88,10 @@ export type FormulaTransformationDateGetter = (
   ...parameters: Parameters<FormulaTransformationMatchGetter>
 ) => Promise<Date | undefined>
 
-export type FormulaTransformationMapGetter = <
-  K extends string | number = string | number,
-  V = any
->(
+export type FormulaTransformationMapGetter = <V = any>(
   contractAddress: string,
   namePrefix: string
-) => Promise<Record<K, V> | undefined>
+) => Promise<Record<string, V> | undefined>
 
 export type FormulaPrefetchTransformations = (
   contractAddress: string,

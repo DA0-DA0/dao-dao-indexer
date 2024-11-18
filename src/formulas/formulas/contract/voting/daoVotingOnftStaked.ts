@@ -89,7 +89,7 @@ export const nftClaims: ContractFormula<NftClaim[], { address: string }> = {
     }))
 
     const claims = Object.entries(
-      (await getTransformationMap<string, Expiration>(
+      (await getTransformationMap<Expiration>(
         contractAddress,
         `claim:${address}`
       )) ?? {}
@@ -265,10 +265,8 @@ export const stakedNfts: ContractFormula<
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     const stakedNfts =
-      (await getTransformationMap<string, any>(
-        contractAddress,
-        `stakedNft:${address}`
-      )) ?? {}
+      (await getTransformationMap(contractAddress, `stakedNft:${address}`)) ??
+      {}
     const tokenIds = Object.keys(stakedNfts)
       // Ascending by token ID.
       .sort((a, b) => a.localeCompare(b))
@@ -358,10 +356,7 @@ export const topStakers: ContractFormula<
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
     const stakedCountMap =
-      (await getTransformationMap<string, string>(
-        contractAddress,
-        'stakedCount'
-      )) ?? {}
+      (await getTransformationMap<string>(contractAddress, 'stakedCount')) ?? {}
     const stakedCounts = Object.entries(stakedCountMap)
       // Remove zero counts.
       .filter(([, stakedCount]) => Number(stakedCount) > 0)
@@ -398,10 +393,7 @@ export const ownersOfStakedNfts: ContractFormula<Record<string, string>> = {
     const { contractAddress, getTransformationMap } = env
 
     const stakedCountMap =
-      (await getTransformationMap<string, string>(
-        contractAddress,
-        'stakedCount'
-      )) ?? {}
+      (await getTransformationMap<string>(contractAddress, 'stakedCount')) ?? {}
     const stakers = Object.entries(stakedCountMap)
       // Remove zero counts.
       .filter(([, stakedCount]) => Number(stakedCount) > 0)
