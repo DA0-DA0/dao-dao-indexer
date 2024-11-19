@@ -139,6 +139,43 @@ export const makeTransformerForSnapshot = ({
 }
 
 /**
+ * Transform a cw-storage-plus SnapshotItem.
+ */
+export const makeTransformersForSnapshotItem = ({
+  codeIdsKeys,
+  name,
+  primaryKey,
+  changelogKey,
+}: {
+  /**
+   * The code IDs to filter by.
+   */
+  codeIdsKeys: string[]
+  /**
+   * The name of the transformation.
+   */
+  name: string
+  /**
+   * The primary key of the item.
+   */
+  primaryKey: string
+  /**
+   * The key of the changelog.
+   */
+  changelogKey: string
+}): Transformer[] => {
+  const primaryTransformer = makeTransformer(codeIdsKeys, name, primaryKey)
+
+  const snapshotTransformer = makeTransformerForSnapshot({
+    codeIdsKeys,
+    name,
+    changelogKey,
+  })
+
+  return [primaryTransformer, snapshotTransformer]
+}
+
+/**
  * Transform a cw-storage-plus SnapshotMap.
  */
 export const makeTransformersForSnapshotMap = ({

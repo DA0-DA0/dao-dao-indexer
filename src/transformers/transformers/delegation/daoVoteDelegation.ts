@@ -1,8 +1,9 @@
 import {
   makeTransformer,
-  makeTransformerForMap,
   makeTransformerForMapList,
   makeTransformerForWormhole,
+  makeTransformersForSnapshotItem,
+  makeTransformersForSnapshotMap,
   makeTransformersForSnapshotVectorMap,
 } from '@/transformers/utils'
 import { Transformer } from '@/types'
@@ -13,7 +14,12 @@ const CODE_IDS_KEYS: string[] = ['dao-vote-delegation']
 const KEY_PREFIX_UDVP = dbKeyForKeys('udvp', '')
 
 const config = makeTransformer(CODE_IDS_KEYS, 'config')
-const vpCapPercent = makeTransformer(CODE_IDS_KEYS, 'vpc')
+const vpCapPercent = makeTransformersForSnapshotItem({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'vpCapPercent',
+  primaryKey: 'vpc',
+  changelogKey: 'vpc__changelog',
+})
 const dao = makeTransformer(CODE_IDS_KEYS, 'dao')
 const proposalHookCallers = makeTransformerForMapList(
   CODE_IDS_KEYS,
@@ -25,7 +31,12 @@ const votingPowerHookCallers = makeTransformerForMapList(
   'votingPowerHookCallers',
   'vphc'
 )
-const delegates = makeTransformerForMap(CODE_IDS_KEYS, 'delegate', 'delegates')
+const delegates = makeTransformersForSnapshotMap({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'delegates',
+  primaryKey: 'delegates',
+  changelogKey: 'delegates__changelog',
+})
 const unvotedDelegatedVotingPower: Transformer = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
@@ -54,16 +65,16 @@ const delegations = makeTransformersForSnapshotVectorMap({
   itemsKey: 'd__items',
   nextIdsKey: 'd__next_ids',
   activePrimaryKey: 'd__active',
-  activeChangelogKey: 'd__active__checkpoints',
+  activeChangelogKey: 'd__active__changelog',
 })
 
 export default [
   config,
   dao,
-  vpCapPercent,
+  ...vpCapPercent,
   proposalHookCallers,
   votingPowerHookCallers,
-  delegates,
+  ...delegates,
   unvotedDelegatedVotingPower,
   delegatedVotingPower,
   ...delegations,
