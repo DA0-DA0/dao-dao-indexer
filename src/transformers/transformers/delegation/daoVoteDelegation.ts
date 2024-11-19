@@ -2,6 +2,8 @@ import {
   makeTransformer,
   makeTransformerForMap,
   makeTransformerForMapList,
+  makeTransformerForWormhole,
+  makeTransformersForSnapshotVectorMap,
 } from '@/transformers/utils'
 import { Transformer } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils/keys'
@@ -41,8 +43,19 @@ const unvotedDelegatedVotingPower: Transformer = {
   },
   getValue: (event) => event.valueJson,
 }
-// TODO: transform wormhole (DELEGATED_VP)
-// TODO: transform snapshot vector map (DELEGATIONS)
+const delegatedVotingPower = makeTransformerForWormhole({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'delegatedVotingPower',
+  key: 'dvp',
+})
+const delegations = makeTransformersForSnapshotVectorMap({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'delegations',
+  itemsKey: 'd__items',
+  nextIdsKey: 'd__next_ids',
+  activePrimaryKey: 'd__active',
+  activeChangelogKey: 'd__active__checkpoints',
+})
 
 export default [
   config,
@@ -52,4 +65,6 @@ export default [
   votingPowerHookCallers,
   delegates,
   unvotedDelegatedVotingPower,
+  delegatedVotingPower,
+  ...delegations,
 ]

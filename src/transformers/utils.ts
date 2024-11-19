@@ -269,3 +269,51 @@ export const makeTransformersForSnapshotVectorMap = ({
     ...activeSnapshotMapTransformers,
   ]
 }
+
+/**
+ * Transform a cw-wormhole Wormhole.
+ */
+export const makeTransformerForWormhole = ({
+  codeIdsKeys,
+  name,
+  key,
+  numericKey = false,
+}: {
+  /**
+   * The code IDs to filter by.
+   */
+  codeIdsKeys: string[]
+  /**
+   * The name of the transformation.
+   */
+  name: string
+  /**
+   * The key of the wormhole map.
+   */
+  key: string
+  /**
+   * Whether or not the keys are numeric (integers). Defaults to false.
+   */
+  numericKey?: boolean
+}): Transformer => {
+  const keyPrefix = dbKeyForKeys(key, '')
+
+  return {
+    filter: {
+      codeIdsKeys,
+      matches: (event) => event.key.startsWith(keyPrefix),
+    },
+    name: (event) => {
+      // map prefix, key, timestamp
+      const [, key, timestamp] = dbKeyToKeys(event.key, [
+        false,
+        numericKey,
+        true,
+      ])
+      return `${name}:${numericKey ? BigInt(key).toString() : key}:${BigInt(
+        timestamp
+      ).toString()}`
+    },
+    getValue: defaultGetValue,
+  }
+}

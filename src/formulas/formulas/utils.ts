@@ -182,7 +182,7 @@ export const snapshotMayLoadAtHeight = async <K extends string | number, V>({
 }): Promise<V | null | undefined> => {
   // Map of height to ChangeSet.
   const changelogMap =
-    (await getTransformationMap(
+    (await getTransformationMap<{ old: V | undefined | null }>(
       contractAddress,
       `${name}:changelog:${
         typeof key === 'number' ? BigInt(key).toString() : key
@@ -194,7 +194,7 @@ export const snapshotMayLoadAtHeight = async <K extends string | number, V>({
     // Sort ascending.
     .sort(([a], [b]) => Number(BigInt(a) - BigInt(b)))
     // Find first entry whose height is the start height or greater.
-    .find(([heightA]) => BigInt(heightA) >= start)
+    .find(([height]) => BigInt(height) >= start)
 
   return changelog && (changelog[1]?.old ?? null)
 }
@@ -386,4 +386,48 @@ export const snapshotVectorMapLoad = async <K extends string | number, V>({
   )
 
   return items
+}
+
+/**
+ * Loads the value at a key at the specified time of a transformed Wormhole.
+ * Returns undefined if no value is found at the time.
+ */
+export const wormholeLoad = async <K extends string | number, V>({
+  env: { contractAddress, getTransformationMap },
+  name,
+  key,
+  timestamp,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed wormhole to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The timestamp to load.
+   */
+  timestamp: number
+}): Promise<V | undefined> => {
+  // Map of timestamp to value.
+  const wormholeMap =
+    (await getTransformationMap<V>(
+      contractAddress,
+      `${name}:${typeof key === 'number' ? BigInt(key).toString() : key}`
+    )) || {}
+
+  const end = BigInt(timestamp)
+  const entry = Object.entries(wormholeMap)
+    // Sort descending.
+    .sort(([a], [b]) => Number(BigInt(b) - BigInt(a)))
+    // Find first entry whose timestamp is the end timestamp or less.
+    .find(([timestamp]) => BigInt(timestamp) <= end)
+
+  return entry?.[1]
 }
