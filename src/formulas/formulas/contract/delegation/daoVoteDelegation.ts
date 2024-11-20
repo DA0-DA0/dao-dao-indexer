@@ -1,12 +1,14 @@
 import { ContractFormula } from '@/types'
 
 import {
+  makeSimpleContractFormula,
+  mapRange,
   snapshotItemMayLoadAtHeight,
   snapshotMapMayLoadAtHeight,
-  snapshotMapRange,
   snapshotVectorMapLoad,
   wormholeLoad,
 } from '../../utils'
+import { totalPowerAtHeight } from '../daoCore/base'
 
 const CODE_IDS_KEYS: string[] = ['dao-vote-delegation']
 
@@ -54,7 +56,7 @@ export const delegates: ContractFormula<
       block: { height },
     } = env
 
-    const range = await snapshotMapRange({
+    const range = await mapRange({
       env,
       name: 'delegates',
       startAfter,
@@ -318,8 +320,17 @@ export const unvotedDelegatedVotingPower: ContractFormula<
         throw new Error('DAO not found')
       }
 
-      // TODO: add totalPowerAtHeight formula for daoCore
-      const totalPower = 0
+      const totalPower = Number(
+        (
+          await totalPowerAtHeight.compute({
+            ...env,
+            contractAddress: dao,
+            args: {
+              height: _height,
+            },
+          })
+        ).power
+      )
 
       const vpCapPercentNum = Number(vpCapPercent)
       const cap =
@@ -336,3 +347,87 @@ export const unvotedDelegatedVotingPower: ContractFormula<
     }
   },
 }
+
+export const proposalModules = makeSimpleContractFormula<
+  string[],
+  string[],
+  {
+    startAfter?: string
+    limit?: string
+  }
+>({
+  docs: {
+    description: 'retrieves the list of proposal modules',
+    args: [
+      {
+        name: 'startAfter',
+        description: 'address to start listing proposal modules after',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of proposal modules to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  transformation: 'proposalHookCallers',
+  fallback: [],
+  transform: (data, { args: { startAfter, limit } }) =>
+    data
+      // Ascending by address.
+      .sort(([a], [b]) => a.localeCompare(b))
+      .filter((item) => !startAfter || item.localeCompare(startAfter) > 0)
+      .slice(0, limit ? Math.max(0, Number(limit)) : Infinity),
+})
+
+export const votingPowerHookCallers = makeSimpleContractFormula<
+  string[],
+  string[],
+  {
+    startAfter?: string
+    limit?: string
+  }
+>({
+  docs: {
+    description: 'retrieves the list of voting power hook callers',
+    args: [
+      {
+        name: 'startAfter',
+        description: 'address to start listing hook callers after',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'limit',
+        description: 'maximum number of hook callers to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  transformation: 'votingPowerHookCallers',
+  fallback: [],
+  transform: (data, { args: { startAfter, limit } }) =>
+    data
+      // Ascending by address.
+      .sort(([a], [b]) => a.localeCompare(b))
+      .filter((item) => !startAfter || item.localeCompare(startAfter) > 0)
+      .slice(0, limit ? Math.max(0, Number(limit)) : Infinity),
+})

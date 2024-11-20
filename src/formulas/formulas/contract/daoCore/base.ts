@@ -378,7 +378,7 @@ export const daoUri: ContractFormula<{ dao_uri: string | null }> = {
 
 const VOTING_POWER_AT_HEIGHT_FORMULAS: ContractFormula<
   VotingPowerAtHeight,
-  { address: string }
+  { address: string; height?: string }
 >[] = [
   daoVotingCw4VotingPowerAtHeight,
   daoVotingCw20StakedVotingPowerAtHeight,
@@ -391,11 +391,11 @@ const VOTING_POWER_AT_HEIGHT_FORMULAS: ContractFormula<
 
 export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
-  { address: string }
+  { address: string; height?: string }
 > = {
   docs: {
     description:
-      'retrieves the voting power at a specific block height for a given address',
+      'retrieves the voting power for a given address, optionally at a specific block height for a given address',
     args: [
       {
         name: 'address',
@@ -406,9 +406,9 @@ export const votingPowerAtHeight: ContractFormula<
         },
       },
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to check voting power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -460,7 +460,12 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
-const TOTAL_POWER_AT_HEIGHT_FORMULAS: ContractFormula<TotalPowerAtHeight>[] = [
+const TOTAL_POWER_AT_HEIGHT_FORMULAS: ContractFormula<
+  TotalPowerAtHeight,
+  {
+    height?: string
+  }
+>[] = [
   daoVotingCw4TotalPowerAtHeight,
   daoVotingCw20StakedTotalPowerAtHeight,
   daoVotingCw721StakedTotalPowerAtHeight,
@@ -470,14 +475,20 @@ const TOTAL_POWER_AT_HEIGHT_FORMULAS: ContractFormula<TotalPowerAtHeight>[] = [
   daoVotingSgCommunityNftTotalPowerAtHeight,
 ]
 
-export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+export const totalPowerAtHeight: ContractFormula<
+  TotalPowerAtHeight,
+  {
+    height?: string
+  }
+> = {
   docs: {
-    description: 'retrieves the total voting power at a specific block height',
+    description:
+      'retrieves the total voting power, optionally at a specific block height',
     args: [
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to check voting power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -511,7 +522,7 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
   },
 }
 
-export const totalPower: ContractFormula<string, { address: string }> = {
+export const totalPower: ContractFormula<string> = {
   docs: {
     description: 'retrieves the total voting power at the current block height',
   },

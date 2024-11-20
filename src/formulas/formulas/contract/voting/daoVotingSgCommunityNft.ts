@@ -1,7 +1,12 @@
 import { ContractFormula } from '@/types'
 
 import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
-import { makeSimpleContractFormula } from '../../utils'
+import {
+  makeSimpleContractFormula,
+  mapRange,
+  snapshotItemMayLoadAtHeight,
+  snapshotMapMayLoadAtHeight,
+} from '../../utils'
 
 const CODE_IDS_KEYS = ['dao-voting-sg-community-nft']
 
@@ -28,11 +33,14 @@ export const nftContract = makeSimpleContractFormula({
 
 export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
-  { address: string }
+  {
+    address: string
+    height?: string
+  }
 > = {
   docs: {
     description:
-      'retrieves the voting power for an address at a specific block height',
+      'retrieves the voting power for an address, optionally at a specific block height',
     args: [
       {
         name: 'address',
@@ -43,9 +51,9 @@ export const votingPowerAtHeight: ContractFormula<
         },
       },
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get voting power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -57,21 +65,25 @@ export const votingPowerAtHeight: ContractFormula<
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({
-    contractAddress,
-    getTransformationMatch,
-    args: { address },
-    block,
-  }) => {
-    if (!address) {
+  compute: async (env) => {
+    if (!env.args.address) {
       throw new Error('missing `address`')
     }
 
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+    const power =
+      (await snapshotMapMayLoadAtHeight<string, string>({
+        env,
+        name: 'vp',
+        key: env.args.address,
+        height,
+      })) ?? '0'
+
     return {
-      power:
-        (await getTransformationMatch<string>(contractAddress, `vp:${address}`))
-          ?.value || '0',
-      height: Number(block.height),
+      power,
+      height,
     }
   },
 }
@@ -95,14 +107,20 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
-export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+export const totalPowerAtHeight: ContractFormula<
+  TotalPowerAtHeight,
+  {
+    height?: string
+  }
+> = {
   docs: {
-    description: 'retrieves the total voting power at a specific block height',
+    description:
+      'retrieves the total voting power, optionally at a specific block height',
     args: [
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get total power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -114,12 +132,22 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({ contractAddress, getTransformationMatch, block }) => ({
-    power:
-      (await getTransformationMatch<string>(contractAddress, 'tvp'))?.value ||
-      '0',
-    height: Number(block.height),
-  }),
+  compute: async (env) => {
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+    const power =
+      (await snapshotItemMayLoadAtHeight<string>({
+        env,
+        name: 'tvp',
+        height,
+      })) ?? '0'
+
+    return {
+      power,
+      height,
+    }
+  },
 }
 
 export const totalPower: ContractFormula<string> = {
@@ -204,19 +232,17 @@ export const listVoters: ContractFormula<
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({
-    contractAddress,
-    getTransformationMap,
-    args: { limit, startAfter },
-  }) => {
-    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+  compute: async (env) => {
+    const { limit, startAfter } = env.args
 
-    const voterMap = (await getTransformationMap(contractAddress, 'vt')) ?? {}
-    const voters = Object.keys(voterMap)
-      // Ascending by voter address.
-      .sort((a, b) => a.localeCompare(b))
-      .filter((voter) => !startAfter || voter.localeCompare(startAfter) > 0)
-      .slice(0, limitNum)
+    const voters = (
+      await mapRange({
+        env,
+        name: 'vt',
+        startAfter,
+        limit: limit ? Math.max(0, Number(limit)) : undefined,
+      })
+    ).map(({ key }) => key)
 
     return {
       voters,
@@ -253,34 +279,29 @@ export const allVotersWithVotingPower: ContractFormula<
     codeIdsKeys: CODE_IDS_KEYS,
   },
   compute: async (env) => {
-    const {
-      contractAddress,
-      getTransformationMap,
-      args: { limit },
-    } = env
-    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
-
-    const voterMap =
-      (await getTransformationMap<string>(contractAddress, 'vp')) ?? {}
-    const voterEntries = Object.entries(voterMap)
-      // Ascending by voter address.
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(0, limitNum)
+    const allVoters = await mapRange<string>({
+      env,
+      name: 'vp',
+      limit: env.args.limit ? Math.max(0, Number(env.args.limit)) : undefined,
+    })
 
     // Get total power.
     const totalVotingPower = Number(
-      (await totalPowerAtHeight.compute(env)).power
+      (
+        await totalPowerAtHeight.compute({
+          ...env,
+          args: {},
+        })
+      ).power
     )
 
     // Compute voting power percent for each voter.
-    const voters = voterEntries.map(
-      ([address, weight]): Voter => ({
-        address,
-        weight: Number(weight),
+    const voters = allVoters.map(
+      ({ key, value }): Voter => ({
+        address: key,
+        weight: Number(value),
         votingPowerPercent:
-          totalVotingPower === 0
-            ? 0
-            : (Number(weight) / totalVotingPower) * 100,
+          totalVotingPower === 0 ? 0 : (Number(value) / totalVotingPower) * 100,
       })
     )
 

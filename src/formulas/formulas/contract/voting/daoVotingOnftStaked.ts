@@ -5,7 +5,12 @@ import {
   TotalPowerAtHeight,
   VotingPowerAtHeight,
 } from '../../types'
-import { makeSimpleContractFormula } from '../../utils'
+import {
+  makeSimpleContractFormula,
+  mapRange,
+  snapshotItemMayLoadAtHeight,
+  snapshotMapMayLoadAtHeight,
+} from '../../utils'
 
 type Config = {
   onft_collection_id: string
@@ -107,11 +112,14 @@ export const nftClaims: ContractFormula<NftClaim[], { address: string }> = {
 
 export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
-  { address: string }
+  {
+    address: string
+    height?: string
+  }
 > = {
   docs: {
     description:
-      'retrieves the voting power for an address at a specific block height',
+      'retrieves the voting power for an address, optionally at a specific block height',
     args: [
       {
         name: 'address',
@@ -122,9 +130,9 @@ export const votingPowerAtHeight: ContractFormula<
         },
       },
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get voting power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -136,25 +144,25 @@ export const votingPowerAtHeight: ContractFormula<
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({
-    contractAddress,
-    getTransformationMatch,
-    args: { address },
-    block,
-  }) => {
-    if (!address) {
+  compute: async (env) => {
+    if (!env.args.address) {
       throw new Error('missing `address`')
     }
 
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+    const power =
+      (await snapshotMapMayLoadAtHeight<string, string>({
+        env,
+        name: 'nftBalances',
+        key: env.args.address,
+        height,
+      })) ?? '0'
+
     return {
-      power:
-        (
-          await getTransformationMatch<string>(
-            contractAddress,
-            `stakedCount:${address}`
-          )
-        )?.value || '0',
-      height: Number(block.height),
+      power,
+      height,
     }
   },
 }
@@ -178,14 +186,20 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
-export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+export const totalPowerAtHeight: ContractFormula<
+  TotalPowerAtHeight,
+  {
+    height?: string
+  }
+> = {
   docs: {
-    description: 'retrieves the total voting power at a specific block height',
+    description:
+      'retrieves the total voting power, optionally at a specific block height',
     args: [
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get total power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -197,12 +211,22 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({ contractAddress, getTransformationMatch, block }) => ({
-    power:
-      (await getTransformationMatch<string>(contractAddress, 'tsn'))?.value ||
-      '0',
-    height: Number(block.height),
-  }),
+  compute: async (env) => {
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+    const power =
+      (await snapshotItemMayLoadAtHeight<string>({
+        env,
+        name: 'totalStakedNfts',
+        height,
+      })) ?? '0'
+
+    return {
+      power,
+      height,
+    }
+  },
 }
 
 export const totalPower: ContractFormula<string> = {
@@ -253,25 +277,20 @@ export const stakedNfts: ContractFormula<
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({
-    contractAddress,
-    getTransformationMap,
-    args: { address, limit, startAfter },
-  }) => {
+  compute: async (env) => {
+    const { address, limit, startAfter } = env.args
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
-
-    const stakedNfts =
-      (await getTransformationMap(contractAddress, `stakedNft:${address}`)) ??
-      {}
-    const tokenIds = Object.keys(stakedNfts)
-      // Ascending by token ID.
-      .sort((a, b) => a.localeCompare(b))
-      .filter((voter) => !startAfter || voter.localeCompare(startAfter) > 0)
-      .slice(0, limitNum)
+    const tokenIds = (
+      await mapRange({
+        env,
+        name: `stakedNft:${address}`,
+        startAfter,
+        limit: limit ? Math.max(0, Number(limit)) : undefined,
+      })
+    ).map(({ key }) => key)
 
     return tokenIds
   },
@@ -355,12 +374,12 @@ export const topStakers: ContractFormula<
 
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
 
-    const stakedCountMap =
-      (await getTransformationMap<string>(contractAddress, 'stakedCount')) ?? {}
-    const stakedCounts = Object.entries(stakedCountMap)
-      // Remove zero counts.
-      .filter(([, stakedCount]) => Number(stakedCount) > 0)
-      // Descending by count.
+    const nftBalancesMap =
+      (await getTransformationMap<string>(contractAddress, 'nftBalances')) ?? {}
+    const nftBalances = Object.entries(nftBalancesMap)
+      // Remove zero balances.
+      .filter(([, balance]) => Number(balance) > 0)
+      // Descending by balance.
       .sort(([, a], [, b]) => Number(b) - Number(a))
       .slice(0, limitNum)
 
@@ -368,12 +387,14 @@ export const topStakers: ContractFormula<
     const totalVotingPower = Number(await totalPower.compute(env))
 
     // Compute voting power for each staker.
-    const stakers = stakedCounts.map(
-      ([address, count]): Staker => ({
+    const stakers = nftBalances.map(
+      ([address, balance]): Staker => ({
         address,
-        count: Number(count),
+        count: Number(balance),
         votingPowerPercent:
-          totalVotingPower === 0 ? 0 : (Number(count) / totalVotingPower) * 100,
+          totalVotingPower === 0
+            ? 0
+            : (Number(balance) / totalVotingPower) * 100,
       })
     )
 
@@ -392,11 +413,11 @@ export const ownersOfStakedNfts: ContractFormula<Record<string, string>> = {
   compute: async (env) => {
     const { contractAddress, getTransformationMap } = env
 
-    const stakedCountMap =
-      (await getTransformationMap<string>(contractAddress, 'stakedCount')) ?? {}
-    const stakers = Object.entries(stakedCountMap)
-      // Remove zero counts.
-      .filter(([, stakedCount]) => Number(stakedCount) > 0)
+    const nftBalancesMap =
+      (await getTransformationMap<string>(contractAddress, 'nftBalances')) ?? {}
+    const stakers = Object.entries(nftBalancesMap)
+      // Remove zero balances.
+      .filter(([, balance]) => Number(balance) > 0)
       .map(([address]) => address)
 
     const stakedNftsPerStaker = await Promise.all(

@@ -768,7 +768,7 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get the staked balance at",
             "required": false,
             "schema": {
@@ -823,7 +823,7 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get the staked balance at",
             "required": false,
             "schema": {
@@ -961,7 +961,7 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get the total staked amount at",
             "required": false,
             "schema": {
@@ -1007,7 +1007,7 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get the total staked amount at",
             "required": false,
             "schema": {
@@ -1189,7 +1189,7 @@
           "contract"
         ],
         "summary": "cw4Group > member",
-        "description": "retrieves the weight of a member in the group",
+        "description": "retrieves the weight of a member in the group, optionally at a specific height",
         "parameters": [
           {
             "name": "chainId",
@@ -1217,6 +1217,15 @@
               "type": "string"
             },
             "in": "query"
+          },
+          {
+            "name": "height",
+            "description": "height to query at",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
           }
         ],
         "responses": {
@@ -1235,7 +1244,7 @@
           "contract"
         ],
         "summary": "cw4Group > totalWeight",
-        "description": "retrieves the total weight of all members in the group",
+        "description": "retrieves the total weight of all members in the group, optionally at a specific height",
         "parameters": [
           {
             "name": "chainId",
@@ -1254,11 +1263,23 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "height",
+            "description": "height to query at",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
             "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
           }
         }
       }
@@ -3135,7 +3156,7 @@
           "contract"
         ],
         "summary": "daoCore > totalPowerAtHeight",
-        "description": "retrieves the total voting power at a specific block height",
+        "description": "retrieves the total voting power, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -3156,9 +3177,9 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to check voting power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -3261,7 +3282,7 @@
           "contract"
         ],
         "summary": "daoCore > votingPowerAtHeight",
-        "description": "retrieves the voting power at a specific block height for a given address",
+        "description": "retrieves the voting power for a given address, optionally at a specific block height for a given address",
         "parameters": [
           {
             "name": "chainId",
@@ -3291,9 +3312,9 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to check voting power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -6056,6 +6077,351 @@
         }
       }
     },
+    "/{chainId}/contract/{address}/daoVoteDelegation/delegates": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoVoteDelegation > delegates",
+        "description": "retrieves the list of active delegates",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startAfter",
+            "description": "address to start listing delegates after",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "maximum number of delegates to return",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoVoteDelegation/delegations": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoVoteDelegation > delegations",
+        "description": "retrieves a list of delegations by a delegator, optionally at a given block height",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "delegator",
+            "description": "address of the delegator",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "height",
+            "description": "block height to retrieve delegations at",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          },
+          {
+            "name": "offset",
+            "description": "offset to start listing delegations at",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "maximum number of delegations to return",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoVoteDelegation/info": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoVoteDelegation > info",
+        "description": "retrieves the contract info (name and version)",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoVoteDelegation/proposalModules": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoVoteDelegation > proposalModules",
+        "description": "retrieves the list of proposal modules",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startAfter",
+            "description": "address to start listing proposal modules after",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "maximum number of proposal modules to return",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoVoteDelegation/unvotedDelegatedVotingPower": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoVoteDelegation > unvotedDelegatedVotingPower",
+        "description": "retrieves the voting power delegated to a delegate that has not yet been used in votes cast by delegators in a specific proposal",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "delegate",
+            "description": "address of the delegate",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "proposalModule",
+            "description": "address of the proposal module",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "proposalId",
+            "description": "proposal ID",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          },
+          {
+            "name": "height",
+            "description": "block height the proposal was created at",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoVoteDelegation/votingPowerHookCallers": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoVoteDelegation > votingPowerHookCallers",
+        "description": "retrieves the list of voting power hook callers",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startAfter",
+            "description": "address to start listing hook callers after",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "limit",
+            "description": "maximum number of hook callers to return",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{address}/daoVoting/activeThreshold": {
       "get": {
         "tags": [
@@ -6300,7 +6666,7 @@
           "contract"
         ],
         "summary": "daoVotingCw20Staked > totalPowerAtHeight",
-        "description": "retrieves the total voting power at a specific block height",
+        "description": "retrieves the total voting power, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -6321,9 +6687,9 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get total power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -6392,7 +6758,7 @@
           "contract"
         ],
         "summary": "daoVotingCw20Staked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address at a specific block height",
+        "description": "retrieves the voting power for an address, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -6422,9 +6788,9 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get voting power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -6549,7 +6915,7 @@
           "contract"
         ],
         "summary": "daoVotingCw4 > totalPowerAtHeight",
-        "description": "retrieves the total voting power at a specific block height",
+        "description": "retrieves the total voting power, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -6570,9 +6936,9 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get total power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -6641,7 +7007,7 @@
           "contract"
         ],
         "summary": "daoVotingCw4 > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address at a specific block height",
+        "description": "retrieves the voting power for an address, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -6671,9 +7037,9 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get voting power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -7102,7 +7468,7 @@
           "contract"
         ],
         "summary": "daoVotingCw721Staked > totalPowerAtHeight",
-        "description": "retrieves the total voting power at a specific block height",
+        "description": "retrieves the total voting power, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -7123,9 +7489,9 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get total power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -7194,7 +7560,7 @@
           "contract"
         ],
         "summary": "daoVotingCw721Staked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address at a specific block height",
+        "description": "retrieves the voting power for an address, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -7224,9 +7590,9 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get voting power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -7554,7 +7920,7 @@
           "contract"
         ],
         "summary": "daoVotingNativeStaked > totalPowerAtHeight",
-        "description": "retrieves the total voting power at a specific block height",
+        "description": "retrieves the total voting power, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -7575,9 +7941,9 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get total power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -7646,7 +8012,7 @@
           "contract"
         ],
         "summary": "daoVotingNativeStaked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address at a specific block height",
+        "description": "retrieves the voting power for an address, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -7676,9 +8042,9 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get voting power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -8107,7 +8473,7 @@
           "contract"
         ],
         "summary": "daoVotingOnftStaked > totalPowerAtHeight",
-        "description": "retrieves the total voting power at a specific block height",
+        "description": "retrieves the total voting power, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -8128,9 +8494,9 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get total power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -8199,7 +8565,7 @@
           "contract"
         ],
         "summary": "daoVotingOnftStaked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address at a specific block height",
+        "description": "retrieves the voting power for an address, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -8229,9 +8595,9 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get voting power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -8537,7 +8903,7 @@
           "contract"
         ],
         "summary": "daoVotingSgCommunityNft > totalPowerAtHeight",
-        "description": "retrieves the total voting power at a specific block height",
+        "description": "retrieves the total voting power, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -8558,9 +8924,9 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get total power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -8629,7 +8995,7 @@
           "contract"
         ],
         "summary": "daoVotingSgCommunityNft > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address at a specific block height",
+        "description": "retrieves the voting power for an address, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -8659,9 +9025,9 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get voting power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -9057,7 +9423,7 @@
           "contract"
         ],
         "summary": "daoVotingTokenStaked > totalPowerAtHeight",
-        "description": "retrieves the total voting power at a specific block height",
+        "description": "retrieves the total voting power, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -9078,9 +9444,9 @@
             }
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get total power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },
@@ -9149,7 +9515,7 @@
           "contract"
         ],
         "summary": "daoVotingTokenStaked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address at a specific block height",
+        "description": "retrieves the voting power for an address, optionally at a specific block height",
         "parameters": [
           {
             "name": "chainId",
@@ -9179,9 +9545,9 @@
             "in": "query"
           },
           {
-            "name": "block",
+            "name": "height",
             "description": "block height to get voting power at",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "integer"
             },

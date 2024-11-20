@@ -7,7 +7,7 @@ const distributions: Transformer = makeTransformerForMap(
   CODE_IDS_KEYS,
   'distribution',
   'd',
-  { numericKey: true }
+  { namer: { input: 'number' } }
 )
 
 export default [distributions]

@@ -1,8 +1,11 @@
-import { fromBech32 } from '@cosmjs/encoding'
-
 import { ContractFormula } from '@/types'
 
-import { makeSimpleContractFormula } from '../../utils'
+import {
+  makeSimpleContractFormula,
+  mapRange,
+  snapshotItemMayLoadAtHeight,
+  snapshotMapMayLoadAtHeight,
+} from '../../utils'
 
 export type StakerBalance = {
   address: string
@@ -30,6 +33,7 @@ export const stakedBalanceAtHeight: ContractFormula<
   StakedBalanceAtHeight,
   {
     address: string
+    height?: string
     // Required when querying oraichain-cw20-staking contract directly.
     oraichainStakingToken?: string
   }
@@ -47,7 +51,7 @@ export const stakedBalanceAtHeight: ContractFormula<
         },
       },
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get the staked balance at',
         required: false,
         schema: {
@@ -65,18 +69,20 @@ export const stakedBalanceAtHeight: ContractFormula<
   },
   compute: async (env) => {
     const {
-      getTransformationMatch,
-      args: { address },
+      args: { address, height: _height, oraichainStakingToken },
       block,
+      contractMatchesCodeIdKeys,
     } = env
     if (!address) {
       throw new Error('missing `address`')
     }
 
+    let key = address
+    const height = _height ? Number(_height) : Number(block.height)
+
     let contractAddress = env.contractAddress
-    const keys = ['stakedBalance']
     if (
-      await env.contractMatchesCodeIdKeys(
+      await contractMatchesCodeIdKeys(
         contractAddress,
         'oraichain-cw20-staking-proxy-snapshot'
       )
@@ -86,32 +92,27 @@ export const stakedBalanceAtHeight: ContractFormula<
         throw new Error('missing proxy config')
       }
       contractAddress = proxyConfig.staking_contract
-      keys.push(proxyConfig.asset_key)
+      key = `${proxyConfig.asset_key}:${address}`
     } else if (
-      await env.contractMatchesCodeIdKeys(
-        contractAddress,
-        'oraichain-cw20-staking'
-      )
+      await contractMatchesCodeIdKeys(contractAddress, 'oraichain-cw20-staking')
     ) {
-      if (!env.args.oraichainStakingToken) {
+      if (!oraichainStakingToken) {
         throw new Error('missing `oraichainStakingToken`')
       }
-      keys.push(env.args.oraichainStakingToken)
+      key = `${oraichainStakingToken}:${address}`
     }
 
-    keys.push(address)
-
     const balance =
-      (
-        await getTransformationMatch<string | undefined>(
-          contractAddress,
-          keys.join(':')
-        )
-      )?.value ?? '0'
+      (await snapshotMapMayLoadAtHeight<string, string>({
+        env,
+        name: 'stakedBalance',
+        key,
+        height,
+      })) ?? '0'
 
     return {
       balance,
-      height: Number(block.height),
+      height,
     }
   },
 }
@@ -120,6 +121,7 @@ export const stakedBalance: ContractFormula<
   string,
   {
     address: string
+    height?: string
     // Required when querying oraichain-cw20-staking contract directly.
     oraichainStakingToken?: string
   }
@@ -137,7 +139,7 @@ export const stakedBalance: ContractFormula<
         },
       },
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get the staked balance at',
         required: false,
         schema: {
@@ -153,6 +155,7 @@ export const stakedBalance: ContractFormula<
 export const totalStakedAtHeight: ContractFormula<
   TotalStakedAtHeight,
   {
+    height?: string
     // Required when querying oraichain-cw20-staking contract directly.
     oraichainStakingToken?: string
   }
@@ -162,7 +165,7 @@ export const totalStakedAtHeight: ContractFormula<
       'retrieves the total staked amount at a specific block height, defaulting to the current block height',
     args: [
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get the total staked amount at',
         required: false,
         schema: {
@@ -179,10 +182,18 @@ export const totalStakedAtHeight: ContractFormula<
     ],
   },
   compute: async (env) => {
+    const {
+      args: { height: _height, oraichainStakingToken },
+      block,
+      contractMatchesCodeIdKeys,
+    } = env
+
+    let oraichainToken: string | undefined
+    const height = _height ? Number(_height) : Number(block.height)
+
     let contractAddress = env.contractAddress
-    const keys: (string | Uint8Array)[] = ['total_staked']
     if (
-      await env.contractMatchesCodeIdKeys(
+      await contractMatchesCodeIdKeys(
         contractAddress,
         'oraichain-cw20-staking-proxy-snapshot'
       )
@@ -192,24 +203,33 @@ export const totalStakedAtHeight: ContractFormula<
         throw new Error('missing proxy config')
       }
       contractAddress = proxyConfig.staking_contract
-      keys.push(fromBech32(proxyConfig.asset_key).data)
+      oraichainToken = proxyConfig.asset_key
     } else if (
-      await env.contractMatchesCodeIdKeys(
-        contractAddress,
-        'oraichain-cw20-staking'
-      )
+      await contractMatchesCodeIdKeys(contractAddress, 'oraichain-cw20-staking')
     ) {
-      if (!env.args.oraichainStakingToken) {
+      if (!oraichainStakingToken) {
         throw new Error('missing `oraichainStakingToken`')
       }
-      keys.push(fromBech32(env.args.oraichainStakingToken).data)
+      oraichainToken = oraichainStakingToken
     }
 
-    const total = (await env.get<string>(contractAddress, ...keys)) || '0'
+    const total =
+      (oraichainToken
+        ? await snapshotMapMayLoadAtHeight<string, string>({
+            env,
+            name: 'stakedTotal',
+            key: oraichainToken,
+            height,
+          })
+        : await snapshotItemMayLoadAtHeight<string>({
+            env,
+            name: 'stakedTotal',
+            height,
+          })) ?? '0'
 
     return {
       total,
-      height: Number(env.block.height),
+      height,
     }
   },
 }
@@ -217,6 +237,7 @@ export const totalStakedAtHeight: ContractFormula<
 export const totalStaked: ContractFormula<
   string,
   {
+    height?: string
     // Required when querying oraichain-cw20-staking contract directly.
     oraichainStakingToken?: string
   }
@@ -226,7 +247,7 @@ export const totalStaked: ContractFormula<
       'retrieves the total staked amount at a specific block height, defaulting to the current block height',
     args: [
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get the total staked amount at',
         required: false,
         schema: {
@@ -337,22 +358,19 @@ export const listStakers: ContractFormula<
       },
     ],
   },
-  compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
-    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+  compute: async (env) => {
+    const { limit, startAfter } = env.args
 
-    const stakers =
-      (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
-    const stakes = Object.entries(stakers)
-      // Ascending by address.
-      .sort(([a], [b]) => a.localeCompare(b))
-      .filter(
-        ([address]) => !startAfter || address.localeCompare(startAfter) > 0
-      )
-      .slice(0, limitNum)
+    const stakers = await mapRange<string>({
+      env,
+      name: 'stakedBalances',
+      startAfter,
+      limit: limit ? Math.max(0, Number(limit)) : undefined,
+    })
 
-    return stakes.map(([address, balance]) => ({
-      address,
-      balance,
+    return stakers.map(({ key, value }) => ({
+      address: key,
+      balance: value,
     }))
   },
 }
@@ -387,14 +405,15 @@ export const topStakers: ContractFormula<
   },
   compute: async (env) => {
     const {
+      args: { limit, oraichainStakingToken },
       getTransformationMap,
-      args: { limit },
+      contractMatchesCodeIdKeys,
     } = env
 
     let contractAddress = env.contractAddress
     const keys = ['stakedBalance']
     if (
-      await env.contractMatchesCodeIdKeys(
+      await contractMatchesCodeIdKeys(
         contractAddress,
         'oraichain-cw20-staking-proxy-snapshot'
       )
@@ -406,15 +425,12 @@ export const topStakers: ContractFormula<
       contractAddress = proxyConfig.staking_contract
       keys.push(proxyConfig.asset_key)
     } else if (
-      await env.contractMatchesCodeIdKeys(
-        contractAddress,
-        'oraichain-cw20-staking'
-      )
+      await contractMatchesCodeIdKeys(contractAddress, 'oraichain-cw20-staking')
     ) {
-      if (!env.args.oraichainStakingToken) {
+      if (!oraichainStakingToken) {
         throw new Error('missing `oraichainStakingToken`')
       }
-      keys.push(env.args.oraichainStakingToken)
+      keys.push(oraichainStakingToken)
     }
 
     const limitNum = limit ? Math.max(0, Number(limit)) : Infinity

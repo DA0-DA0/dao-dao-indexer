@@ -1,17 +1,31 @@
 import { Transformer } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 
-import { makeTransformer } from '../../utils'
+import {
+  makeTransformer,
+  makeTransformersForSnapshotItem,
+  makeTransformersForSnapshotMap,
+} from '../../utils'
 
 const CODE_IDS_KEYS = ['dao-voting-onft-staked']
 
 const KEY_PREFIX_SNPW = dbKeyForKeys('snpw', '')
-const KEY_PREFIX_NB = dbKeyForKeys('nb', '')
 const KEY_PREFIX_NC = dbKeyForKeys('nc', '')
 
 const config = makeTransformer(CODE_IDS_KEYS, 'config')
 const dao = makeTransformer(CODE_IDS_KEYS, 'dao')
-const totalStakedNfts = makeTransformer(CODE_IDS_KEYS, 'tsn')
+const nftBalances = makeTransformersForSnapshotMap({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'nftBalances',
+  primaryKey: 'nb',
+  changelogKey: 'nb__changelog',
+})
+const totalStakedNfts = makeTransformersForSnapshotItem({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'totalStakedNfts',
+  primaryKey: 'tsn',
+  changelogKey: 'tsn__changelog',
+})
 const activeThreshold = makeTransformer(
   CODE_IDS_KEYS,
   'activeThreshold',
@@ -61,27 +75,13 @@ const stakedNftOwner: Transformer = {
   },
 }
 
-// Maintain running count of staked NFTs per owner.
-const stakedCount: Transformer = {
-  filter: {
-    codeIdsKeys: CODE_IDS_KEYS,
-    matches: (event) => event.key.startsWith(KEY_PREFIX_NB),
-  },
-  name: (event) => {
-    // "nb", address
-    const [, address] = dbKeyToKeys(event.key, [false, false])
-    return `stakedCount:${address}`
-  },
-  getValue: (event) => event.valueJson,
-}
-
 export default [
   config,
   dao,
-  totalStakedNfts,
+  ...nftBalances,
+  ...totalStakedNfts,
   stakedNftPerOwner,
   stakedNftOwner,
-  stakedCount,
   activeThreshold,
   claim,
 ]

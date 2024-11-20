@@ -153,61 +153,9 @@ export const makeSimpleContractFormula = <
 })
 
 /**
- * Potentially load a value at a height from a transformed snapshot. Returns
- * undefined if no value is found at the height, null if a change was found but
- * the old value did not exist, and the old value otherwise.
- *
- * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/mod.rs#L151-L180
+ * Load a specific range of values from a transformed map or snapshot map.
  */
-export const snapshotMayLoadAtHeight = async <
-  K extends string | number | null,
-  V
->({
-  env: { contractAddress, getTransformationMap },
-  name,
-  key,
-  height,
-}: {
-  /**
-   * The environment.
-   */
-  env: ContractEnv
-  /**
-   * The name of the transformed snapshot to load from.
-   */
-  name: string
-  /**
-   * The key to load.
-   */
-  key: K
-  /**
-   * The height to load.
-   */
-  height: number
-}): Promise<V | null | undefined> => {
-  // Map of height to ChangeSet.
-  const changelogMap =
-    (await getTransformationMap<{ old: V | undefined | null }>(
-      contractAddress,
-      `${name}:changelog:${
-        typeof key === 'number' ? BigInt(key).toString() : key
-      }`
-    )) || {}
-
-  const start = BigInt(height)
-  const changelog = Object.entries(changelogMap)
-    // Sort ascending.
-    .sort(([a], [b]) => Number(BigInt(a) - BigInt(b)))
-    // Find first entry whose height is the start height or greater.
-    .find(([height]) => BigInt(height) >= start)
-
-  return changelog && (changelog[1]?.old ?? null)
-}
-
-/**
- * Load a specific range of values from a transformed snapshot map.
- */
-export const snapshotMapRange = async <V>({
+export const mapRange = async <V>({
   env: { contractAddress, getTransformationMatches },
   name,
   startAfter,
@@ -244,7 +192,7 @@ export const snapshotMapRange = async <V>({
   (
     await getTransformationMatches<V>(
       contractAddress,
-      name,
+      name + ':*',
       undefined,
       undefined,
       startAfter
@@ -258,6 +206,58 @@ export const snapshotMapRange = async <V>({
     key: nameAndKey.slice(name.length + 1),
     value,
   })) ?? []
+
+/**
+ * Potentially load a value at a height from a transformed snapshot. Returns
+ * undefined if no value is found at the height, null if a change was found but
+ * the old value did not exist, and the old value otherwise.
+ *
+ * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/mod.rs#L151-L180
+ */
+export const snapshotMayLoadAtHeight = async <
+  K extends string | number | null,
+  V
+>({
+  env: { contractAddress, getTransformationMap },
+  name,
+  key,
+  height,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The height to load.
+   */
+  height: number
+}): Promise<V | null | undefined> => {
+  // Map of height to ChangeSet.
+  const changelogMap =
+    (await getTransformationMap<{ old: V | undefined | null }>(
+      contractAddress,
+      `${name}/changelog:${
+        typeof key === 'number' ? BigInt(key).toString() : key
+      }`
+    )) || {}
+
+  const start = BigInt(height)
+  const changelog = Object.entries(changelogMap)
+    // Sort ascending.
+    .sort(([a], [b]) => Number(BigInt(a) - BigInt(b)))
+    // Find first entry whose height is the start height or greater.
+    .find(([height]) => BigInt(height) >= start)
+
+  return changelog && (changelog[1]?.old ?? null)
+}
 
 /**
  * Potentially load a value from a transformed snapshot item. Returns undefined
@@ -436,7 +436,7 @@ export const snapshotVectorMapMayLoadItem = async <
   (
     await getTransformationMatch<V>(
       contractAddress,
-      `${name}:items:${
+      `${name}/items:${
         typeof key === 'number' ? BigInt(key).toString() : key
       }:${BigInt(id).toString()}`
     )
@@ -488,7 +488,7 @@ export const snapshotVectorMapLoad = async <K extends string | number, V>({
   const activeIds =
     (await snapshotMapMayLoadAtHeight<K, [number, number | null][]>({
       env,
-      name: `${name}:active`,
+      name: `${name}/active`,
       key,
       height,
     })) || []

@@ -1,5 +1,10 @@
-import { ParsedWasmStateEvent, Transformer } from '@/types'
-import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
+import {
+  KeyInput,
+  KeyInputType,
+  ParsedWasmStateEvent,
+  Transformer,
+} from '@/types'
+import { dbKeyForKeys, dbKeyToKeys, dbKeyToKeysAdvanced } from '@/utils'
 
 export const defaultGetValue = (event: ParsedWasmStateEvent) =>
   // If value is null but this is not a delete event, store an empty string
@@ -24,7 +29,28 @@ export const makeTransformer = (
 }
 
 interface TransformerForMapOptions<V = any> {
-  numericKey?: boolean
+  /**
+   * Override the default name generation. The map prefix is automatically
+   * prepended to the name.
+   */
+  namer?: {
+    /**
+     * The key types to decode from the event, ignoring the map prefix. This is
+     * passed to `dbKeyToKeysAdvanced`.
+     *
+     * Defaults to `string`, which is just one key.
+     */
+    input?: KeyInputType | KeyInputType[]
+    /**
+     * Transform the decoded keys into a string to use as the name.
+     *
+     * Defaults to concatenating the keys with a colon.
+     */
+    transform?: (keys: KeyInput[]) => string
+  }
+  /**
+   * Override the default value generation.
+   */
   getValue?: Transformer<V>['getValue']
 }
 
@@ -32,8 +58,20 @@ export const makeTransformerForMap = <V = any>(
   codeIdsKeys: string[],
   mapPrefix: string,
   keyPrefixOrPrefixes: string | string[],
-  { numericKey = false, getValue }: TransformerForMapOptions<V> = {}
+  { namer: _namer, getValue }: TransformerForMapOptions<V> = {}
 ): Transformer<V> => {
+  const namer = {
+    input: [_namer?.input || 'string'].flat(),
+    transform:
+      _namer?.transform ||
+      ((keys) =>
+        keys
+          .map((key) =>
+            typeof key === 'number' ? BigInt(key).toString() : key
+          )
+          .join(':')),
+  }
+
   const dbKeyPrefixes = [keyPrefixOrPrefixes]
     .flat()
     .map((key) => dbKeyForKeys(key, ''))
@@ -45,7 +83,15 @@ export const makeTransformerForMap = <V = any>(
         dbKeyPrefixes.some((prefix) => event.key.startsWith(prefix)),
     },
     name: (event) => {
-      const [, key] = dbKeyToKeys(event.key, [false, numericKey])
+      const key = namer.transform(
+        dbKeyToKeysAdvanced(event.key, [
+          // The map prefix is a string.
+          'string',
+          ...namer.input,
+        ])
+          // Ignore the decoded map namespace.
+          .slice(1)
+      )
       return `${mapPrefix}:${key}`
     },
     getValue: getValue || defaultGetValue,
@@ -99,7 +145,7 @@ export const makeTransformerForSnapshot = ({
   codeIdsKeys,
   name,
   changelogKey,
-  numericKey = false,
+  namer,
 }: {
   /**
    * The code IDs to filter by.
@@ -113,30 +159,21 @@ export const makeTransformerForSnapshot = ({
    * The key of the changelog.
    */
   changelogKey: string
-  /**
-   * Whether or not the snapshot keys are numeric (integers). Defaults to
-   * false.
-   */
-  numericKey?: boolean
-}): Transformer => {
-  const changelogKeyPrefix = dbKeyForKeys(changelogKey, '')
-  const changelogNamePrefix = `${name}:changelog`
-
-  return {
-    filter: {
-      codeIdsKeys,
-      matches: (event) => event.key.startsWith(changelogKeyPrefix),
+} & Pick<TransformerForMapOptions, 'namer'>): Transformer =>
+  makeTransformerForMap(codeIdsKeys, `${name}/changelog`, changelogKey, {
+    namer: {
+      // Detect additional numeric key at the end, which is the height.
+      input: [...[namer?.input || 'string'].flat(), 'number'],
+      transform:
+        namer?.transform &&
+        ((keys) =>
+          // Transform just the keys provided by the custom namer.
+          namer.transform!(keys.slice(0, -1)) +
+          // Add the height.
+          ':' +
+          BigInt(keys[keys.length - 1] as number).toString()),
     },
-    name: (event) => {
-      // map prefix, key, height
-      const [, key, height] = dbKeyToKeys(event.key, [false, numericKey, true])
-      return `${changelogNamePrefix}:${
-        numericKey ? BigInt(key).toString() : key
-      }:${BigInt(height).toString()}`
-    },
-    getValue: defaultGetValue,
-  }
-}
+  })
 
 /**
  * Transform a cw-storage-plus SnapshotItem.
@@ -170,6 +207,10 @@ export const makeTransformersForSnapshotItem = ({
     codeIdsKeys,
     name,
     changelogKey,
+    namer: {
+      // No additional map keys for snapshot item.
+      input: [],
+    },
   })
 
   return [primaryTransformer, snapshotTransformer]
@@ -183,7 +224,7 @@ export const makeTransformersForSnapshotMap = ({
   name,
   primaryKey,
   changelogKey,
-  numericKey = false,
+  namer,
 }: {
   /**
    * The code IDs to filter by.
@@ -201,24 +242,19 @@ export const makeTransformersForSnapshotMap = ({
    * The key of the changelog.
    */
   changelogKey: string
-  /**
-   * Whether or not the snapshot map keys are numeric (integers). Defaults to
-   * false.
-   */
-  numericKey?: boolean
-}): Transformer[] => {
+} & Pick<TransformerForMapOptions, 'namer'>): Transformer[] => {
   const primaryTransformer = makeTransformerForMap(
     codeIdsKeys,
     name,
     primaryKey,
-    { numericKey }
+    { namer }
   )
 
   const snapshotTransformer = makeTransformerForSnapshot({
     codeIdsKeys,
     name,
     changelogKey,
-    numericKey,
+    namer,
   })
 
   return [primaryTransformer, snapshotTransformer]
@@ -234,7 +270,7 @@ export const makeTransformersForSnapshotVectorMap = ({
   nextIdsKey,
   activePrimaryKey,
   activeChangelogKey,
-  numericKey = false,
+  keyType = 'string',
 }: {
   /**
    * The code IDs to filter by.
@@ -261,43 +297,40 @@ export const makeTransformersForSnapshotVectorMap = ({
    */
   activeChangelogKey: string
   /**
-   * Whether or not the keys are numeric (integers). Defaults to false.
+   * The type of the key. Defaults to `string`.
    */
-  numericKey?: boolean
+  keyType?: KeyInputType
 }): Transformer[] => {
-  const itemsKeyPrefix = dbKeyForKeys(itemsKey, '')
-  const itemsNamePrefix = `${name}:items`
-
-  const itemsTransformer: Transformer = {
-    filter: {
-      codeIdsKeys,
-      matches: (event) => event.key.startsWith(itemsKeyPrefix),
-    },
-    name: (event) => {
-      // map prefix, key, ID
-      const [, key, id] = dbKeyToKeys(event.key, [false, numericKey, true])
-      return `${itemsNamePrefix}:${
-        numericKey ? BigInt(key).toString() : key
-      }:${BigInt(id).toString()}`
-    },
-    getValue: defaultGetValue,
-  }
+  const itemsTransformer = makeTransformerForMap(
+    codeIdsKeys,
+    `${name}/items`,
+    itemsKey,
+    {
+      namer: {
+        input: [keyType, 'number'],
+      },
+    }
+  )
 
   const nextIdsTransformer = makeTransformerForMap(
     codeIdsKeys,
-    `${name}:nextIds`,
+    `${name}/nextIds`,
     nextIdsKey,
     {
-      numericKey,
+      namer: {
+        input: keyType,
+      },
     }
   )
 
   const activeSnapshotMapTransformers = makeTransformersForSnapshotMap({
     codeIdsKeys,
-    name: `${name}:active`,
+    name: `${name}/active`,
     primaryKey: activePrimaryKey,
     changelogKey: activeChangelogKey,
-    numericKey,
+    namer: {
+      input: keyType,
+    },
   })
 
   return [
@@ -314,7 +347,7 @@ export const makeTransformerForWormhole = ({
   codeIdsKeys,
   name,
   key,
-  numericKey = false,
+  keyType = 'string',
 }: {
   /**
    * The code IDs to filter by.
@@ -329,28 +362,13 @@ export const makeTransformerForWormhole = ({
    */
   key: string
   /**
-   * Whether or not the keys are numeric (integers). Defaults to false.
+   * The type of the key. Defaults to `string`.
    */
-  numericKey?: boolean
-}): Transformer => {
-  const keyPrefix = dbKeyForKeys(key, '')
-
-  return {
-    filter: {
-      codeIdsKeys,
-      matches: (event) => event.key.startsWith(keyPrefix),
+  keyType?: KeyInputType
+}): Transformer =>
+  makeTransformerForMap(codeIdsKeys, name, key, {
+    namer: {
+      // Detect additional numeric key at the end, which is the timestamp.
+      input: [keyType, 'number'],
     },
-    name: (event) => {
-      // map prefix, key, timestamp
-      const [, key, timestamp] = dbKeyToKeys(event.key, [
-        false,
-        numericKey,
-        true,
-      ])
-      return `${name}:${numericKey ? BigInt(key).toString() : key}:${BigInt(
-        timestamp
-      ).toString()}`
-    },
-    getValue: defaultGetValue,
-  }
-}
+  })
