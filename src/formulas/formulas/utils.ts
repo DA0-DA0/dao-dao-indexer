@@ -232,9 +232,10 @@ export const snapshotMayLoadAtHeight = async <
    */
   name: string
   /**
-   * The key to load.
+   * The key to load. If undefined, key is omitted. This is used for
+   * SnapshotItems that have no key.
    */
-  key: K
+  key: K | undefined
   /**
    * The height to load.
    */
@@ -244,9 +245,12 @@ export const snapshotMayLoadAtHeight = async <
   const changelogMap =
     (await getTransformationMap<{ old: V | undefined | null }>(
       contractAddress,
-      `${name}/changelog:${
-        typeof key === 'number' ? BigInt(key).toString() : key
-      }`
+      [
+        `${name}/changelog`,
+        ...(key !== undefined
+          ? [typeof key === 'number' ? BigInt(key).toString() : key]
+          : []),
+      ].join(':')
     )) || {}
 
   const start = BigInt(height)
@@ -309,7 +313,7 @@ export const snapshotItemMayLoadAtHeight = async <V>({
   const snapshot = await snapshotMayLoadAtHeight<null, V>({
     env,
     name,
-    key: null,
+    key: undefined,
     height,
   })
 
