@@ -12,7 +12,7 @@ export const defaultGetValue = (event: ParsedWasmStateEvent) =>
   event.valueJson === null && !event.delete ? '' : event.valueJson
 
 export const makeTransformer = (
-  codeIdsKeys: string[],
+  codeIdsKeys: string[] | 'any',
   name: string,
   keyOrKeys?: string | string[]
 ): Transformer => {
@@ -55,7 +55,7 @@ interface TransformerForMapOptions<V = any> {
 }
 
 export const makeTransformerForMap = <V = any>(
-  codeIdsKeys: string[],
+  codeIdsKeys: string[] | 'any',
   mapPrefix: string,
   keyPrefixOrPrefixes: string | string[],
   { namer: _namer, getValue }: TransformerForMapOptions<V> = {}
@@ -150,7 +150,7 @@ export const makeTransformerForSnapshot = ({
   /**
    * The code IDs to filter by.
    */
-  codeIdsKeys: string[]
+  codeIdsKeys: string[] | 'any'
   /**
    * The name of the transformation.
    */
@@ -229,7 +229,7 @@ export const makeTransformersForSnapshotMap = ({
   /**
    * The code IDs to filter by.
    */
-  codeIdsKeys: string[]
+  codeIdsKeys: string[] | 'any'
   /**
    * The name of the transformation.
    */
@@ -275,7 +275,7 @@ export const makeTransformersForSnapshotVectorMap = ({
   /**
    * The code IDs to filter by.
    */
-  codeIdsKeys: string[]
+  codeIdsKeys: string[] | 'any'
   /**
    * The name of the transformation.
    */
@@ -352,7 +352,7 @@ export const makeTransformerForWormhole = ({
   /**
    * The code IDs to filter by.
    */
-  codeIdsKeys: string[]
+  codeIdsKeys: string[] | 'any'
   /**
    * The name of the transformation.
    */

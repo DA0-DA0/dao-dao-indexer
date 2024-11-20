@@ -1,7 +1,6 @@
 import { toBech32 } from '@cosmjs/encoding'
 
 import { loadConfig } from '@/config'
-import { Transformer } from '@/types'
 
 import { makeTransformersForSnapshotMap } from '../../utils'
 

@@ -4,7 +4,7 @@ import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 import { makeTransformer, makeTransformerForMap } from '../../utils'
 
 // There are so many CW721 contracts, just don't filter by code ID.
-const CODE_IDS_KEYS: string[] = []
+const CODE_IDS_KEYS = 'any'
 
 const KEY_PREFIX_TOKENS__OWNER = dbKeyForKeys('tokens__owner', '')
 

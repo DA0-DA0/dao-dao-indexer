@@ -52,12 +52,21 @@ export const getProcessedTransformers = (
       filter: (event) => {
         let match = true
 
-        const allCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-          ...(filter.codeIdsKeys ?? [])
-        )
+        // If codeIdsKeys is 'any', match all code IDs. Otherwise, match the
+        // given code IDs. If no code IDs present, do not match. This ensures
+        // that missing code IDs do not lead to transformers matching all, which
+        // might happen if some contracts only exist on certain chains.
+        if (filter.codeIdsKeys !== 'any') {
+          const allCodeIds =
+            WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+              ...(filter.codeIdsKeys ?? [])
+            )
 
-        if (allCodeIds.length) {
-          match &&= allCodeIds.includes(event.codeId)
+          if (allCodeIds.length) {
+            match &&= allCodeIds.includes(event.codeId)
+          } else {
+            match = false
+          }
         }
 
         if (match && filter.contractAddresses?.length) {
