@@ -363,7 +363,7 @@ export const listStakers: ContractFormula<
 
     const stakers = await mapRange<string>({
       env,
-      name: 'stakedBalances',
+      name: 'stakedBalance',
       startAfter,
       limit: limit ? Math.max(0, Number(limit)) : undefined,
     })
