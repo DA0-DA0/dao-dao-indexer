@@ -274,7 +274,13 @@ export const topStakers: ContractFormula<Staker[]> = {
     const { stakers: allStakers } = await listStakers.compute(env)
 
     // Get total power.
-    const totalVotingPower = Number(await totalPower.compute(env))
+    const totalVotingPower = Number(
+      await totalPower.compute({
+        ...env,
+        // Make sure to not pass height in case it was passed to this formula.
+        args: {},
+      })
+    )
 
     // Compute voting power for each staker.
     const stakers = allStakers

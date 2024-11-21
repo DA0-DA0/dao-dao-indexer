@@ -228,8 +228,7 @@ export const topStakers: ContractFormula<
     const totalVotingPower = Number(
       await totalPower.compute({
         ...env,
-        // Make sure to not pass height to totalPower in case it was passed to
-        // this formula.
+        // Make sure to not pass height in case it was passed to this formula.
         args: {},
       })
     )

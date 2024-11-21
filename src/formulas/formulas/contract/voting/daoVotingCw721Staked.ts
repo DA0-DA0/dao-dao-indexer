@@ -374,7 +374,13 @@ export const topStakers: ContractFormula<
       .slice(0, limitNum)
 
     // Get total power.
-    const totalVotingPower = Number(await totalPower.compute(env))
+    const totalVotingPower = Number(
+      await totalPower.compute({
+        ...env,
+        // Make sure to not pass height in case it was passed to this formula.
+        args: {},
+      })
+    )
 
     // Compute voting power for each staker.
     const stakers = nftBalances.map(
