@@ -1,23 +1,3 @@
-/*
-    pub const CONFIG: Item<Config> = Item::new("cfg");
-
-    // Modules waiting for approvals
-    pub const PENDING_MODULES: Map<&ModuleInfo, ModuleReference> = Map::new("pendm");
-    // We can iterate over the map giving just the prefix to get all the versions
-    pub const REGISTERED_MODULES: Map<&ModuleInfo, ModuleReference> = Map::new("lib");
-    // Reverse map for module info of standalone modules
-    pub const STANDALONE_INFOS: Map<u64, ModuleInfo> = Map::new("stli");
-    // Yanked Modules
-    pub const YANKED_MODULES: Map<&ModuleInfo, ModuleReference> = Map::new("yknd");
-    // Modules Configuration
-    pub const MODULE_CONFIG: Map<&ModuleInfo, ModuleConfiguration> = Map::new("cfg");
-    // Modules Default Configuration
-    pub const MODULE_DEFAULT_CONFIG: Map<(&Namespace, &str), ModuleDefaultConfiguration> =
-        Map::new("dcfg");
-    /// Maps Account ID to the address of its core contracts
-    pub const ACCOUNT_ADDRESSES: Map<&AccountId, AccountBase> = Map::new("accs");
-*/
-
 import semver from 'semver/preload'
 
 import { Module } from '@/formulas/formulas/contract/abstract/types/registry'
@@ -30,11 +10,15 @@ const RegistryStorageKeys = {
   CONFIG: 'cfg',
   PENDING_MODULES: 'ca',
   REGISTERED_MODULES: 'cb',
-  STANDALONE_INFOS: 'cd',
+  STANDALONE_INFOS: 'cc',
+  SERVICE_INFOS: 'cd',
   YANKED_MODULES: 'ce',
   MODULE_CONFIG: 'cf',
   MODULE_DEFAULT_CONFIG: 'cg',
   ACCOUNT_ADDRESSES: 'ch',
+  LOCAL_ACCOUNT_SEQUENCE: 'ci',
+  NAMESPACES: 'cj',
+  REV_NAMESPACES: 'ck',
 }
 
 export const listRegisteredModules: ContractFormula<Array<Module>> = {
@@ -88,7 +72,7 @@ const DEFAULT_MODULE_CONFIG: RegistryTypes.ModuleConfiguration = {
 }
 
 type ModuleInfoParameter = Omit<RegistryTypes.ModuleInfo, 'version'> & {
-  version?: string
+  version: string
 }
 
 export const moduleConfig: ContractFormula<
@@ -96,14 +80,42 @@ export const moduleConfig: ContractFormula<
   ModuleInfoParameter
 > = {
   docs: {
-    description: 'Configuration of the module installation',
+    description: 'Configuration of the module installation huh',
+    args: [
+      {
+        name: 'name',
+        description: 'name of the module',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'namespace',
+        description: 'namespace of the module',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'version',
+        description: 'semver version of the module',
+        // TODO: it's possible to make it false with transformer and saving latest version of the module
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
   },
   compute: async ({ contractAddress, getMap, args }) => {
-    if (!args || !args.name || !args.namespace) return undefined
+    if (!args || !args.name || !args.namespace || !args.version)
+      return undefined
     const moduleInfo: RegistryTypes.ModuleInfo = {
       namespace: args.namespace,
       name: args.name,
-      version: args.version ? { version: args.version } : 'latest',
+      version: { version: args.version },
     }
 
     const versionedConfigMap =
@@ -194,3 +206,38 @@ export const module: ContractFormula<
     )
   },
 }
+
+export const listLocalAccounts: ContractFormula<RegistryTypes.AccountListResponse> =
+  {
+    docs: {
+      description: 'Lists local accounts on chain',
+    },
+    compute: async ({ contractAddress, getMap }) => {
+      const registeredModulesMap =
+        (await getMap<string, string>(
+          contractAddress,
+          RegistryStorageKeys.ACCOUNT_ADDRESSES,
+          { keyType: 'raw' }
+        )) ?? {}
+
+      const accounts = Object.entries(registeredModulesMap).map(
+        ([key, reference]) => {
+          const [trace_raw, sequence] = dbKeyToKeys(key, [false, true])
+          let trace
+          if (trace_raw === 'local') {
+            trace = 'local'
+          } else {
+            trace = { remote: (trace_raw as string).split('>') }
+          }
+          return [
+            {
+              seq: sequence as number,
+              trace,
+            },
+            reference,
+          ] as [RegistryTypes.AccountId, RegistryTypes.AccountForAddr]
+        }
+      )
+      return { accounts }
+    },
+  }

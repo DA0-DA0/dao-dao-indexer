@@ -28,6 +28,23 @@ export const makeTransformer = (
   }
 }
 
+export const makeAddressTransformer = (
+  contractAddresses: string[],
+  name: string,
+  keyOrKeys?: string | string[]
+): Transformer => {
+  const dbKeys = [keyOrKeys || name].flat().map((key) => dbKeyForKeys(key))
+
+  return {
+    filter: {
+      contractAddresses,
+      matches: (event) => dbKeys.includes(event.key),
+    },
+    name,
+    getValue: defaultGetValue,
+  }
+}
+
 interface TransformerForMapOptions<V = any> {
   /**
    * Override the default name generation. The map prefix is automatically

@@ -1,31 +1,9 @@
+import { loadConfig } from '@/config'
 import { ContractFormula } from '@/types'
 
 import * as Common from '../common'
 import { AccountTypes } from './types'
 import { Addr, GovernanceDetailsForString } from './types/account'
-
-/*
-    /// Suspension status
-    pub const SUSPENSION_STATUS: Item<SuspensionStatus> = Item::new("\u{0}{12}is_suspended");
-    /// Configuration
-    pub const CONFIG: Item<Config> = Item::new("\u{0}{6}config");
-    /// Info about the Account
-    pub const INFO: Item<AccountInfo<Addr>> = Item::new("\u{0}{4}info");
-    /// Account owner - managed by cw-ownable
-    pub const OWNER: Item<Ownership<Addr>> = Item::new(OWNERSHIP_STORAGE_KEY);
-    /// Enabled Abstract modules
-    pub const ACCOUNT_MODULES: Map<ModuleId, Addr> = Map::new("modules");
-    /// Stores the dependency relationship between modules
-    /// map module -> modules that depend on module.
-    pub const DEPENDENTS: Map<ModuleId, HashSet<String>> = Map::new("dependents");
-    /// List of sub-accounts
-    pub const SUB_ACCOUNTS: Map<u32, cosmwasm_std::Empty> = Map::new("sub_accs");
-    /// Pending new governance
-    pub const PENDING_GOVERNANCE: Item<GovernanceDetails<Addr>> = Item::new("pgov");
-    /// Context for old adapters that are currently removing authorized addresses
-    pub const REMOVE_ADAPTER_AUTHORIZED_CONTEXT: Item<u64> = Item::new("rm_a_auth");
-}
- */
 
 const AccountStorageKeys = {
   SUSPENSION_STATUS: 'aa',
@@ -36,6 +14,11 @@ const AccountStorageKeys = {
   WHITELISTED_MODULES: 'af',
   ACCOUNT_ID: 'ag',
   OWNER: 'ownership',
+}
+
+// Replace with transformer
+function registryAddress(): string {
+  return loadConfig().abstractRegistry as string
 }
 
 export const owner: ContractFormula<GovernanceDetailsForString | undefined> = {
@@ -135,12 +118,7 @@ export const moduleInfos: ContractFormula<
     description: '',
   },
   compute: async (env) => {
-    const { contractAddress, getMap, get } = env
-
-    // TODO:
-    const RegistryAddr = undefined
-
-    if (!RegistryAddr) return []
+    const { contractAddress, getMap } = env
 
     const moduleAddressesMap =
       (await getMap<string, AccountTypes.Addr>(
@@ -148,7 +126,7 @@ export const moduleInfos: ContractFormula<
         AccountStorageKeys.ACCOUNT_MODULES
       )) ?? {}
 
-    // Query the info from
+    // Query the info from registry
     return await Promise.all(
       Object.entries(moduleAddressesMap).map(async ([moduleId, address]) => {
         const contractInfo = await Common.info.compute({
@@ -166,6 +144,13 @@ export const moduleInfos: ContractFormula<
   },
 }
 
-type State = {
-  modules: string[]
+export const accountTxs: ContractFormula<any> = {
+  docs: {
+    description: '',
+  },
+  compute: async (env) => {
+    const { contractAddress, getTxEvents } = env
+    const events = await getTxEvents(contractAddress)
+    return events ?? []
+  },
 }
