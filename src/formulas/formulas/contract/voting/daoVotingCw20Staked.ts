@@ -180,9 +180,24 @@ type Staker = StakerBalance & {
   votingPowerPercent: number
 }
 
-export const topStakers: ContractFormula<Staker[]> = {
+export const topStakers: ContractFormula<
+  Staker[],
+  {
+    limit?: string
+  }
+> = {
   docs: {
     description: 'retrieves the top stakers sorted by voting power',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of stakers to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
   },
   compute: async (env) => {
     const stakingContractAddress = await stakingContract.compute(env)
@@ -210,7 +225,14 @@ export const topStakers: ContractFormula<Staker[]> = {
     })
 
     // Get total power.
-    const totalVotingPower = Number(await totalPower.compute(env))
+    const totalVotingPower = Number(
+      await totalPower.compute({
+        ...env,
+        // Make sure to not pass height to totalPower in case it was passed to
+        // this formula.
+        args: {},
+      })
+    )
 
     // Compute voting power for each staker.
     const stakers = topStakers.map((staker) => ({
