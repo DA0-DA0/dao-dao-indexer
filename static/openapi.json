@@ -26,9 +26,284 @@
   "servers": [
     {
       "url": "https://indexer.daodao.zone"
+    },
+    {
+      "url": "http://localhost:3420"
     }
   ],
   "paths": {
+    "/{chainId}/contract/{address}/account/accountId": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "account > accountId",
+        "description": "`account/accountId`",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/account/accountTxs": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "account > accountTxs",
+        "description": "`account/accountTxs`",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/account/info": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "account > info",
+        "description": "`account/info`",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/account/moduleInfos": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "account > moduleInfos",
+        "description": "`account/moduleInfos`",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/account/owner": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "account > owner",
+        "description": "`account/owner`",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/account/subAccountIds": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "account > subAccountIds",
+        "description": "`account/subAccountIds`",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/account/suspensionStatus": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "account > suspensionStatus",
+        "description": "`account/suspensionStatus`",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/account/whitelistedModules": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "account > whitelistedModules",
+        "description": "`account/whitelistedModules`",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{address}/cw1Whitelist/adminList": {
       "get": {
         "tags": [
@@ -10253,6 +10528,172 @@
           {
             "name": "address",
             "description": "proxy address to get sender information for",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/registry/listLocalAccounts": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "registry > listLocalAccounts",
+        "description": "Lists local accounts on chain",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/registry/listRegisteredModules": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "registry > listRegisteredModules",
+        "description": "Lists registered modules in registry",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/registry/module": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "registry > module",
+        "description": "Module info",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/registry/moduleConfig": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "registry > moduleConfig",
+        "description": "Configuration of the module installation huh",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "description": "name of the module",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "namespace",
+            "description": "namespace of the module",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "version",
+            "description": "semver version of the module",
             "required": true,
             "schema": {
               "type": "string"
