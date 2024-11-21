@@ -75,7 +75,7 @@ const createdToCompletedProposal = makeTransformerForMap(
   'createdToCompletedProposal',
   'created_to_completed_proposal',
   {
-    numericKey: true,
+    namer: { input: 'number' },
   }
 )
 

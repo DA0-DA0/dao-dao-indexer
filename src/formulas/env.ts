@@ -695,7 +695,7 @@ export const getEnv = ({
     )
 
     // If transformations found, create map.
-    const map: Record<string | number, any> = {}
+    const map: Record<string, any> = {}
     for (const transformation of definedTransformations) {
       map[transformation.name.slice(mapNamePrefix.length)] =
         transformation.value

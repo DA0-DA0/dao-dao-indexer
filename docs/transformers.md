@@ -145,7 +145,8 @@ const subDaoMap = await getTransformationMap(contractAddress, 'subDao')
 
 This function also has some options:
 
-- `numericKey` will interpret the map keys as numbers instead of strings.
+- `namer` lets you customize the count and types of keys that are used to derive
+  the name.
 - `getValue` lets you override the default behavior of returning the value of
   the map item.
 

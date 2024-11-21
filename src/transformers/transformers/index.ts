@@ -10,6 +10,7 @@ import {
 
 import common from './common'
 import dao from './dao'
+import delegation from './delegation'
 import distribution from './distribution'
 import external from './external'
 import polytone from './polytone'
@@ -32,6 +33,7 @@ export const getProcessedTransformers = (
       // Add transformers here.
       ...common,
       ...dao,
+      ...delegation,
       ...distribution,
       ...external,
       ...polytone,
@@ -50,12 +52,21 @@ export const getProcessedTransformers = (
       filter: (event) => {
         let match = true
 
-        const allCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-          ...(filter.codeIdsKeys ?? [])
-        )
+        // If codeIdsKeys is 'any', match all code IDs. Otherwise, match the
+        // given code IDs. If no code IDs present, do not match. This ensures
+        // that missing code IDs do not lead to transformers matching all, which
+        // might happen if some contracts only exist on certain chains.
+        if (filter.codeIdsKeys !== 'any') {
+          const allCodeIds =
+            WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+              ...(filter.codeIdsKeys ?? [])
+            )
 
-        if (allCodeIds.length) {
-          match &&= allCodeIds.includes(event.codeId)
+          if (allCodeIds.length) {
+            match &&= allCodeIds.includes(event.codeId)
+          } else {
+            match = false
+          }
         }
 
         if (match && filter.contractAddresses?.length) {

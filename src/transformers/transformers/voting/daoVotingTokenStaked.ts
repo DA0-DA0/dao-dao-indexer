@@ -1,4 +1,9 @@
-import { makeTransformer, makeTransformerForMap } from '../../utils'
+import {
+  makeTransformer,
+  makeTransformerForMap,
+  makeTransformersForSnapshotItem,
+  makeTransformersForSnapshotMap,
+} from '../../utils'
 
 const CODE_IDS_KEYS = ['dao-voting-token-staked']
 
@@ -10,28 +15,32 @@ const tokenIssuerContract = makeTransformer(
   'tokenIssuerContract',
   'token_issuer_contract'
 )
-const stakedBalance = makeTransformerForMap(
-  CODE_IDS_KEYS,
-  'stakedBalance',
-  'staked_balances'
-)
-const totalStaked = makeTransformer(
-  CODE_IDS_KEYS,
-  'totalStaked',
-  'total_staked'
-)
+const stakedBalances = makeTransformersForSnapshotMap({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'stakedBalances',
+  primaryKey: 'staked_balances',
+  changelogKey: 'staked_balance__changelog',
+})
+const stakedTotal = makeTransformersForSnapshotItem({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'stakedTotal',
+  primaryKey: 'total_staked',
+  changelogKey: 'total_staked__changelog',
+})
 const activeThreshold = makeTransformer(
   CODE_IDS_KEYS,
   'activeThreshold',
   'active_threshold'
 )
+const claims = makeTransformerForMap(CODE_IDS_KEYS, 'claims', 'claims')
 
 export default [
   config,
   dao,
   denom,
   tokenIssuerContract,
-  stakedBalance,
-  totalStaked,
+  ...stakedBalances,
+  ...stakedTotal,
   activeThreshold,
+  claims,
 ]

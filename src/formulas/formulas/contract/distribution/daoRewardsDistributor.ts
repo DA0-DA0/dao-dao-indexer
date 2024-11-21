@@ -87,10 +87,7 @@ export const distributions: ContractFormula<
     const startAfterNum = startAfter ? Number(startAfter) : -1
 
     const map =
-      (await getTransformationMap<number, any>(
-        contractAddress,
-        'distribution'
-      )) ?? {}
+      (await getTransformationMap(contractAddress, 'distribution')) ?? {}
     const distributions = Object.entries(map)
       // Ascending by ID.
       .sort(([a], [b]) => Number(a) - Number(b))

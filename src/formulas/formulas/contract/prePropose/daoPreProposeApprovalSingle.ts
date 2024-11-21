@@ -213,7 +213,7 @@ export const pendingProposals: ContractFormula<
     } = env
 
     const pendingProposals =
-      (await getTransformationMap<number, Proposal>(
+      (await getTransformationMap<Proposal>(
         contractAddress,
         'pendingProposal'
       )) ||
@@ -280,7 +280,7 @@ export const reversePendingProposals: ContractFormula<
     } = env
 
     const pendingProposals =
-      (await getTransformationMap<number, Proposal>(
+      (await getTransformationMap<Proposal>(
         contractAddress,
         'pendingProposal'
       )) ||
@@ -347,7 +347,7 @@ export const completedProposals: ContractFormula<
     } = env
 
     const completedProposals =
-      (await getTransformationMap<number, Proposal>(
+      (await getTransformationMap<Proposal>(
         contractAddress,
         'completedProposal'
       )) ||
@@ -414,7 +414,7 @@ export const reverseCompletedProposals: ContractFormula<
     } = env
 
     const completedProposals =
-      (await getTransformationMap<number, Proposal>(
+      (await getTransformationMap<Proposal>(
         contractAddress,
         'completedProposal'
       )) ||

@@ -46,7 +46,8 @@ export const transformParsedStateEvents = async (
                 : transformer.name(event)
           } catch (error) {
             console.error(
-              `Error getting transformation name for event ${event.blockHeight}/${event.contractAddress}/${event.key}: ${error}`
+              `Error getting transformation name for event ${event.blockHeight}/${event.contractAddress}/${event.key}`,
+              error
             )
             Sentry.captureException(error, {
               tags: {

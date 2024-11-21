@@ -33,6 +33,7 @@ const main = async () => {
     '-k, --code-ids-keys <keys>',
     'comma separated list of code IDs keys from the config to transform'
   )
+  program.option('-f, --force-all', 'force transform all events')
   program.parse()
   const {
     config: _config,
@@ -40,6 +41,7 @@ const main = async () => {
     batch,
     addresses,
     codeIdsKeys,
+    forceAll,
   } = program.opts()
 
   // Load config with config option.
@@ -58,6 +60,7 @@ const main = async () => {
       batchSize: batch,
       addresses,
       codeIdsKeys: WasmCodeService.extractWasmCodeKeys(codeIdsKeys),
+      forceAll,
     },
     {
       attempts: 1,

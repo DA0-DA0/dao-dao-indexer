@@ -1,7 +1,12 @@
 import { ContractFormula } from '@/types'
 
 import { TotalPowerAtHeight, VotingPowerAtHeight } from '../../types'
-import { makeSimpleContractFormula } from '../../utils'
+import {
+  makeSimpleContractFormula,
+  mapRange,
+  snapshotItemMayLoadAtHeight,
+  snapshotMapMayLoadAtHeight,
+} from '../../utils'
 
 interface StakerBalance {
   address: string
@@ -18,11 +23,14 @@ export { activeThreshold } from './common'
 
 export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
-  { address: string }
+  {
+    address: string
+    height?: string
+  }
 > = {
   docs: {
     description:
-      'retrieves the voting power for an address at a specific block height',
+      'retrieves the voting power for an address, optionally at a specific block height',
     args: [
       {
         name: 'address',
@@ -33,9 +41,9 @@ export const votingPowerAtHeight: ContractFormula<
         },
       },
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get voting power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -47,25 +55,25 @@ export const votingPowerAtHeight: ContractFormula<
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({
-    contractAddress,
-    getTransformationMatch,
-    args: { address },
-    block,
-  }) => {
-    if (!address) {
+  compute: async (env) => {
+    if (!env.args.address) {
       throw new Error('missing `address`')
     }
 
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+    const power =
+      (await snapshotMapMayLoadAtHeight<string, string>({
+        env,
+        name: 'stakedBalances',
+        key: env.args.address,
+        height,
+      })) ?? '0'
+
     return {
-      power:
-        (
-          await getTransformationMatch<string>(
-            contractAddress,
-            `stakedBalance:${address}`
-          )
-        )?.value ?? '0',
-      height: Number(block.height),
+      power,
+      height,
     }
   },
 }
@@ -89,14 +97,20 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
-export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+export const totalPowerAtHeight: ContractFormula<
+  TotalPowerAtHeight,
+  {
+    height?: string
+  }
+> = {
   docs: {
-    description: 'retrieves the total voting power at a specific block height',
+    description:
+      'retrieves the total voting power, optionally at a specific block height',
     args: [
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get total power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -108,12 +122,20 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
   filter: {
     codeIdsKeys: CODE_IDS_KEYS,
   },
-  compute: async ({ contractAddress, getTransformationMatch, block }) => {
+  compute: async (env) => {
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+    const power =
+      (await snapshotItemMayLoadAtHeight<string>({
+        env,
+        name: 'stakedTotal',
+        height,
+      })) ?? '0'
+
     return {
-      power:
-        (await getTransformationMatch<string>(contractAddress, 'totalStaked'))
-          ?.value || '0',
-      height: Number(block.height),
+      power,
+      height,
     }
   },
 }
@@ -147,12 +169,19 @@ export const claims: ContractFormula<any[], { address: string }> = {
       },
     ],
   },
-  compute: async ({ contractAddress, get, args: { address } }) => {
+  compute: async ({
+    contractAddress,
+    getTransformationMatch,
+    args: { address },
+  }) => {
     if (!address) {
       throw new Error('missing `address`')
     }
 
-    return (await get<any[]>(contractAddress, 'claims', address)) ?? []
+    return (
+      (await getTransformationMatch<any[]>(contractAddress, 'claims', address))
+        ?.value ?? []
+    )
   },
 }
 
@@ -191,22 +220,19 @@ export const listStakers: ContractFormula<
       },
     ],
   },
-  compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
-    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+  compute: async (env) => {
+    const { limit, startAfter } = env.args
 
-    const stakers =
-      (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
-    const stakes = Object.entries(stakers)
-      // Ascending by address.
-      .sort(([a], [b]) => a.localeCompare(b))
-      .filter(
-        ([address]) => !startAfter || address.localeCompare(startAfter) > 0
-      )
-      .slice(0, limitNum)
+    const stakers = await mapRange<string>({
+      env,
+      name: 'stakedBalances',
+      startAfter,
+      limit: limit ? Math.max(0, Number(limit)) : undefined,
+    })
 
-    return stakes.map(([address, balance]) => ({
-      address,
-      balance,
+    return stakers.map(({ key, value }) => ({
+      address: key,
+      balance: value,
     }))
   },
 }
@@ -220,19 +246,22 @@ export const topStakers: ContractFormula<Staker[]> = {
     description: 'retrieves the top stakers sorted by voting power',
   },
   compute: async (env) => {
-    const { contractAddress, getMap } = env
-
     // Get stakers.
-    const stakerBalances =
-      (await getMap<string, string>(contractAddress, 'staked_balances')) ?? {}
+    const allStakers = await listStakers.compute(env)
 
     // Get total power.
-    const totalVotingPower = Number(await totalPower.compute(env))
+    const totalVotingPower = Number(
+      await totalPower.compute({
+        ...env,
+        // Make sure to not pass height in case it was passed to this formula.
+        args: {},
+      })
+    )
 
     // Compute voting power for each staker.
-    const stakers = Object.entries(stakerBalances)
+    const stakers = allStakers
       .map(
-        ([address, balance]): Staker => ({
+        ({ address, balance }): Staker => ({
           address,
           balance,
           votingPowerPercent:

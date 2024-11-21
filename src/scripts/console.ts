@@ -11,6 +11,7 @@ import * as Models from '@/db/models'
 import { queues } from '@/queues'
 import * as Services from '@/services'
 import { DbType } from '@/types'
+import * as Utils from '@/utils'
 
 // Global context available to repl.
 const context: Context = {
@@ -50,6 +51,7 @@ const main = async () => {
 
   // ADD TO CONTEXT
   setupImport({
+    ...Utils,
     ...Config,
     ...Models,
     ...Services,

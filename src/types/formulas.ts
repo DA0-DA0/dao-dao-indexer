@@ -13,6 +13,7 @@ import { ContractJson, DependableEventModel } from './db'
 import { Block, RequireAtLeastOne } from './misc'
 
 export type KeyInput = string | number | Uint8Array
+export type KeyInputType = 'string' | 'number' | 'bytes'
 
 export type FormulaGetter = <T>(
   contractAddress: string,
@@ -88,13 +89,10 @@ export type FormulaTransformationDateGetter = (
   ...parameters: Parameters<FormulaTransformationMatchGetter>
 ) => Promise<Date | undefined>
 
-export type FormulaTransformationMapGetter = <
-  K extends string | number = string | number,
-  V = any
->(
+export type FormulaTransformationMapGetter = <V = any>(
   contractAddress: string,
   namePrefix: string
-) => Promise<Record<K, V> | undefined>
+) => Promise<Record<string, V> | undefined>
 
 export type FormulaPrefetchTransformations = (
   contractAddress: string,

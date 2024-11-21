@@ -1,4 +1,4 @@
-import { DependentKeyNamespace } from '@/types'
+import { DependentKeyNamespace, KeyInput, KeyInputType } from '@/types'
 
 // Convert base64 string to comma-separated list of bytes. See explanation in
 // `Event` model for the key attribute for more information.
@@ -14,9 +14,7 @@ export const eventKeyToBase64 = (key: string): string =>
 // Recreate cw-storage-plus key nesting format. Output is a comma-separated list
 // of uint8 values that represents a byte array. See `Event` model for more
 // information.
-export const dbKeyForKeys = (
-  ...keys: (string | number | Uint8Array)[]
-): string => {
+export const dbKeyForKeys = (...keys: KeyInput[]): string => {
   const bufferKeys = keys.map(keyToBuffer)
   const namespaces = bufferKeys.slice(0, -1)
   const key = bufferKeys.slice(-1)[0]
@@ -40,7 +38,7 @@ export const dbKeyForKeys = (
   return buffer.join(',')
 }
 
-export const keyToBuffer = (key: string | number | Uint8Array): Buffer => {
+export const keyToBuffer = (key: KeyInput): Buffer => {
   if (typeof key === 'string' || key instanceof Uint8Array) {
     return Buffer.from(key)
   }
@@ -67,10 +65,10 @@ export const dbKeyToKeys = (
 
 export const dbKeyToKeysAdvanced = (
   key: string,
-  withTypes: ('string' | 'number' | 'bytes')[]
-): (string | number | Uint8Array)[] => {
+  withTypes: KeyInputType[]
+): KeyInput[] => {
   const buffer = Buffer.from(key.split(',').map((c) => parseInt(c, 10)))
-  const keys: (string | number | Uint8Array)[] = []
+  const keys: KeyInput[] = []
   const addKey = (buffer: Buffer, type: 'string' | 'number' | 'bytes') =>
     keys.push(
       type === 'string'
