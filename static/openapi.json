@@ -6617,11 +6617,23 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "description": "maximum number of stakers to return",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
             "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
           }
         }
       }
