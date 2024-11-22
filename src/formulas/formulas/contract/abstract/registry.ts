@@ -72,7 +72,7 @@ const DEFAULT_MODULE_CONFIG: RegistryTypes.ModuleConfiguration = {
 }
 
 type ModuleInfoParameter = Omit<RegistryTypes.ModuleInfo, 'version'> & {
-  version: string
+  version?: string
 }
 
 export const moduleConfig: ContractFormula<
@@ -80,7 +80,7 @@ export const moduleConfig: ContractFormula<
   ModuleInfoParameter
 > = {
   docs: {
-    description: 'Configuration of the module installation huh',
+    description: 'Configuration of the module installation',
     args: [
       {
         name: 'name',
@@ -101,7 +101,7 @@ export const moduleConfig: ContractFormula<
       {
         name: 'version',
         description: 'semver version of the module',
-        // TODO: it's possible to make it false with transformer and saving latest version of the module
+        // We force version here
         required: true,
         schema: {
           type: 'string',
@@ -158,7 +158,33 @@ export const module: ContractFormula<
   ModuleInfoParameter
 > = {
   docs: {
-    description: 'Module info',
+    description: 'Module details',
+    args: [
+      {
+        name: 'name',
+        description: 'name of the module',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'namespace',
+        description: 'namespace of the module',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'version',
+        description: 'semver version of the module',
+        required: false,
+        schema: {
+          type: 'string',
+        },
+      },
+    ],
   },
   compute: async (env) => {
     const { args } = env
@@ -173,7 +199,7 @@ export const module: ContractFormula<
       }
     )
 
-    let foundModule = undefined
+    let foundModule: Module | undefined
 
     // Find the latest version of the module
     if (!moduleParam.version || moduleParam.version === 'latest') {
@@ -186,16 +212,21 @@ export const module: ContractFormula<
         }
       )
       foundModule = sortedVersions[sortedVersions.length - 1]
+    } else {
+      // Get the proper module version
+      foundModule = filteredModules.find(
+        ({ info: { version } }) =>
+          (typeof version === 'string' ? version : version.version) ===
+          (moduleParam as { version: string }).version
+      )
     }
 
-    // Get the proper module version
-    foundModule = filteredModules.find(
-      ({ info: { version } }) =>
-        (typeof version === 'string' ? version : version.version) ===
-        (moduleParam as { version: string }).version
-    )
-
-    const foundConfig = await moduleConfig.compute(env)
+    // Maybe we found latest already so let's use it
+    const version = foundModule?.info.version as { version: string }
+    const foundConfig = await moduleConfig.compute({
+      ...env,
+      ...{ args: { version: version.version, ...args } },
+    })
 
     return (
       foundModule &&

@@ -16,14 +16,9 @@ const AccountStorageKeys = {
   OWNER: 'ownership',
 }
 
-// Replace with transformer
-function registryAddress(): string {
-  return loadConfig().abstractRegistry as string
-}
-
 export const owner: ContractFormula<GovernanceDetailsForString | undefined> = {
   docs: {
-    description: '',
+    description: 'Get the owner of the account',
   },
   compute: async ({ contractAddress, get }) => {
     return (
@@ -39,7 +34,7 @@ export const owner: ContractFormula<GovernanceDetailsForString | undefined> = {
 
 export const accountId: ContractFormula<AccountTypes.AccountId | undefined> = {
   docs: {
-    description: '',
+    description: 'Get accountId of the account',
   },
   compute: async ({ contractAddress, get }) => {
     return await get<AccountTypes.AccountId>(
@@ -51,7 +46,7 @@ export const accountId: ContractFormula<AccountTypes.AccountId | undefined> = {
 
 export const suspensionStatus: ContractFormula<boolean | undefined> = {
   docs: {
-    description: '',
+    description: 'Get suspension status of the account',
   },
   compute: async ({ contractAddress, get }) => {
     return await get<boolean>(
@@ -63,7 +58,7 @@ export const suspensionStatus: ContractFormula<boolean | undefined> = {
 
 export const info: ContractFormula<AccountTypes.AccountInfo | undefined> = {
   docs: {
-    description: '',
+    description: 'Get the account info',
   },
   compute: async ({ contractAddress, get }) => {
     return await get<AccountTypes.AccountInfo>(
@@ -75,7 +70,7 @@ export const info: ContractFormula<AccountTypes.AccountInfo | undefined> = {
 
 export const whitelistedModules: ContractFormula<Array<Addr> | undefined> = {
   docs: {
-    description: '',
+    description: 'Get a list of whitelisted modules',
   },
   compute: async ({ contractAddress, get }) => {
     return await get<Array<Addr>>(
@@ -87,7 +82,7 @@ export const whitelistedModules: ContractFormula<Array<Addr> | undefined> = {
 
 export const subAccountIds: ContractFormula<AccountTypes.AccountId[]> = {
   docs: {
-    description: '',
+    description: 'Get sub-accounts owned by this account',
   },
   compute: async ({ contractAddress, getMap }) => {
     const subAccountsMap =
@@ -115,7 +110,7 @@ export const moduleInfos: ContractFormula<
   >
 > = {
   docs: {
-    description: '',
+    description: 'Get module infos that are installed on this account',
   },
   compute: async (env) => {
     const { contractAddress, getMap } = env
@@ -126,7 +121,7 @@ export const moduleInfos: ContractFormula<
         AccountStorageKeys.ACCOUNT_MODULES
       )) ?? {}
 
-    // Query the info from registry
+    // Query the info from the address of the module
     return await Promise.all(
       Object.entries(moduleAddressesMap).map(async ([moduleId, address]) => {
         const contractInfo = await Common.info.compute({
