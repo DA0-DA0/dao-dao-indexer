@@ -8,7 +8,6 @@ import {
   TransformerMaker,
 } from '@/types'
 
-import abstract from './abstract'
 import common from './common'
 import dao from './dao'
 import distribution from './distribution'
@@ -41,7 +40,6 @@ export const getProcessedTransformers = (
       ...staking,
       ...valence,
       ...voting,
-      ...abstract,
 
       // Makers.
       ...transformerMakers.map((maker) => maker(config)),
