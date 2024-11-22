@@ -30,6 +30,7 @@ export type DumpState = {
   // Extra.
   votingModuleInfo?: ContractInfo
   createdAt?: string
+  createdAtEpoch?: number
   adminInfo?: {
     admin?: string | null
     config: Config
@@ -171,6 +172,7 @@ export const dumpState: ContractFormula<DumpState> = {
       // Extra.
       votingModuleInfo,
       createdAt,
+      createdAtEpoch: createdAt ? new Date(createdAt).getTime() : undefined,
       adminInfo: adminConfig && {
         admin: adminAdmin,
         info: adminInfo,
