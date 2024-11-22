@@ -38,41 +38,7 @@
           "contract"
         ],
         "summary": "account > accountId",
-        "description": "`account/accountId`",
-        "parameters": [
-          {
-            "name": "chainId",
-            "in": "path",
-            "description": "chain ID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "address",
-            "in": "path",
-            "description": "contract address",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "success"
-          }
-        }
-      }
-    },
-    "/{chainId}/contract/{address}/account/accountTxs": {
-      "get": {
-        "tags": [
-          "contract"
-        ],
-        "summary": "account > accountTxs",
-        "description": "`account/accountTxs`",
+        "description": "Get accountId of the account",
         "parameters": [
           {
             "name": "chainId",
@@ -106,7 +72,7 @@
           "contract"
         ],
         "summary": "account > info",
-        "description": "`account/info`",
+        "description": "Get the account info",
         "parameters": [
           {
             "name": "chainId",
@@ -140,7 +106,7 @@
           "contract"
         ],
         "summary": "account > moduleInfos",
-        "description": "`account/moduleInfos`",
+        "description": "Get module infos that are installed on this account",
         "parameters": [
           {
             "name": "chainId",
@@ -174,7 +140,7 @@
           "contract"
         ],
         "summary": "account > owner",
-        "description": "`account/owner`",
+        "description": "Get the owner of the account",
         "parameters": [
           {
             "name": "chainId",
@@ -208,7 +174,7 @@
           "contract"
         ],
         "summary": "account > subAccountIds",
-        "description": "`account/subAccountIds`",
+        "description": "Get sub-accounts owned by this account",
         "parameters": [
           {
             "name": "chainId",
@@ -242,7 +208,7 @@
           "contract"
         ],
         "summary": "account > suspensionStatus",
-        "description": "`account/suspensionStatus`",
+        "description": "Get suspension status of the account",
         "parameters": [
           {
             "name": "chainId",
@@ -276,7 +242,7 @@
           "contract"
         ],
         "summary": "account > whitelistedModules",
-        "description": "`account/whitelistedModules`",
+        "description": "Get a list of whitelisted modules",
         "parameters": [
           {
             "name": "chainId",
@@ -10619,7 +10585,7 @@
           "contract"
         ],
         "summary": "registry > module",
-        "description": "Module info",
+        "description": "Module details",
         "parameters": [
           {
             "name": "chainId",
@@ -10638,11 +10604,41 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "name",
+            "description": "name of the module",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "namespace",
+            "description": "namespace of the module",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "version",
+            "description": "semver version of the module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
             "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
           }
         }
       }
@@ -10653,7 +10649,7 @@
           "contract"
         ],
         "summary": "registry > moduleConfig",
-        "description": "Configuration of the module installation huh",
+        "description": "Configuration of the module installation",
         "parameters": [
           {
             "name": "chainId",
