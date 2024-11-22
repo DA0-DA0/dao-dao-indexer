@@ -222,20 +222,20 @@ export const listLocalAccounts: ContractFormula<RegistryTypes.AccountListRespons
 
       const accounts = Object.entries(registeredModulesMap).map(
         ([key, reference]) => {
-          const [trace_raw, sequence] = dbKeyToKeys(key, [false, true])
-          let trace
-          if (trace_raw === 'local') {
-            trace = 'local'
-          } else {
-            trace = { remote: (trace_raw as string).split('>') }
-          }
+          const [trace_raw, sequence] = dbKeyToKeys(key, [false, true]) as [
+            string,
+            number
+          ]
+
+          const trace =
+            trace_raw === 'local' ? 'local' : { remote: trace_raw.split('>') }
           return [
             {
-              seq: sequence as number,
+              seq: sequence,
               trace,
             },
             reference,
-          ] as [RegistryTypes.AccountId, RegistryTypes.AccountForAddr]
+          ] satisfies [RegistryTypes.AccountId, RegistryTypes.AccountForAddr]
         }
       )
       return { accounts }

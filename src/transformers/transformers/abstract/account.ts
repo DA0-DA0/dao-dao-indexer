@@ -13,30 +13,4 @@ const AccountStorageKeys = {
   OWNER: 'ownership',
 }
 
-const suspended = makeTransformer(
-  CODE_IDS_KEYS,
-  'suspended',
-  AccountStorageKeys.SUSPENSION_STATUS
-)
-
-const accountId = makeTransformer(
-  CODE_IDS_KEYS,
-  'accountId',
-  AccountStorageKeys.ACCOUNT_ID
-)
-
-const accountModules = makeTransformerForMap(
-  CODE_IDS_KEYS,
-  'accountModules',
-  AccountStorageKeys.ACCOUNT_MODULES
-)
-
-const subAccounts = makeTransformerForMap(
-  CODE_IDS_KEYS,
-  'subAccounts',
-  AccountStorageKeys.SUB_ACCOUNTS
-)
-
-export default [
-  // suspended, accountId, accountModules, subAccounts
-]
+export default []

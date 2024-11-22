@@ -144,13 +144,14 @@ export const moduleInfos: ContractFormula<
   },
 }
 
-export const accountTxs: ContractFormula<any> = {
-  docs: {
-    description: '',
-  },
-  compute: async (env) => {
-    const { contractAddress, getTxEvents } = env
-    const events = await getTxEvents(contractAddress)
-    return events ?? []
-  },
-}
+// TODO: account txs
+// export const accountTxs: ContractFormula<any> = {
+//   docs: {
+//     description: '',
+//   },
+//   compute: async (env) => {
+//     const { contractAddress, getTxEvents } = env
+//     const events = await getTxEvents(contractAddress)
+//     return events || []
+//   },
+// }
