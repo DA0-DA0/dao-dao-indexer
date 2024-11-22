@@ -37,7 +37,6 @@
     "polytone-note": [],
     "polytone-voice": [],
     "valence-account": [],
-    "abstract:account": [7693],
   },
   "daoDaoBase": "https://testnet.daodao.zone",
   "discordNotifierApiKey": "key",
