@@ -11109,6 +11109,52 @@
         }
       }
     },
+    "/{chainId}/account/{address}/abstractAccount/accountsOwnedBy": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "abstractAccount > accountsOwnedBy",
+        "description": "retrieves account (that use abstract governance to manage ownership) where the account is the owner",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "account address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "description": "optional code ID key to filter by",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
     "/{chainId}/account/{address}/bank/balance": {
       "get": {
         "tags": [
