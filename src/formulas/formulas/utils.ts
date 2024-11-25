@@ -137,7 +137,7 @@ export const makeSimpleContractFormula = <
               }, Promise.resolve<T | undefined>(undefined) as Promise<T | undefined>)
             : undefined)
 
-    if (!value) {
+    if (value === undefined) {
       if (fallback !== undefined) {
         return fallback
       }
