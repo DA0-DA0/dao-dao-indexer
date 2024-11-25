@@ -179,8 +179,12 @@ export const claims: ContractFormula<any[], { address: string }> = {
     }
 
     return (
-      (await getTransformationMatch<any[]>(contractAddress, 'claims', address))
-        ?.value ?? []
+      (
+        await getTransformationMatch<any[]>(
+          contractAddress,
+          `claims:${address}`
+        )
+      )?.value ?? []
     )
   },
 }
