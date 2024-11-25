@@ -202,10 +202,13 @@ export const mapRange = async <V>({
         : undefined,
       limit
     )
-  )?.map(({ name: nameAndKey, value }) => ({
-    key: nameAndKey.slice(name.length + 1),
-    value,
-  })) ?? []
+  )
+    // Remove deleted values.
+    ?.filter(({ value }) => value !== null)
+    .map(({ name: nameAndKey, value }) => ({
+      key: nameAndKey.slice(name.length + 1),
+      value,
+    })) ?? []
 
 /**
  * Potentially load a value at a height from a transformed snapshot. Returns
