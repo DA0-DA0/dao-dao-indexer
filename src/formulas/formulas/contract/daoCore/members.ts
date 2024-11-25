@@ -1,5 +1,6 @@
 import { ContractFormula } from '@/types'
 
+import { info } from '../common'
 import {
   listMembers as listCw4Members,
   totalWeight as totalCw4Weight,
@@ -12,7 +13,7 @@ import { topStakers as topOnftStakers } from '../voting/daoVotingOnftStaked'
 import { allVotersWithVotingPower as sgCommunityAllVoters } from '../voting/daoVotingSgCommunityNft'
 import { topStakers as topTokenStakers } from '../voting/daoVotingTokenStaked'
 import { config, votingModule } from './base'
-import { getUniqueSubDaosInTree } from './utils'
+import { DAO_CORE_CONTRACT_NAMES, getUniqueSubDaosInTree } from './utils'
 
 export type DaoMember = {
   address: string
@@ -99,11 +100,34 @@ export const allMembers: ContractFormula<
     > = {}
 
     for (const dao of daos) {
+      // Get info.
+      const daoInfo = await info
+        .compute({
+          ...env,
+          contractAddress: dao,
+        })
+        .catch(() => null)
+
+      // If invalid DAO, skip.
+      if (
+        !daoInfo ||
+        !DAO_CORE_CONTRACT_NAMES.some((name) => daoInfo.contract.includes(name))
+      ) {
+        continue
+      }
+
       // Get config.
-      const daoConfig = await config.compute({
-        ...env,
-        contractAddress: dao,
-      })
+      const daoConfig = await config
+        .compute({
+          ...env,
+          contractAddress: dao,
+        })
+        .catch(() => null)
+
+      // If can't load DAO config, skip.
+      if (!daoConfig) {
+        continue
+      }
 
       // Get members.
       const members = await listMembers.compute({
