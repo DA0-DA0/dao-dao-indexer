@@ -14,6 +14,74 @@ const CODE_IDS_KEYS: string[] = ['dao-vote-delegation']
 
 export { info } from '../common'
 
+export const registration: ContractFormula<
+  {
+    registered: boolean
+    power: string
+    height: number
+  },
+  {
+    delegate: string
+    height?: string
+  }
+> = {
+  docs: {
+    description:
+      'retrieves whether or not a delegate is registered, optionally at a given block height',
+    args: [
+      {
+        name: 'delegate',
+        description: 'address of the delegate',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'height',
+        description: 'block height to retrieve delegate registration at',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async (env) => {
+    if (!env.args.delegate) {
+      throw new Error('delegate is required')
+    }
+
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+
+    const registered = !!(await snapshotMapMayLoadAtHeight({
+      env,
+      name: 'delegates',
+      key: env.args.delegate,
+      height,
+    }))
+
+    const power =
+      (await wormholeLoad<string, string>({
+        env,
+        name: 'delegatedVotingPower',
+        key: env.args.delegate,
+        timestamp: height,
+      })) || '0'
+
+    return {
+      registered,
+      power,
+      height,
+    }
+  },
+}
+
 export const delegates: ContractFormula<
   {
     delegates: {
