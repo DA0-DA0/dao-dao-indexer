@@ -104,7 +104,10 @@ export const stakedBalanceAtHeight: ContractFormula<
 
     const balance =
       (await snapshotMapMayLoadAtHeight<string, string>({
-        env,
+        env: {
+          ...env,
+          contractAddress,
+        },
         name: 'stakedBalance',
         key,
         height,
@@ -216,7 +219,10 @@ export const totalStakedAtHeight: ContractFormula<
     const total =
       (oraichainToken
         ? await snapshotMapMayLoadAtHeight<string, string>({
-            env,
+            env: {
+              ...env,
+              contractAddress,
+            },
             name: 'stakedTotal',
             key: oraichainToken,
             height,
