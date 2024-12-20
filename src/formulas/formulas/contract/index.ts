@@ -1,4 +1,5 @@
 export * from './daoCore'
+export * from './delegation'
 export * from './distribution'
 export * from './external'
 export * as neutron from './neutron'

@@ -1,4 +1,13 @@
-import { Block, ContractFormula, Env, Formula, KeyInput } from '@/types'
+import { Op } from 'sequelize'
+
+import {
+  Block,
+  ContractEnv,
+  ContractFormula,
+  Env,
+  Formula,
+  KeyInput,
+} from '@/types'
 
 import { Duration, Expiration } from './types'
 
@@ -128,7 +137,7 @@ export const makeSimpleContractFormula = <
               }, Promise.resolve<T | undefined>(undefined) as Promise<T | undefined>)
             : undefined)
 
-    if (!value) {
+    if (value === undefined) {
       if (fallback !== undefined) {
         return fallback
       }
@@ -142,3 +151,414 @@ export const makeSimpleContractFormula = <
     })
   },
 })
+
+/**
+ * Load a specific range of values from a transformed map or snapshot map.
+ */
+export const mapRange = async <V>({
+  env: { contractAddress, getTransformationMatches },
+  name,
+  startAfter,
+  limit,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot map to load from.
+   */
+  name: string
+  /**
+   * The key to start after.
+   */
+  startAfter?: string
+  /**
+   * The maximum number of values to load.
+   */
+  limit?: number
+}): Promise<
+  {
+    /**
+     * Key in the map with the name prefix removed.
+     */
+    key: string
+    /**
+     * Value in the map.
+     */
+    value: V
+  }[]
+> =>
+  (
+    await getTransformationMatches<V>(
+      contractAddress,
+      name + ':*',
+      undefined,
+      undefined,
+      startAfter
+        ? {
+            [Op.gt]: `${name}:${startAfter}`,
+          }
+        : undefined,
+      limit
+    )
+  )
+    // Remove deleted values.
+    ?.filter(({ value }) => value !== null)
+    .map(({ name: nameAndKey, value }) => ({
+      key: nameAndKey.slice(name.length + 1),
+      value,
+    })) ?? []
+
+/**
+ * Potentially load a value at a height from a transformed snapshot. Returns
+ * undefined if no value is found at the height, null if a change was found but
+ * the old value did not exist, and the old value otherwise.
+ *
+ * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/mod.rs#L151-L180
+ */
+export const snapshotMayLoadAtHeight = async <
+  K extends string | number | null,
+  V
+>({
+  env: { contractAddress, getTransformationMap },
+  name,
+  key,
+  height,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot to load from.
+   */
+  name: string
+  /**
+   * The key to load. If undefined, key is omitted. This is used for
+   * SnapshotItems that have no key.
+   */
+  key: K | undefined
+  /**
+   * The height to load.
+   */
+  height: number
+}): Promise<V | null | undefined> => {
+  // Map of height to ChangeSet.
+  const changelogMap =
+    (await getTransformationMap<{ old: V | undefined | null }>(
+      contractAddress,
+      [
+        `${name}/changelog`,
+        ...(key !== undefined
+          ? [typeof key === 'number' ? BigInt(key).toString() : key]
+          : []),
+      ].join(':')
+    )) || {}
+
+  const start = BigInt(height)
+  const changelog = Object.entries(changelogMap)
+    // Sort ascending.
+    .sort(([a], [b]) => Number(BigInt(a) - BigInt(b)))
+    // Find first entry whose height is the start height or greater.
+    .find(([height]) => BigInt(height) >= start)
+
+  return changelog && (changelog[1]?.old ?? null)
+}
+
+/**
+ * Potentially load a value from a transformed snapshot item. Returns undefined
+ * if no value is found.
+ *
+ * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/item.rs#L130-L134
+ */
+export const snapshotItemMayLoad = async <V>({
+  env: { contractAddress, getTransformationMatch },
+  name,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot item to load from.
+   */
+  name: string
+}): Promise<V | undefined> =>
+  (await getTransformationMatch<V>(contractAddress, name))?.value
+
+/**
+ * Potentially load a value at a height from a transformed snapshot item.
+ * Returns undefined if no old value is found at the height and no current value
+ * exists, null if a change was found but the old value did not exist, and the
+ * old value otherwise.
+ *
+ * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/item.rs#L136-L145
+ */
+export const snapshotItemMayLoadAtHeight = async <V>({
+  env,
+  name,
+  height,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot item to load from.
+   */
+  name: string
+  /**
+   * The height to load.
+   */
+  height: number
+}): Promise<V | null | undefined> => {
+  const snapshot = await snapshotMayLoadAtHeight<null, V>({
+    env,
+    name,
+    key: undefined,
+    height,
+  })
+
+  return snapshot === undefined
+    ? // If no snapshot at height, return current value.
+      await snapshotItemMayLoad({
+        env,
+        name,
+      })
+    : // Otherwise, return snapshot.
+      snapshot
+}
+
+/**
+ * Potentially load a value from a transformed snapshot map. Returns undefined
+ * if no value is found.
+ *
+ * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/map.rs#L148-L152
+ */
+export const snapshotMapMayLoad = async <K extends string | number, V>({
+  env: { contractAddress, getTransformationMatch },
+  name,
+  key,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot map to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+}): Promise<V | undefined> =>
+  (
+    await getTransformationMatch<V>(
+      contractAddress,
+      `${name}:${typeof key === 'number' ? BigInt(key).toString() : key}`
+    )
+  )?.value
+
+/**
+ * Potentially load a value at a height from a transformed snapshot map. Returns
+ * undefined if no old value is found at the height and no current value exists,
+ * null if a change was found but the old value did not exist, and the old value
+ * otherwise.
+ *
+ * https://github.com/CosmWasm/cw-storage-plus/blob/cac9687e29579c61eeacffafc131614c9f43baaa/src/snapshot/map.rs#L154-L170
+ */
+export const snapshotMapMayLoadAtHeight = async <K extends string | number, V>({
+  env,
+  name,
+  key,
+  height,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot map to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The height to load.
+   */
+  height: number
+}): Promise<V | null | undefined> => {
+  const snapshot = await snapshotMayLoadAtHeight<K, V>({
+    env,
+    name,
+    key,
+    height,
+  })
+
+  return snapshot === undefined
+    ? // If no snapshot at height, return current value.
+      await snapshotMapMayLoad({
+        env,
+        name,
+        key,
+      })
+    : // Otherwise, return snapshot.
+      snapshot
+}
+
+/**
+ * Potentially load an item by key and ID from a transformed SnapshotVectorMap.
+ * Returns undefined if no item is found.
+ */
+export const snapshotVectorMapMayLoadItem = async <
+  K extends string | number,
+  V
+>({
+  env: { contractAddress, getTransformationMatch },
+  name,
+  key,
+  id,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot map to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The ID to load.
+   */
+  id: number
+}): Promise<V | undefined> =>
+  (
+    await getTransformationMatch<V>(
+      contractAddress,
+      `${name}/items:${
+        typeof key === 'number' ? BigInt(key).toString() : key
+      }:${BigInt(id).toString()}`
+    )
+  )?.value
+
+/**
+ * Loads paged items at the given block height that are not expired from a
+ * transformed SnapshotVectorMap.
+ */
+export const snapshotVectorMapLoad = async <K extends string | number, V>({
+  env,
+  name,
+  key,
+  height,
+  limit,
+  offset = 0,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed snapshot map to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The height to load.
+   */
+  height: number
+  /**
+   * Limit the number of items to load.
+   */
+  limit?: number
+  /**
+   * The offset to start loading from.
+   */
+  offset?: number
+}): Promise<
+  {
+    id: number
+    item: V | undefined
+    expiration: number | null
+  }[]
+> => {
+  const activeIds =
+    (await snapshotMapMayLoadAtHeight<K, [number, number | null][]>({
+      env,
+      name: `${name}/active`,
+      key,
+      height,
+    })) || []
+
+  const items = await Promise.all(
+    activeIds
+      .filter(([, exp]) => exp === null || exp > height)
+      .slice(offset, limit === undefined ? undefined : offset + limit)
+      .map(async ([id, expiration]) => ({
+        id,
+        item: await snapshotVectorMapMayLoadItem<K, V>({
+          env,
+          name,
+          key,
+          id,
+        }),
+        expiration,
+      }))
+  )
+
+  return items
+}
+
+/**
+ * Loads the value at a key at the specified time of a transformed Wormhole.
+ * Returns undefined if no value is found at the time.
+ */
+export const wormholeLoad = async <K extends string | number, V>({
+  env: { contractAddress, getTransformationMap },
+  name,
+  key,
+  timestamp,
+}: {
+  /**
+   * The environment.
+   */
+  env: ContractEnv
+  /**
+   * The name of the transformed wormhole to load from.
+   */
+  name: string
+  /**
+   * The key to load.
+   */
+  key: K
+  /**
+   * The timestamp to load.
+   */
+  timestamp: number
+}): Promise<V | undefined> => {
+  // Map of timestamp to value.
+  const wormholeMap =
+    (await getTransformationMap<V>(
+      contractAddress,
+      `${name}:${typeof key === 'number' ? BigInt(key).toString() : key}`
+    )) || {}
+
+  const end = BigInt(timestamp)
+  const entry = Object.entries(wormholeMap)
+    // Sort descending.
+    .sort(([a], [b]) => Number(BigInt(b) - BigInt(a)))
+    // Find first entry whose timestamp is the end timestamp or less.
+    .find(([timestamp]) => BigInt(timestamp) <= end)
+
+  return entry?.[1]
+}

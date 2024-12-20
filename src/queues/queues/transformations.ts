@@ -29,6 +29,10 @@ export type TransformationsQueuePayload = {
    * Transform contracts matching code IDs.
    */
   codeIds?: number[]
+  /**
+   * Force transform all.
+   */
+  forceAll?: boolean
 }
 
 export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload> {
@@ -52,25 +56,33 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
       addresses,
       codeIdsKeys,
       codeIds: _codeIds = [],
+      forceAll = false,
     } = job.data
 
-    const foundCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-      ...(codeIdsKeys || [])
-    )
-    if (codeIdsKeys?.length && !foundCodeIds.length) {
-      job.log(`no code IDs found for code IDs keys: ${codeIdsKeys.join(', ')}`)
-      return
+    const codeIds = []
+    if (!forceAll) {
+      const foundCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+        ...(codeIdsKeys || [])
+      )
+      if (codeIdsKeys?.length && !foundCodeIds.length) {
+        job.log(
+          `no code IDs found for code IDs keys: ${codeIdsKeys.join(', ')}`
+        )
+        return
+      }
+      codeIds.push(..._codeIds, ...foundCodeIds)
     }
 
-    const codeIds = [..._codeIds, ...foundCodeIds]
+    const addressFilter =
+      !forceAll && addresses?.length
+        ? {
+            contractAddress: addresses,
+          }
+        : undefined
 
-    const addressFilter = addresses?.length
-      ? {
-          contractAddress: addresses,
-        }
-      : undefined
-
-    if (!addressFilter && !codeIds.length) {
+    if (forceAll) {
+      job.log('force transforming all events')
+    } else if (!addressFilter && !codeIds.length) {
       job.log('no contract address nor code ID filter provided')
       return
     } else {

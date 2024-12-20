@@ -1,15 +1,31 @@
 import { ContractFormula } from '@/types'
 
-import { makeSimpleContractFormula } from '../../utils'
+import {
+  makeSimpleContractFormula,
+  mapRange,
+  snapshotItemMayLoad,
+  snapshotItemMayLoadAtHeight,
+  snapshotMapMayLoad,
+  snapshotMapMayLoadAtHeight,
+} from '../../utils'
+
+const CODE_IDS_KEYS = ['cw4-group']
 
 interface Member {
   addr: string
   weight: number
 }
 
-export const member: ContractFormula<number, { address: string }> = {
+export const member: ContractFormula<
+  number,
+  {
+    address: string
+    height?: string
+  }
+> = {
   docs: {
-    description: 'retrieves the weight of a member in the group',
+    description:
+      'retrieves the weight of a member in the group, optionally at a specific height',
     args: [
       {
         name: 'address',
@@ -19,14 +35,38 @@ export const member: ContractFormula<number, { address: string }> = {
           type: 'string',
         },
       },
+      {
+        name: 'height',
+        description: 'height to query at',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
     ],
   },
-  compute: async ({ contractAddress, get, args: { address } }) => {
-    if (!address) {
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async (env) => {
+    if (!env.args.address) {
       throw new Error('missing `address`')
     }
 
-    return (await get<number>(contractAddress, 'members', address)) ?? 0
+    return (
+      (env.args.height
+        ? await snapshotMapMayLoadAtHeight<string, number>({
+            env,
+            name: 'members',
+            key: env.args.address,
+            height: Number(env.args.height),
+          })
+        : await snapshotMapMayLoad<string, number>({
+            env,
+            name: 'members',
+            key: env.args.address,
+          })) ?? 0
+    )
   },
 }
 
@@ -58,33 +98,56 @@ export const listMembers: ContractFormula<
       },
     ],
   },
-  compute: async ({ contractAddress, getMap, args: { limit, startAfter } }) => {
-    const limitNum = limit ? Math.max(0, Number(limit)) : Infinity
+  compute: async (env) => {
+    const members = await mapRange<number>({
+      env,
+      name: 'members',
+      startAfter: env.args.startAfter,
+      limit: env.args.limit ? Math.max(0, Number(env.args.limit)) : undefined,
+    })
 
-    const membersMap =
-      (await getMap<string, number>(contractAddress, 'members')) ?? {}
-    const members = Object.entries(membersMap)
-      // Ascending by address.
-      .sort(([a], [b]) => a.localeCompare(b))
-      .filter(
-        ([address]) => !startAfter || address.localeCompare(startAfter) > 0
-      )
-      .slice(0, limitNum)
-
-    return members.map(([addr, weight]) => ({
+    return members.map(({ key: addr, value: weight }) => ({
       addr,
       weight,
     }))
   },
 }
 
-export const totalWeight = makeSimpleContractFormula<number>({
+export const totalWeight: ContractFormula<
+  number,
+  {
+    height?: string
+  }
+> = {
   docs: {
-    description: 'retrieves the total weight of all members in the group',
+    description:
+      'retrieves the total weight of all members in the group, optionally at a specific height',
+    args: [
+      {
+        name: 'height',
+        description: 'height to query at',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
   },
-  key: 'total',
-  fallback: 0,
-})
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async (env) =>
+    (env.args.height
+      ? await snapshotItemMayLoadAtHeight<number>({
+          env,
+          name: 'total',
+          height: Number(env.args.height),
+        })
+      : await snapshotItemMayLoad<number>({
+          env,
+          name: 'total',
+        })) ?? 0,
+}
 
 export const admin = makeSimpleContractFormula<string | null>({
   docs: {

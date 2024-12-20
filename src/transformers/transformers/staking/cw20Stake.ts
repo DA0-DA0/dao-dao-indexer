@@ -1,11 +1,21 @@
-import { makeTransformerForMap } from '../../utils'
+import {
+  makeTransformersForSnapshotItem,
+  makeTransformersForSnapshotMap,
+} from '../../utils'
 
 const CODE_IDS_KEYS = ['cw20-stake']
 
-const stakedBalance = makeTransformerForMap(
-  CODE_IDS_KEYS,
-  'stakedBalance',
-  'staked_balances'
-)
+const stakedBalance = makeTransformersForSnapshotMap({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'stakedBalance',
+  primaryKey: 'staked_balances',
+  changelogKey: 'staked_balance__changelog',
+})
+const stakedTotal = makeTransformersForSnapshotItem({
+  codeIdsKeys: CODE_IDS_KEYS,
+  name: 'stakedTotal',
+  primaryKey: 'total_staked',
+  changelogKey: 'total_staked__changelog',
+})
 
-export default [stakedBalance]
+export default [...stakedBalance, ...stakedTotal]

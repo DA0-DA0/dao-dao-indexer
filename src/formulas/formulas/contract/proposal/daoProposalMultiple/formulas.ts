@@ -167,7 +167,7 @@ export const listProposals: ContractFormula<
       : -Infinity
 
     const proposals =
-      (await getTransformationMap<number, MultipleChoiceProposal>(
+      (await getTransformationMap<MultipleChoiceProposal>(
         contractAddress,
         'proposal'
       )) ??
@@ -246,7 +246,7 @@ export const reverseProposals: ContractFormula<
       : Infinity
 
     const proposals =
-      (await getTransformationMap<number, MultipleChoiceProposal>(
+      (await getTransformationMap<MultipleChoiceProposal>(
         contractAddress,
         'proposal'
       )) ??

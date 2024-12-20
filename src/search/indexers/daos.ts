@@ -21,7 +21,7 @@ export const daos: MeilisearchIndexer = {
     'value.proposalCount',
     'value.hideFromSearch',
   ],
-  sortableAttributes: ['value.proposalCount'],
+  sortableAttributes: ['value.proposalCount', 'value.createdAtEpoch'],
   matches: async ({ event, state }) => {
     if (!(event instanceof WasmStateEvent)) {
       return

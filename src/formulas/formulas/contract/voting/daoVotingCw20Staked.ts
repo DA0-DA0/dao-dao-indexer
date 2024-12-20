@@ -31,11 +31,11 @@ export const stakingContract = makeSimpleContractFormula<string>({
 
 export const votingPowerAtHeight: ContractFormula<
   VotingPowerAtHeight,
-  { address: string }
+  { address: string; height?: string }
 > = {
   docs: {
     description:
-      'retrieves the voting power for an address at a specific block height',
+      'retrieves the voting power for an address, optionally at a specific block height',
     args: [
       {
         name: 'address',
@@ -46,9 +46,9 @@ export const votingPowerAtHeight: ContractFormula<
         },
       },
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get voting power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -86,9 +86,13 @@ export const votingPowerAtHeight: ContractFormula<
         contractAddress: stakingContractAddress,
       })) || '0'
 
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+
     return {
       power,
-      height: Number(env.block.height),
+      height,
     }
   },
 }
@@ -112,14 +116,20 @@ export const votingPower: ContractFormula<string, { address: string }> = {
   compute: async (env) => (await votingPowerAtHeight.compute(env)).power,
 }
 
-export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
+export const totalPowerAtHeight: ContractFormula<
+  TotalPowerAtHeight,
+  {
+    height?: string
+  }
+> = {
   docs: {
-    description: 'retrieves the total voting power at a specific block height',
+    description:
+      'retrieves the total voting power, optionally at a specific block height',
     args: [
       {
-        name: 'block',
+        name: 'height',
         description: 'block height to get total power at',
-        required: true,
+        required: false,
         schema: {
           type: 'integer',
         },
@@ -139,9 +149,13 @@ export const totalPowerAtHeight: ContractFormula<TotalPowerAtHeight> = {
         contractAddress: stakingContractAddress,
       })) || '0'
 
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+
     return {
       power,
-      height: Number(env.block.height),
+      height,
     }
   },
 }
@@ -166,9 +180,24 @@ type Staker = StakerBalance & {
   votingPowerPercent: number
 }
 
-export const topStakers: ContractFormula<Staker[]> = {
+export const topStakers: ContractFormula<
+  Staker[],
+  {
+    limit?: string
+  }
+> = {
   docs: {
     description: 'retrieves the top stakers sorted by voting power',
+    args: [
+      {
+        name: 'limit',
+        description: 'maximum number of stakers to return',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
   },
   compute: async (env) => {
     const stakingContractAddress = await stakingContract.compute(env)
@@ -196,7 +225,13 @@ export const topStakers: ContractFormula<Staker[]> = {
     })
 
     // Get total power.
-    const totalVotingPower = Number(await totalPower.compute(env))
+    const totalVotingPower = Number(
+      await totalPower.compute({
+        ...env,
+        // Make sure to not pass height in case it was passed to this formula.
+        args: {},
+      })
+    )
 
     // Compute voting power for each staker.
     const stakers = topStakers.map((staker) => ({

@@ -4,7 +4,7 @@ import { ParsedWasmStateEvent } from './tracer'
 
 export type Transformer<V = any> = {
   filter: RequireAtLeastOne<{
-    codeIdsKeys: string[]
+    codeIdsKeys: string[] | 'any'
     contractAddresses: string[]
     matches: (event: ParsedWasmStateEvent) => boolean
   }>

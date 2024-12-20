@@ -4,7 +4,7 @@ import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 import { makeTransformer } from '../../utils'
 
 // There are so many CW20 contracts, just don't filter by code ID.
-const CODE_IDS_KEYS: string[] = []
+const CODE_IDS_KEYS = 'any'
 
 const KEY_PREFIX_BALANCE = dbKeyForKeys('balance', '')
 
