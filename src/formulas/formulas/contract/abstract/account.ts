@@ -1,6 +1,6 @@
-import { loadConfig } from '@/config'
 import { ContractFormula } from '@/types'
 
+import { makeSimpleContractFormula } from '../../utils'
 import * as Common from '../common'
 import { AccountTypes } from './types'
 import { Addr, GovernanceDetailsForString } from './types/account'
@@ -16,69 +16,51 @@ const AccountStorageKeys = {
   OWNER: 'ownership',
 }
 
-export const owner: ContractFormula<GovernanceDetailsForString | undefined> = {
+export const owner = makeSimpleContractFormula<
+  { owner: GovernanceDetailsForString },
+  GovernanceDetailsForString | null
+>({
   docs: {
     description: 'Get the owner of the account',
   },
-  compute: async ({ contractAddress, get }) => {
-    return (
-      (
-        await get<AccountTypes.OwnershipForString>(
-          contractAddress,
-          AccountStorageKeys.OWNER
-        )
-      )?.owner ?? undefined
-    )
-  },
-}
+  transformation: AccountStorageKeys.OWNER,
+  fallbackKeys: [AccountStorageKeys.OWNER],
+  transform: (data) => data.owner,
+  fallback: null,
+})
 
-export const accountId: ContractFormula<AccountTypes.AccountId | undefined> = {
-  docs: {
-    description: 'Get accountId of the account',
-  },
-  compute: async ({ contractAddress, get }) => {
-    return await get<AccountTypes.AccountId>(
-      contractAddress,
-      AccountStorageKeys.ACCOUNT_ID
-    )
-  },
-}
+export const accountId =
+  makeSimpleContractFormula<AccountTypes.AccountId | null>({
+    docs: {
+      description: 'Get accountId of the account',
+    },
+    key: AccountStorageKeys.ACCOUNT_ID,
+    fallback: null,
+  })
 
-export const suspensionStatus: ContractFormula<boolean | undefined> = {
+export const suspensionStatus = makeSimpleContractFormula<boolean | null>({
   docs: {
     description: 'Get suspension status of the account',
   },
-  compute: async ({ contractAddress, get }) => {
-    return await get<boolean>(
-      contractAddress,
-      AccountStorageKeys.SUSPENSION_STATUS
-    )
-  },
-}
+  key: AccountStorageKeys.SUSPENSION_STATUS,
+  fallback: null,
+})
 
-export const info: ContractFormula<AccountTypes.AccountInfo | undefined> = {
+export const info = makeSimpleContractFormula<AccountTypes.AccountInfo | null>({
   docs: {
     description: 'Get the account info',
   },
-  compute: async ({ contractAddress, get }) => {
-    return await get<AccountTypes.AccountInfo>(
-      contractAddress,
-      AccountStorageKeys.INFO
-    )
-  },
-}
+  key: AccountStorageKeys.INFO,
+  fallback: null,
+})
 
-export const whitelistedModules: ContractFormula<Array<Addr> | undefined> = {
+export const whitelistedModules = makeSimpleContractFormula<Addr[] | null>({
   docs: {
     description: 'Get a list of whitelisted modules',
   },
-  compute: async ({ contractAddress, get }) => {
-    return await get<Array<Addr>>(
-      contractAddress,
-      AccountStorageKeys.WHITELISTED_MODULES
-    )
-  },
-}
+  key: AccountStorageKeys.WHITELISTED_MODULES,
+  fallback: null,
+})
 
 export const subAccountIds: ContractFormula<AccountTypes.AccountId[]> = {
   docs: {

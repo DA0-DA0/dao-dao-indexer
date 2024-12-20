@@ -1,2 +1,2 @@
-export * as abstractAccount from './account'
-export * as abstractRegistry from './registry'
+export * as account from './account'
+export * as registry from './registry'
