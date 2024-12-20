@@ -36,7 +36,7 @@
     "cw4-group": [178],
     "polytone-note": [],
     "polytone-voice": [],
-    "valence-account": [],
+    "valence-account": []
   },
   "daoDaoBase": "https://testnet.daodao.zone",
   "discordNotifierApiKey": "key",
