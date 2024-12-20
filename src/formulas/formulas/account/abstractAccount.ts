@@ -1,4 +1,7 @@
+import { Op } from 'sequelize'
+
 import { AccountFormula } from '@/types'
+
 import { AccountTypes } from '../contract/abstract/types'
 
 /**
@@ -35,48 +38,34 @@ export const accountsOwnedBy: AccountFormula<
       getCodeIdsForKeys,
     } = env
 
-    const monarchyOwned =
+    const owned =
       (
         await getTransformationMatches(
           undefined,
           'owner',
           {
-            monarchy: {
-              monarch: address,
-            },
-          } satisfies AccountTypes.GovernanceDetailsForString,
+            [Op.or]: [
+              {
+                monarchy: {
+                  monarch: address,
+                },
+              } satisfies AccountTypes.GovernanceDetailsForString,
+              {
+                sub_account: {
+                  account: address,
+                },
+              } satisfies AccountTypes.GovernanceDetailsForString,
+              {
+                abstract_account: {
+                  address: address,
+                },
+              } satisfies AccountTypes.GovernanceDetailsForString,
+            ],
+          },
           key ? getCodeIdsForKeys(key) : undefined
         )
       )?.map(({ contractAddress }) => contractAddress) || []
 
-    const subAccountOwned =
-      (
-        await getTransformationMatches(
-          undefined,
-          'owner',
-          {
-            sub_account: {
-              account: address,
-            },
-          } satisfies AccountTypes.GovernanceDetailsForString,
-          key ? getCodeIdsForKeys(key) : undefined
-        )
-      )?.map(({ contractAddress }) => contractAddress) || []
-
-    const abstractAccountOwned =
-      (
-        await getTransformationMatches(
-          undefined,
-          'owner',
-          {
-            abstract_account: {
-              address: address,
-            },
-          } satisfies AccountTypes.GovernanceDetailsForString,
-          key ? getCodeIdsForKeys(key) : undefined
-        )
-      )?.map(({ contractAddress }) => contractAddress) || []
-
-    return monarchyOwned.concat(subAccountOwned, abstractAccountOwned)
+    return owned
   },
 }
