@@ -1,10 +1,11 @@
 import semver from 'semver/preload'
 
+import { moduleInfos } from '@/formulas/formulas/contract/abstract/account'
 import { Module } from '@/formulas/formulas/contract/abstract/types/registry'
 import { ContractFormula } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 
-import { RegistryTypes } from './types'
+import { AccountTypes, RegistryTypes } from './types'
 
 const RegistryStorageKeys = {
   CONFIG: 'cfg',
@@ -21,7 +22,7 @@ const RegistryStorageKeys = {
   REV_NAMESPACES: 'ck',
 }
 
-export const listRegisteredModules: ContractFormula<Array<Module>> = {
+export const registeredModules: ContractFormula<Array<Module>> = {
   docs: {
     description: 'Lists registered modules in registry',
   },
@@ -191,7 +192,7 @@ export const module: ContractFormula<
     if (!args || !args.namespace || !args.name) return undefined
     const moduleParam = args as ModuleInfoParameter
 
-    const registeredModules = await listRegisteredModules.compute(env)
+    const registeredModules = await registeredModules.compute(env)
 
     const filteredModules = registeredModules.filter(
       ({ info: { name, namespace } }) => {
@@ -238,7 +239,7 @@ export const module: ContractFormula<
   },
 }
 
-export const listLocalAccounts: ContractFormula<RegistryTypes.AccountListResponse> =
+export const localAccounts: ContractFormula<RegistryTypes.AccountListResponse> =
   {
     docs: {
       description: 'Lists local accounts on chain',
@@ -272,3 +273,63 @@ export const listLocalAccounts: ContractFormula<RegistryTypes.AccountListRespons
       return { accounts }
     },
   }
+
+/**
+ * Get all contracts with the account governance owner set to this address.
+ */
+export const accountsByModule: ContractFormula<
+  { id: AccountTypes.AccountId | null; address: string }[],
+  {
+    /**
+     * Filter by module id.
+     */
+    id?: string
+    /**
+     * Filter by module version.
+     */
+    version?: string
+    /**
+     * Filter by module address.
+     */
+    address?: string
+  }
+> = {
+  docs: {
+    description:
+      'Filters accounts by module id, version, or address. Returns account id and address',
+    args: [],
+  },
+  compute: async (env) => {
+    const {
+      args: { id: moduleId, address: moduleAddress, version: moduleVersion },
+    } = env
+
+    if (!moduleId && !moduleAddress) {
+      throw new Error('accountsByModule requires id or address')
+    }
+
+    const { accounts: allAccounts } = await localAccounts.compute(env)
+
+    const allAccountsWithModules = await Promise.all(
+      allAccounts.map(async ([id, address]) => ({
+        address,
+        id,
+        modules: await moduleInfos.compute({
+          ...env,
+          contractAddress: address,
+        }),
+      }))
+    )
+
+    return allAccountsWithModules
+      .filter(({ modules }) =>
+        modules.some(
+          (module) =>
+            (!moduleId || moduleId === module.id) &&
+            (!moduleVersion || moduleVersion === module.version) &&
+            (!moduleAddress || moduleAddress === module.address)
+        )
+      )
+      .map(({ id, address }) => ({ id, address }))
+  },
+}

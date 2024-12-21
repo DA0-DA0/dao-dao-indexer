@@ -270,6 +270,52 @@
         }
       }
     },
+    "/{chainId}/contract/{address}/abstract/registry/accountsByModule": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "abstract > registry > accountsByModule",
+        "description": "retrieves account (that use abstract governance to manage ownership) where the account is the owner",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "description": "optional code ID key to filter by",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{address}/abstract/registry/listLocalAccounts": {
       "get": {
         "tags": [

@@ -1,5 +1,6 @@
 import { Op } from 'sequelize'
 
+import { accountId } from '@/formulas/formulas/contract/abstract/account'
 import { AccountFormula } from '@/types'
 
 import { AccountTypes } from '../contract/abstract/types'
@@ -8,7 +9,7 @@ import { AccountTypes } from '../contract/abstract/types'
  * Get all contracts with the account governance owner set to this address.
  */
 export const accountsOwnedBy: AccountFormula<
-  string[],
+  { id: AccountTypes.AccountId | null; address: AccountTypes.Addr }[],
   {
     /**
      * Optionally filter by code ID key.
@@ -66,6 +67,14 @@ export const accountsOwnedBy: AccountFormula<
         )
       )?.map(({ contractAddress }) => contractAddress) || []
 
-    return owned
+    return await Promise.all(
+      owned.map(async (account) => ({
+        address: account,
+        id: await accountId.compute({
+          ...env,
+          contractAddress: account,
+        }),
+      }))
+    )
   },
 }
