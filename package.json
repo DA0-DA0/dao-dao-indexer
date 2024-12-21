@@ -10,6 +10,7 @@
     "test:computer": "docker compose -f compose.test.yml -f compose.test-computer.yml up --exit-code-from test",
     "jest": "NODE_ENV=test node --nolazy --inspect=0.0.0.0:9227 ./node_modules/jest/bin/jest.js --runInBand",
     "coverage": "npm run test -- --coverage",
+    "prebuild": "tsc",
     "build": "tsup",
     "build:watch": "tsup --watch",
     "postbuild": "npm run autodoc",
