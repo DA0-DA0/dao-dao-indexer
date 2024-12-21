@@ -22,7 +22,7 @@ module.exports = {
       name: 'server_accounts',
       script: 'dist/server/serve.js',
       args: ['-p', '3001', '-c', 'config.accounts.json', '-a'],
-      instances: 1,
+      instances: 2,
       wait_ready: true,
       listen_timeout: 10000,
     },
