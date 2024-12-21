@@ -6294,6 +6294,61 @@
         }
       }
     },
+    "/{chainId}/contract/{address}/daoVoteDelegation/registration": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoVoteDelegation > registration",
+        "description": "retrieves whether or not a delegate is registered, optionally at a given block height",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "delegate",
+            "description": "address of the delegate",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "in": "query"
+          },
+          {
+            "name": "height",
+            "description": "block height to retrieve delegate registration at",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{address}/daoVoteDelegation/unvotedDelegatedVotingPower": {
       "get": {
         "tags": [
