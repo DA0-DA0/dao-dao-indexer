@@ -9,5 +9,6 @@ export * from './proposal'
 export * from './staking'
 export * as valence from './valence'
 export * from './voting'
+export * from './abstract'
 
 export * from './common'
