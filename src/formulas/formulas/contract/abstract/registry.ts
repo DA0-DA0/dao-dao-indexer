@@ -192,9 +192,9 @@ export const module: ContractFormula<
     if (!args || !args.namespace || !args.name) return undefined
     const moduleParam = args as ModuleInfoParameter
 
-    const registeredModules = await registeredModules.compute(env)
+    const registeredModulesList = await registeredModules.compute(env)
 
-    const filteredModules = registeredModules.filter(
+    const filteredModules = registeredModulesList.filter(
       ({ info: { name, namespace } }) => {
         return namespace === moduleParam.namespace && name === moduleParam.name
       }
