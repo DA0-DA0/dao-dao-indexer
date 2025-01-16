@@ -46,6 +46,29 @@ export class Account extends Model {
   @HasMany(() => AccountCodeIdSet, 'accountPublicKey')
   declare codeIdSets: AccountCodeIdSet[]
 
+  /**
+   * Adds a new infinite key to this account.
+   */
+  public async addInfiniteKey({ name }: { name: string }) {
+    const { key: apiKey, hash: hashedKey } = AccountKey.generateKeyAndHash()
+
+    const accountKey = await this.$create<AccountKey>('key', {
+      name,
+      hashedKey,
+    })
+
+    await accountKey.$create<AccountKeyCredit>('credit', {
+      paymentSource: AccountKeyCreditPaymentSource.Manual,
+      paymentId: randomUUID(),
+      amount: '-1',
+      paidAt: new Date(),
+    })
+
+    return {
+      apiKey,
+    }
+  }
+
   // Generates a random API key and creates a key on this account with it. Also
   // setup one credit for the key to accept payment.
   public async generateKey({
