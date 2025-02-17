@@ -36,6 +36,9 @@ const app = new Koa()
 if (config.sentryDsn) {
   Sentry.init({
     dsn: config.sentryDsn,
+    // Don't send these to Sentry as we don't need to be notified for them or
+    // they are spam and waste our quota.
+    ignoreErrors: ['Malicious Path'],
   })
 
   // Add Sentry error handler.
