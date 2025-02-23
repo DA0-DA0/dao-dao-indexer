@@ -170,7 +170,7 @@ export const allProposals: ContractFormula<
   Proposal[],
   {
     filter?: ListProposalFilter
-    // Whether or not to recurse into SubDAOs. Defaults to true. `true` or `1`
+    // Whether or not to recurse into SubDAOs. Defaults to false. `true` or `1`
     // means recurse, anything else means don't recurse.
     recursive?: string
   }
@@ -189,7 +189,7 @@ export const allProposals: ContractFormula<
       },
       {
         name: 'recursive',
-        description: 'whether to recurse into SubDAOs (defaults to true)',
+        description: 'whether to recurse into SubDAOs (defaults to false)',
         required: false,
         schema: {
           type: 'string',
@@ -203,9 +203,7 @@ export const allProposals: ContractFormula<
     const daos = [
       env.contractAddress,
       // Add SubDAOs if `recursive` is enabled.
-      ...(!('recursive' in env.args) ||
-      env.args.recursive === 'true' ||
-      env.args.recursive === '1'
+      ...(env.args.recursive === 'true' || env.args.recursive === '1'
         ? await getUniqueSubDaosInTree(env, env.contractAddress)
         : []),
     ]
