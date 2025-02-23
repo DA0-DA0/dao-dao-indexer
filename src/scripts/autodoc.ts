@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
 
@@ -12,13 +13,13 @@ import {
 } from '@/formulas/formulas'
 import { Formula, FormulaType, NestedFormulaMap } from '@/types'
 
-const OPENAPI_PATH = path.join(__dirname, '../../static/openapi.json')
-
 const program = new Command('autodoc')
 program.description('Autogenerate OpenAPI spec from the available formulas.')
 
+const OPENAPI_BASE_PATH = path.join(__dirname, '../../static/openapi.json')
+
 const openapi: OpenAPIV3_1.Document = JSON.parse(
-  fs.readFileSync(OPENAPI_PATH, 'utf8')
+  fs.readFileSync(OPENAPI_BASE_PATH, 'utf8')
 )
 
 openapi.tags = [
@@ -74,13 +75,22 @@ const makeFormulaDoc = (
 ): [string, OpenAPIV3_1.PathItemObject] => {
   const hasAddress = type !== FormulaType.Generic
 
+  // tools must follow the regex: ^[a-zA-Z0-9_-]{1,64}$
+  // so slice to 48 characters, hash it, and add an 8-character suffix
+  const base = path.replace(/\//g, '_').slice(0, 48)
+  const operationId =
+    base +
+    '_' +
+    crypto.createHash('sha256').update(base).digest('hex').slice(0, 7)
+
   return [
     `/{chainId}/${type}/${hasAddress ? '{address}' : '_'}/${path}`,
     {
       get: {
         tags: [type],
-        summary: path.split('/').join(' > '),
+        summary: path.replace(/\//g, ' > '),
         description: formula.docs?.description || '`' + path + '`',
+        operationId,
         parameters: [
           {
             name: 'chainId',
@@ -151,4 +161,4 @@ openapi.paths = {
   ),
 }
 
-fs.writeFileSync(OPENAPI_PATH, JSON.stringify(openapi, null, 2))
+fs.writeFileSync(OPENAPI_BASE_PATH, JSON.stringify(openapi, null, 2))

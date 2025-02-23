@@ -39,6 +39,7 @@
         ],
         "summary": "abstract > account > accountId",
         "description": "Get accountId of the account",
+        "operationId": "abstract_account_accountId_e92f8b5",
         "parameters": [
           {
             "name": "chainId",
@@ -73,6 +74,7 @@
         ],
         "summary": "abstract > account > info",
         "description": "Get the account info",
+        "operationId": "abstract_account_info_5c6d9e1",
         "parameters": [
           {
             "name": "chainId",
@@ -107,6 +109,7 @@
         ],
         "summary": "abstract > account > moduleInfos",
         "description": "Get module infos that are installed on this account",
+        "operationId": "abstract_account_moduleInfos_4de38cc",
         "parameters": [
           {
             "name": "chainId",
@@ -141,6 +144,7 @@
         ],
         "summary": "abstract > account > owner",
         "description": "Get the owner of the account",
+        "operationId": "abstract_account_owner_5d10d52",
         "parameters": [
           {
             "name": "chainId",
@@ -175,6 +179,7 @@
         ],
         "summary": "abstract > account > subAccountIds",
         "description": "Get sub-accounts owned by this account",
+        "operationId": "abstract_account_subAccountIds_842e84a",
         "parameters": [
           {
             "name": "chainId",
@@ -209,6 +214,7 @@
         ],
         "summary": "abstract > account > suspensionStatus",
         "description": "Get suspension status of the account",
+        "operationId": "abstract_account_suspensionStatus_440e941",
         "parameters": [
           {
             "name": "chainId",
@@ -243,6 +249,7 @@
         ],
         "summary": "abstract > account > whitelistedModules",
         "description": "Get a list of whitelisted modules",
+        "operationId": "abstract_account_whitelistedModules_ce3eb11",
         "parameters": [
           {
             "name": "chainId",
@@ -277,6 +284,7 @@
         ],
         "summary": "abstract > registry > accountsByModule",
         "description": "Filters accounts by module id, version, or address. Returns account id and address",
+        "operationId": "abstract_registry_accountsByModule_a8f5734",
         "parameters": [
           {
             "name": "chainId",
@@ -311,6 +319,7 @@
         ],
         "summary": "abstract > registry > localAccounts",
         "description": "Lists local accounts on chain",
+        "operationId": "abstract_registry_localAccounts_7d27966",
         "parameters": [
           {
             "name": "chainId",
@@ -345,6 +354,7 @@
         ],
         "summary": "abstract > registry > module",
         "description": "Module details",
+        "operationId": "abstract_registry_module_7d861e4",
         "parameters": [
           {
             "name": "chainId",
@@ -409,6 +419,7 @@
         ],
         "summary": "abstract > registry > moduleConfig",
         "description": "Configuration of the module installation",
+        "operationId": "abstract_registry_moduleConfig_c904a3e",
         "parameters": [
           {
             "name": "chainId",
@@ -473,6 +484,7 @@
         ],
         "summary": "abstract > registry > registeredModules",
         "description": "Lists registered modules in registry",
+        "operationId": "abstract_registry_registeredModules_310a69c",
         "parameters": [
           {
             "name": "chainId",
@@ -507,6 +519,7 @@
         ],
         "summary": "cw1Whitelist > adminList",
         "description": "retrieves the list of addresses",
+        "operationId": "cw1Whitelist_adminList_96d35ba",
         "parameters": [
           {
             "name": "chainId",
@@ -541,6 +554,7 @@
         ],
         "summary": "cw20 > allAccounts",
         "description": "retrieves all accounts that hold this token",
+        "operationId": "cw20_allAccounts_32215d9",
         "parameters": [
           {
             "name": "chainId",
@@ -596,6 +610,7 @@
         ],
         "summary": "cw20 > allowance",
         "description": "retrieves the allowance for a spender from an owner",
+        "operationId": "cw20_allowance_0096ac0",
         "parameters": [
           {
             "name": "chainId",
@@ -651,6 +666,7 @@
         ],
         "summary": "cw20 > balance",
         "description": "retrieves the balance of a given address",
+        "operationId": "cw20_balance_06ff6af",
         "parameters": [
           {
             "name": "chainId",
@@ -697,6 +713,7 @@
         ],
         "summary": "cw20 > daos",
         "description": "retrieves the DAOs that use this token as their governance token",
+        "operationId": "cw20_daos_696579f",
         "parameters": [
           {
             "name": "chainId",
@@ -731,6 +748,7 @@
         ],
         "summary": "cw20 > logoUrl",
         "description": "retrieves the logo URL",
+        "operationId": "cw20_logoUrl_3956ed1",
         "parameters": [
           {
             "name": "chainId",
@@ -765,6 +783,7 @@
         ],
         "summary": "cw20 > marketingInfo",
         "description": "retrieves the marketing info",
+        "operationId": "cw20_marketingInfo_b885b6b",
         "parameters": [
           {
             "name": "chainId",
@@ -799,6 +818,7 @@
         ],
         "summary": "cw20 > minter",
         "description": "retrieves the minter info",
+        "operationId": "cw20_minter_7f2d112",
         "parameters": [
           {
             "name": "chainId",
@@ -833,6 +853,7 @@
         ],
         "summary": "cw20 > ownerAllowances",
         "description": "retrieves all allowances granted by an owner",
+        "operationId": "cw20_ownerAllowances_a857690",
         "parameters": [
           {
             "name": "chainId",
@@ -897,6 +918,7 @@
         ],
         "summary": "cw20 > spenderAllowances",
         "description": "retrieves all allowances granted to a spender",
+        "operationId": "cw20_spenderAllowances_fbf631f",
         "parameters": [
           {
             "name": "chainId",
@@ -961,6 +983,7 @@
         ],
         "summary": "cw20 > tokenInfo",
         "description": "retrieves the token info",
+        "operationId": "cw20_tokenInfo_e2217e8",
         "parameters": [
           {
             "name": "chainId",
@@ -995,6 +1018,7 @@
         ],
         "summary": "cw20 > topAccountBalances",
         "description": "retrieves the top account balances",
+        "operationId": "cw20_topAccountBalances_448167e",
         "parameters": [
           {
             "name": "chainId",
@@ -1041,6 +1065,7 @@
         ],
         "summary": "cw20Stake > claims",
         "description": "retrieves the claims for an address",
+        "operationId": "cw20Stake_claims_1c4b116",
         "parameters": [
           {
             "name": "chainId",
@@ -1087,6 +1112,7 @@
         ],
         "summary": "cw20Stake > config",
         "description": "retrieves the configuration of the staking contract",
+        "operationId": "cw20Stake_config_172b29c",
         "parameters": [
           {
             "name": "chainId",
@@ -1121,6 +1147,7 @@
         ],
         "summary": "cw20Stake > getHooks",
         "description": "retrieves the hooks associated with the staking contract",
+        "operationId": "cw20Stake_getHooks_13e7ba9",
         "parameters": [
           {
             "name": "chainId",
@@ -1155,6 +1182,7 @@
         ],
         "summary": "cw20Stake > listStakers",
         "description": "lists stakers and their balances",
+        "operationId": "cw20Stake_listStakers_600a364",
         "parameters": [
           {
             "name": "chainId",
@@ -1210,6 +1238,7 @@
         ],
         "summary": "cw20Stake > stakedBalance",
         "description": "retrieves the staked balance string of an address at a specific block height, defaulting to the current block height",
+        "operationId": "cw20Stake_stakedBalance_497bcdb",
         "parameters": [
           {
             "name": "chainId",
@@ -1265,6 +1294,7 @@
         ],
         "summary": "cw20Stake > stakedBalanceAtHeight",
         "description": "retrieves the staked balance object of an address at a specific block height, defaulting to the current block height",
+        "operationId": "cw20Stake_stakedBalanceAtHeight_8577ad6",
         "parameters": [
           {
             "name": "chainId",
@@ -1320,6 +1350,7 @@
         ],
         "summary": "cw20Stake > stakedValue",
         "description": "calculates the value of staked tokens for an address",
+        "operationId": "cw20Stake_stakedValue_103f827",
         "parameters": [
           {
             "name": "chainId",
@@ -1366,6 +1397,7 @@
         ],
         "summary": "cw20Stake > topStakers",
         "description": "retrieves the top stakers by balance",
+        "operationId": "cw20Stake_topStakers_24a9796",
         "parameters": [
           {
             "name": "chainId",
@@ -1412,6 +1444,7 @@
         ],
         "summary": "cw20Stake > totalStaked",
         "description": "retrieves the total staked amount at a specific block height, defaulting to the current block height",
+        "operationId": "cw20Stake_totalStaked_d092abe",
         "parameters": [
           {
             "name": "chainId",
@@ -1458,6 +1491,7 @@
         ],
         "summary": "cw20Stake > totalStakedAtHeight",
         "description": "retrieves the total staked amount at a specific block height, defaulting to the current block height",
+        "operationId": "cw20Stake_totalStakedAtHeight_70e0402",
         "parameters": [
           {
             "name": "chainId",
@@ -1504,6 +1538,7 @@
         ],
         "summary": "cw20Stake > totalValue",
         "description": "retrieves the total value of the staking contract",
+        "operationId": "cw20Stake_totalValue_ef382e0",
         "parameters": [
           {
             "name": "chainId",
@@ -1538,6 +1573,7 @@
         ],
         "summary": "cw4Group > admin",
         "description": "retrieves the admin address of the contract",
+        "operationId": "cw4Group_admin_a0c660b",
         "parameters": [
           {
             "name": "chainId",
@@ -1572,6 +1608,7 @@
         ],
         "summary": "cw4Group > hooks",
         "description": "retrieves the hooks associated with the contract",
+        "operationId": "cw4Group_hooks_2407090",
         "parameters": [
           {
             "name": "chainId",
@@ -1606,6 +1643,7 @@
         ],
         "summary": "cw4Group > listMembers",
         "description": "lists members of the group",
+        "operationId": "cw4Group_listMembers_95574d4",
         "parameters": [
           {
             "name": "chainId",
@@ -1661,6 +1699,7 @@
         ],
         "summary": "cw4Group > member",
         "description": "retrieves the weight of a member in the group, optionally at a specific height",
+        "operationId": "cw4Group_member_02dfa43",
         "parameters": [
           {
             "name": "chainId",
@@ -1716,6 +1755,7 @@
         ],
         "summary": "cw4Group > totalWeight",
         "description": "retrieves the total weight of all members in the group, optionally at a specific height",
+        "operationId": "cw4Group_totalWeight_52cb18b",
         "parameters": [
           {
             "name": "chainId",
@@ -1762,6 +1802,7 @@
         ],
         "summary": "cw721 > allNftInfo",
         "description": "retrieves both NFT info and owner info for a specific token ID",
+        "operationId": "cw721_allNftInfo_0537db9",
         "parameters": [
           {
             "name": "chainId",
@@ -1808,6 +1849,7 @@
         ],
         "summary": "cw721 > allOperators",
         "description": "retrieves all operators for a specific owner",
+        "operationId": "cw721_allOperators_e1a1ce5",
         "parameters": [
           {
             "name": "chainId",
@@ -1872,6 +1914,7 @@
         ],
         "summary": "cw721 > allTokens",
         "description": "retrieves all tokens in the NFT contract",
+        "operationId": "cw721_allTokens_fcdb2ac",
         "parameters": [
           {
             "name": "chainId",
@@ -1927,6 +1970,7 @@
         ],
         "summary": "cw721 > approvals",
         "description": "retrieves all approvals for a specific token",
+        "operationId": "cw721_approvals_8cb01c1",
         "parameters": [
           {
             "name": "chainId",
@@ -1973,6 +2017,7 @@
         ],
         "summary": "cw721 > approvalsForSpender",
         "description": "retrieves approvals for a specific spender on a token",
+        "operationId": "cw721_approvalsForSpender_2b4d050",
         "parameters": [
           {
             "name": "chainId",
@@ -2028,6 +2073,7 @@
         ],
         "summary": "cw721 > contractInfo",
         "description": "retrieves the contract info for the NFT contract",
+        "operationId": "cw721_contractInfo_88e7597",
         "parameters": [
           {
             "name": "chainId",
@@ -2062,6 +2108,7 @@
         ],
         "summary": "cw721 > minter",
         "description": "retrieves the minter address for the NFT contract",
+        "operationId": "cw721_minter_e832e9c",
         "parameters": [
           {
             "name": "chainId",
@@ -2096,6 +2143,7 @@
         ],
         "summary": "cw721 > nftInfo",
         "description": "retrieves the NFT info for a specific token ID",
+        "operationId": "cw721_nftInfo_e18f850",
         "parameters": [
           {
             "name": "chainId",
@@ -2142,6 +2190,7 @@
         ],
         "summary": "cw721 > numTokens",
         "description": "retrieves the total number of tokens in the NFT contract",
+        "operationId": "cw721_numTokens_a6a65b3",
         "parameters": [
           {
             "name": "chainId",
@@ -2176,6 +2225,7 @@
         ],
         "summary": "cw721 > ownerOf",
         "description": "retrieves the owner and approvals for a specific token ID",
+        "operationId": "cw721_ownerOf_3c43100",
         "parameters": [
           {
             "name": "chainId",
@@ -2222,6 +2272,7 @@
         ],
         "summary": "cw721 > tokens",
         "description": "retrieves all tokens owned by a specific address",
+        "operationId": "cw721_tokens_bfe1a56",
         "parameters": [
           {
             "name": "chainId",
@@ -2286,6 +2337,7 @@
         ],
         "summary": "cwPayrollFactory > codeId",
         "description": "retrieves the code ID of the cw-vesting contract that gets created by this factory",
+        "operationId": "cwPayrollFactory_codeId_8acb4aa",
         "parameters": [
           {
             "name": "chainId",
@@ -2320,6 +2372,7 @@
         ],
         "summary": "cwPayrollFactory > listVestingContracts",
         "description": "lists vesting contracts",
+        "operationId": "cwPayrollFactory_listVestingContracts_ef49299",
         "parameters": [
           {
             "name": "chainId",
@@ -2375,6 +2428,7 @@
         ],
         "summary": "cwPayrollFactory > listVestingContractsByInstantiator",
         "description": "lists vesting contracts by instantiator",
+        "operationId": "cwPayrollFactory_listVestingContractsByInstantia_eafa46d",
         "parameters": [
           {
             "name": "chainId",
@@ -2439,6 +2493,7 @@
         ],
         "summary": "cwPayrollFactory > listVestingContractsByInstantiatorReverse",
         "description": "lists vesting contracts by instantiator in reverse order",
+        "operationId": "cwPayrollFactory_listVestingContractsByInstantia_eafa46d",
         "parameters": [
           {
             "name": "chainId",
@@ -2503,6 +2558,7 @@
         ],
         "summary": "cwPayrollFactory > listVestingContractsByRecipient",
         "description": "lists vesting contracts by recipient",
+        "operationId": "cwPayrollFactory_listVestingContractsByRecipient_b617620",
         "parameters": [
           {
             "name": "chainId",
@@ -2567,6 +2623,7 @@
         ],
         "summary": "cwPayrollFactory > listVestingContractsByRecipientReverse",
         "description": "lists vesting contracts by recipient in reverse order",
+        "operationId": "cwPayrollFactory_listVestingContractsByRecipient_b617620",
         "parameters": [
           {
             "name": "chainId",
@@ -2631,6 +2688,7 @@
         ],
         "summary": "cwPayrollFactory > listVestingContractsReverse",
         "description": "lists vesting contracts in reverse order",
+        "operationId": "cwPayrollFactory_listVestingContractsReverse_626f534",
         "parameters": [
           {
             "name": "chainId",
@@ -2686,6 +2744,7 @@
         ],
         "summary": "cwPayrollFactory > ownership",
         "description": "retrieves the ownership information of the contract",
+        "operationId": "cwPayrollFactory_ownership_bd20ed8",
         "parameters": [
           {
             "name": "chainId",
@@ -2720,6 +2779,7 @@
         ],
         "summary": "cwTokenSwap > status",
         "description": "retrieves the status of the token swap",
+        "operationId": "cwTokenSwap_status_fbd7ab2",
         "parameters": [
           {
             "name": "chainId",
@@ -2754,6 +2814,7 @@
         ],
         "summary": "cwVesting > info",
         "description": "retrieves vesting information",
+        "operationId": "cwVesting_info_4998ba3",
         "parameters": [
           {
             "name": "chainId",
@@ -2788,6 +2849,7 @@
         ],
         "summary": "cwVesting > ownership",
         "description": "retrieves the contract ownership defined by the cw-ownable crate",
+        "operationId": "cwVesting_ownership_08ef5e4",
         "parameters": [
           {
             "name": "chainId",
@@ -2822,6 +2884,7 @@
         ],
         "summary": "cwVesting > totalToVest",
         "description": "calculates the total amount to be vested",
+        "operationId": "cwVesting_totalToVest_abeebe6",
         "parameters": [
           {
             "name": "chainId",
@@ -2856,6 +2919,7 @@
         ],
         "summary": "cwVesting > unbondingDurationSeconds",
         "description": "calculates the unbonding duration in seconds",
+        "operationId": "cwVesting_unbondingDurationSeconds_15dc0d1",
         "parameters": [
           {
             "name": "chainId",
@@ -2890,6 +2954,7 @@
         ],
         "summary": "cwVesting > validatorStakes",
         "description": "retrieves the amount staked and unstaking for each validator over time",
+        "operationId": "cwVesting_validatorStakes_7e3c238",
         "parameters": [
           {
             "name": "chainId",
@@ -2924,6 +2989,7 @@
         ],
         "summary": "cwVesting > vestDuration",
         "description": "calculates the duration of the vesting period",
+        "operationId": "cwVesting_vestDuration_795db6e",
         "parameters": [
           {
             "name": "chainId",
@@ -2958,6 +3024,7 @@
         ],
         "summary": "cwVesting > vested",
         "description": "calculates the vested amount at a given timestamp",
+        "operationId": "cwVesting_vested_d4560d5",
         "parameters": [
           {
             "name": "chainId",
@@ -3004,6 +3071,7 @@
         ],
         "summary": "daoCore > activeProposalModules",
         "description": "retrieves all active (enabled) proposal modules for the DAO",
+        "operationId": "daoCore_activeProposalModules_4b8c7ee",
         "parameters": [
           {
             "name": "chainId",
@@ -3038,6 +3106,7 @@
         ],
         "summary": "daoCore > admin",
         "description": "retrieves the admin address of the DAO",
+        "operationId": "daoCore_admin_4568e31",
         "parameters": [
           {
             "name": "chainId",
@@ -3072,6 +3141,7 @@
         ],
         "summary": "daoCore > adminNomination",
         "description": "retrieves the nominated admin address of the DAO",
+        "operationId": "daoCore_adminNomination_010aaa5",
         "parameters": [
           {
             "name": "chainId",
@@ -3106,6 +3176,7 @@
         ],
         "summary": "daoCore > approvalDaos",
         "description": "retrieves DAOs that have a pre-propose-approval contract whose approver is set to this DAO",
+        "operationId": "daoCore_approvalDaos_6086507",
         "parameters": [
           {
             "name": "chainId",
@@ -3140,6 +3211,7 @@
         ],
         "summary": "daoCore > config",
         "description": "retrieves the DAO configuration",
+        "operationId": "daoCore_config_b84150d",
         "parameters": [
           {
             "name": "chainId",
@@ -3174,6 +3246,7 @@
         ],
         "summary": "daoCore > cw20Balances",
         "description": "retrieves the CW20 token balances for the DAO",
+        "operationId": "daoCore_cw20Balances_dc0f1bd",
         "parameters": [
           {
             "name": "chainId",
@@ -3208,6 +3281,7 @@
         ],
         "summary": "daoCore > cw20List",
         "description": "retrieves the list of CW20 token addresses associated with the DAO",
+        "operationId": "daoCore_cw20List_e456920",
         "parameters": [
           {
             "name": "chainId",
@@ -3242,6 +3316,7 @@
         ],
         "summary": "daoCore > cw721List",
         "description": "retrieves the list of CW721 NFT addresses associated with the DAO",
+        "operationId": "daoCore_cw721List_22e273b",
         "parameters": [
           {
             "name": "chainId",
@@ -3276,6 +3351,7 @@
         ],
         "summary": "daoCore > daoUri",
         "description": "retrieves the URI of the DAO",
+        "operationId": "daoCore_daoUri_d557b1d",
         "parameters": [
           {
             "name": "chainId",
@@ -3310,6 +3386,7 @@
         ],
         "summary": "daoCore > item",
         "description": "retrieves a specific item from the DAO's storage",
+        "operationId": "daoCore_item_0d790a7",
         "parameters": [
           {
             "name": "chainId",
@@ -3356,6 +3433,7 @@
         ],
         "summary": "daoCore > listItems",
         "description": "retrieves all items stored in the DAO",
+        "operationId": "daoCore_listItems_0d467b2",
         "parameters": [
           {
             "name": "chainId",
@@ -3390,6 +3468,7 @@
         ],
         "summary": "daoCore > listSubDaos",
         "description": "retrieves the list of subDAOs recognized by the DAO",
+        "operationId": "daoCore_listSubDaos_621c87b",
         "parameters": [
           {
             "name": "chainId",
@@ -3424,6 +3503,7 @@
         ],
         "summary": "daoCore > pauseInfo",
         "description": "retrieves the pause status of the DAO",
+        "operationId": "daoCore_pauseInfo_d4cdeb4",
         "parameters": [
           {
             "name": "chainId",
@@ -3458,6 +3538,7 @@
         ],
         "summary": "daoCore > paused",
         "description": "retrieves the pause status of the DAO",
+        "operationId": "daoCore_paused_004f6fb",
         "parameters": [
           {
             "name": "chainId",
@@ -3492,6 +3573,7 @@
         ],
         "summary": "daoCore > polytoneProxies",
         "description": "retrieves polytone proxies for the DAO",
+        "operationId": "daoCore_polytoneProxies_e688e32",
         "parameters": [
           {
             "name": "chainId",
@@ -3526,6 +3608,7 @@
         ],
         "summary": "daoCore > potentialSubDaos",
         "description": "retrieves potential subDAOs, which are DAOs whose admin state key is set to this DAO. these may or may not be recognized by the DAO",
+        "operationId": "daoCore_potentialSubDaos_79bee82",
         "parameters": [
           {
             "name": "chainId",
@@ -3560,6 +3643,7 @@
         ],
         "summary": "daoCore > proposalModules",
         "description": "retrieves all proposal modules for the DAO",
+        "operationId": "daoCore_proposalModules_a52e71c",
         "parameters": [
           {
             "name": "chainId",
@@ -3594,6 +3678,7 @@
         ],
         "summary": "daoCore > totalPower",
         "description": "retrieves the total voting power at the current block height",
+        "operationId": "daoCore_totalPower_648dbed",
         "parameters": [
           {
             "name": "chainId",
@@ -3628,6 +3713,7 @@
         ],
         "summary": "daoCore > totalPowerAtHeight",
         "description": "retrieves the total voting power, optionally at a specific block height",
+        "operationId": "daoCore_totalPowerAtHeight_6776f07",
         "parameters": [
           {
             "name": "chainId",
@@ -3674,6 +3760,7 @@
         ],
         "summary": "daoCore > votingModule",
         "description": "retrieves the voting module address of the DAO",
+        "operationId": "daoCore_votingModule_55ea282",
         "parameters": [
           {
             "name": "chainId",
@@ -3708,6 +3795,7 @@
         ],
         "summary": "daoCore > votingPower",
         "description": "retrieves the voting power for a given address at the current block height",
+        "operationId": "daoCore_votingPower_f6da781",
         "parameters": [
           {
             "name": "chainId",
@@ -3754,6 +3842,7 @@
         ],
         "summary": "daoCore > votingPowerAtHeight",
         "description": "retrieves the voting power for a given address, optionally at a specific block height for a given address",
+        "operationId": "daoCore_votingPowerAtHeight_a3c323d",
         "parameters": [
           {
             "name": "chainId",
@@ -3809,6 +3898,7 @@
         ],
         "summary": "daoCore > dumpState",
         "description": "retrieves a lot of high-level information about a DAO, including its voting and proposal modules",
+        "operationId": "daoCore_dumpState_d218de3",
         "parameters": [
           {
             "name": "chainId",
@@ -3843,6 +3933,7 @@
         ],
         "summary": "daoCore > junoHomeMetadata",
         "description": "retrieves specific DAO metadata for the Juno website",
+        "operationId": "daoCore_junoHomeMetadata_de0e94a",
         "parameters": [
           {
             "name": "chainId",
@@ -3877,6 +3968,7 @@
         ],
         "summary": "daoCore > allMembers",
         "description": "retrieves all members of the DAO and optionally its SubDAOs",
+        "operationId": "daoCore_allMembers_3165924",
         "parameters": [
           {
             "name": "chainId",
@@ -3923,6 +4015,7 @@
         ],
         "summary": "daoCore > lastMembershipChange",
         "description": "retrieves the date membership was last updated for a member-based DAO",
+        "operationId": "daoCore_lastMembershipChange_51bb2f7",
         "parameters": [
           {
             "name": "chainId",
@@ -3957,6 +4050,7 @@
         ],
         "summary": "daoCore > listMembers",
         "description": "lists all members of the DAO with their voting power percentages",
+        "operationId": "daoCore_listMembers_daf5387",
         "parameters": [
           {
             "name": "chainId",
@@ -3991,6 +4085,7 @@
         ],
         "summary": "daoCore > memberCount",
         "description": "count of unique members in the DAO and optionally its SubDAOs",
+        "operationId": "daoCore_memberCount_efb9c0a",
         "parameters": [
           {
             "name": "chainId",
@@ -4037,6 +4132,7 @@
         ],
         "summary": "daoCore > allProposals",
         "description": "retrieves all proposals, optionally including SubDAOs",
+        "operationId": "daoCore_allProposals_1191c9f",
         "parameters": [
           {
             "name": "chainId",
@@ -4092,6 +4188,7 @@
         ],
         "summary": "daoCore > lastActivity",
         "description": "retrieves the date of the most recent proposal event (completion or creation)",
+        "operationId": "daoCore_lastActivity_3548b5a",
         "parameters": [
           {
             "name": "chainId",
@@ -4126,6 +4223,7 @@
         ],
         "summary": "daoCore > openProposals",
         "description": "retrieves open proposals and optionally voting status for a given address",
+        "operationId": "daoCore_openProposals_5383c5e",
         "parameters": [
           {
             "name": "chainId",
@@ -4172,6 +4270,7 @@
         ],
         "summary": "daoCore > proposalCount",
         "description": "retrieves the total number of proposals across all active proposal modules",
+        "operationId": "daoCore_proposalCount_9d9325b",
         "parameters": [
           {
             "name": "chainId",
@@ -4206,6 +4305,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > approver",
         "description": "retrieves the approver address for the pre-propose module",
+        "operationId": "daoPreProposeApprovalSingle_approver_4f8bbf1",
         "parameters": [
           {
             "name": "chainId",
@@ -4240,6 +4340,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > completedProposalIdForCreatedProposalId",
         "description": "retrieves the completed proposal ID for a given created proposal ID",
+        "operationId": "daoPreProposeApprovalSingle_completedProposalIdF_1eb3f6a",
         "parameters": [
           {
             "name": "chainId",
@@ -4286,6 +4387,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > completedProposals",
         "description": "retrieves a list of completed proposals",
+        "operationId": "daoPreProposeApprovalSingle_completedProposals_5de4262",
         "parameters": [
           {
             "name": "chainId",
@@ -4341,6 +4443,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > config",
         "description": "retrieves the configuration for the pre-propose module",
+        "operationId": "daoPreProposeApprovalSingle_config_e170301",
         "parameters": [
           {
             "name": "chainId",
@@ -4375,6 +4478,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > dao",
         "description": "retrieves the DAO address",
+        "operationId": "daoPreProposeApprovalSingle_dao_e743ee5",
         "parameters": [
           {
             "name": "chainId",
@@ -4409,6 +4513,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > depositInfo",
         "description": "retrieves deposit information for a given proposal ID",
+        "operationId": "daoPreProposeApprovalSingle_depositInfo_6f449f1",
         "parameters": [
           {
             "name": "chainId",
@@ -4455,6 +4560,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > pendingProposals",
         "description": "retrieves a list of pending proposals",
+        "operationId": "daoPreProposeApprovalSingle_pendingProposals_9efba6a",
         "parameters": [
           {
             "name": "chainId",
@@ -4510,6 +4616,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > proposal",
         "description": "retrieves a proposal",
+        "operationId": "daoPreProposeApprovalSingle_proposal_57a10f9",
         "parameters": [
           {
             "name": "chainId",
@@ -4556,6 +4663,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > proposalCompletedAt",
         "description": "retrieves the completion date of a proposal",
+        "operationId": "daoPreProposeApprovalSingle_proposalCompletedAt_1efed8e",
         "parameters": [
           {
             "name": "chainId",
@@ -4602,6 +4710,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > proposalCreatedAt",
         "description": "retrieves the creation date of a proposal",
+        "operationId": "daoPreProposeApprovalSingle_proposalCreatedAt_0423fc1",
         "parameters": [
           {
             "name": "chainId",
@@ -4648,6 +4757,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > proposalModule",
         "description": "retrieves the proposal module address",
+        "operationId": "daoPreProposeApprovalSingle_proposalModule_78c0eb9",
         "parameters": [
           {
             "name": "chainId",
@@ -4682,6 +4792,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > reverseCompletedProposals",
         "description": "retrieves a list of completed proposals in reverse order",
+        "operationId": "daoPreProposeApprovalSingle_reverseCompletedProp_4c7582a",
         "parameters": [
           {
             "name": "chainId",
@@ -4737,6 +4848,7 @@
         ],
         "summary": "daoPreProposeApprovalSingle > reversePendingProposals",
         "description": "retrieves a list of pending proposals in reverse order",
+        "operationId": "daoPreProposeApprovalSingle_reversePendingPropos_5971d95",
         "parameters": [
           {
             "name": "chainId",
@@ -4792,6 +4904,7 @@
         ],
         "summary": "daoPreProposeApprover > approverProposalIdForPreProposeApprovalId",
         "description": "retrieves the approver proposal ID for a given approval ID",
+        "operationId": "daoPreProposeApprover_approverProposalIdForPrePr_1d85a38",
         "parameters": [
           {
             "name": "chainId",
@@ -4838,6 +4951,7 @@
         ],
         "summary": "daoPreProposeApprover > config",
         "description": "retrieves the configuration for the pre-propose module",
+        "operationId": "daoPreProposeApprover_config_753d0f1",
         "parameters": [
           {
             "name": "chainId",
@@ -4872,6 +4986,7 @@
         ],
         "summary": "daoPreProposeApprover > dao",
         "description": "retrieves the DAO address",
+        "operationId": "daoPreProposeApprover_dao_b18645b",
         "parameters": [
           {
             "name": "chainId",
@@ -4906,6 +5021,7 @@
         ],
         "summary": "daoPreProposeApprover > depositInfo",
         "description": "retrieves deposit information for a given proposal ID",
+        "operationId": "daoPreProposeApprover_depositInfo_7d6986e",
         "parameters": [
           {
             "name": "chainId",
@@ -4952,6 +5068,7 @@
         ],
         "summary": "daoPreProposeApprover > preProposeApprovalContract",
         "description": "retrieves the pre-propose approval contract address",
+        "operationId": "daoPreProposeApprover_preProposeApprovalContract_b9c0067",
         "parameters": [
           {
             "name": "chainId",
@@ -4986,6 +5103,7 @@
         ],
         "summary": "daoPreProposeApprover > preProposeApprovalIdForApproverProposalId",
         "description": "retrieves the approval ID for a given approver proposal ID",
+        "operationId": "daoPreProposeApprover_preProposeApprovalIdForApp_46344d5",
         "parameters": [
           {
             "name": "chainId",
@@ -5032,6 +5150,7 @@
         ],
         "summary": "daoPreProposeApprover > proposalModule",
         "description": "retrieves the proposal module address",
+        "operationId": "daoPreProposeApprover_proposalModule_6677f85",
         "parameters": [
           {
             "name": "chainId",
@@ -5066,6 +5185,7 @@
         ],
         "summary": "daoPreProposeMultiple > config",
         "description": "retrieves the configuration for the pre-propose module",
+        "operationId": "daoPreProposeMultiple_config_19c7b8b",
         "parameters": [
           {
             "name": "chainId",
@@ -5100,6 +5220,7 @@
         ],
         "summary": "daoPreProposeMultiple > dao",
         "description": "retrieves the DAO address",
+        "operationId": "daoPreProposeMultiple_dao_940675d",
         "parameters": [
           {
             "name": "chainId",
@@ -5134,6 +5255,7 @@
         ],
         "summary": "daoPreProposeMultiple > depositInfo",
         "description": "retrieves deposit information for a given proposal ID",
+        "operationId": "daoPreProposeMultiple_depositInfo_9a8ebc8",
         "parameters": [
           {
             "name": "chainId",
@@ -5180,6 +5302,7 @@
         ],
         "summary": "daoPreProposeMultiple > proposalModule",
         "description": "retrieves the proposal module address",
+        "operationId": "daoPreProposeMultiple_proposalModule_a822fe6",
         "parameters": [
           {
             "name": "chainId",
@@ -5214,6 +5337,7 @@
         ],
         "summary": "daoPreProposeSingle > config",
         "description": "retrieves the configuration for the pre-propose module",
+        "operationId": "daoPreProposeSingle_config_f80ac00",
         "parameters": [
           {
             "name": "chainId",
@@ -5248,6 +5372,7 @@
         ],
         "summary": "daoPreProposeSingle > dao",
         "description": "retrieves the DAO address",
+        "operationId": "daoPreProposeSingle_dao_d05abe1",
         "parameters": [
           {
             "name": "chainId",
@@ -5282,6 +5407,7 @@
         ],
         "summary": "daoPreProposeSingle > depositInfo",
         "description": "retrieves deposit information for a given proposal ID",
+        "operationId": "daoPreProposeSingle_depositInfo_b9e2ef3",
         "parameters": [
           {
             "name": "chainId",
@@ -5328,6 +5454,7 @@
         ],
         "summary": "daoPreProposeSingle > proposalModule",
         "description": "retrieves the proposal module address",
+        "operationId": "daoPreProposeSingle_proposalModule_e99500f",
         "parameters": [
           {
             "name": "chainId",
@@ -5362,6 +5489,7 @@
         ],
         "summary": "daoProposalMultiple > config",
         "description": "retrieves the configuration of the proposal module",
+        "operationId": "daoProposalMultiple_config_f20c872",
         "parameters": [
           {
             "name": "chainId",
@@ -5396,6 +5524,7 @@
         ],
         "summary": "daoProposalMultiple > creationPolicy",
         "description": "retrieves the proposal creation policy",
+        "operationId": "daoProposalMultiple_creationPolicy_2cb6933",
         "parameters": [
           {
             "name": "chainId",
@@ -5430,6 +5559,7 @@
         ],
         "summary": "daoProposalMultiple > dao",
         "description": "retrieves the DAO address associated with the proposal module",
+        "operationId": "daoProposalMultiple_dao_0e57bad",
         "parameters": [
           {
             "name": "chainId",
@@ -5464,6 +5594,7 @@
         ],
         "summary": "daoProposalMultiple > listProposals",
         "description": "retrieves a list of proposals",
+        "operationId": "daoProposalMultiple_listProposals_afe7fc1",
         "parameters": [
           {
             "name": "chainId",
@@ -5528,6 +5659,7 @@
         ],
         "summary": "daoProposalMultiple > listVotes",
         "description": "retrieves a list of votes for a given proposal",
+        "operationId": "daoProposalMultiple_listVotes_7f2de5c",
         "parameters": [
           {
             "name": "chainId",
@@ -5592,6 +5724,7 @@
         ],
         "summary": "daoProposalMultiple > nextProposalId",
         "description": "retrieves the next proposal ID",
+        "operationId": "daoProposalMultiple_nextProposalId_3034590",
         "parameters": [
           {
             "name": "chainId",
@@ -5626,6 +5759,7 @@
         ],
         "summary": "daoProposalMultiple > openProposals",
         "description": "retrieves a list of open proposals",
+        "operationId": "daoProposalMultiple_openProposals_6f6bfda",
         "parameters": [
           {
             "name": "chainId",
@@ -5672,6 +5806,7 @@
         ],
         "summary": "daoProposalMultiple > proposal",
         "description": "retrieves a proposal",
+        "operationId": "daoProposalMultiple_proposal_a7d06f9",
         "parameters": [
           {
             "name": "chainId",
@@ -5718,6 +5853,7 @@
         ],
         "summary": "daoProposalMultiple > proposalCount",
         "description": "retrieves the number of proposals",
+        "operationId": "daoProposalMultiple_proposalCount_f1213cf",
         "parameters": [
           {
             "name": "chainId",
@@ -5752,6 +5888,7 @@
         ],
         "summary": "daoProposalMultiple > proposalCreatedAt",
         "description": "retrieves the creation date of a proposal",
+        "operationId": "daoProposalMultiple_proposalCreatedAt_189e7e4",
         "parameters": [
           {
             "name": "chainId",
@@ -5798,6 +5935,7 @@
         ],
         "summary": "daoProposalMultiple > reverseProposals",
         "description": "retrieves a list of proposals in reverse order",
+        "operationId": "daoProposalMultiple_reverseProposals_e9a9a14",
         "parameters": [
           {
             "name": "chainId",
@@ -5853,6 +5991,7 @@
         ],
         "summary": "daoProposalMultiple > vote",
         "description": "retrieves the vote for a given proposal and voter",
+        "operationId": "daoProposalMultiple_vote_faddf91",
         "parameters": [
           {
             "name": "chainId",
@@ -5908,6 +6047,7 @@
         ],
         "summary": "daoProposalSingle > config",
         "description": "retrieves the configuration of the proposal module",
+        "operationId": "daoProposalSingle_config_6b552dd",
         "parameters": [
           {
             "name": "chainId",
@@ -5942,6 +6082,7 @@
         ],
         "summary": "daoProposalSingle > creationPolicy",
         "description": "retrieves the proposal creation policy",
+        "operationId": "daoProposalSingle_creationPolicy_5e70dbb",
         "parameters": [
           {
             "name": "chainId",
@@ -5976,6 +6117,7 @@
         ],
         "summary": "daoProposalSingle > dao",
         "description": "retrieves the DAO address associated with the proposal module",
+        "operationId": "daoProposalSingle_dao_afabc3f",
         "parameters": [
           {
             "name": "chainId",
@@ -6010,6 +6152,7 @@
         ],
         "summary": "daoProposalSingle > listProposals",
         "description": "retrieves a list of proposals",
+        "operationId": "daoProposalSingle_listProposals_96d8f38",
         "parameters": [
           {
             "name": "chainId",
@@ -6074,6 +6217,7 @@
         ],
         "summary": "daoProposalSingle > listVotes",
         "description": "retrieves a list of votes for a given proposal",
+        "operationId": "daoProposalSingle_listVotes_5028e83",
         "parameters": [
           {
             "name": "chainId",
@@ -6138,6 +6282,7 @@
         ],
         "summary": "daoProposalSingle > nextProposalId",
         "description": "retrieves the next proposal ID",
+        "operationId": "daoProposalSingle_nextProposalId_5d105f8",
         "parameters": [
           {
             "name": "chainId",
@@ -6172,6 +6317,7 @@
         ],
         "summary": "daoProposalSingle > openProposals",
         "description": "retrieves a list of open proposals",
+        "operationId": "daoProposalSingle_openProposals_187222c",
         "parameters": [
           {
             "name": "chainId",
@@ -6218,6 +6364,7 @@
         ],
         "summary": "daoProposalSingle > proposal",
         "description": "retrieves a proposal",
+        "operationId": "daoProposalSingle_proposal_2d4e3e6",
         "parameters": [
           {
             "name": "chainId",
@@ -6264,6 +6411,7 @@
         ],
         "summary": "daoProposalSingle > proposalCount",
         "description": "retrieves the number of proposals",
+        "operationId": "daoProposalSingle_proposalCount_b1c3604",
         "parameters": [
           {
             "name": "chainId",
@@ -6298,6 +6446,7 @@
         ],
         "summary": "daoProposalSingle > proposalCreatedAt",
         "description": "retrieves the creation date of a proposal",
+        "operationId": "daoProposalSingle_proposalCreatedAt_eb09bc4",
         "parameters": [
           {
             "name": "chainId",
@@ -6344,6 +6493,7 @@
         ],
         "summary": "daoProposalSingle > reverseProposals",
         "description": "retrieves a list of proposals in reverse order",
+        "operationId": "daoProposalSingle_reverseProposals_08bb4cc",
         "parameters": [
           {
             "name": "chainId",
@@ -6399,6 +6549,7 @@
         ],
         "summary": "daoProposalSingle > vote",
         "description": "retrieves the vote for a given proposal and voter",
+        "operationId": "daoProposalSingle_vote_c488222",
         "parameters": [
           {
             "name": "chainId",
@@ -6454,6 +6605,7 @@
         ],
         "summary": "daoRewardsDistributor > distribution",
         "description": "retrieves a distribution",
+        "operationId": "daoRewardsDistributor_distribution_eb4baac",
         "parameters": [
           {
             "name": "chainId",
@@ -6500,6 +6652,7 @@
         ],
         "summary": "daoRewardsDistributor > distributions",
         "description": "retrieves a list of distributions",
+        "operationId": "daoRewardsDistributor_distributions_7616345",
         "parameters": [
           {
             "name": "chainId",
@@ -6555,6 +6708,7 @@
         ],
         "summary": "daoVoteDelegation > delegates",
         "description": "retrieves the list of active delegates",
+        "operationId": "daoVoteDelegation_delegates_1de6d05",
         "parameters": [
           {
             "name": "chainId",
@@ -6610,6 +6764,7 @@
         ],
         "summary": "daoVoteDelegation > delegations",
         "description": "retrieves a list of delegations by a delegator, optionally at a given block height",
+        "operationId": "daoVoteDelegation_delegations_24fbeff",
         "parameters": [
           {
             "name": "chainId",
@@ -6683,6 +6838,7 @@
         ],
         "summary": "daoVoteDelegation > info",
         "description": "retrieves the contract info (name and version)",
+        "operationId": "daoVoteDelegation_info_7dd1961",
         "parameters": [
           {
             "name": "chainId",
@@ -6717,6 +6873,7 @@
         ],
         "summary": "daoVoteDelegation > proposalModules",
         "description": "retrieves the list of proposal modules",
+        "operationId": "daoVoteDelegation_proposalModules_00b71c3",
         "parameters": [
           {
             "name": "chainId",
@@ -6772,6 +6929,7 @@
         ],
         "summary": "daoVoteDelegation > registration",
         "description": "retrieves whether or not a delegate is registered, optionally at a given block height",
+        "operationId": "daoVoteDelegation_registration_ce63894",
         "parameters": [
           {
             "name": "chainId",
@@ -6827,6 +6985,7 @@
         ],
         "summary": "daoVoteDelegation > unvotedDelegatedVotingPower",
         "description": "retrieves the voting power delegated to a delegate that has not yet been used in votes cast by delegators in a specific proposal",
+        "operationId": "daoVoteDelegation_unvotedDelegatedVotingPower_69745ae",
         "parameters": [
           {
             "name": "chainId",
@@ -6900,6 +7059,7 @@
         ],
         "summary": "daoVoteDelegation > votingPowerHookCallers",
         "description": "retrieves the list of voting power hook callers",
+        "operationId": "daoVoteDelegation_votingPowerHookCallers_aeb5eed",
         "parameters": [
           {
             "name": "chainId",
@@ -6955,6 +7115,7 @@
         ],
         "summary": "daoVoting > activeThreshold",
         "description": "retrieves the active threshold for the contract",
+        "operationId": "daoVoting_activeThreshold_9279ec4",
         "parameters": [
           {
             "name": "chainId",
@@ -6989,6 +7150,7 @@
         ],
         "summary": "daoVotingCw20Staked > activeThreshold",
         "description": "retrieves the active threshold for the contract",
+        "operationId": "daoVotingCw20Staked_activeThreshold_9392dc5",
         "parameters": [
           {
             "name": "chainId",
@@ -7023,6 +7185,7 @@
         ],
         "summary": "daoVotingCw20Staked > dao",
         "description": "retrieves the DAO address associated with the contract",
+        "operationId": "daoVotingCw20Staked_dao_2eff002",
         "parameters": [
           {
             "name": "chainId",
@@ -7057,6 +7220,7 @@
         ],
         "summary": "daoVotingCw20Staked > stakingContract",
         "description": "retrieves the staking contract address",
+        "operationId": "daoVotingCw20Staked_stakingContract_5ec4c51",
         "parameters": [
           {
             "name": "chainId",
@@ -7091,6 +7255,7 @@
         ],
         "summary": "daoVotingCw20Staked > tokenContract",
         "description": "retrieves the token contract address",
+        "operationId": "daoVotingCw20Staked_tokenContract_777b326",
         "parameters": [
           {
             "name": "chainId",
@@ -7125,6 +7290,7 @@
         ],
         "summary": "daoVotingCw20Staked > topStakers",
         "description": "retrieves the top stakers sorted by voting power",
+        "operationId": "daoVotingCw20Staked_topStakers_082709f",
         "parameters": [
           {
             "name": "chainId",
@@ -7171,6 +7337,7 @@
         ],
         "summary": "daoVotingCw20Staked > totalPower",
         "description": "retrieves the total voting power at the current block height",
+        "operationId": "daoVotingCw20Staked_totalPower_ff3087d",
         "parameters": [
           {
             "name": "chainId",
@@ -7205,6 +7372,7 @@
         ],
         "summary": "daoVotingCw20Staked > totalPowerAtHeight",
         "description": "retrieves the total voting power, optionally at a specific block height",
+        "operationId": "daoVotingCw20Staked_totalPowerAtHeight_d49fbbe",
         "parameters": [
           {
             "name": "chainId",
@@ -7251,6 +7419,7 @@
         ],
         "summary": "daoVotingCw20Staked > votingPower",
         "description": "retrieves the voting power for an address at the current block height",
+        "operationId": "daoVotingCw20Staked_votingPower_d36c092",
         "parameters": [
           {
             "name": "chainId",
@@ -7297,6 +7466,7 @@
         ],
         "summary": "daoVotingCw20Staked > votingPowerAtHeight",
         "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "operationId": "daoVotingCw20Staked_votingPowerAtHeight_420f3e4",
         "parameters": [
           {
             "name": "chainId",
@@ -7352,6 +7522,7 @@
         ],
         "summary": "daoVotingCw4 > dao",
         "description": "retrieves the DAO address associated with the contract",
+        "operationId": "daoVotingCw4_dao_e54529c",
         "parameters": [
           {
             "name": "chainId",
@@ -7386,6 +7557,7 @@
         ],
         "summary": "daoVotingCw4 > groupContract",
         "description": "retrieves the group contract address",
+        "operationId": "daoVotingCw4_groupContract_75a72a8",
         "parameters": [
           {
             "name": "chainId",
@@ -7420,6 +7592,7 @@
         ],
         "summary": "daoVotingCw4 > totalPower",
         "description": "retrieves the total voting power at the current block height",
+        "operationId": "daoVotingCw4_totalPower_7e803de",
         "parameters": [
           {
             "name": "chainId",
@@ -7454,6 +7627,7 @@
         ],
         "summary": "daoVotingCw4 > totalPowerAtHeight",
         "description": "retrieves the total voting power, optionally at a specific block height",
+        "operationId": "daoVotingCw4_totalPowerAtHeight_76cc5b6",
         "parameters": [
           {
             "name": "chainId",
@@ -7500,6 +7674,7 @@
         ],
         "summary": "daoVotingCw4 > votingPower",
         "description": "retrieves the voting power for an address at the current block height",
+        "operationId": "daoVotingCw4_votingPower_650a775",
         "parameters": [
           {
             "name": "chainId",
@@ -7546,6 +7721,7 @@
         ],
         "summary": "daoVotingCw4 > votingPowerAtHeight",
         "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "operationId": "daoVotingCw4_votingPowerAtHeight_cb6cf82",
         "parameters": [
           {
             "name": "chainId",
@@ -7601,6 +7777,7 @@
         ],
         "summary": "daoVotingCw721Staked > activeThreshold",
         "description": "retrieves the active threshold for the contract",
+        "operationId": "daoVotingCw721Staked_activeThreshold_4a88717",
         "parameters": [
           {
             "name": "chainId",
@@ -7635,6 +7812,7 @@
         ],
         "summary": "daoVotingCw721Staked > config",
         "description": "retrieves the configuration of the contract",
+        "operationId": "daoVotingCw721Staked_config_0b7fd64",
         "parameters": [
           {
             "name": "chainId",
@@ -7669,6 +7847,7 @@
         ],
         "summary": "daoVotingCw721Staked > dao",
         "description": "retrieves the DAO address associated with the contract",
+        "operationId": "daoVotingCw721Staked_dao_d16dab3",
         "parameters": [
           {
             "name": "chainId",
@@ -7703,6 +7882,7 @@
         ],
         "summary": "daoVotingCw721Staked > hooks",
         "description": "retrieves the hooks associated with the contract",
+        "operationId": "daoVotingCw721Staked_hooks_bcc2ff0",
         "parameters": [
           {
             "name": "chainId",
@@ -7737,6 +7917,7 @@
         ],
         "summary": "daoVotingCw721Staked > nftClaims",
         "description": "retrieves the NFT claims for a given address",
+        "operationId": "daoVotingCw721Staked_nftClaims_a44d1d9",
         "parameters": [
           {
             "name": "chainId",
@@ -7783,6 +7964,7 @@
         ],
         "summary": "daoVotingCw721Staked > ownersOfStakedNfts",
         "description": "retrieves a mapping of NFT token IDs to their stakers",
+        "operationId": "daoVotingCw721Staked_ownersOfStakedNfts_d283d7c",
         "parameters": [
           {
             "name": "chainId",
@@ -7817,6 +7999,7 @@
         ],
         "summary": "daoVotingCw721Staked > stakedNfts",
         "description": "retrieves the staked NFTs for a given address",
+        "operationId": "daoVotingCw721Staked_stakedNfts_669ef73",
         "parameters": [
           {
             "name": "chainId",
@@ -7881,6 +8064,7 @@
         ],
         "summary": "daoVotingCw721Staked > staker",
         "description": "retrieves the staker address for a given token ID",
+        "operationId": "daoVotingCw721Staked_staker_1d84edf",
         "parameters": [
           {
             "name": "chainId",
@@ -7927,6 +8111,7 @@
         ],
         "summary": "daoVotingCw721Staked > topStakers",
         "description": "retrieves the top stakers sorted by voting power",
+        "operationId": "daoVotingCw721Staked_topStakers_47a32b1",
         "parameters": [
           {
             "name": "chainId",
@@ -7973,6 +8158,7 @@
         ],
         "summary": "daoVotingCw721Staked > totalPower",
         "description": "retrieves the total voting power at the current block height",
+        "operationId": "daoVotingCw721Staked_totalPower_de10038",
         "parameters": [
           {
             "name": "chainId",
@@ -8007,6 +8193,7 @@
         ],
         "summary": "daoVotingCw721Staked > totalPowerAtHeight",
         "description": "retrieves the total voting power, optionally at a specific block height",
+        "operationId": "daoVotingCw721Staked_totalPowerAtHeight_b721e79",
         "parameters": [
           {
             "name": "chainId",
@@ -8053,6 +8240,7 @@
         ],
         "summary": "daoVotingCw721Staked > votingPower",
         "description": "retrieves the voting power for an address at the current block height",
+        "operationId": "daoVotingCw721Staked_votingPower_7326ef8",
         "parameters": [
           {
             "name": "chainId",
@@ -8099,6 +8287,7 @@
         ],
         "summary": "daoVotingCw721Staked > votingPowerAtHeight",
         "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "operationId": "daoVotingCw721Staked_votingPowerAtHeight_fa561f5",
         "parameters": [
           {
             "name": "chainId",
@@ -8154,6 +8343,7 @@
         ],
         "summary": "daoVotingNativeStaked > activeThreshold",
         "description": "retrieves the active threshold for the contract",
+        "operationId": "daoVotingNativeStaked_activeThreshold_9d97ec9",
         "parameters": [
           {
             "name": "chainId",
@@ -8188,6 +8378,7 @@
         ],
         "summary": "daoVotingNativeStaked > claims",
         "description": "retrieves the claims for a given address",
+        "operationId": "daoVotingNativeStaked_claims_00c18fe",
         "parameters": [
           {
             "name": "chainId",
@@ -8234,6 +8425,7 @@
         ],
         "summary": "daoVotingNativeStaked > config",
         "description": "retrieves the configuration for the contract",
+        "operationId": "daoVotingNativeStaked_config_7f06451",
         "parameters": [
           {
             "name": "chainId",
@@ -8268,6 +8460,7 @@
         ],
         "summary": "daoVotingNativeStaked > dao",
         "description": "retrieves the DAO address associated with the contract",
+        "operationId": "daoVotingNativeStaked_dao_c172130",
         "parameters": [
           {
             "name": "chainId",
@@ -8302,6 +8495,7 @@
         ],
         "summary": "daoVotingNativeStaked > getHooks",
         "description": "retrieves the hooks for the contract",
+        "operationId": "daoVotingNativeStaked_getHooks_7a12e0a",
         "parameters": [
           {
             "name": "chainId",
@@ -8336,6 +8530,7 @@
         ],
         "summary": "daoVotingNativeStaked > listStakers",
         "description": "retrieves a list of stakers with their balances",
+        "operationId": "daoVotingNativeStaked_listStakers_54c00b7",
         "parameters": [
           {
             "name": "chainId",
@@ -8391,6 +8586,7 @@
         ],
         "summary": "daoVotingNativeStaked > topStakers",
         "description": "retrieves the top stakers sorted by voting power",
+        "operationId": "daoVotingNativeStaked_topStakers_551517c",
         "parameters": [
           {
             "name": "chainId",
@@ -8425,6 +8621,7 @@
         ],
         "summary": "daoVotingNativeStaked > totalPower",
         "description": "retrieves the total voting power at the current block height",
+        "operationId": "daoVotingNativeStaked_totalPower_87bbb37",
         "parameters": [
           {
             "name": "chainId",
@@ -8459,6 +8656,7 @@
         ],
         "summary": "daoVotingNativeStaked > totalPowerAtHeight",
         "description": "retrieves the total voting power, optionally at a specific block height",
+        "operationId": "daoVotingNativeStaked_totalPowerAtHeight_84c2d5d",
         "parameters": [
           {
             "name": "chainId",
@@ -8505,6 +8703,7 @@
         ],
         "summary": "daoVotingNativeStaked > votingPower",
         "description": "retrieves the voting power for an address at the current block height",
+        "operationId": "daoVotingNativeStaked_votingPower_b8dc412",
         "parameters": [
           {
             "name": "chainId",
@@ -8551,6 +8750,7 @@
         ],
         "summary": "daoVotingNativeStaked > votingPowerAtHeight",
         "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "operationId": "daoVotingNativeStaked_votingPowerAtHeight_e5d4633",
         "parameters": [
           {
             "name": "chainId",
@@ -8606,6 +8806,7 @@
         ],
         "summary": "daoVotingOnftStaked > activeThreshold",
         "description": "retrieves the active threshold for the contract",
+        "operationId": "daoVotingOnftStaked_activeThreshold_68c3c0a",
         "parameters": [
           {
             "name": "chainId",
@@ -8640,6 +8841,7 @@
         ],
         "summary": "daoVotingOnftStaked > config",
         "description": "retrieves the configuration of the contract",
+        "operationId": "daoVotingOnftStaked_config_86f2e42",
         "parameters": [
           {
             "name": "chainId",
@@ -8674,6 +8876,7 @@
         ],
         "summary": "daoVotingOnftStaked > dao",
         "description": "retrieves the DAO address associated with the contract",
+        "operationId": "daoVotingOnftStaked_dao_5a15747",
         "parameters": [
           {
             "name": "chainId",
@@ -8708,6 +8911,7 @@
         ],
         "summary": "daoVotingOnftStaked > hooks",
         "description": "retrieves the hooks associated with the contract",
+        "operationId": "daoVotingOnftStaked_hooks_a4acc3b",
         "parameters": [
           {
             "name": "chainId",
@@ -8742,6 +8946,7 @@
         ],
         "summary": "daoVotingOnftStaked > nftClaims",
         "description": "retrieves the NFT claims for a given address",
+        "operationId": "daoVotingOnftStaked_nftClaims_adc8779",
         "parameters": [
           {
             "name": "chainId",
@@ -8788,6 +8993,7 @@
         ],
         "summary": "daoVotingOnftStaked > ownersOfStakedNfts",
         "description": "retrieves a mapping of NFT token IDs to their stakers",
+        "operationId": "daoVotingOnftStaked_ownersOfStakedNfts_f2fdf23",
         "parameters": [
           {
             "name": "chainId",
@@ -8822,6 +9028,7 @@
         ],
         "summary": "daoVotingOnftStaked > stakedNfts",
         "description": "retrieves the staked NFTs for a given address",
+        "operationId": "daoVotingOnftStaked_stakedNfts_a0a4be7",
         "parameters": [
           {
             "name": "chainId",
@@ -8886,6 +9093,7 @@
         ],
         "summary": "daoVotingOnftStaked > staker",
         "description": "retrieves the staker address for a given token ID",
+        "operationId": "daoVotingOnftStaked_staker_32ddf61",
         "parameters": [
           {
             "name": "chainId",
@@ -8932,6 +9140,7 @@
         ],
         "summary": "daoVotingOnftStaked > topStakers",
         "description": "retrieves the top stakers sorted by voting power",
+        "operationId": "daoVotingOnftStaked_topStakers_a3b2f8b",
         "parameters": [
           {
             "name": "chainId",
@@ -8978,6 +9187,7 @@
         ],
         "summary": "daoVotingOnftStaked > totalPower",
         "description": "retrieves the total voting power at the current block height",
+        "operationId": "daoVotingOnftStaked_totalPower_9224e51",
         "parameters": [
           {
             "name": "chainId",
@@ -9012,6 +9222,7 @@
         ],
         "summary": "daoVotingOnftStaked > totalPowerAtHeight",
         "description": "retrieves the total voting power, optionally at a specific block height",
+        "operationId": "daoVotingOnftStaked_totalPowerAtHeight_913d958",
         "parameters": [
           {
             "name": "chainId",
@@ -9058,6 +9269,7 @@
         ],
         "summary": "daoVotingOnftStaked > votingPower",
         "description": "retrieves the voting power for an address at the current block height",
+        "operationId": "daoVotingOnftStaked_votingPower_0b4fa87",
         "parameters": [
           {
             "name": "chainId",
@@ -9104,6 +9316,7 @@
         ],
         "summary": "daoVotingOnftStaked > votingPowerAtHeight",
         "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "operationId": "daoVotingOnftStaked_votingPowerAtHeight_4da3d88",
         "parameters": [
           {
             "name": "chainId",
@@ -9159,6 +9372,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > allVotersWithVotingPower",
         "description": "retrieves all voters with their voting power",
+        "operationId": "daoVotingSgCommunityNft_allVotersWithVotingPower_b961e12",
         "parameters": [
           {
             "name": "chainId",
@@ -9205,6 +9419,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > dao",
         "description": "retrieves the DAO address associated with the contract",
+        "operationId": "daoVotingSgCommunityNft_dao_62d18e7",
         "parameters": [
           {
             "name": "chainId",
@@ -9239,6 +9454,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > hooks",
         "description": "retrieves the hooks associated with the contract",
+        "operationId": "daoVotingSgCommunityNft_hooks_5a60ecf",
         "parameters": [
           {
             "name": "chainId",
@@ -9273,6 +9489,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > listVoters",
         "description": "retrieves a list of voters",
+        "operationId": "daoVotingSgCommunityNft_listVoters_a0e9eb3",
         "parameters": [
           {
             "name": "chainId",
@@ -9328,6 +9545,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > nftContract",
         "description": "retrieves the NFT contract address associated with the contract",
+        "operationId": "daoVotingSgCommunityNft_nftContract_93c4371",
         "parameters": [
           {
             "name": "chainId",
@@ -9362,6 +9580,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > registeredNft",
         "description": "retrieves the registered NFT token ID for an address",
+        "operationId": "daoVotingSgCommunityNft_registeredNft_64a240c",
         "parameters": [
           {
             "name": "chainId",
@@ -9408,6 +9627,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > totalPower",
         "description": "retrieves the total voting power at the current block height",
+        "operationId": "daoVotingSgCommunityNft_totalPower_5d42016",
         "parameters": [
           {
             "name": "chainId",
@@ -9442,6 +9662,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > totalPowerAtHeight",
         "description": "retrieves the total voting power, optionally at a specific block height",
+        "operationId": "daoVotingSgCommunityNft_totalPowerAtHeight_c7229d7",
         "parameters": [
           {
             "name": "chainId",
@@ -9488,6 +9709,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > votingPower",
         "description": "retrieves the voting power for an address at the current block height",
+        "operationId": "daoVotingSgCommunityNft_votingPower_7809485",
         "parameters": [
           {
             "name": "chainId",
@@ -9534,6 +9756,7 @@
         ],
         "summary": "daoVotingSgCommunityNft > votingPowerAtHeight",
         "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "operationId": "daoVotingSgCommunityNft_votingPowerAtHeight_6c6f478",
         "parameters": [
           {
             "name": "chainId",
@@ -9589,6 +9812,7 @@
         ],
         "summary": "daoVotingTokenStaked > activeThreshold",
         "description": "retrieves the active threshold for the contract",
+        "operationId": "daoVotingTokenStaked_activeThreshold_474408a",
         "parameters": [
           {
             "name": "chainId",
@@ -9623,6 +9847,7 @@
         ],
         "summary": "daoVotingTokenStaked > claims",
         "description": "retrieves the claims for a given address",
+        "operationId": "daoVotingTokenStaked_claims_4cac47b",
         "parameters": [
           {
             "name": "chainId",
@@ -9669,6 +9894,7 @@
         ],
         "summary": "daoVotingTokenStaked > config",
         "description": "retrieves the configuration of the contract",
+        "operationId": "daoVotingTokenStaked_config_c7fc40d",
         "parameters": [
           {
             "name": "chainId",
@@ -9703,6 +9929,7 @@
         ],
         "summary": "daoVotingTokenStaked > dao",
         "description": "retrieves the DAO address associated with the contract",
+        "operationId": "daoVotingTokenStaked_dao_6f78229",
         "parameters": [
           {
             "name": "chainId",
@@ -9737,6 +9964,7 @@
         ],
         "summary": "daoVotingTokenStaked > denom",
         "description": "retrieves the token denomination used by the contract",
+        "operationId": "daoVotingTokenStaked_denom_7a5229c",
         "parameters": [
           {
             "name": "chainId",
@@ -9771,6 +9999,7 @@
         ],
         "summary": "daoVotingTokenStaked > getHooks",
         "description": "retrieves the hooks associated with the contract",
+        "operationId": "daoVotingTokenStaked_getHooks_3aa3a96",
         "parameters": [
           {
             "name": "chainId",
@@ -9805,6 +10034,7 @@
         ],
         "summary": "daoVotingTokenStaked > listStakers",
         "description": "retrieves a list of stakers",
+        "operationId": "daoVotingTokenStaked_listStakers_0615201",
         "parameters": [
           {
             "name": "chainId",
@@ -9860,6 +10090,7 @@
         ],
         "summary": "daoVotingTokenStaked > tokenIssuerContract",
         "description": "retrieves the token issuer contract address",
+        "operationId": "daoVotingTokenStaked_tokenIssuerContract_61b2f05",
         "parameters": [
           {
             "name": "chainId",
@@ -9894,6 +10125,7 @@
         ],
         "summary": "daoVotingTokenStaked > topStakers",
         "description": "retrieves the top stakers sorted by voting power",
+        "operationId": "daoVotingTokenStaked_topStakers_15c4f3a",
         "parameters": [
           {
             "name": "chainId",
@@ -9928,6 +10160,7 @@
         ],
         "summary": "daoVotingTokenStaked > totalPower",
         "description": "retrieves the total voting power at the current block height",
+        "operationId": "daoVotingTokenStaked_totalPower_8e7918b",
         "parameters": [
           {
             "name": "chainId",
@@ -9962,6 +10195,7 @@
         ],
         "summary": "daoVotingTokenStaked > totalPowerAtHeight",
         "description": "retrieves the total voting power, optionally at a specific block height",
+        "operationId": "daoVotingTokenStaked_totalPowerAtHeight_40c9183",
         "parameters": [
           {
             "name": "chainId",
@@ -10008,6 +10242,7 @@
         ],
         "summary": "daoVotingTokenStaked > votingPower",
         "description": "retrieves the voting power for an address at the current block height",
+        "operationId": "daoVotingTokenStaked_votingPower_c9ba912",
         "parameters": [
           {
             "name": "chainId",
@@ -10054,6 +10289,7 @@
         ],
         "summary": "daoVotingTokenStaked > votingPowerAtHeight",
         "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "operationId": "daoVotingTokenStaked_votingPowerAtHeight_50d070c",
         "parameters": [
           {
             "name": "chainId",
@@ -10109,6 +10345,7 @@
         ],
         "summary": "info",
         "description": "retrieves the contract info (name and version)",
+        "operationId": "info_06271ba",
         "parameters": [
           {
             "name": "chainId",
@@ -10143,6 +10380,7 @@
         ],
         "summary": "instantiatedAt",
         "description": "retrieves the contract instantiation timestamp",
+        "operationId": "instantiatedAt_3a89a1b",
         "parameters": [
           {
             "name": "chainId",
@@ -10177,6 +10415,7 @@
         ],
         "summary": "item",
         "description": "retrieves a value stored in the contract state at the given key",
+        "operationId": "item_4a33eac",
         "parameters": [
           {
             "name": "chainId",
@@ -10246,6 +10485,7 @@
         ],
         "summary": "map",
         "description": "retrieves a map stored in the contract state at the given key. if the map has a tuple key, you can access the map at any degree by omitting a suffix of the tuple key",
+        "operationId": "map_60be986",
         "parameters": [
           {
             "name": "chainId",
@@ -10320,6 +10560,7 @@
         ],
         "summary": "neutron > cwdPreProposeSingleOverrule > config",
         "description": "retrieves the configuration for the pre-propose module",
+        "operationId": "neutron_cwdPreProposeSingleOverrule_config_90dc296",
         "parameters": [
           {
             "name": "chainId",
@@ -10354,6 +10595,7 @@
         ],
         "summary": "neutron > cwdPreProposeSingleOverrule > dao",
         "description": "retrieves the DAO address",
+        "operationId": "neutron_cwdPreProposeSingleOverrule_dao_57eedf4",
         "parameters": [
           {
             "name": "chainId",
@@ -10388,6 +10630,7 @@
         ],
         "summary": "neutron > cwdPreProposeSingleOverrule > depositInfo",
         "description": "retrieves deposit information for a given proposal ID",
+        "operationId": "neutron_cwdPreProposeSingleOverrule_depositInfo_42d3bb4",
         "parameters": [
           {
             "name": "chainId",
@@ -10434,6 +10677,7 @@
         ],
         "summary": "neutron > cwdPreProposeSingleOverrule > overruleProposalId",
         "description": "retrieves the overrule proposal ID for a given subDAO proposal ID and timelock address",
+        "operationId": "neutron_cwdPreProposeSingleOverrule_overruleProp_d357345",
         "parameters": [
           {
             "name": "chainId",
@@ -10489,6 +10733,7 @@
         ],
         "summary": "neutron > cwdPreProposeSingleOverrule > proposalModule",
         "description": "retrieves the proposal module address",
+        "operationId": "neutron_cwdPreProposeSingleOverrule_proposalModu_40a8862",
         "parameters": [
           {
             "name": "chainId",
@@ -10523,6 +10768,7 @@
         ],
         "summary": "neutron > cwdSubdaoPreProposeSingle > config",
         "description": "retrieves the configuration for the pre-propose module",
+        "operationId": "neutron_cwdSubdaoPreProposeSingle_config_3815b1f",
         "parameters": [
           {
             "name": "chainId",
@@ -10557,6 +10803,7 @@
         ],
         "summary": "neutron > cwdSubdaoPreProposeSingle > dao",
         "description": "retrieves the DAO address",
+        "operationId": "neutron_cwdSubdaoPreProposeSingle_dao_cfca162",
         "parameters": [
           {
             "name": "chainId",
@@ -10591,6 +10838,7 @@
         ],
         "summary": "neutron > cwdSubdaoPreProposeSingle > depositInfo",
         "description": "retrieves deposit information for a given proposal ID",
+        "operationId": "neutron_cwdSubdaoPreProposeSingle_depositInfo_874a884",
         "parameters": [
           {
             "name": "chainId",
@@ -10637,6 +10885,7 @@
         ],
         "summary": "neutron > cwdSubdaoPreProposeSingle > proposalModule",
         "description": "retrieves the proposal module address",
+        "operationId": "neutron_cwdSubdaoPreProposeSingle_proposalModule_d594f30",
         "parameters": [
           {
             "name": "chainId",
@@ -10671,6 +10920,7 @@
         ],
         "summary": "neutron > cwdSubdaoPreProposeSingle > timelockAddress",
         "description": "retrieves the timelock contract address",
+        "operationId": "neutron_cwdSubdaoPreProposeSingle_timelockAddres_1540deb",
         "parameters": [
           {
             "name": "chainId",
@@ -10705,6 +10955,7 @@
         ],
         "summary": "neutron > cwdSubdaoTimelockSingle > config",
         "description": "retrieves the configuration of the contract",
+        "operationId": "neutron_cwdSubdaoTimelockSingle_config_179f26a",
         "parameters": [
           {
             "name": "chainId",
@@ -10739,6 +10990,7 @@
         ],
         "summary": "neutron > cwdSubdaoTimelockSingle > listProposals",
         "description": "retrieves a list of proposals",
+        "operationId": "neutron_cwdSubdaoTimelockSingle_listProposals_509dbed",
         "parameters": [
           {
             "name": "chainId",
@@ -10794,6 +11046,7 @@
         ],
         "summary": "neutron > cwdSubdaoTimelockSingle > proposal",
         "description": "retrieves a proposal",
+        "operationId": "neutron_cwdSubdaoTimelockSingle_proposal_0157543",
         "parameters": [
           {
             "name": "chainId",
@@ -10840,6 +11093,7 @@
         ],
         "summary": "neutron > cwdSubdaoTimelockSingle > proposalExecutionError",
         "description": "retrieves the execution error for a specific proposal",
+        "operationId": "neutron_cwdSubdaoTimelockSingle_proposalExecutio_643a891",
         "parameters": [
           {
             "name": "chainId",
@@ -10886,6 +11140,7 @@
         ],
         "summary": "ownership",
         "description": "retrieves the contract ownership defined by the cw-ownable crate",
+        "operationId": "ownership_01b8016",
         "parameters": [
           {
             "name": "chainId",
@@ -10920,6 +11175,7 @@
         ],
         "summary": "polytone > note > remoteAddress",
         "description": "retrieves the remote address for a given address",
+        "operationId": "polytone_note_remoteAddress_5e35d08",
         "parameters": [
           {
             "name": "chainId",
@@ -10966,6 +11222,7 @@
         ],
         "summary": "polytone > listener > note",
         "description": "retrieves the note contract address this listener is listening to",
+        "operationId": "polytone_listener_note_45299d9",
         "parameters": [
           {
             "name": "chainId",
@@ -11000,6 +11257,7 @@
         ],
         "summary": "polytone > listener > result",
         "description": "retrieves the result for a given initiator and initiator message",
+        "operationId": "polytone_listener_result_7b4a2d4",
         "parameters": [
           {
             "name": "chainId",
@@ -11055,6 +11313,7 @@
         ],
         "summary": "polytone > proxy > instantiator",
         "description": "retrieves the instantiator/owner of the proxy contract",
+        "operationId": "polytone_proxy_instantiator_2d68d1a",
         "parameters": [
           {
             "name": "chainId",
@@ -11089,6 +11348,7 @@
         ],
         "summary": "polytone > voice > remoteController",
         "description": "retrieves the remote controller for a given address",
+        "operationId": "polytone_voice_remoteController_3159a64",
         "parameters": [
           {
             "name": "chainId",
@@ -11135,6 +11395,7 @@
         ],
         "summary": "polytone > voice > senderInfoForProxy",
         "description": "retrieves sender information for a proxy address",
+        "operationId": "polytone_voice_senderInfoForProxy_dcc7ac9",
         "parameters": [
           {
             "name": "chainId",
@@ -11181,6 +11442,7 @@
         ],
         "summary": "valence > account > admin",
         "description": "retrieves the admin address of the contract",
+        "operationId": "valence_account_admin_9b29390",
         "parameters": [
           {
             "name": "chainId",
@@ -11215,6 +11477,7 @@
         ],
         "summary": "valence > account > data",
         "description": "retrieves account data (admin and rebalancer config)",
+        "operationId": "valence_account_data_24d6c1c",
         "parameters": [
           {
             "name": "chainId",
@@ -11249,6 +11512,7 @@
         ],
         "summary": "valence > account > fundsInAuction",
         "description": "retrieves information about funds currently in auction for the account",
+        "operationId": "valence_account_fundsInAuction_4a8078e",
         "parameters": [
           {
             "name": "chainId",
@@ -11283,6 +11547,7 @@
         ],
         "summary": "valence > account > rebalancerConfig",
         "description": "retrieves the rebalancer configuration for the account",
+        "operationId": "valence_account_rebalancerConfig_556b7f2",
         "parameters": [
           {
             "name": "chainId",
@@ -11317,6 +11582,7 @@
         ],
         "summary": "valence > account > rebalancerTargets",
         "description": "retrieves the rebalancer targets",
+        "operationId": "valence_account_rebalancerTargets_fffdb90",
         "parameters": [
           {
             "name": "chainId",
@@ -11351,6 +11617,7 @@
         ],
         "summary": "valence > auction > config",
         "description": "retrieves the auction configuration and price strategy from the contract",
+        "operationId": "valence_auction_config_9edfde1",
         "parameters": [
           {
             "name": "chainId",
@@ -11385,6 +11652,7 @@
         ],
         "summary": "valence > oracle > allPrices",
         "description": "retrieves all price pairs from the oracle",
+        "operationId": "valence_oracle_allPrices_c394449",
         "parameters": [
           {
             "name": "chainId",
@@ -11419,6 +11687,7 @@
         ],
         "summary": "valence > oracle > price",
         "description": "retrieves the price for a specific pair from the oracle",
+        "operationId": "valence_oracle_price_8679915",
         "parameters": [
           {
             "name": "chainId",
@@ -11465,6 +11734,7 @@
         ],
         "summary": "valence > oracle > pricesOfDenom",
         "description": "retrieves all prices for a specific base token",
+        "operationId": "valence_oracle_pricesOfDenom_310b460",
         "parameters": [
           {
             "name": "chainId",
@@ -11511,6 +11781,7 @@
         ],
         "summary": "wasmswap > price",
         "description": "calculates the price ratio between the two tokens in the pool",
+        "operationId": "wasmswap_price_ceb9bc3",
         "parameters": [
           {
             "name": "chainId",
@@ -11545,6 +11816,7 @@
         ],
         "summary": "wasmswap > summary",
         "description": "retrieves summary information about the pool",
+        "operationId": "wasmswap_summary_0151574",
         "parameters": [
           {
             "name": "chainId",
@@ -11579,6 +11851,7 @@
         ],
         "summary": "abstract > accountsOwnedBy",
         "description": "retrieves account (that use abstract governance to manage ownership) where the account is the owner",
+        "operationId": "abstract_accountsOwnedBy_88d4682",
         "parameters": [
           {
             "name": "chainId",
@@ -11625,6 +11898,7 @@
         ],
         "summary": "bank > balance",
         "description": "retrieves the balance of a specific token for this account",
+        "operationId": "bank_balance_f698fed",
         "parameters": [
           {
             "name": "chainId",
@@ -11671,6 +11945,7 @@
         ],
         "summary": "bank > balances",
         "description": "retrieves all token balances for this account",
+        "operationId": "bank_balances_d3391b8",
         "parameters": [
           {
             "name": "chainId",
@@ -11705,6 +11980,7 @@
         ],
         "summary": "contract > ownedBy",
         "description": "retrieves contracts (that use cw-ownable to manage ownership) where the account is the owner",
+        "operationId": "contract_ownedBy_adee6bd",
         "parameters": [
           {
             "name": "chainId",
@@ -11751,6 +12027,7 @@
         ],
         "summary": "daos > adminOf",
         "description": "retrieves DAOs where the account is the admin",
+        "operationId": "daos_adminOf_ab037e6",
         "parameters": [
           {
             "name": "chainId",
@@ -11785,6 +12062,7 @@
         ],
         "summary": "daos > memberOf",
         "description": "retrieves DAOs where the account is a member",
+        "operationId": "daos_memberOf_32b1e82",
         "parameters": [
           {
             "name": "chainId",
@@ -11819,6 +12097,7 @@
         ],
         "summary": "nft > collections",
         "description": "retrieves NFT collections with their NFTs owned by the account",
+        "operationId": "nft_collections_cf99c0e",
         "parameters": [
           {
             "name": "chainId",
@@ -11853,6 +12132,7 @@
         ],
         "summary": "nft > stakedWithDaos",
         "description": "retrieves NFT collections with their NFTs staked by the account with DAOs",
+        "operationId": "nft_stakedWithDaos_5024b0c",
         "parameters": [
           {
             "name": "chainId",
@@ -11887,6 +12167,7 @@
         ],
         "summary": "polytone > proxies",
         "description": "retrieves mapping of polytone note contract to the remote address controlled by this account on the chain the note is connected to",
+        "operationId": "polytone_proxies_21cffb0",
         "parameters": [
           {
             "name": "chainId",
@@ -11921,6 +12202,7 @@
         ],
         "summary": "proposals > created",
         "description": "retrieves proposals created by the account",
+        "operationId": "proposals_created_713a069",
         "parameters": [
           {
             "name": "chainId",
@@ -11955,6 +12237,7 @@
         ],
         "summary": "proposals > stats",
         "description": "retrieves statistics about proposals created and votes cast by the account",
+        "operationId": "proposals_stats_1bd7d53",
         "parameters": [
           {
             "name": "chainId",
@@ -11989,6 +12272,7 @@
         ],
         "summary": "proposals > votesCast",
         "description": "retrieves votes cast by the account",
+        "operationId": "proposals_votesCast_39a222a",
         "parameters": [
           {
             "name": "chainId",
@@ -12023,6 +12307,7 @@
         ],
         "summary": "tokens > list",
         "description": "retrieves a list of CW20 token balances for the account",
+        "operationId": "tokens_list_138b5b1",
         "parameters": [
           {
             "name": "chainId",
@@ -12057,6 +12342,7 @@
         ],
         "summary": "valence > accounts",
         "description": "retrieves valence accounts owned by this account",
+        "operationId": "valence_accounts_3d7dcbd",
         "parameters": [
           {
             "name": "chainId",
@@ -12091,6 +12377,7 @@
         ],
         "summary": "vesting > ownerOf",
         "description": "retrieves the addresses of cw-vesting contracts owned by the account or by cw1-whitelist contracts where the account is an admin",
+        "operationId": "vesting_ownerOf_82be06d",
         "parameters": [
           {
             "name": "chainId",
@@ -12125,6 +12412,7 @@
         ],
         "summary": "veto > vetoableProposals",
         "description": "retrieves all proposals this account has the authority to veto",
+        "operationId": "veto_vetoableProposals_54c5a8e",
         "parameters": [
           {
             "name": "chainId",
@@ -12159,6 +12447,7 @@
         ],
         "summary": "communityPool > balances",
         "description": "retrieves the current balances of the community pool",
+        "operationId": "communityPool_balances_389d52b",
         "parameters": [
           {
             "name": "chainId",
@@ -12184,6 +12473,7 @@
         ],
         "summary": "featuredDaos",
         "description": "retrieves a list of featured DAOs for the current chain, with the order number from the entire featured list",
+        "operationId": "featuredDaos_2e024c5",
         "parameters": [
           {
             "name": "chainId",
@@ -12209,6 +12499,7 @@
         ],
         "summary": "gov > decodedProposal",
         "description": "retrieves and decodes a chain governance proposal",
+        "operationId": "gov_decodedProposal_b649571",
         "parameters": [
           {
             "name": "chainId",
@@ -12246,6 +12537,7 @@
         ],
         "summary": "gov > decodedVote",
         "description": "retrieves and decodes a vote for a specific chain governance proposal and voter",
+        "operationId": "gov_decodedVote_bcbeb14",
         "parameters": [
           {
             "name": "chainId",
@@ -12292,6 +12584,7 @@
         ],
         "summary": "gov > proposal",
         "description": "retrieves a chain governance proposal",
+        "operationId": "gov_proposal_fd2b26d",
         "parameters": [
           {
             "name": "chainId",
@@ -12329,6 +12622,7 @@
         ],
         "summary": "gov > proposals",
         "description": "retrieves a list of chain governance proposals in ascending order",
+        "operationId": "gov_proposals_1a7a4e5",
         "parameters": [
           {
             "name": "chainId",
@@ -12375,6 +12669,7 @@
         ],
         "summary": "gov > reverseProposals",
         "description": "retrieves a list of chain governance proposals in descending order",
+        "operationId": "gov_reverseProposals_8570f90",
         "parameters": [
           {
             "name": "chainId",
@@ -12421,6 +12716,7 @@
         ],
         "summary": "gov > reverseVotes",
         "description": "retrieves a list of votes for a specific chain governance proposal in descending order",
+        "operationId": "gov_reverseVotes_b22de24",
         "parameters": [
           {
             "name": "chainId",
@@ -12476,6 +12772,7 @@
         ],
         "summary": "gov > vote",
         "description": "retrieves a vote for a specific chain governance proposal and voter",
+        "operationId": "gov_vote_8328cd4",
         "parameters": [
           {
             "name": "chainId",
@@ -12522,6 +12819,7 @@
         ],
         "summary": "gov > votes",
         "description": "retrieves a list of votes for a specific chain governance proposal in ascending order",
+        "operationId": "gov_votes_c083074",
         "parameters": [
           {
             "name": "chainId",
@@ -12577,6 +12875,7 @@
         ],
         "summary": "stats > daos",
         "description": "counts the number of DAOs created",
+        "operationId": "stats_daos_6eb23c9",
         "parameters": [
           {
             "name": "chainId",
@@ -12614,6 +12913,7 @@
         ],
         "summary": "stats > proposals",
         "description": "counts the number of proposals created",
+        "operationId": "stats_proposals_908892d",
         "parameters": [
           {
             "name": "chainId",
@@ -12651,6 +12951,7 @@
         ],
         "summary": "stats > uniqueVoters",
         "description": "counts the number of unique voters",
+        "operationId": "stats_uniqueVoters_9379b11",
         "parameters": [
           {
             "name": "chainId",
@@ -12688,6 +12989,7 @@
         ],
         "summary": "stats > votes",
         "description": "counts the number of votes cast",
+        "operationId": "stats_votes_749565d",
         "parameters": [
           {
             "name": "chainId",
@@ -12725,6 +13027,7 @@
         ],
         "summary": "token > daos",
         "description": "retrieves DAOs that use a native token as their governance token",
+        "operationId": "token_daos_f048a4a",
         "parameters": [
           {
             "name": "chainId",
