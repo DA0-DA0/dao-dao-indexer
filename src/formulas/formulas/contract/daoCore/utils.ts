@@ -14,6 +14,10 @@ export const getUniqueSubDaosInTree = async (
 
   while (pendingDaos.size > 0) {
     const dao = pendingDaos.values().next().value
+    if (!dao) {
+      throw new Error('no DAO to process')
+    }
+
     pendingDaos.delete(dao)
 
     // Get SubDAOs.
