@@ -14,6 +14,17 @@ const CODE_IDS_KEYS: string[] = ['dao-vote-delegation']
 
 export { info } from '../common'
 
+export const config = makeSimpleContractFormula({
+  docs: {
+    description: 'retrieves the configuration of the delegation module',
+  },
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  transformation: 'config',
+  fallbackKeys: ['config'],
+})
+
 export const registration: ContractFormula<
   {
     registered: boolean
