@@ -67,6 +67,7 @@ const subDaos = makeTransformerForMap(CODE_IDS_KEYS, 'subDao', 'sub_daos')
 const items = makeTransformerForMap(CODE_IDS_KEYS, 'item', 'items')
 const cw20s = makeTransformerForMap(CODE_IDS_KEYS, 'cw20', 'cw20s')
 const cw721s = makeTransformerForMap(CODE_IDS_KEYS, 'cw721', 'cw721s')
+const initialActions = makeTransformer(CODE_IDS_KEYS, 'initialActions', 'initial_actions')
 
 export default [
   config,
@@ -81,4 +82,5 @@ export default [
   items,
   cw20s,
   cw721s,
+  initialActions,
 ]

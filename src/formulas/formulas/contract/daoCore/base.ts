@@ -529,6 +529,15 @@ export const totalPower: ContractFormula<string> = {
   compute: async (env) => (await totalPowerAtHeight.compute(env)).power,
 }
 
+export const initialActions: ContractFormula<any[]> = makeSimpleContractFormula({
+  docs: {
+    description: 'retrieves the initial actions for the DAO',
+  },
+  transformation: 'initialActions',
+  fallbackKeys: ['initial_actions'],
+  fallback: [],
+})
+
 // Returns DAO contracts with an admin state key set to this DAO.
 export const potentialSubDaos: ContractFormula<
   {
