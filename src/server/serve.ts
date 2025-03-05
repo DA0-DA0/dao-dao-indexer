@@ -38,7 +38,7 @@ if (config.sentryDsn) {
     dsn: config.sentryDsn,
     // Don't send these to Sentry as we don't need to be notified for them or
     // they are spam and waste our quota.
-    ignoreErrors: ['Malicious Path'],
+    ignoreErrors: ['BadRequestError'],
   })
 
   // Add Sentry error handler.
