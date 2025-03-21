@@ -47,6 +47,10 @@ export interface MultipleChoiceProposal {
   title: string
   total_power: string
   votes: MultipleChoiceVotes
+  /**
+   * Delegation v2.7.0+
+   */
+  individual_votes?: MultipleChoiceVotes
   voting_strategy: VotingStrategy
   veto?: VetoConfig | null
 }

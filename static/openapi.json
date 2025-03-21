@@ -5622,6 +5622,41 @@
         }
       }
     },
+    "/{chainId}/contract/{address}/daoProposalMultiple/delegationModule": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoProposalMultiple > delegationModule",
+        "description": "retrieves the address of the delegation module, if any",
+        "operationId": "daoProposalMultiple_delegationModule_a0f8c2c",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{address}/daoProposalMultiple/listProposals": {
       "get": {
         "tags": [
@@ -6153,6 +6188,41 @@
         "summary": "daoProposalSingle > dao",
         "description": "retrieves the DAO address associated with the proposal module",
         "operationId": "daoProposalSingle_dao_afabc3f",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoProposalSingle/delegationModule": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoProposalSingle > delegationModule",
+        "description": "retrieves the address of the delegation module, if any",
+        "operationId": "daoProposalSingle_delegationModule_b55852e",
         "parameters": [
           {
             "name": "chainId",

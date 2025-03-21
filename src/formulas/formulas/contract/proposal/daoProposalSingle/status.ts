@@ -7,6 +7,10 @@ import { SingleChoiceProposal, Votes } from './types'
 // https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/contracts/proposal/dao-proposal-single/src/proposal.rs#L81
 export const isPassed = (env: Env, proposal: SingleChoiceProposal): boolean => {
   const expired = isExpirationExpired(env, proposal.expiration)
+  // If not expired, use individual votes, unless they don't exist because this
+  // is an older version of the contract.
+  const votesToConsider =
+    (!expired && proposal.individual_votes) || proposal.votes
 
   if (proposal.allow_revoting && !expired) {
     return false
@@ -22,14 +26,14 @@ export const isPassed = (env: Env, proposal: SingleChoiceProposal): boolean => {
   if ('absolute_percentage' in proposal.threshold) {
     const { percentage } = proposal.threshold.absolute_percentage
     const options =
-      BigInt(proposal.total_power) - BigInt(proposal.votes.abstain)
-    return doesVoteCountPass(BigInt(proposal.votes.yes), options, percentage)
+      BigInt(proposal.total_power) - BigInt(votesToConsider.abstain)
+    return doesVoteCountPass(BigInt(votesToConsider.yes), options, percentage)
   } else if ('threshold_quorum' in proposal.threshold) {
     const { threshold, quorum } = proposal.threshold.threshold_quorum
 
     if (
       !doesVoteCountPass(
-        totalVotes(proposal.votes),
+        totalVotes(votesToConsider),
         BigInt(proposal.total_power),
         quorum
       )
@@ -39,18 +43,18 @@ export const isPassed = (env: Env, proposal: SingleChoiceProposal): boolean => {
 
     if (expired) {
       const options =
-        totalVotes(proposal.votes) - BigInt(proposal.votes.abstain)
-      return doesVoteCountPass(BigInt(proposal.votes.yes), options, threshold)
+        totalVotes(votesToConsider) - BigInt(votesToConsider.abstain)
+      return doesVoteCountPass(BigInt(votesToConsider.yes), options, threshold)
     } else {
       const options =
-        BigInt(proposal.total_power) - BigInt(proposal.votes.abstain)
-      return doesVoteCountPass(BigInt(proposal.votes.yes), options, threshold)
+        BigInt(proposal.total_power) - BigInt(votesToConsider.abstain)
+      return doesVoteCountPass(BigInt(votesToConsider.yes), options, threshold)
     }
   }
 
   // 'absolute_count' in proposal.threshold
   const { threshold } = proposal.threshold.absolute_count
-  return BigInt(proposal.votes.yes) >= BigInt(threshold)
+  return BigInt(votesToConsider.yes) >= BigInt(threshold)
 }
 
 // https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/contracts/proposal/dao-proposal-single/src/proposal.rs#L127
@@ -59,6 +63,10 @@ export const isRejected = (
   proposal: SingleChoiceProposal
 ): boolean => {
   const expired = isExpirationExpired(env, proposal.expiration)
+  // If not expired, use individual votes, unless they don't exist because this
+  // is an older version of the contract.
+  const votesToConsider =
+    (!expired && proposal.individual_votes) || proposal.votes
 
   if (proposal.allow_revoting && !expired) {
     return false
@@ -68,7 +76,7 @@ export const isRejected = (
     const { percentage: percentageNeeded } =
       proposal.threshold.absolute_percentage
     const options =
-      BigInt(proposal.total_power) - BigInt(proposal.votes.abstain)
+      BigInt(proposal.total_power) - BigInt(votesToConsider.abstain)
 
     if (
       'percent' in percentageNeeded &&
@@ -77,12 +85,12 @@ export const isRejected = (
       if (options === 0n) {
         return true
       } else {
-        return BigInt(proposal.votes.no) >= 1n
+        return BigInt(votesToConsider.no) >= 1n
       }
     }
 
     return doesVoteCountFail(
-      BigInt(proposal.votes.no),
+      BigInt(votesToConsider.no),
       options,
       percentageNeeded
     )
@@ -90,39 +98,39 @@ export const isRejected = (
     const { threshold, quorum } = proposal.threshold.threshold_quorum
 
     const quorumMet = doesVoteCountPass(
-      totalVotes(proposal.votes),
+      totalVotes(votesToConsider),
       BigInt(proposal.total_power),
       quorum
     )
 
     if (quorumMet && expired) {
       const options =
-        totalVotes(proposal.votes) - BigInt(proposal.votes.abstain)
+        totalVotes(votesToConsider) - BigInt(votesToConsider.abstain)
 
       if ('percent' in threshold && Number(threshold.percent) === 1) {
         if (options === 0n) {
           return true
         } else {
-          return BigInt(proposal.votes.no) >= 1n
+          return BigInt(votesToConsider.no) >= 1n
         }
       }
 
-      return doesVoteCountFail(BigInt(proposal.votes.no), options, threshold)
+      return doesVoteCountFail(BigInt(votesToConsider.no), options, threshold)
     } else if (!expired) {
       // (quorumMet && !expired) || (!quorumMet && !expired)
 
       const options =
-        BigInt(proposal.total_power) - BigInt(proposal.votes.abstain)
+        BigInt(proposal.total_power) - BigInt(votesToConsider.abstain)
 
       if ('percent' in threshold && Number(threshold.percent) === 1) {
         if (options === 0n) {
           return true
         } else {
-          return BigInt(proposal.votes.no) >= 1n
+          return BigInt(votesToConsider.no) >= 1n
         }
       }
 
-      return doesVoteCountFail(BigInt(proposal.votes.no), options, threshold)
+      return doesVoteCountFail(BigInt(votesToConsider.no), options, threshold)
     }
 
     // !quorumMet && expired
@@ -132,8 +140,8 @@ export const isRejected = (
   // 'absolute_count' in proposal.threshold
   const { threshold } = proposal.threshold.absolute_count
   const outstandingVotes =
-    BigInt(proposal.total_power) - totalVotes(proposal.votes)
-  return BigInt(proposal.votes.yes) + outstandingVotes < BigInt(threshold)
+    BigInt(proposal.total_power) - totalVotes(votesToConsider)
+  return BigInt(votesToConsider.yes) + outstandingVotes < BigInt(threshold)
 }
 
 // https://github.com/DA0-DA0/dao-contracts/blob/e1f46b48cc72d4e48bf6afcb44432979347e594c/packages/dao-voting/src/voting.rs#L216

@@ -40,6 +40,10 @@ export interface SingleChoiceProposal {
   title: string
   total_power: string
   votes: Votes
+  /**
+   * Delegation v2.7.0+
+   */
+  individual_votes?: Votes
   veto?: VetoConfig | null
 }
 

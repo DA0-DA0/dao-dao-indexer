@@ -13,6 +13,11 @@ const KEY_PREFIX_BALLOTS = dbKeyForKeys('ballots', '')
 const KEY_CONFIG_V2 = dbKeyForKeys('config_v2')
 
 const config = makeTransformer(CODE_IDS_KEYS, 'config', ['config_v2', 'config'])
+const delegationModule = makeTransformer(
+  CODE_IDS_KEYS,
+  'delegationModule',
+  'delegation_module'
+)
 
 const proposal: Transformer = {
   filter: {
@@ -111,4 +116,12 @@ const proposalVetoer: Transformer = {
   },
 }
 
-export default [config, proposal, proposed, voteCast, vetoer, proposalVetoer]
+export default [
+  config,
+  proposal,
+  proposed,
+  voteCast,
+  vetoer,
+  proposalVetoer,
+  delegationModule,
+]

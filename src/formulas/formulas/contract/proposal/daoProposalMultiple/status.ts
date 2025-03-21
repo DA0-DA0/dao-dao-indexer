@@ -16,6 +16,10 @@ export const isPassed = (
   proposal: MultipleChoiceProposal
 ): boolean => {
   const expired = isExpirationExpired(env, proposal.expiration)
+  // If not expired, use individual votes, unless they don't exist because this
+  // is an older version of the contract.
+  const votesToConsider =
+    (!expired && proposal.individual_votes) || proposal.votes
 
   if (proposal.allow_revoting && !expired) {
     return false
@@ -30,12 +34,12 @@ export const isPassed = (
 
   if (
     doesVoteCountPass(
-      totalVotes(proposal.votes),
+      totalVotes(votesToConsider),
       BigInt(proposal.total_power),
       proposal.voting_strategy.single_choice.quorum
     )
   ) {
-    const voteResult = calculateVoteResult(proposal)
+    const voteResult = calculateVoteResult(env, proposal)
 
     if ('tie' in voteResult) {
       return false
@@ -48,7 +52,11 @@ export const isPassed = (
       if (expired) {
         return true
       } else {
-        return isChoiceUnbeatable(proposal, voteResult.single_winner)
+        return isChoiceUnbeatable(
+          proposal,
+          votesToConsider,
+          voteResult.single_winner
+        )
       }
     }
   }
@@ -62,22 +70,26 @@ export const isRejected = (
   proposal: MultipleChoiceProposal
 ): boolean => {
   const expired = isExpirationExpired(env, proposal.expiration)
+  // If not expired, use individual votes, unless they don't exist because this
+  // is an older version of the contract.
+  const votesToConsider =
+    (!expired && proposal.individual_votes) || proposal.votes
 
   if (proposal.allow_revoting && !expired) {
     return false
   }
 
-  const voteResult = calculateVoteResult(proposal)
+  const voteResult = calculateVoteResult(env, proposal)
 
   if ('tie' in voteResult) {
     return (
-      expired || BigInt(proposal.total_power) === totalVotes(proposal.votes)
+      expired || BigInt(proposal.total_power) === totalVotes(votesToConsider)
     )
   }
 
   // 'single_winner' in result
   const quorumMet = doesVoteCountPass(
-    totalVotes(proposal.votes),
+    totalVotes(votesToConsider),
     BigInt(proposal.total_power),
     proposal.voting_strategy.single_choice.quorum
   )
@@ -90,7 +102,7 @@ export const isRejected = (
     // (quorumMet && !expired) || (!quorumMet && !expired)
     return (
       voteResult.single_winner.option_type === MultipleChoiceOptionType.None &&
-      isChoiceUnbeatable(proposal, voteResult.single_winner)
+      isChoiceUnbeatable(proposal, votesToConsider, voteResult.single_winner)
     )
   }
 
@@ -103,17 +115,26 @@ const totalVotes = ({ vote_weights }: MultipleChoiceVotes): bigint =>
   vote_weights.reduce((acc, weight) => acc + BigInt(weight), 0n)
 
 // https://github.com/DA0-DA0/dao-contracts/blob/fa567797e2f42e70296a2d6f889f341ff80f0695/contracts/proposal/dao-proposal-multiple/src/proposal.rs#L186
-const calculateVoteResult = (proposal: MultipleChoiceProposal): VoteResult => {
-  if (proposal.votes.vote_weights.length === 0) {
+const calculateVoteResult = (
+  env: Env,
+  proposal: MultipleChoiceProposal
+): VoteResult => {
+  const expired = isExpirationExpired(env, proposal.expiration)
+  // If not expired, use individual votes, unless they don't exist because this
+  // is an older version of the contract.
+  const votesToConsider =
+    (!expired && proposal.individual_votes) || proposal.votes
+
+  if (votesToConsider.vote_weights.length === 0) {
     throw new Error('No vote weights')
   }
 
-  const maxWeight = proposal.votes.vote_weights.reduce(
+  const maxWeight = votesToConsider.vote_weights.reduce(
     (acc, weight) => (BigInt(weight) > acc ? BigInt(weight) : acc),
     0n
   )
 
-  const topChoices = Array.from(proposal.votes.vote_weights.entries()).filter(
+  const topChoices = Array.from(votesToConsider.vote_weights.entries()).filter(
     ([, weight]) => BigInt(weight) === maxWeight
   )
   if (topChoices.length > 1) {
@@ -128,13 +149,14 @@ const calculateVoteResult = (proposal: MultipleChoiceProposal): VoteResult => {
 // https://github.com/DA0-DA0/dao-contracts/blob/fa567797e2f42e70296a2d6f889f341ff80f0695/contracts/proposal/dao-proposal-multiple/src/proposal.rs#L221
 const isChoiceUnbeatable = (
   proposal: MultipleChoiceProposal,
+  votesToConsider: MultipleChoiceVotes,
   winningChoice: CheckedMultipleChoiceOption
 ): boolean => {
   const winningChoicePower = BigInt(
-    proposal.votes.vote_weights[winningChoice.index]
+    votesToConsider.vote_weights[winningChoice.index]
   )
 
-  const otherChoicePowers = proposal.votes.vote_weights.filter(
+  const otherChoicePowers = votesToConsider.vote_weights.filter(
     (weight) => BigInt(weight) < winningChoicePower
   )
   if (otherChoicePowers.length === 0) {
@@ -146,7 +168,7 @@ const isChoiceUnbeatable = (
     0n
   )
   const remainingVotePower =
-    BigInt(proposal.total_power) - totalVotes(proposal.votes)
+    BigInt(proposal.total_power) - totalVotes(votesToConsider)
 
   if (winningChoice.option_type === MultipleChoiceOptionType.Standard) {
     return winningChoicePower > secondChoicePower + remainingVotePower
