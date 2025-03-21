@@ -510,3 +510,46 @@ export const votingPowerHookCallers = makeSimpleContractFormula<
       .filter((item) => !startAfter || item.localeCompare(startAfter) > 0)
       .slice(0, limit ? Math.max(0, Number(limit)) : Infinity),
 })
+
+export const votingPowerCap: ContractFormula<
+  {
+    vp_cap_percent?: string | null
+    height: number
+  },
+  {
+    height?: string
+  }
+> = {
+  docs: {
+    description: 'retrieves the voting power cap, optionally at a given height',
+    args: [
+      {
+        name: 'height',
+        description: 'block height to retrieve voting power cap at',
+        required: false,
+        schema: {
+          type: 'integer',
+        },
+      },
+    ],
+  },
+  filter: {
+    codeIdsKeys: CODE_IDS_KEYS,
+  },
+  compute: async (env) => {
+    const height = env.args.height
+      ? Number(env.args.height)
+      : Number(env.block.height)
+    const vpCapPercent =
+      (await snapshotItemMayLoadAtHeight<string | null>({
+        env,
+        name: 'vpCapPercent',
+        height,
+      })) ?? null
+
+    return {
+      vp_cap_percent: vpCapPercent,
+      height,
+    }
+  },
+}

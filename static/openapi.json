@@ -3379,6 +3379,41 @@
         }
       }
     },
+    "/{chainId}/contract/{address}/daoCore/initialActions": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoCore > initialActions",
+        "description": "retrieves the initial actions for the DAO",
+        "operationId": "daoCore_initialActions_51ec55c",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{address}/daoCore/item": {
       "get": {
         "tags": [
@@ -3990,7 +4025,7 @@
           },
           {
             "name": "recursive",
-            "description": "whether or not to recurse into SubDAOs. defaults to true",
+            "description": "whether or not to recurse into SubDAOs. defaults to false",
             "required": false,
             "schema": {
               "type": "boolean"
@@ -4163,7 +4198,7 @@
           },
           {
             "name": "recursive",
-            "description": "whether to recurse into SubDAOs (defaults to true)",
+            "description": "whether to recurse into SubDAOs (defaults to false)",
             "required": false,
             "schema": {
               "type": "string"
@@ -6701,6 +6736,41 @@
         }
       }
     },
+    "/{chainId}/contract/{address}/daoVoteDelegation/config": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoVoteDelegation > config",
+        "description": "retrieves the configuration of the delegation module",
+        "operationId": "daoVoteDelegation_config_93b51af",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{address}/daoVoteDelegation/delegates": {
       "get": {
         "tags": [
@@ -7036,6 +7106,53 @@
             "name": "height",
             "description": "block height the proposal was created at",
             "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoVoteDelegation/votingPowerCap": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "daoVoteDelegation > votingPowerCap",
+        "description": "retrieves the voting power cap, optionally at a given height",
+        "operationId": "daoVoteDelegation_votingPowerCap_c165a9b",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "height",
+            "description": "block height to retrieve voting power cap at",
+            "required": false,
             "schema": {
               "type": "integer"
             },
