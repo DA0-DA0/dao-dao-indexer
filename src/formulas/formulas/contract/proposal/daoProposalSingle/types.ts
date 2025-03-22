@@ -49,6 +49,10 @@ export interface SingleChoiceProposal {
 
 export interface Ballot {
   power: string
+  /**
+   * Delegation v2.7.0+
+   */
+  individual_power?: string
   vote: string
   rationale?: string | null
 }
