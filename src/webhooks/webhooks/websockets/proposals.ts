@@ -5,7 +5,7 @@ import { activeProposalModules } from '@/formulas/formulas/contract/daoCore/base
 import { Webhook, WebhookMaker, WebhookType } from '@/types'
 import { dbKeyForKeys, dbKeyToKeys, decodeGovProposal } from '@/utils'
 
-import { getDaoAddressForProposalModule } from '../utils'
+import { getDaoAddressForProposalModule } from '../../utils'
 
 const CODE_IDS_KEY_SINGLE = 'dao-proposal-single'
 const CODE_IDS_KEY_MULTIPLE = 'dao-proposal-multiple'
@@ -14,7 +14,7 @@ const KEY_PREFIX_BALLOTS = dbKeyForKeys('ballots', '')
 const KEY_PREFIX_PROPOSALS = dbKeyForKeys('proposals', '')
 const KEY_PREFIX_PROPOSALS_V2 = dbKeyForKeys('proposals_v2', '')
 
-const makeWebSocketEndpoint =
+const makeDaoWebSocketEndpoint =
   ({ chainId }: State): Webhook<WasmStateEvent>['endpoint'] =>
   async (event, env) => {
     // Get DAO address.
@@ -44,7 +44,7 @@ export const makeBroadcastVoteCast: WebhookMaker<WasmStateEvent> = (
       codeIdsKeys: [CODE_IDS_KEY_SINGLE, CODE_IDS_KEY_MULTIPLE],
       matches: (event) => event.key.startsWith(KEY_PREFIX_BALLOTS),
     },
-    endpoint: makeWebSocketEndpoint(state),
+    endpoint: makeDaoWebSocketEndpoint(state),
     getValue: async (event, _, env) => {
       // "ballots", proposalNum, voter
       const [, proposalNum, voter] = dbKeyToKeys(event.key, [
@@ -99,7 +99,7 @@ export const makeDaoProposalStatusChanged: WebhookMaker<WasmStateEvent> = (
         event.key.startsWith(KEY_PREFIX_PROPOSALS) ||
         event.key.startsWith(KEY_PREFIX_PROPOSALS_V2),
     },
-    endpoint: makeWebSocketEndpoint(state),
+    endpoint: makeDaoWebSocketEndpoint(state),
     getValue: async (event, getLastEvent, env) => {
       // Only fire the webhook when the status changes.
       const lastEvent = await getLastEvent()

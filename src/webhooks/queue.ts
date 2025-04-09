@@ -27,25 +27,25 @@ export const queueWebhooks = async (
   const pendingWebhooks = (
     await Promise.all(
       events.flatMap((event) => {
+        const env = getEnv({
+          chainId: state.chainId,
+          block: event.block,
+          cache:
+            event instanceof WasmStateEvent
+              ? {
+                  contracts: {
+                    [event.contract.address]: event.contract,
+                  },
+                }
+              : undefined,
+        })
+
         const webhooksForEvent = webhooks.filter((webhook) =>
-          webhook.filter(event)
+          webhook.filter(event, env)
         )
 
         return webhooksForEvent.map(
           async (webhook): Promise<PendingWebhook | undefined> => {
-            const env = getEnv({
-              chainId: state.chainId,
-              block: event.block,
-              cache:
-                event instanceof WasmStateEvent
-                  ? {
-                      contracts: {
-                        [event.contract.address]: event.contract,
-                      },
-                    }
-                  : undefined,
-            })
-
             // Wrap in try/catch in case a webhook errors. Don't want to prevent
             // other webhooks from sending.
             let value

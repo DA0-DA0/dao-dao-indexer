@@ -11,6 +11,7 @@ import * as telegram from './telegram'
 import * as websockets from './websockets'
 
 let processedWebhooks: ProcessedWebhook<any, any>[] | undefined
+
 export const getProcessedWebhooks = (
   config: Config,
   state: State
@@ -42,7 +43,7 @@ export const getProcessedWebhooks = (
 
       return {
         ...webhook,
-        filter: (event) => {
+        filter: (event, env) => {
           // Filter for event type. This is necessary since the rest of the
           // webhook's functions expect to receive the correct type.
           if (!(event instanceof filter.EventType)) {
@@ -70,7 +71,7 @@ export const getProcessedWebhooks = (
             // Wrap in try/catch in case a webhook errors. Don't want to prevent
             // other webhooks from sending.
             try {
-              return filter.matches(event)
+              return filter.matches(event, env)
             } catch (error) {
               console.error(
                 `Error matching webhook for ${event.constructor.name} ID ${event.id} at height ${event.block.height}: ${error}`

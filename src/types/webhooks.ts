@@ -49,7 +49,7 @@ export type Webhook<
     /**
      * A function to support any custom matching logic.
      */
-    matches: (event: Event) => boolean
+    matches: (event: Event, env: Env) => boolean
   }>
   // If returns undefined, the webhook will not be called.
   endpoint:
@@ -74,7 +74,7 @@ export type ProcessedWebhook<
   Event extends DependableEventModel = DependableEventModel,
   Value = any
 > = Omit<Webhook<Event, Value>, 'filter'> & {
-  filter: (event: Event) => boolean
+  filter: (event: Event, env: Env) => boolean
 }
 
 export type PendingWebhook = {
