@@ -7,6 +7,7 @@ import {
   ProposalModuleWithInfo,
   admin,
   config,
+  initialActions,
   listSubDaos,
   polytoneProxies,
   proposalModules,
@@ -27,6 +28,7 @@ export type DumpState = {
   voting_module?: string
   active_proposal_module_count: number
   total_proposal_module_count: number
+  initial_actions?: any[]
   // Extra.
   votingModuleInfo?: ContractInfo
   createdAt?: string
@@ -56,6 +58,8 @@ export const dumpState: ContractFormula<DumpState> = {
       configResponse,
       version,
       proposal_modules,
+      // V2.7.0+
+      initial_actions,
       { address: voting_module, info: votingModuleInfo },
       activeProposalModuleCount,
       totalProposalModuleCount,
@@ -68,6 +72,8 @@ export const dumpState: ContractFormula<DumpState> = {
       config.compute(env),
       info.compute(env),
       proposalModules.compute(env),
+      // V2.7.0+
+      initialActions.compute(env),
       votingModule.compute(env).then(async (contractAddress) => ({
         address: contractAddress,
         info: contractAddress
@@ -164,6 +170,7 @@ export const dumpState: ContractFormula<DumpState> = {
       version,
       proposal_modules,
       voting_module,
+      initial_actions,
       // V1 doesn't have these counts; all proposal modules are active.
       active_proposal_module_count:
         activeProposalModuleCount ?? proposal_modules?.length ?? 0,
