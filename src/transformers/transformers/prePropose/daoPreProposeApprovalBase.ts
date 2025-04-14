@@ -3,7 +3,10 @@ import { dbKeyForKeys, dbKeyToKeys } from '@/utils'
 
 import { makeTransformerForMap } from '../../utils'
 
-const CODE_IDS_KEYS: string[] = ['dao-pre-propose-approval-single']
+const CODE_IDS_KEYS: string[] = [
+  'dao-pre-propose-approval-single',
+  'dao-pre-propose-approval-multiple',
+]
 
 const KEY_APPROVER = dbKeyForKeys('approver')
 const KEY_PREFIX_PENDING_PROPOSALS = dbKeyForKeys('pending_proposals', '')

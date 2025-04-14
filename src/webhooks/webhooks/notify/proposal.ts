@@ -18,6 +18,7 @@ import { getDaoAddressForProposalModule } from '../../utils'
 const PROPOSAL_CODE_IDS_KEYS = ['dao-proposal-single', 'dao-proposal-multiple']
 const PRE_PROPOSE_APPROVAL_PROPOSAL_CODE_IDS_KEYS = [
   'dao-pre-propose-approval-single',
+  'dao-pre-propose-approval-multiple',
 ]
 
 const APPROVER_CONTRACT_NAME = 'crates.io:dao-pre-propose-approver'

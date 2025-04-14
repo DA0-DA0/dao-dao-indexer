@@ -1,3 +1,3 @@
-import daoPreProposeApprovalSingle from './daoPreProposeApprovalSingle'
+import daoPreProposeApprovalBase from './daoPreProposeApprovalBase'
 
-export default [...daoPreProposeApprovalSingle]
+export default [...daoPreProposeApprovalBase]

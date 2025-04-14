@@ -610,8 +610,8 @@ type ApprovalDao = {
   preProposeAddress: string
 }
 
-// Get all DAOs with dao-pre-propose-approval-single contracts that have this
-// DAO set as the approver.
+// Get all DAOs with dao-pre-propose-approval-* contracts that have this DAO set
+// as the approver.
 export const approvalDaos: ContractFormula<ApprovalDao[]> = {
   docs: {
     description:
@@ -620,12 +620,15 @@ export const approvalDaos: ContractFormula<ApprovalDao[]> = {
   compute: async (env) => {
     const { contractAddress, getTransformationMatches, getCodeIdsForKeys } = env
 
-    const codeIds = getCodeIdsForKeys('dao-pre-propose-approval-single')
+    const codeIds = getCodeIdsForKeys(
+      'dao-pre-propose-approval-single',
+      'dao-pre-propose-approval-multiple'
+    )
     if (!codeIds.length) {
-      throw new Error('missing dao-pre-propose-approval-single code IDs')
+      throw new Error('missing dao-pre-propose-approval-* code IDs')
     }
 
-    const daoPreProposeApprovalSingleContracts =
+    const daoPreProposeApprovalContracts =
       (await getTransformationMatches(
         undefined,
         `approver:${contractAddress}`,
@@ -634,7 +637,7 @@ export const approvalDaos: ContractFormula<ApprovalDao[]> = {
       )) ?? []
 
     const daos = await Promise.all(
-      daoPreProposeApprovalSingleContracts.map(({ contractAddress }) =>
+      daoPreProposeApprovalContracts.map(({ contractAddress }) =>
         daoPreProposeBaseDao.compute({
           ...env,
           contractAddress,
@@ -647,7 +650,7 @@ export const approvalDaos: ContractFormula<ApprovalDao[]> = {
         ? {
             dao,
             preProposeAddress:
-              daoPreProposeApprovalSingleContracts[index].contractAddress,
+              daoPreProposeApprovalContracts[index].contractAddress,
           }
         : []
     )
