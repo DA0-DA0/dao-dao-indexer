@@ -1,4 +1,5 @@
-export * as daoPreProposeApprovalSingle from './daoPreProposeApprovalBase'
+export * as daoPreProposeApprovalMultiple from './daoPreProposeApprovalMultiple'
+export * as daoPreProposeApprovalSingle from './daoPreProposeApprovalSingle'
 export * as daoPreProposeApprover from './daoPreProposeApprover'
 export * as daoPreProposeMultiple from './daoPreProposeMultiple'
 export * as daoPreProposeSingle from './daoPreProposeSingle'
