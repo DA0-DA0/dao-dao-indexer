@@ -503,18 +503,22 @@ const withMetadata = async (
   proposal: Proposal
 ): Promise<Proposal> => {
   const [createdAt, completedAt] = await Promise.all([
-    proposalCreatedAt.compute({
-      ...env,
-      args: {
-        id: proposal.approval_id.toString(),
-      },
-    }),
-    proposalCompletedAt.compute({
-      ...env,
-      args: {
-        id: proposal.approval_id.toString(),
-      },
-    }),
+    proposalCreatedAt
+      .compute({
+        ...env,
+        args: {
+          id: proposal.approval_id.toString(),
+        },
+      })
+      .catch(() => undefined),
+    proposalCompletedAt
+      .compute({
+        ...env,
+        args: {
+          id: proposal.approval_id.toString(),
+        },
+      })
+      .catch(() => undefined),
   ])
 
   return {
