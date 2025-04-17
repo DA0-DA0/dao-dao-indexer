@@ -37,8 +37,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > account > accountId",
-        "description": "Get accountId of the account",
+        "summary": "Get accountId of the account",
         "operationId": "abstract_account_accountId_e92f8b5",
         "parameters": [
           {
@@ -72,8 +71,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > account > info",
-        "description": "Get the account info",
+        "summary": "Get the account info",
         "operationId": "abstract_account_info_5c6d9e1",
         "parameters": [
           {
@@ -107,8 +105,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > account > moduleInfos",
-        "description": "Get module infos that are installed on this account",
+        "summary": "Get module infos that are installed on this account",
         "operationId": "abstract_account_moduleInfos_4de38cc",
         "parameters": [
           {
@@ -142,8 +139,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > account > owner",
-        "description": "Get the owner of the account",
+        "summary": "Get the owner of the account",
         "operationId": "abstract_account_owner_5d10d52",
         "parameters": [
           {
@@ -177,8 +173,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > account > subAccountIds",
-        "description": "Get sub-accounts owned by this account",
+        "summary": "Get sub-accounts owned by this account",
         "operationId": "abstract_account_subAccountIds_842e84a",
         "parameters": [
           {
@@ -212,8 +207,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > account > suspensionStatus",
-        "description": "Get suspension status of the account",
+        "summary": "Get suspension status of the account",
         "operationId": "abstract_account_suspensionStatus_440e941",
         "parameters": [
           {
@@ -247,8 +241,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > account > whitelistedModules",
-        "description": "Get a list of whitelisted modules",
+        "summary": "Get a list of whitelisted modules",
         "operationId": "abstract_account_whitelistedModules_ce3eb11",
         "parameters": [
           {
@@ -282,8 +275,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > registry > accountsByModule",
-        "description": "Filters accounts by module id, version, or address. Returns account id and address",
+        "summary": "Filters accounts by module id, version, or address. Returns account id and address",
         "operationId": "abstract_registry_accountsByModule_a8f5734",
         "parameters": [
           {
@@ -317,8 +309,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > registry > localAccounts",
-        "description": "Lists local accounts on chain",
+        "summary": "Lists local accounts on chain",
         "operationId": "abstract_registry_localAccounts_7d27966",
         "parameters": [
           {
@@ -352,8 +343,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > registry > module",
-        "description": "Module details",
+        "summary": "Module details",
         "operationId": "abstract_registry_module_7d861e4",
         "parameters": [
           {
@@ -417,8 +407,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > registry > moduleConfig",
-        "description": "Configuration of the module installation",
+        "summary": "Configuration of the module installation",
         "operationId": "abstract_registry_moduleConfig_c904a3e",
         "parameters": [
           {
@@ -482,8 +471,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "abstract > registry > registeredModules",
-        "description": "Lists registered modules in registry",
+        "summary": "Lists registered modules in registry",
         "operationId": "abstract_registry_registeredModules_310a69c",
         "parameters": [
           {
@@ -517,8 +505,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw1Whitelist > adminList",
-        "description": "retrieves the list of addresses",
+        "summary": "retrieves the list of addresses",
         "operationId": "cw1Whitelist_adminList_96d35ba",
         "parameters": [
           {
@@ -552,8 +539,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > allAccounts",
-        "description": "retrieves all accounts that hold this token",
+        "summary": "retrieves all accounts that hold this token",
         "operationId": "cw20_allAccounts_32215d9",
         "parameters": [
           {
@@ -608,8 +594,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > allowance",
-        "description": "retrieves the allowance for a spender from an owner",
+        "summary": "retrieves the allowance for a spender from an owner",
         "operationId": "cw20_allowance_0096ac0",
         "parameters": [
           {
@@ -664,8 +649,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > balance",
-        "description": "retrieves the balance of a given address",
+        "summary": "retrieves the balance of a given address",
         "operationId": "cw20_balance_06ff6af",
         "parameters": [
           {
@@ -711,8 +695,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > daos",
-        "description": "retrieves the DAOs that use this token as their governance token",
+        "summary": "retrieves the DAOs that use this token as their governance token",
         "operationId": "cw20_daos_696579f",
         "parameters": [
           {
@@ -746,8 +729,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > logoUrl",
-        "description": "retrieves the logo URL",
+        "summary": "retrieves the logo URL",
         "operationId": "cw20_logoUrl_3956ed1",
         "parameters": [
           {
@@ -781,8 +763,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > marketingInfo",
-        "description": "retrieves the marketing info",
+        "summary": "retrieves the marketing info",
         "operationId": "cw20_marketingInfo_b885b6b",
         "parameters": [
           {
@@ -816,8 +797,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > minter",
-        "description": "retrieves the minter info",
+        "summary": "retrieves the minter info",
         "operationId": "cw20_minter_7f2d112",
         "parameters": [
           {
@@ -851,8 +831,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > ownerAllowances",
-        "description": "retrieves all allowances granted by an owner",
+        "summary": "retrieves all allowances granted by an owner",
         "operationId": "cw20_ownerAllowances_a857690",
         "parameters": [
           {
@@ -916,8 +895,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > spenderAllowances",
-        "description": "retrieves all allowances granted to a spender",
+        "summary": "retrieves all allowances granted to a spender",
         "operationId": "cw20_spenderAllowances_fbf631f",
         "parameters": [
           {
@@ -981,8 +959,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > tokenInfo",
-        "description": "retrieves the token info",
+        "summary": "retrieves the token info",
         "operationId": "cw20_tokenInfo_e2217e8",
         "parameters": [
           {
@@ -1016,8 +993,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20 > topAccountBalances",
-        "description": "retrieves the top account balances",
+        "summary": "retrieves the top account balances",
         "operationId": "cw20_topAccountBalances_448167e",
         "parameters": [
           {
@@ -1063,8 +1039,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > claims",
-        "description": "retrieves the claims for an address",
+        "summary": "retrieves the claims for an address",
         "operationId": "cw20Stake_claims_1c4b116",
         "parameters": [
           {
@@ -1110,8 +1085,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > config",
-        "description": "retrieves the configuration of the staking contract",
+        "summary": "retrieves the configuration of the staking contract",
         "operationId": "cw20Stake_config_172b29c",
         "parameters": [
           {
@@ -1145,8 +1119,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > getHooks",
-        "description": "retrieves the hooks associated with the staking contract",
+        "summary": "retrieves the hooks associated with the staking contract",
         "operationId": "cw20Stake_getHooks_13e7ba9",
         "parameters": [
           {
@@ -1180,8 +1153,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > listStakers",
-        "description": "lists stakers and their balances",
+        "summary": "lists stakers and their balances",
         "operationId": "cw20Stake_listStakers_600a364",
         "parameters": [
           {
@@ -1236,8 +1208,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > stakedBalance",
-        "description": "retrieves the staked balance string of an address at a specific block height, defaulting to the current block height",
+        "summary": "retrieves the staked balance string of an address at a specific block height, defaulting to the current block height",
         "operationId": "cw20Stake_stakedBalance_497bcdb",
         "parameters": [
           {
@@ -1292,8 +1263,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > stakedBalanceAtHeight",
-        "description": "retrieves the staked balance object of an address at a specific block height, defaulting to the current block height",
+        "summary": "retrieves the staked balance object of an address at a specific block height, defaulting to the current block height",
         "operationId": "cw20Stake_stakedBalanceAtHeight_8577ad6",
         "parameters": [
           {
@@ -1348,8 +1318,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > stakedValue",
-        "description": "calculates the value of staked tokens for an address",
+        "summary": "calculates the value of staked tokens for an address",
         "operationId": "cw20Stake_stakedValue_103f827",
         "parameters": [
           {
@@ -1395,8 +1364,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > topStakers",
-        "description": "retrieves the top stakers by balance",
+        "summary": "retrieves the top stakers by balance",
         "operationId": "cw20Stake_topStakers_24a9796",
         "parameters": [
           {
@@ -1442,8 +1410,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > totalStaked",
-        "description": "retrieves the total staked amount at a specific block height, defaulting to the current block height",
+        "summary": "retrieves the total staked amount at a specific block height, defaulting to the current block height",
         "operationId": "cw20Stake_totalStaked_d092abe",
         "parameters": [
           {
@@ -1489,8 +1456,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > totalStakedAtHeight",
-        "description": "retrieves the total staked amount at a specific block height, defaulting to the current block height",
+        "summary": "retrieves the total staked amount at a specific block height, defaulting to the current block height",
         "operationId": "cw20Stake_totalStakedAtHeight_70e0402",
         "parameters": [
           {
@@ -1536,8 +1502,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw20Stake > totalValue",
-        "description": "retrieves the total value of the staking contract",
+        "summary": "retrieves the total value of the staking contract",
         "operationId": "cw20Stake_totalValue_ef382e0",
         "parameters": [
           {
@@ -1571,8 +1536,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw4Group > admin",
-        "description": "retrieves the admin address of the contract",
+        "summary": "retrieves the admin address of the contract",
         "operationId": "cw4Group_admin_a0c660b",
         "parameters": [
           {
@@ -1606,8 +1570,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw4Group > hooks",
-        "description": "retrieves the hooks associated with the contract",
+        "summary": "retrieves the hooks associated with the contract",
         "operationId": "cw4Group_hooks_2407090",
         "parameters": [
           {
@@ -1641,8 +1604,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw4Group > listMembers",
-        "description": "lists members of the group",
+        "summary": "lists members of the group",
         "operationId": "cw4Group_listMembers_95574d4",
         "parameters": [
           {
@@ -1697,8 +1659,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw4Group > member",
-        "description": "retrieves the weight of a member in the group, optionally at a specific height",
+        "summary": "retrieves the weight of a member in the group, optionally at a specific height",
         "operationId": "cw4Group_member_02dfa43",
         "parameters": [
           {
@@ -1753,8 +1714,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw4Group > totalWeight",
-        "description": "retrieves the total weight of all members in the group, optionally at a specific height",
+        "summary": "retrieves the total weight of all members in the group, optionally at a specific height",
         "operationId": "cw4Group_totalWeight_52cb18b",
         "parameters": [
           {
@@ -1800,8 +1760,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > allNftInfo",
-        "description": "retrieves both NFT info and owner info for a specific token ID",
+        "summary": "retrieves both NFT info and owner info for a specific token ID",
         "operationId": "cw721_allNftInfo_0537db9",
         "parameters": [
           {
@@ -1847,8 +1806,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > allOperators",
-        "description": "retrieves all operators for a specific owner",
+        "summary": "retrieves all operators for a specific owner",
         "operationId": "cw721_allOperators_e1a1ce5",
         "parameters": [
           {
@@ -1912,8 +1870,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > allTokens",
-        "description": "retrieves all tokens in the NFT contract",
+        "summary": "retrieves all tokens in the NFT contract",
         "operationId": "cw721_allTokens_fcdb2ac",
         "parameters": [
           {
@@ -1968,8 +1925,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > approvals",
-        "description": "retrieves all approvals for a specific token",
+        "summary": "retrieves all approvals for a specific token",
         "operationId": "cw721_approvals_8cb01c1",
         "parameters": [
           {
@@ -2015,8 +1971,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > approvalsForSpender",
-        "description": "retrieves approvals for a specific spender on a token",
+        "summary": "retrieves approvals for a specific spender on a token",
         "operationId": "cw721_approvalsForSpender_2b4d050",
         "parameters": [
           {
@@ -2071,8 +2026,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > contractInfo",
-        "description": "retrieves the contract info for the NFT contract",
+        "summary": "retrieves the contract info for the NFT contract",
         "operationId": "cw721_contractInfo_88e7597",
         "parameters": [
           {
@@ -2106,8 +2060,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > minter",
-        "description": "retrieves the minter address for the NFT contract",
+        "summary": "retrieves the minter address for the NFT contract",
         "operationId": "cw721_minter_e832e9c",
         "parameters": [
           {
@@ -2141,8 +2094,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > nftInfo",
-        "description": "retrieves the NFT info for a specific token ID",
+        "summary": "retrieves the NFT info for a specific token ID",
         "operationId": "cw721_nftInfo_e18f850",
         "parameters": [
           {
@@ -2188,8 +2140,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > numTokens",
-        "description": "retrieves the total number of tokens in the NFT contract",
+        "summary": "retrieves the total number of tokens in the NFT contract",
         "operationId": "cw721_numTokens_a6a65b3",
         "parameters": [
           {
@@ -2223,8 +2174,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > ownerOf",
-        "description": "retrieves the owner and approvals for a specific token ID",
+        "summary": "retrieves the owner and approvals for a specific token ID",
         "operationId": "cw721_ownerOf_3c43100",
         "parameters": [
           {
@@ -2270,8 +2220,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cw721 > tokens",
-        "description": "retrieves all tokens owned by a specific address",
+        "summary": "retrieves all tokens owned by a specific address",
         "operationId": "cw721_tokens_bfe1a56",
         "parameters": [
           {
@@ -2335,8 +2284,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwPayrollFactory > codeId",
-        "description": "retrieves the code ID of the cw-vesting contract that gets created by this factory",
+        "summary": "retrieves the code ID of the cw-vesting contract that gets created by this factory",
         "operationId": "cwPayrollFactory_codeId_8acb4aa",
         "parameters": [
           {
@@ -2370,8 +2318,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwPayrollFactory > listVestingContracts",
-        "description": "lists vesting contracts",
+        "summary": "lists vesting contracts",
         "operationId": "cwPayrollFactory_listVestingContracts_ef49299",
         "parameters": [
           {
@@ -2426,8 +2373,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwPayrollFactory > listVestingContractsByInstantiator",
-        "description": "lists vesting contracts by instantiator",
+        "summary": "lists vesting contracts by instantiator",
         "operationId": "cwPayrollFactory_listVestingContractsByInstantia_eafa46d",
         "parameters": [
           {
@@ -2491,8 +2437,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwPayrollFactory > listVestingContractsByInstantiatorReverse",
-        "description": "lists vesting contracts by instantiator in reverse order",
+        "summary": "lists vesting contracts by instantiator in reverse order",
         "operationId": "cwPayrollFactory_listVestingContractsByInstantia_eafa46d",
         "parameters": [
           {
@@ -2556,8 +2501,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwPayrollFactory > listVestingContractsByRecipient",
-        "description": "lists vesting contracts by recipient",
+        "summary": "lists vesting contracts by recipient",
         "operationId": "cwPayrollFactory_listVestingContractsByRecipient_b617620",
         "parameters": [
           {
@@ -2621,8 +2565,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwPayrollFactory > listVestingContractsByRecipientReverse",
-        "description": "lists vesting contracts by recipient in reverse order",
+        "summary": "lists vesting contracts by recipient in reverse order",
         "operationId": "cwPayrollFactory_listVestingContractsByRecipient_b617620",
         "parameters": [
           {
@@ -2686,8 +2629,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwPayrollFactory > listVestingContractsReverse",
-        "description": "lists vesting contracts in reverse order",
+        "summary": "lists vesting contracts in reverse order",
         "operationId": "cwPayrollFactory_listVestingContractsReverse_626f534",
         "parameters": [
           {
@@ -2742,8 +2684,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwPayrollFactory > ownership",
-        "description": "retrieves the ownership information of the contract",
+        "summary": "retrieves the ownership information of the contract",
         "operationId": "cwPayrollFactory_ownership_bd20ed8",
         "parameters": [
           {
@@ -2777,8 +2718,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwTokenSwap > status",
-        "description": "retrieves the status of the token swap",
+        "summary": "retrieves the status of the token swap",
         "operationId": "cwTokenSwap_status_fbd7ab2",
         "parameters": [
           {
@@ -2812,8 +2752,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwVesting > info",
-        "description": "retrieves vesting information",
+        "summary": "retrieves vesting information",
         "operationId": "cwVesting_info_4998ba3",
         "parameters": [
           {
@@ -2847,8 +2786,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwVesting > ownership",
-        "description": "retrieves the contract ownership defined by the cw-ownable crate",
+        "summary": "retrieves the contract ownership defined by the cw-ownable crate",
         "operationId": "cwVesting_ownership_08ef5e4",
         "parameters": [
           {
@@ -2882,8 +2820,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwVesting > totalToVest",
-        "description": "calculates the total amount to be vested",
+        "summary": "calculates the total amount to be vested",
         "operationId": "cwVesting_totalToVest_abeebe6",
         "parameters": [
           {
@@ -2917,8 +2854,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwVesting > unbondingDurationSeconds",
-        "description": "calculates the unbonding duration in seconds",
+        "summary": "calculates the unbonding duration in seconds",
         "operationId": "cwVesting_unbondingDurationSeconds_15dc0d1",
         "parameters": [
           {
@@ -2952,8 +2888,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwVesting > validatorStakes",
-        "description": "retrieves the amount staked and unstaking for each validator over time",
+        "summary": "retrieves the amount staked and unstaking for each validator over time",
         "operationId": "cwVesting_validatorStakes_7e3c238",
         "parameters": [
           {
@@ -2987,8 +2922,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwVesting > vestDuration",
-        "description": "calculates the duration of the vesting period",
+        "summary": "calculates the duration of the vesting period",
         "operationId": "cwVesting_vestDuration_795db6e",
         "parameters": [
           {
@@ -3022,8 +2956,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "cwVesting > vested",
-        "description": "calculates the vested amount at a given timestamp",
+        "summary": "calculates the vested amount at a given timestamp",
         "operationId": "cwVesting_vested_d4560d5",
         "parameters": [
           {
@@ -3069,8 +3002,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > activeProposalModules",
-        "description": "retrieves all active (enabled) proposal modules for the DAO",
+        "summary": "retrieves all active (enabled) proposal modules for the DAO",
         "operationId": "daoCore_activeProposalModules_4b8c7ee",
         "parameters": [
           {
@@ -3104,8 +3036,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > admin",
-        "description": "retrieves the admin address of the DAO",
+        "summary": "retrieves the admin address of the DAO",
         "operationId": "daoCore_admin_4568e31",
         "parameters": [
           {
@@ -3139,8 +3070,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > adminNomination",
-        "description": "retrieves the nominated admin address of the DAO",
+        "summary": "retrieves the nominated admin address of the DAO",
         "operationId": "daoCore_adminNomination_010aaa5",
         "parameters": [
           {
@@ -3174,8 +3104,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > approvalDaos",
-        "description": "retrieves DAOs that have a pre-propose-approval contract whose approver is set to this DAO",
+        "summary": "retrieves DAOs that have a pre-propose-approval contract whose approver is set to this DAO",
         "operationId": "daoCore_approvalDaos_6086507",
         "parameters": [
           {
@@ -3209,8 +3138,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > config",
-        "description": "retrieves the DAO configuration",
+        "summary": "retrieves the DAO configuration",
         "operationId": "daoCore_config_b84150d",
         "parameters": [
           {
@@ -3244,8 +3172,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > cw20Balances",
-        "description": "retrieves the CW20 token balances for the DAO",
+        "summary": "retrieves the CW20 token balances for the DAO",
         "operationId": "daoCore_cw20Balances_dc0f1bd",
         "parameters": [
           {
@@ -3279,8 +3206,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > cw20List",
-        "description": "retrieves the list of CW20 token addresses associated with the DAO",
+        "summary": "retrieves the list of CW20 token addresses associated with the DAO",
         "operationId": "daoCore_cw20List_e456920",
         "parameters": [
           {
@@ -3314,8 +3240,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > cw721List",
-        "description": "retrieves the list of CW721 NFT addresses associated with the DAO",
+        "summary": "retrieves the list of CW721 NFT addresses associated with the DAO",
         "operationId": "daoCore_cw721List_22e273b",
         "parameters": [
           {
@@ -3349,8 +3274,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > daoUri",
-        "description": "retrieves the URI of the DAO",
+        "summary": "retrieves the URI of the DAO",
         "operationId": "daoCore_daoUri_d557b1d",
         "parameters": [
           {
@@ -3384,8 +3308,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > initialActions",
-        "description": "retrieves the initial actions for the DAO",
+        "summary": "retrieves the initial actions for the DAO",
         "operationId": "daoCore_initialActions_51ec55c",
         "parameters": [
           {
@@ -3419,8 +3342,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > item",
-        "description": "retrieves a specific item from the DAO's storage",
+        "summary": "retrieves a specific item from the DAO's storage",
         "operationId": "daoCore_item_0d790a7",
         "parameters": [
           {
@@ -3466,8 +3388,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > listItems",
-        "description": "retrieves all items stored in the DAO",
+        "summary": "retrieves all items stored in the DAO",
         "operationId": "daoCore_listItems_0d467b2",
         "parameters": [
           {
@@ -3501,8 +3422,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > listSubDaos",
-        "description": "retrieves the list of subDAOs recognized by the DAO",
+        "summary": "retrieves the list of subDAOs recognized by the DAO",
         "operationId": "daoCore_listSubDaos_621c87b",
         "parameters": [
           {
@@ -3536,8 +3456,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > pauseInfo",
-        "description": "retrieves the pause status of the DAO",
+        "summary": "retrieves the pause status of the DAO",
         "operationId": "daoCore_pauseInfo_d4cdeb4",
         "parameters": [
           {
@@ -3571,8 +3490,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > paused",
-        "description": "retrieves the pause status of the DAO",
+        "summary": "retrieves the pause status of the DAO",
         "operationId": "daoCore_paused_004f6fb",
         "parameters": [
           {
@@ -3606,8 +3524,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > polytoneProxies",
-        "description": "retrieves polytone proxies for the DAO",
+        "summary": "retrieves polytone proxies for the DAO",
         "operationId": "daoCore_polytoneProxies_e688e32",
         "parameters": [
           {
@@ -3641,8 +3558,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > potentialSubDaos",
-        "description": "retrieves potential subDAOs, which are DAOs whose admin state key is set to this DAO. these may or may not be recognized by the DAO",
+        "summary": "retrieves potential subDAOs, which are DAOs whose admin state key is set to this DAO. these may or may not be recognized by the DAO",
         "operationId": "daoCore_potentialSubDaos_79bee82",
         "parameters": [
           {
@@ -3676,8 +3592,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > proposalModules",
-        "description": "retrieves all proposal modules for the DAO",
+        "summary": "retrieves all proposal modules for the DAO",
         "operationId": "daoCore_proposalModules_a52e71c",
         "parameters": [
           {
@@ -3711,8 +3626,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > totalPower",
-        "description": "retrieves the total voting power at the current block height",
+        "summary": "retrieves the total voting power at the current block height",
         "operationId": "daoCore_totalPower_648dbed",
         "parameters": [
           {
@@ -3746,8 +3660,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > totalPowerAtHeight",
-        "description": "retrieves the total voting power, optionally at a specific block height",
+        "summary": "retrieves the total voting power, optionally at a specific block height",
         "operationId": "daoCore_totalPowerAtHeight_6776f07",
         "parameters": [
           {
@@ -3793,8 +3706,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > votingModule",
-        "description": "retrieves the voting module address of the DAO",
+        "summary": "retrieves the voting module address of the DAO",
         "operationId": "daoCore_votingModule_55ea282",
         "parameters": [
           {
@@ -3828,8 +3740,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > votingPower",
-        "description": "retrieves the voting power for a given address at the current block height",
+        "summary": "retrieves the voting power for a given address at the current block height",
         "operationId": "daoCore_votingPower_f6da781",
         "parameters": [
           {
@@ -3875,8 +3786,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > votingPowerAtHeight",
-        "description": "retrieves the voting power for a given address, optionally at a specific block height for a given address",
+        "summary": "retrieves the voting power for a given address, optionally at a specific block height for a given address",
         "operationId": "daoCore_votingPowerAtHeight_a3c323d",
         "parameters": [
           {
@@ -3931,8 +3841,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > dumpState",
-        "description": "retrieves a lot of high-level information about a DAO, including its voting and proposal modules",
+        "summary": "retrieves a lot of high-level information about a DAO, including its voting and proposal modules",
         "operationId": "daoCore_dumpState_d218de3",
         "parameters": [
           {
@@ -3966,8 +3875,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > junoHomeMetadata",
-        "description": "retrieves specific DAO metadata for the Juno website",
+        "summary": "retrieves specific DAO metadata for the Juno website",
         "operationId": "daoCore_junoHomeMetadata_de0e94a",
         "parameters": [
           {
@@ -4001,8 +3909,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > allMembers",
-        "description": "retrieves all members of the DAO and optionally its SubDAOs",
+        "summary": "retrieves all members of the DAO and optionally its SubDAOs",
         "operationId": "daoCore_allMembers_3165924",
         "parameters": [
           {
@@ -4048,8 +3955,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > lastMembershipChange",
-        "description": "retrieves the date membership was last updated for a member-based DAO",
+        "summary": "retrieves the date membership was last updated for a member-based DAO",
         "operationId": "daoCore_lastMembershipChange_51bb2f7",
         "parameters": [
           {
@@ -4083,8 +3989,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > listMembers",
-        "description": "lists all members of the DAO with their voting power percentages",
+        "summary": "lists all members of the DAO with their voting power percentages",
         "operationId": "daoCore_listMembers_daf5387",
         "parameters": [
           {
@@ -4118,8 +4023,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > memberCount",
-        "description": "count of unique members in the DAO and optionally its SubDAOs",
+        "summary": "count of unique members in the DAO and optionally its SubDAOs",
         "operationId": "daoCore_memberCount_efb9c0a",
         "parameters": [
           {
@@ -4165,8 +4069,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > allProposals",
-        "description": "retrieves all proposals, optionally including SubDAOs",
+        "summary": "retrieves all proposals, optionally including SubDAOs",
         "operationId": "daoCore_allProposals_1191c9f",
         "parameters": [
           {
@@ -4221,8 +4124,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > lastActivity",
-        "description": "retrieves the date of the most recent proposal event (completion or creation)",
+        "summary": "retrieves the date of the most recent proposal event (completion or creation)",
         "operationId": "daoCore_lastActivity_3548b5a",
         "parameters": [
           {
@@ -4256,8 +4158,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > openProposals",
-        "description": "retrieves open proposals and optionally voting status for a given address",
+        "summary": "retrieves open proposals and optionally voting status for a given address",
         "operationId": "daoCore_openProposals_5383c5e",
         "parameters": [
           {
@@ -4303,8 +4204,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoCore > proposalCount",
-        "description": "retrieves the total number of proposals across all active proposal modules",
+        "summary": "retrieves the total number of proposals across all active proposal modules",
         "operationId": "daoCore_proposalCount_9d9325b",
         "parameters": [
           {
@@ -4333,13 +4233,598 @@
         }
       }
     },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/approver": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves the approver address for the pre-propose module",
+        "operationId": "daoPreProposeApprovalMultiple_approver_9dac49a",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/completedProposalIdForCreatedProposalId": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves the completed proposal ID for a given created proposal ID",
+        "operationId": "daoPreProposeApprovalMultiple_completedProposalI_f629d2c",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "description": "ID of the created proposal",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/completedProposals": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves a list of completed proposals",
+        "operationId": "daoPreProposeApprovalMultiple_completedProposals_26850bd",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "description": "maximum number of proposals to return",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          },
+          {
+            "name": "startAfter",
+            "description": "ID to start after when paginating",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/config": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves the configuration for the pre-propose module",
+        "operationId": "daoPreProposeApprovalMultiple_config_6736889",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/dao": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves the DAO address",
+        "operationId": "daoPreProposeApprovalMultiple_dao_62fd82b",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/depositInfo": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves deposit information for a given proposal ID",
+        "operationId": "daoPreProposeApprovalMultiple_depositInfo_0782617",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "proposalId",
+            "description": "ID of the proposal to retrieve deposit information for",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/pendingProposals": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves a list of pending proposals",
+        "operationId": "daoPreProposeApprovalMultiple_pendingProposals_bcab11f",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "description": "maximum number of proposals to return",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          },
+          {
+            "name": "startAfter",
+            "description": "ID to start after when paginating",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/proposal": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves a proposal",
+        "operationId": "daoPreProposeApprovalMultiple_proposal_9e874cc",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "description": "ID of the proposal",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/proposalCompletedAt": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves the completion date of a proposal",
+        "operationId": "daoPreProposeApprovalMultiple_proposalCompletedA_6992b26",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "description": "ID of the proposal",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/proposalCreatedAt": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves the creation date of a proposal",
+        "operationId": "daoPreProposeApprovalMultiple_proposalCreatedAt_ffdf20e",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "description": "ID of the proposal",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/proposalModule": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves the proposal module address",
+        "operationId": "daoPreProposeApprovalMultiple_proposalModule_5e2fb9f",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/reverseCompletedProposals": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves a list of completed proposals in reverse order",
+        "operationId": "daoPreProposeApprovalMultiple_reverseCompletedPr_81d879d",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "description": "maximum number of proposals to return",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          },
+          {
+            "name": "startBefore",
+            "description": "ID to start before when paginating",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/reversePendingProposals": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves a list of pending proposals in reverse order",
+        "operationId": "daoPreProposeApprovalMultiple_reversePendingProp_f7acbf4",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "description": "maximum number of proposals to return",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          },
+          {
+            "name": "startBefore",
+            "description": "ID to start before when paginating",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "400": {
+            "description": "missing required arguments"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/approver": {
       "get": {
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > approver",
-        "description": "retrieves the approver address for the pre-propose module",
+        "summary": "retrieves the approver address for the pre-propose module",
         "operationId": "daoPreProposeApprovalSingle_approver_4f8bbf1",
         "parameters": [
           {
@@ -4373,8 +4858,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > completedProposalIdForCreatedProposalId",
-        "description": "retrieves the completed proposal ID for a given created proposal ID",
+        "summary": "retrieves the completed proposal ID for a given created proposal ID",
         "operationId": "daoPreProposeApprovalSingle_completedProposalIdF_1eb3f6a",
         "parameters": [
           {
@@ -4420,8 +4904,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > completedProposals",
-        "description": "retrieves a list of completed proposals",
+        "summary": "retrieves a list of completed proposals",
         "operationId": "daoPreProposeApprovalSingle_completedProposals_5de4262",
         "parameters": [
           {
@@ -4476,8 +4959,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > config",
-        "description": "retrieves the configuration for the pre-propose module",
+        "summary": "retrieves the configuration for the pre-propose module",
         "operationId": "daoPreProposeApprovalSingle_config_e170301",
         "parameters": [
           {
@@ -4511,8 +4993,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > dao",
-        "description": "retrieves the DAO address",
+        "summary": "retrieves the DAO address",
         "operationId": "daoPreProposeApprovalSingle_dao_e743ee5",
         "parameters": [
           {
@@ -4546,8 +5027,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > depositInfo",
-        "description": "retrieves deposit information for a given proposal ID",
+        "summary": "retrieves deposit information for a given proposal ID",
         "operationId": "daoPreProposeApprovalSingle_depositInfo_6f449f1",
         "parameters": [
           {
@@ -4593,8 +5073,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > pendingProposals",
-        "description": "retrieves a list of pending proposals",
+        "summary": "retrieves a list of pending proposals",
         "operationId": "daoPreProposeApprovalSingle_pendingProposals_9efba6a",
         "parameters": [
           {
@@ -4649,8 +5128,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > proposal",
-        "description": "retrieves a proposal",
+        "summary": "retrieves a proposal",
         "operationId": "daoPreProposeApprovalSingle_proposal_57a10f9",
         "parameters": [
           {
@@ -4696,8 +5174,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > proposalCompletedAt",
-        "description": "retrieves the completion date of a proposal",
+        "summary": "retrieves the completion date of a proposal",
         "operationId": "daoPreProposeApprovalSingle_proposalCompletedAt_1efed8e",
         "parameters": [
           {
@@ -4743,8 +5220,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > proposalCreatedAt",
-        "description": "retrieves the creation date of a proposal",
+        "summary": "retrieves the creation date of a proposal",
         "operationId": "daoPreProposeApprovalSingle_proposalCreatedAt_0423fc1",
         "parameters": [
           {
@@ -4790,8 +5266,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > proposalModule",
-        "description": "retrieves the proposal module address",
+        "summary": "retrieves the proposal module address",
         "operationId": "daoPreProposeApprovalSingle_proposalModule_78c0eb9",
         "parameters": [
           {
@@ -4825,8 +5300,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > reverseCompletedProposals",
-        "description": "retrieves a list of completed proposals in reverse order",
+        "summary": "retrieves a list of completed proposals in reverse order",
         "operationId": "daoPreProposeApprovalSingle_reverseCompletedProp_4c7582a",
         "parameters": [
           {
@@ -4881,8 +5355,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprovalSingle > reversePendingProposals",
-        "description": "retrieves a list of pending proposals in reverse order",
+        "summary": "retrieves a list of pending proposals in reverse order",
         "operationId": "daoPreProposeApprovalSingle_reversePendingPropos_5971d95",
         "parameters": [
           {
@@ -4937,8 +5410,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprover > approverProposalIdForPreProposeApprovalId",
-        "description": "retrieves the approver proposal ID for a given approval ID",
+        "summary": "retrieves the approver proposal ID for a given approval ID",
         "operationId": "daoPreProposeApprover_approverProposalIdForPrePr_1d85a38",
         "parameters": [
           {
@@ -4984,8 +5456,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprover > config",
-        "description": "retrieves the configuration for the pre-propose module",
+        "summary": "retrieves the configuration for the pre-propose module",
         "operationId": "daoPreProposeApprover_config_753d0f1",
         "parameters": [
           {
@@ -5019,8 +5490,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprover > dao",
-        "description": "retrieves the DAO address",
+        "summary": "retrieves the DAO address",
         "operationId": "daoPreProposeApprover_dao_b18645b",
         "parameters": [
           {
@@ -5054,8 +5524,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprover > depositInfo",
-        "description": "retrieves deposit information for a given proposal ID",
+        "summary": "retrieves deposit information for a given proposal ID",
         "operationId": "daoPreProposeApprover_depositInfo_7d6986e",
         "parameters": [
           {
@@ -5101,8 +5570,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprover > preProposeApprovalContract",
-        "description": "retrieves the pre-propose approval contract address",
+        "summary": "retrieves the pre-propose approval contract address",
         "operationId": "daoPreProposeApprover_preProposeApprovalContract_b9c0067",
         "parameters": [
           {
@@ -5136,8 +5604,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprover > preProposeApprovalIdForApproverProposalId",
-        "description": "retrieves the approval ID for a given approver proposal ID",
+        "summary": "retrieves the approval ID for a given approver proposal ID",
         "operationId": "daoPreProposeApprover_preProposeApprovalIdForApp_46344d5",
         "parameters": [
           {
@@ -5183,8 +5650,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeApprover > proposalModule",
-        "description": "retrieves the proposal module address",
+        "summary": "retrieves the proposal module address",
         "operationId": "daoPreProposeApprover_proposalModule_6677f85",
         "parameters": [
           {
@@ -5218,8 +5684,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeMultiple > config",
-        "description": "retrieves the configuration for the pre-propose module",
+        "summary": "retrieves the configuration for the pre-propose module",
         "operationId": "daoPreProposeMultiple_config_19c7b8b",
         "parameters": [
           {
@@ -5253,8 +5718,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeMultiple > dao",
-        "description": "retrieves the DAO address",
+        "summary": "retrieves the DAO address",
         "operationId": "daoPreProposeMultiple_dao_940675d",
         "parameters": [
           {
@@ -5288,8 +5752,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeMultiple > depositInfo",
-        "description": "retrieves deposit information for a given proposal ID",
+        "summary": "retrieves deposit information for a given proposal ID",
         "operationId": "daoPreProposeMultiple_depositInfo_9a8ebc8",
         "parameters": [
           {
@@ -5335,8 +5798,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeMultiple > proposalModule",
-        "description": "retrieves the proposal module address",
+        "summary": "retrieves the proposal module address",
         "operationId": "daoPreProposeMultiple_proposalModule_a822fe6",
         "parameters": [
           {
@@ -5370,8 +5832,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeSingle > config",
-        "description": "retrieves the configuration for the pre-propose module",
+        "summary": "retrieves the configuration for the pre-propose module",
         "operationId": "daoPreProposeSingle_config_f80ac00",
         "parameters": [
           {
@@ -5405,8 +5866,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeSingle > dao",
-        "description": "retrieves the DAO address",
+        "summary": "retrieves the DAO address",
         "operationId": "daoPreProposeSingle_dao_d05abe1",
         "parameters": [
           {
@@ -5440,8 +5900,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeSingle > depositInfo",
-        "description": "retrieves deposit information for a given proposal ID",
+        "summary": "retrieves deposit information for a given proposal ID",
         "operationId": "daoPreProposeSingle_depositInfo_b9e2ef3",
         "parameters": [
           {
@@ -5487,8 +5946,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoPreProposeSingle > proposalModule",
-        "description": "retrieves the proposal module address",
+        "summary": "retrieves the proposal module address",
         "operationId": "daoPreProposeSingle_proposalModule_e99500f",
         "parameters": [
           {
@@ -5522,8 +5980,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > config",
-        "description": "retrieves the configuration of the proposal module",
+        "summary": "retrieves the configuration of the proposal module",
         "operationId": "daoProposalMultiple_config_f20c872",
         "parameters": [
           {
@@ -5557,8 +6014,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > creationPolicy",
-        "description": "retrieves the proposal creation policy",
+        "summary": "retrieves the proposal creation policy",
         "operationId": "daoProposalMultiple_creationPolicy_2cb6933",
         "parameters": [
           {
@@ -5592,8 +6048,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > dao",
-        "description": "retrieves the DAO address associated with the proposal module",
+        "summary": "retrieves the DAO address associated with the proposal module",
         "operationId": "daoProposalMultiple_dao_0e57bad",
         "parameters": [
           {
@@ -5627,8 +6082,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > delegationModule",
-        "description": "retrieves the address of the delegation module, if any",
+        "summary": "retrieves the address of the delegation module, if any",
         "operationId": "daoProposalMultiple_delegationModule_a0f8c2c",
         "parameters": [
           {
@@ -5662,8 +6116,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > listProposals",
-        "description": "retrieves a list of proposals",
+        "summary": "retrieves a list of proposals",
         "operationId": "daoProposalMultiple_listProposals_afe7fc1",
         "parameters": [
           {
@@ -5727,8 +6180,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > listVotes",
-        "description": "retrieves a list of votes for a given proposal",
+        "summary": "retrieves a list of votes for a given proposal",
         "operationId": "daoProposalMultiple_listVotes_7f2de5c",
         "parameters": [
           {
@@ -5792,8 +6244,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > nextProposalId",
-        "description": "retrieves the next proposal ID",
+        "summary": "retrieves the next proposal ID",
         "operationId": "daoProposalMultiple_nextProposalId_3034590",
         "parameters": [
           {
@@ -5827,8 +6278,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > openProposals",
-        "description": "retrieves a list of open proposals",
+        "summary": "retrieves a list of open proposals",
         "operationId": "daoProposalMultiple_openProposals_6f6bfda",
         "parameters": [
           {
@@ -5874,8 +6324,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > proposal",
-        "description": "retrieves a proposal",
+        "summary": "retrieves a proposal",
         "operationId": "daoProposalMultiple_proposal_a7d06f9",
         "parameters": [
           {
@@ -5921,8 +6370,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > proposalCount",
-        "description": "retrieves the number of proposals",
+        "summary": "retrieves the number of proposals",
         "operationId": "daoProposalMultiple_proposalCount_f1213cf",
         "parameters": [
           {
@@ -5956,8 +6404,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > proposalCreatedAt",
-        "description": "retrieves the creation date of a proposal",
+        "summary": "retrieves the creation date of a proposal",
         "operationId": "daoProposalMultiple_proposalCreatedAt_189e7e4",
         "parameters": [
           {
@@ -6003,8 +6450,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > reverseProposals",
-        "description": "retrieves a list of proposals in reverse order",
+        "summary": "retrieves a list of proposals in reverse order",
         "operationId": "daoProposalMultiple_reverseProposals_e9a9a14",
         "parameters": [
           {
@@ -6059,8 +6505,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalMultiple > vote",
-        "description": "retrieves the vote for a given proposal and voter",
+        "summary": "retrieves the vote for a given proposal and voter",
         "operationId": "daoProposalMultiple_vote_faddf91",
         "parameters": [
           {
@@ -6115,8 +6560,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > config",
-        "description": "retrieves the configuration of the proposal module",
+        "summary": "retrieves the configuration of the proposal module",
         "operationId": "daoProposalSingle_config_6b552dd",
         "parameters": [
           {
@@ -6150,8 +6594,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > creationPolicy",
-        "description": "retrieves the proposal creation policy",
+        "summary": "retrieves the proposal creation policy",
         "operationId": "daoProposalSingle_creationPolicy_5e70dbb",
         "parameters": [
           {
@@ -6185,8 +6628,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > dao",
-        "description": "retrieves the DAO address associated with the proposal module",
+        "summary": "retrieves the DAO address associated with the proposal module",
         "operationId": "daoProposalSingle_dao_afabc3f",
         "parameters": [
           {
@@ -6220,8 +6662,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > delegationModule",
-        "description": "retrieves the address of the delegation module, if any",
+        "summary": "retrieves the address of the delegation module, if any",
         "operationId": "daoProposalSingle_delegationModule_b55852e",
         "parameters": [
           {
@@ -6255,8 +6696,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > listProposals",
-        "description": "retrieves a list of proposals",
+        "summary": "retrieves a list of proposals",
         "operationId": "daoProposalSingle_listProposals_96d8f38",
         "parameters": [
           {
@@ -6320,8 +6760,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > listVotes",
-        "description": "retrieves a list of votes for a given proposal",
+        "summary": "retrieves a list of votes for a given proposal",
         "operationId": "daoProposalSingle_listVotes_5028e83",
         "parameters": [
           {
@@ -6385,8 +6824,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > nextProposalId",
-        "description": "retrieves the next proposal ID",
+        "summary": "retrieves the next proposal ID",
         "operationId": "daoProposalSingle_nextProposalId_5d105f8",
         "parameters": [
           {
@@ -6420,8 +6858,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > openProposals",
-        "description": "retrieves a list of open proposals",
+        "summary": "retrieves a list of open proposals",
         "operationId": "daoProposalSingle_openProposals_187222c",
         "parameters": [
           {
@@ -6467,8 +6904,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > proposal",
-        "description": "retrieves a proposal",
+        "summary": "retrieves a proposal",
         "operationId": "daoProposalSingle_proposal_2d4e3e6",
         "parameters": [
           {
@@ -6514,8 +6950,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > proposalCount",
-        "description": "retrieves the number of proposals",
+        "summary": "retrieves the number of proposals",
         "operationId": "daoProposalSingle_proposalCount_b1c3604",
         "parameters": [
           {
@@ -6549,8 +6984,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > proposalCreatedAt",
-        "description": "retrieves the creation date of a proposal",
+        "summary": "retrieves the creation date of a proposal",
         "operationId": "daoProposalSingle_proposalCreatedAt_eb09bc4",
         "parameters": [
           {
@@ -6596,8 +7030,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > reverseProposals",
-        "description": "retrieves a list of proposals in reverse order",
+        "summary": "retrieves a list of proposals in reverse order",
         "operationId": "daoProposalSingle_reverseProposals_08bb4cc",
         "parameters": [
           {
@@ -6652,8 +7085,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoProposalSingle > vote",
-        "description": "retrieves the vote for a given proposal and voter",
+        "summary": "retrieves the vote for a given proposal and voter",
         "operationId": "daoProposalSingle_vote_c488222",
         "parameters": [
           {
@@ -6708,8 +7140,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoRewardsDistributor > distribution",
-        "description": "retrieves a distribution",
+        "summary": "retrieves a distribution",
         "operationId": "daoRewardsDistributor_distribution_eb4baac",
         "parameters": [
           {
@@ -6755,8 +7186,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoRewardsDistributor > distributions",
-        "description": "retrieves a list of distributions",
+        "summary": "retrieves a list of distributions",
         "operationId": "daoRewardsDistributor_distributions_7616345",
         "parameters": [
           {
@@ -6811,8 +7241,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoteDelegation > config",
-        "description": "retrieves the configuration of the delegation module",
+        "summary": "retrieves the configuration of the delegation module",
         "operationId": "daoVoteDelegation_config_93b51af",
         "parameters": [
           {
@@ -6846,8 +7275,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoteDelegation > delegates",
-        "description": "retrieves the list of active delegates",
+        "summary": "retrieves the list of active delegates",
         "operationId": "daoVoteDelegation_delegates_1de6d05",
         "parameters": [
           {
@@ -6902,8 +7330,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoteDelegation > delegations",
-        "description": "retrieves a list of delegations by a delegator, optionally at a given block height",
+        "summary": "retrieves a list of delegations by a delegator, optionally at a given block height",
         "operationId": "daoVoteDelegation_delegations_24fbeff",
         "parameters": [
           {
@@ -6976,8 +7403,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoteDelegation > info",
-        "description": "retrieves the contract info (name and version)",
+        "summary": "retrieves the contract info (name and version)",
         "operationId": "daoVoteDelegation_info_7dd1961",
         "parameters": [
           {
@@ -7011,8 +7437,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoteDelegation > proposalModules",
-        "description": "retrieves the list of proposal modules",
+        "summary": "retrieves the list of proposal modules",
         "operationId": "daoVoteDelegation_proposalModules_00b71c3",
         "parameters": [
           {
@@ -7067,8 +7492,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoteDelegation > registration",
-        "description": "retrieves whether or not a delegate is registered, optionally at a given block height",
+        "summary": "retrieves whether or not a delegate is registered, optionally at a given block height",
         "operationId": "daoVoteDelegation_registration_ce63894",
         "parameters": [
           {
@@ -7123,8 +7547,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoteDelegation > unvotedDelegatedVotingPower",
-        "description": "retrieves the voting power delegated to a delegate that has not yet been used in votes cast by delegators in a specific proposal",
+        "summary": "retrieves the voting power delegated to a delegate that has not yet been used in votes cast by delegators in a specific proposal",
         "operationId": "daoVoteDelegation_unvotedDelegatedVotingPower_69745ae",
         "parameters": [
           {
@@ -7197,8 +7620,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoteDelegation > votingPowerCap",
-        "description": "retrieves the voting power cap, optionally at a given height",
+        "summary": "retrieves the voting power cap, optionally at a given height",
         "operationId": "daoVoteDelegation_votingPowerCap_c165a9b",
         "parameters": [
           {
@@ -7244,8 +7666,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoteDelegation > votingPowerHookCallers",
-        "description": "retrieves the list of voting power hook callers",
+        "summary": "retrieves the list of voting power hook callers",
         "operationId": "daoVoteDelegation_votingPowerHookCallers_aeb5eed",
         "parameters": [
           {
@@ -7300,8 +7721,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVoting > activeThreshold",
-        "description": "retrieves the active threshold for the contract",
+        "summary": "retrieves the active threshold for the contract",
         "operationId": "daoVoting_activeThreshold_9279ec4",
         "parameters": [
           {
@@ -7335,8 +7755,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw20Staked > activeThreshold",
-        "description": "retrieves the active threshold for the contract",
+        "summary": "retrieves the active threshold for the contract",
         "operationId": "daoVotingCw20Staked_activeThreshold_9392dc5",
         "parameters": [
           {
@@ -7370,8 +7789,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw20Staked > dao",
-        "description": "retrieves the DAO address associated with the contract",
+        "summary": "retrieves the DAO address associated with the contract",
         "operationId": "daoVotingCw20Staked_dao_2eff002",
         "parameters": [
           {
@@ -7405,8 +7823,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw20Staked > stakingContract",
-        "description": "retrieves the staking contract address",
+        "summary": "retrieves the staking contract address",
         "operationId": "daoVotingCw20Staked_stakingContract_5ec4c51",
         "parameters": [
           {
@@ -7440,8 +7857,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw20Staked > tokenContract",
-        "description": "retrieves the token contract address",
+        "summary": "retrieves the token contract address",
         "operationId": "daoVotingCw20Staked_tokenContract_777b326",
         "parameters": [
           {
@@ -7475,8 +7891,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw20Staked > topStakers",
-        "description": "retrieves the top stakers sorted by voting power",
+        "summary": "retrieves the top stakers sorted by voting power",
         "operationId": "daoVotingCw20Staked_topStakers_082709f",
         "parameters": [
           {
@@ -7522,8 +7937,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw20Staked > totalPower",
-        "description": "retrieves the total voting power at the current block height",
+        "summary": "retrieves the total voting power at the current block height",
         "operationId": "daoVotingCw20Staked_totalPower_ff3087d",
         "parameters": [
           {
@@ -7557,8 +7971,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw20Staked > totalPowerAtHeight",
-        "description": "retrieves the total voting power, optionally at a specific block height",
+        "summary": "retrieves the total voting power, optionally at a specific block height",
         "operationId": "daoVotingCw20Staked_totalPowerAtHeight_d49fbbe",
         "parameters": [
           {
@@ -7604,8 +8017,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw20Staked > votingPower",
-        "description": "retrieves the voting power for an address at the current block height",
+        "summary": "retrieves the voting power for an address at the current block height",
         "operationId": "daoVotingCw20Staked_votingPower_d36c092",
         "parameters": [
           {
@@ -7651,8 +8063,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw20Staked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "summary": "retrieves the voting power for an address, optionally at a specific block height",
         "operationId": "daoVotingCw20Staked_votingPowerAtHeight_420f3e4",
         "parameters": [
           {
@@ -7707,8 +8118,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw4 > dao",
-        "description": "retrieves the DAO address associated with the contract",
+        "summary": "retrieves the DAO address associated with the contract",
         "operationId": "daoVotingCw4_dao_e54529c",
         "parameters": [
           {
@@ -7742,8 +8152,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw4 > groupContract",
-        "description": "retrieves the group contract address",
+        "summary": "retrieves the group contract address",
         "operationId": "daoVotingCw4_groupContract_75a72a8",
         "parameters": [
           {
@@ -7777,8 +8186,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw4 > totalPower",
-        "description": "retrieves the total voting power at the current block height",
+        "summary": "retrieves the total voting power at the current block height",
         "operationId": "daoVotingCw4_totalPower_7e803de",
         "parameters": [
           {
@@ -7812,8 +8220,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw4 > totalPowerAtHeight",
-        "description": "retrieves the total voting power, optionally at a specific block height",
+        "summary": "retrieves the total voting power, optionally at a specific block height",
         "operationId": "daoVotingCw4_totalPowerAtHeight_76cc5b6",
         "parameters": [
           {
@@ -7859,8 +8266,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw4 > votingPower",
-        "description": "retrieves the voting power for an address at the current block height",
+        "summary": "retrieves the voting power for an address at the current block height",
         "operationId": "daoVotingCw4_votingPower_650a775",
         "parameters": [
           {
@@ -7906,8 +8312,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw4 > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "summary": "retrieves the voting power for an address, optionally at a specific block height",
         "operationId": "daoVotingCw4_votingPowerAtHeight_cb6cf82",
         "parameters": [
           {
@@ -7962,8 +8367,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > activeThreshold",
-        "description": "retrieves the active threshold for the contract",
+        "summary": "retrieves the active threshold for the contract",
         "operationId": "daoVotingCw721Staked_activeThreshold_4a88717",
         "parameters": [
           {
@@ -7997,8 +8401,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > config",
-        "description": "retrieves the configuration of the contract",
+        "summary": "retrieves the configuration of the contract",
         "operationId": "daoVotingCw721Staked_config_0b7fd64",
         "parameters": [
           {
@@ -8032,8 +8435,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > dao",
-        "description": "retrieves the DAO address associated with the contract",
+        "summary": "retrieves the DAO address associated with the contract",
         "operationId": "daoVotingCw721Staked_dao_d16dab3",
         "parameters": [
           {
@@ -8067,8 +8469,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > hooks",
-        "description": "retrieves the hooks associated with the contract",
+        "summary": "retrieves the hooks associated with the contract",
         "operationId": "daoVotingCw721Staked_hooks_bcc2ff0",
         "parameters": [
           {
@@ -8102,8 +8503,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > nftClaims",
-        "description": "retrieves the NFT claims for a given address",
+        "summary": "retrieves the NFT claims for a given address",
         "operationId": "daoVotingCw721Staked_nftClaims_a44d1d9",
         "parameters": [
           {
@@ -8149,8 +8549,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > ownersOfStakedNfts",
-        "description": "retrieves a mapping of NFT token IDs to their stakers",
+        "summary": "retrieves a mapping of NFT token IDs to their stakers",
         "operationId": "daoVotingCw721Staked_ownersOfStakedNfts_d283d7c",
         "parameters": [
           {
@@ -8184,8 +8583,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > stakedNfts",
-        "description": "retrieves the staked NFTs for a given address",
+        "summary": "retrieves the staked NFTs for a given address",
         "operationId": "daoVotingCw721Staked_stakedNfts_669ef73",
         "parameters": [
           {
@@ -8249,8 +8647,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > staker",
-        "description": "retrieves the staker address for a given token ID",
+        "summary": "retrieves the staker address for a given token ID",
         "operationId": "daoVotingCw721Staked_staker_1d84edf",
         "parameters": [
           {
@@ -8296,8 +8693,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > topStakers",
-        "description": "retrieves the top stakers sorted by voting power",
+        "summary": "retrieves the top stakers sorted by voting power",
         "operationId": "daoVotingCw721Staked_topStakers_47a32b1",
         "parameters": [
           {
@@ -8343,8 +8739,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > totalPower",
-        "description": "retrieves the total voting power at the current block height",
+        "summary": "retrieves the total voting power at the current block height",
         "operationId": "daoVotingCw721Staked_totalPower_de10038",
         "parameters": [
           {
@@ -8378,8 +8773,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > totalPowerAtHeight",
-        "description": "retrieves the total voting power, optionally at a specific block height",
+        "summary": "retrieves the total voting power, optionally at a specific block height",
         "operationId": "daoVotingCw721Staked_totalPowerAtHeight_b721e79",
         "parameters": [
           {
@@ -8425,8 +8819,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > votingPower",
-        "description": "retrieves the voting power for an address at the current block height",
+        "summary": "retrieves the voting power for an address at the current block height",
         "operationId": "daoVotingCw721Staked_votingPower_7326ef8",
         "parameters": [
           {
@@ -8472,8 +8865,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingCw721Staked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "summary": "retrieves the voting power for an address, optionally at a specific block height",
         "operationId": "daoVotingCw721Staked_votingPowerAtHeight_fa561f5",
         "parameters": [
           {
@@ -8528,8 +8920,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > activeThreshold",
-        "description": "retrieves the active threshold for the contract",
+        "summary": "retrieves the active threshold for the contract",
         "operationId": "daoVotingNativeStaked_activeThreshold_9d97ec9",
         "parameters": [
           {
@@ -8563,8 +8954,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > claims",
-        "description": "retrieves the claims for a given address",
+        "summary": "retrieves the claims for a given address",
         "operationId": "daoVotingNativeStaked_claims_00c18fe",
         "parameters": [
           {
@@ -8610,8 +9000,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > config",
-        "description": "retrieves the configuration for the contract",
+        "summary": "retrieves the configuration for the contract",
         "operationId": "daoVotingNativeStaked_config_7f06451",
         "parameters": [
           {
@@ -8645,8 +9034,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > dao",
-        "description": "retrieves the DAO address associated with the contract",
+        "summary": "retrieves the DAO address associated with the contract",
         "operationId": "daoVotingNativeStaked_dao_c172130",
         "parameters": [
           {
@@ -8680,8 +9068,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > getHooks",
-        "description": "retrieves the hooks for the contract",
+        "summary": "retrieves the hooks for the contract",
         "operationId": "daoVotingNativeStaked_getHooks_7a12e0a",
         "parameters": [
           {
@@ -8715,8 +9102,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > listStakers",
-        "description": "retrieves a list of stakers with their balances",
+        "summary": "retrieves a list of stakers with their balances",
         "operationId": "daoVotingNativeStaked_listStakers_54c00b7",
         "parameters": [
           {
@@ -8771,8 +9157,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > topStakers",
-        "description": "retrieves the top stakers sorted by voting power",
+        "summary": "retrieves the top stakers sorted by voting power",
         "operationId": "daoVotingNativeStaked_topStakers_551517c",
         "parameters": [
           {
@@ -8806,8 +9191,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > totalPower",
-        "description": "retrieves the total voting power at the current block height",
+        "summary": "retrieves the total voting power at the current block height",
         "operationId": "daoVotingNativeStaked_totalPower_87bbb37",
         "parameters": [
           {
@@ -8841,8 +9225,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > totalPowerAtHeight",
-        "description": "retrieves the total voting power, optionally at a specific block height",
+        "summary": "retrieves the total voting power, optionally at a specific block height",
         "operationId": "daoVotingNativeStaked_totalPowerAtHeight_84c2d5d",
         "parameters": [
           {
@@ -8888,8 +9271,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > votingPower",
-        "description": "retrieves the voting power for an address at the current block height",
+        "summary": "retrieves the voting power for an address at the current block height",
         "operationId": "daoVotingNativeStaked_votingPower_b8dc412",
         "parameters": [
           {
@@ -8935,8 +9317,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingNativeStaked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "summary": "retrieves the voting power for an address, optionally at a specific block height",
         "operationId": "daoVotingNativeStaked_votingPowerAtHeight_e5d4633",
         "parameters": [
           {
@@ -8991,8 +9372,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > activeThreshold",
-        "description": "retrieves the active threshold for the contract",
+        "summary": "retrieves the active threshold for the contract",
         "operationId": "daoVotingOnftStaked_activeThreshold_68c3c0a",
         "parameters": [
           {
@@ -9026,8 +9406,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > config",
-        "description": "retrieves the configuration of the contract",
+        "summary": "retrieves the configuration of the contract",
         "operationId": "daoVotingOnftStaked_config_86f2e42",
         "parameters": [
           {
@@ -9061,8 +9440,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > dao",
-        "description": "retrieves the DAO address associated with the contract",
+        "summary": "retrieves the DAO address associated with the contract",
         "operationId": "daoVotingOnftStaked_dao_5a15747",
         "parameters": [
           {
@@ -9096,8 +9474,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > hooks",
-        "description": "retrieves the hooks associated with the contract",
+        "summary": "retrieves the hooks associated with the contract",
         "operationId": "daoVotingOnftStaked_hooks_a4acc3b",
         "parameters": [
           {
@@ -9131,8 +9508,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > nftClaims",
-        "description": "retrieves the NFT claims for a given address",
+        "summary": "retrieves the NFT claims for a given address",
         "operationId": "daoVotingOnftStaked_nftClaims_adc8779",
         "parameters": [
           {
@@ -9178,8 +9554,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > ownersOfStakedNfts",
-        "description": "retrieves a mapping of NFT token IDs to their stakers",
+        "summary": "retrieves a mapping of NFT token IDs to their stakers",
         "operationId": "daoVotingOnftStaked_ownersOfStakedNfts_f2fdf23",
         "parameters": [
           {
@@ -9213,8 +9588,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > stakedNfts",
-        "description": "retrieves the staked NFTs for a given address",
+        "summary": "retrieves the staked NFTs for a given address",
         "operationId": "daoVotingOnftStaked_stakedNfts_a0a4be7",
         "parameters": [
           {
@@ -9278,8 +9652,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > staker",
-        "description": "retrieves the staker address for a given token ID",
+        "summary": "retrieves the staker address for a given token ID",
         "operationId": "daoVotingOnftStaked_staker_32ddf61",
         "parameters": [
           {
@@ -9325,8 +9698,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > topStakers",
-        "description": "retrieves the top stakers sorted by voting power",
+        "summary": "retrieves the top stakers sorted by voting power",
         "operationId": "daoVotingOnftStaked_topStakers_a3b2f8b",
         "parameters": [
           {
@@ -9372,8 +9744,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > totalPower",
-        "description": "retrieves the total voting power at the current block height",
+        "summary": "retrieves the total voting power at the current block height",
         "operationId": "daoVotingOnftStaked_totalPower_9224e51",
         "parameters": [
           {
@@ -9407,8 +9778,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > totalPowerAtHeight",
-        "description": "retrieves the total voting power, optionally at a specific block height",
+        "summary": "retrieves the total voting power, optionally at a specific block height",
         "operationId": "daoVotingOnftStaked_totalPowerAtHeight_913d958",
         "parameters": [
           {
@@ -9454,8 +9824,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > votingPower",
-        "description": "retrieves the voting power for an address at the current block height",
+        "summary": "retrieves the voting power for an address at the current block height",
         "operationId": "daoVotingOnftStaked_votingPower_0b4fa87",
         "parameters": [
           {
@@ -9501,8 +9870,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingOnftStaked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "summary": "retrieves the voting power for an address, optionally at a specific block height",
         "operationId": "daoVotingOnftStaked_votingPowerAtHeight_4da3d88",
         "parameters": [
           {
@@ -9557,8 +9925,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > allVotersWithVotingPower",
-        "description": "retrieves all voters with their voting power",
+        "summary": "retrieves all voters with their voting power",
         "operationId": "daoVotingSgCommunityNft_allVotersWithVotingPower_b961e12",
         "parameters": [
           {
@@ -9604,8 +9971,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > dao",
-        "description": "retrieves the DAO address associated with the contract",
+        "summary": "retrieves the DAO address associated with the contract",
         "operationId": "daoVotingSgCommunityNft_dao_62d18e7",
         "parameters": [
           {
@@ -9639,8 +10005,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > hooks",
-        "description": "retrieves the hooks associated with the contract",
+        "summary": "retrieves the hooks associated with the contract",
         "operationId": "daoVotingSgCommunityNft_hooks_5a60ecf",
         "parameters": [
           {
@@ -9674,8 +10039,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > listVoters",
-        "description": "retrieves a list of voters",
+        "summary": "retrieves a list of voters",
         "operationId": "daoVotingSgCommunityNft_listVoters_a0e9eb3",
         "parameters": [
           {
@@ -9730,8 +10094,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > nftContract",
-        "description": "retrieves the NFT contract address associated with the contract",
+        "summary": "retrieves the NFT contract address associated with the contract",
         "operationId": "daoVotingSgCommunityNft_nftContract_93c4371",
         "parameters": [
           {
@@ -9765,8 +10128,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > registeredNft",
-        "description": "retrieves the registered NFT token ID for an address",
+        "summary": "retrieves the registered NFT token ID for an address",
         "operationId": "daoVotingSgCommunityNft_registeredNft_64a240c",
         "parameters": [
           {
@@ -9812,8 +10174,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > totalPower",
-        "description": "retrieves the total voting power at the current block height",
+        "summary": "retrieves the total voting power at the current block height",
         "operationId": "daoVotingSgCommunityNft_totalPower_5d42016",
         "parameters": [
           {
@@ -9847,8 +10208,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > totalPowerAtHeight",
-        "description": "retrieves the total voting power, optionally at a specific block height",
+        "summary": "retrieves the total voting power, optionally at a specific block height",
         "operationId": "daoVotingSgCommunityNft_totalPowerAtHeight_c7229d7",
         "parameters": [
           {
@@ -9894,8 +10254,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > votingPower",
-        "description": "retrieves the voting power for an address at the current block height",
+        "summary": "retrieves the voting power for an address at the current block height",
         "operationId": "daoVotingSgCommunityNft_votingPower_7809485",
         "parameters": [
           {
@@ -9941,8 +10300,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingSgCommunityNft > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "summary": "retrieves the voting power for an address, optionally at a specific block height",
         "operationId": "daoVotingSgCommunityNft_votingPowerAtHeight_6c6f478",
         "parameters": [
           {
@@ -9997,8 +10355,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > activeThreshold",
-        "description": "retrieves the active threshold for the contract",
+        "summary": "retrieves the active threshold for the contract",
         "operationId": "daoVotingTokenStaked_activeThreshold_474408a",
         "parameters": [
           {
@@ -10032,8 +10389,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > claims",
-        "description": "retrieves the claims for a given address",
+        "summary": "retrieves the claims for a given address",
         "operationId": "daoVotingTokenStaked_claims_4cac47b",
         "parameters": [
           {
@@ -10079,8 +10435,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > config",
-        "description": "retrieves the configuration of the contract",
+        "summary": "retrieves the configuration of the contract",
         "operationId": "daoVotingTokenStaked_config_c7fc40d",
         "parameters": [
           {
@@ -10114,8 +10469,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > dao",
-        "description": "retrieves the DAO address associated with the contract",
+        "summary": "retrieves the DAO address associated with the contract",
         "operationId": "daoVotingTokenStaked_dao_6f78229",
         "parameters": [
           {
@@ -10149,8 +10503,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > denom",
-        "description": "retrieves the token denomination used by the contract",
+        "summary": "retrieves the token denomination used by the contract",
         "operationId": "daoVotingTokenStaked_denom_7a5229c",
         "parameters": [
           {
@@ -10184,8 +10537,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > getHooks",
-        "description": "retrieves the hooks associated with the contract",
+        "summary": "retrieves the hooks associated with the contract",
         "operationId": "daoVotingTokenStaked_getHooks_3aa3a96",
         "parameters": [
           {
@@ -10219,8 +10571,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > listStakers",
-        "description": "retrieves a list of stakers",
+        "summary": "retrieves a list of stakers",
         "operationId": "daoVotingTokenStaked_listStakers_0615201",
         "parameters": [
           {
@@ -10275,8 +10626,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > tokenIssuerContract",
-        "description": "retrieves the token issuer contract address",
+        "summary": "retrieves the token issuer contract address",
         "operationId": "daoVotingTokenStaked_tokenIssuerContract_61b2f05",
         "parameters": [
           {
@@ -10310,8 +10660,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > topStakers",
-        "description": "retrieves the top stakers sorted by voting power",
+        "summary": "retrieves the top stakers sorted by voting power",
         "operationId": "daoVotingTokenStaked_topStakers_15c4f3a",
         "parameters": [
           {
@@ -10345,8 +10694,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > totalPower",
-        "description": "retrieves the total voting power at the current block height",
+        "summary": "retrieves the total voting power at the current block height",
         "operationId": "daoVotingTokenStaked_totalPower_8e7918b",
         "parameters": [
           {
@@ -10380,8 +10728,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > totalPowerAtHeight",
-        "description": "retrieves the total voting power, optionally at a specific block height",
+        "summary": "retrieves the total voting power, optionally at a specific block height",
         "operationId": "daoVotingTokenStaked_totalPowerAtHeight_40c9183",
         "parameters": [
           {
@@ -10427,8 +10774,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > votingPower",
-        "description": "retrieves the voting power for an address at the current block height",
+        "summary": "retrieves the voting power for an address at the current block height",
         "operationId": "daoVotingTokenStaked_votingPower_c9ba912",
         "parameters": [
           {
@@ -10474,8 +10820,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "daoVotingTokenStaked > votingPowerAtHeight",
-        "description": "retrieves the voting power for an address, optionally at a specific block height",
+        "summary": "retrieves the voting power for an address, optionally at a specific block height",
         "operationId": "daoVotingTokenStaked_votingPowerAtHeight_50d070c",
         "parameters": [
           {
@@ -10530,8 +10875,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "info",
-        "description": "retrieves the contract info (name and version)",
+        "summary": "retrieves the contract info (name and version)",
         "operationId": "info_06271ba",
         "parameters": [
           {
@@ -10565,8 +10909,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "instantiatedAt",
-        "description": "retrieves the contract instantiation timestamp",
+        "summary": "retrieves the contract instantiation timestamp",
         "operationId": "instantiatedAt_3a89a1b",
         "parameters": [
           {
@@ -10600,8 +10943,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "item",
-        "description": "retrieves a value stored in the contract state at the given key",
+        "summary": "retrieves a value stored in the contract state at the given key",
         "operationId": "item_4a33eac",
         "parameters": [
           {
@@ -10670,8 +11012,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "map",
-        "description": "retrieves a map stored in the contract state at the given key. if the map has a tuple key, you can access the map at any degree by omitting a suffix of the tuple key",
+        "summary": "retrieves a map stored in the contract state at the given key. if the map has a tuple key, you can access the map at any degree by omitting a suffix of the tuple key",
         "operationId": "map_60be986",
         "parameters": [
           {
@@ -10745,8 +11086,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdPreProposeSingleOverrule > config",
-        "description": "retrieves the configuration for the pre-propose module",
+        "summary": "retrieves the configuration for the pre-propose module",
         "operationId": "neutron_cwdPreProposeSingleOverrule_config_90dc296",
         "parameters": [
           {
@@ -10780,8 +11120,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdPreProposeSingleOverrule > dao",
-        "description": "retrieves the DAO address",
+        "summary": "retrieves the DAO address",
         "operationId": "neutron_cwdPreProposeSingleOverrule_dao_57eedf4",
         "parameters": [
           {
@@ -10815,8 +11154,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdPreProposeSingleOverrule > depositInfo",
-        "description": "retrieves deposit information for a given proposal ID",
+        "summary": "retrieves deposit information for a given proposal ID",
         "operationId": "neutron_cwdPreProposeSingleOverrule_depositInfo_42d3bb4",
         "parameters": [
           {
@@ -10862,8 +11200,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdPreProposeSingleOverrule > overruleProposalId",
-        "description": "retrieves the overrule proposal ID for a given subDAO proposal ID and timelock address",
+        "summary": "retrieves the overrule proposal ID for a given subDAO proposal ID and timelock address",
         "operationId": "neutron_cwdPreProposeSingleOverrule_overruleProp_d357345",
         "parameters": [
           {
@@ -10918,8 +11255,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdPreProposeSingleOverrule > proposalModule",
-        "description": "retrieves the proposal module address",
+        "summary": "retrieves the proposal module address",
         "operationId": "neutron_cwdPreProposeSingleOverrule_proposalModu_40a8862",
         "parameters": [
           {
@@ -10953,8 +11289,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdSubdaoPreProposeSingle > config",
-        "description": "retrieves the configuration for the pre-propose module",
+        "summary": "retrieves the configuration for the pre-propose module",
         "operationId": "neutron_cwdSubdaoPreProposeSingle_config_3815b1f",
         "parameters": [
           {
@@ -10988,8 +11323,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdSubdaoPreProposeSingle > dao",
-        "description": "retrieves the DAO address",
+        "summary": "retrieves the DAO address",
         "operationId": "neutron_cwdSubdaoPreProposeSingle_dao_cfca162",
         "parameters": [
           {
@@ -11023,8 +11357,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdSubdaoPreProposeSingle > depositInfo",
-        "description": "retrieves deposit information for a given proposal ID",
+        "summary": "retrieves deposit information for a given proposal ID",
         "operationId": "neutron_cwdSubdaoPreProposeSingle_depositInfo_874a884",
         "parameters": [
           {
@@ -11070,8 +11403,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdSubdaoPreProposeSingle > proposalModule",
-        "description": "retrieves the proposal module address",
+        "summary": "retrieves the proposal module address",
         "operationId": "neutron_cwdSubdaoPreProposeSingle_proposalModule_d594f30",
         "parameters": [
           {
@@ -11105,8 +11437,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdSubdaoPreProposeSingle > timelockAddress",
-        "description": "retrieves the timelock contract address",
+        "summary": "retrieves the timelock contract address",
         "operationId": "neutron_cwdSubdaoPreProposeSingle_timelockAddres_1540deb",
         "parameters": [
           {
@@ -11140,8 +11471,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdSubdaoTimelockSingle > config",
-        "description": "retrieves the configuration of the contract",
+        "summary": "retrieves the configuration of the contract",
         "operationId": "neutron_cwdSubdaoTimelockSingle_config_179f26a",
         "parameters": [
           {
@@ -11175,8 +11505,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdSubdaoTimelockSingle > listProposals",
-        "description": "retrieves a list of proposals",
+        "summary": "retrieves a list of proposals",
         "operationId": "neutron_cwdSubdaoTimelockSingle_listProposals_509dbed",
         "parameters": [
           {
@@ -11231,8 +11560,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdSubdaoTimelockSingle > proposal",
-        "description": "retrieves a proposal",
+        "summary": "retrieves a proposal",
         "operationId": "neutron_cwdSubdaoTimelockSingle_proposal_0157543",
         "parameters": [
           {
@@ -11278,8 +11606,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "neutron > cwdSubdaoTimelockSingle > proposalExecutionError",
-        "description": "retrieves the execution error for a specific proposal",
+        "summary": "retrieves the execution error for a specific proposal",
         "operationId": "neutron_cwdSubdaoTimelockSingle_proposalExecutio_643a891",
         "parameters": [
           {
@@ -11325,8 +11652,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "ownership",
-        "description": "retrieves the contract ownership defined by the cw-ownable crate",
+        "summary": "retrieves the contract ownership defined by the cw-ownable crate",
         "operationId": "ownership_01b8016",
         "parameters": [
           {
@@ -11360,8 +11686,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "polytone > note > remoteAddress",
-        "description": "retrieves the remote address for a given address",
+        "summary": "retrieves the remote address for a given address",
         "operationId": "polytone_note_remoteAddress_5e35d08",
         "parameters": [
           {
@@ -11407,8 +11732,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "polytone > listener > note",
-        "description": "retrieves the note contract address this listener is listening to",
+        "summary": "retrieves the note contract address this listener is listening to",
         "operationId": "polytone_listener_note_45299d9",
         "parameters": [
           {
@@ -11442,8 +11766,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "polytone > listener > result",
-        "description": "retrieves the result for a given initiator and initiator message",
+        "summary": "retrieves the result for a given initiator and initiator message",
         "operationId": "polytone_listener_result_7b4a2d4",
         "parameters": [
           {
@@ -11498,8 +11821,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "polytone > proxy > instantiator",
-        "description": "retrieves the instantiator/owner of the proxy contract",
+        "summary": "retrieves the instantiator/owner of the proxy contract",
         "operationId": "polytone_proxy_instantiator_2d68d1a",
         "parameters": [
           {
@@ -11533,8 +11855,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "polytone > voice > remoteController",
-        "description": "retrieves the remote controller for a given address",
+        "summary": "retrieves the remote controller for a given address",
         "operationId": "polytone_voice_remoteController_3159a64",
         "parameters": [
           {
@@ -11580,8 +11901,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "polytone > voice > senderInfoForProxy",
-        "description": "retrieves sender information for a proxy address",
+        "summary": "retrieves sender information for a proxy address",
         "operationId": "polytone_voice_senderInfoForProxy_dcc7ac9",
         "parameters": [
           {
@@ -11627,8 +11947,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "valence > account > admin",
-        "description": "retrieves the admin address of the contract",
+        "summary": "retrieves the admin address of the contract",
         "operationId": "valence_account_admin_9b29390",
         "parameters": [
           {
@@ -11662,8 +11981,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "valence > account > data",
-        "description": "retrieves account data (admin and rebalancer config)",
+        "summary": "retrieves account data (admin and rebalancer config)",
         "operationId": "valence_account_data_24d6c1c",
         "parameters": [
           {
@@ -11697,8 +12015,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "valence > account > fundsInAuction",
-        "description": "retrieves information about funds currently in auction for the account",
+        "summary": "retrieves information about funds currently in auction for the account",
         "operationId": "valence_account_fundsInAuction_4a8078e",
         "parameters": [
           {
@@ -11732,8 +12049,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "valence > account > rebalancerConfig",
-        "description": "retrieves the rebalancer configuration for the account",
+        "summary": "retrieves the rebalancer configuration for the account",
         "operationId": "valence_account_rebalancerConfig_556b7f2",
         "parameters": [
           {
@@ -11767,8 +12083,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "valence > account > rebalancerTargets",
-        "description": "retrieves the rebalancer targets",
+        "summary": "retrieves the rebalancer targets",
         "operationId": "valence_account_rebalancerTargets_fffdb90",
         "parameters": [
           {
@@ -11802,8 +12117,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "valence > auction > config",
-        "description": "retrieves the auction configuration and price strategy from the contract",
+        "summary": "retrieves the auction configuration and price strategy from the contract",
         "operationId": "valence_auction_config_9edfde1",
         "parameters": [
           {
@@ -11837,8 +12151,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "valence > oracle > allPrices",
-        "description": "retrieves all price pairs from the oracle",
+        "summary": "retrieves all price pairs from the oracle",
         "operationId": "valence_oracle_allPrices_c394449",
         "parameters": [
           {
@@ -11872,8 +12185,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "valence > oracle > price",
-        "description": "retrieves the price for a specific pair from the oracle",
+        "summary": "retrieves the price for a specific pair from the oracle",
         "operationId": "valence_oracle_price_8679915",
         "parameters": [
           {
@@ -11919,8 +12231,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "valence > oracle > pricesOfDenom",
-        "description": "retrieves all prices for a specific base token",
+        "summary": "retrieves all prices for a specific base token",
         "operationId": "valence_oracle_pricesOfDenom_310b460",
         "parameters": [
           {
@@ -11966,8 +12277,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "wasmswap > price",
-        "description": "calculates the price ratio between the two tokens in the pool",
+        "summary": "calculates the price ratio between the two tokens in the pool",
         "operationId": "wasmswap_price_ceb9bc3",
         "parameters": [
           {
@@ -12001,8 +12311,7 @@
         "tags": [
           "contract"
         ],
-        "summary": "wasmswap > summary",
-        "description": "retrieves summary information about the pool",
+        "summary": "retrieves summary information about the pool",
         "operationId": "wasmswap_summary_0151574",
         "parameters": [
           {
@@ -12036,8 +12345,7 @@
         "tags": [
           "account"
         ],
-        "summary": "abstract > accountsOwnedBy",
-        "description": "retrieves account (that use abstract governance to manage ownership) where the account is the owner",
+        "summary": "retrieves account (that use abstract governance to manage ownership) where the account is the owner",
         "operationId": "abstract_accountsOwnedBy_88d4682",
         "parameters": [
           {
@@ -12083,8 +12391,7 @@
         "tags": [
           "account"
         ],
-        "summary": "bank > balance",
-        "description": "retrieves the balance of a specific token for this account",
+        "summary": "retrieves the balance of a specific token for this account",
         "operationId": "bank_balance_f698fed",
         "parameters": [
           {
@@ -12130,8 +12437,7 @@
         "tags": [
           "account"
         ],
-        "summary": "bank > balances",
-        "description": "retrieves all token balances for this account",
+        "summary": "retrieves all token balances for this account",
         "operationId": "bank_balances_d3391b8",
         "parameters": [
           {
@@ -12165,8 +12471,7 @@
         "tags": [
           "account"
         ],
-        "summary": "contract > ownedBy",
-        "description": "retrieves contracts (that use cw-ownable to manage ownership) where the account is the owner",
+        "summary": "retrieves contracts (that use cw-ownable to manage ownership) where the account is the owner",
         "operationId": "contract_ownedBy_adee6bd",
         "parameters": [
           {
@@ -12212,8 +12517,7 @@
         "tags": [
           "account"
         ],
-        "summary": "daos > adminOf",
-        "description": "retrieves DAOs where the account is the admin",
+        "summary": "retrieves DAOs where the account is the admin",
         "operationId": "daos_adminOf_ab037e6",
         "parameters": [
           {
@@ -12247,8 +12551,7 @@
         "tags": [
           "account"
         ],
-        "summary": "daos > memberOf",
-        "description": "retrieves DAOs where the account is a member",
+        "summary": "retrieves DAOs where the account is a member",
         "operationId": "daos_memberOf_32b1e82",
         "parameters": [
           {
@@ -12282,8 +12585,7 @@
         "tags": [
           "account"
         ],
-        "summary": "nft > collections",
-        "description": "retrieves NFT collections with their NFTs owned by the account",
+        "summary": "retrieves NFT collections with their NFTs owned by the account",
         "operationId": "nft_collections_cf99c0e",
         "parameters": [
           {
@@ -12317,8 +12619,7 @@
         "tags": [
           "account"
         ],
-        "summary": "nft > stakedWithDaos",
-        "description": "retrieves NFT collections with their NFTs staked by the account with DAOs",
+        "summary": "retrieves NFT collections with their NFTs staked by the account with DAOs",
         "operationId": "nft_stakedWithDaos_5024b0c",
         "parameters": [
           {
@@ -12352,8 +12653,7 @@
         "tags": [
           "account"
         ],
-        "summary": "polytone > proxies",
-        "description": "retrieves mapping of polytone note contract to the remote address controlled by this account on the chain the note is connected to",
+        "summary": "retrieves mapping of polytone note contract to the remote address controlled by this account on the chain the note is connected to",
         "operationId": "polytone_proxies_21cffb0",
         "parameters": [
           {
@@ -12387,8 +12687,7 @@
         "tags": [
           "account"
         ],
-        "summary": "proposals > created",
-        "description": "retrieves proposals created by the account",
+        "summary": "retrieves proposals created by the account",
         "operationId": "proposals_created_713a069",
         "parameters": [
           {
@@ -12422,8 +12721,7 @@
         "tags": [
           "account"
         ],
-        "summary": "proposals > stats",
-        "description": "retrieves statistics about proposals created and votes cast by the account",
+        "summary": "retrieves statistics about proposals created and votes cast by the account",
         "operationId": "proposals_stats_1bd7d53",
         "parameters": [
           {
@@ -12457,8 +12755,7 @@
         "tags": [
           "account"
         ],
-        "summary": "proposals > votesCast",
-        "description": "retrieves votes cast by the account",
+        "summary": "retrieves votes cast by the account",
         "operationId": "proposals_votesCast_39a222a",
         "parameters": [
           {
@@ -12492,8 +12789,7 @@
         "tags": [
           "account"
         ],
-        "summary": "tokens > list",
-        "description": "retrieves a list of CW20 token balances for the account",
+        "summary": "retrieves a list of CW20 token balances for the account",
         "operationId": "tokens_list_138b5b1",
         "parameters": [
           {
@@ -12527,8 +12823,7 @@
         "tags": [
           "account"
         ],
-        "summary": "valence > accounts",
-        "description": "retrieves valence accounts owned by this account",
+        "summary": "retrieves valence accounts owned by this account",
         "operationId": "valence_accounts_3d7dcbd",
         "parameters": [
           {
@@ -12562,8 +12857,7 @@
         "tags": [
           "account"
         ],
-        "summary": "vesting > ownerOf",
-        "description": "retrieves the addresses of cw-vesting contracts owned by the account or by cw1-whitelist contracts where the account is an admin",
+        "summary": "retrieves the addresses of cw-vesting contracts owned by the account or by cw1-whitelist contracts where the account is an admin",
         "operationId": "vesting_ownerOf_82be06d",
         "parameters": [
           {
@@ -12597,8 +12891,7 @@
         "tags": [
           "account"
         ],
-        "summary": "veto > vetoableProposals",
-        "description": "retrieves all proposals this account has the authority to veto",
+        "summary": "retrieves all proposals this account has the authority to veto",
         "operationId": "veto_vetoableProposals_54c5a8e",
         "parameters": [
           {
@@ -12632,8 +12925,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "communityPool > balances",
-        "description": "retrieves the current balances of the community pool",
+        "summary": "retrieves the current balances of the community pool",
         "operationId": "communityPool_balances_389d52b",
         "parameters": [
           {
@@ -12658,8 +12950,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "featuredDaos",
-        "description": "retrieves a list of featured DAOs for the current chain, with the order number from the entire featured list",
+        "summary": "retrieves a list of featured DAOs for the current chain, with the order number from the entire featured list",
         "operationId": "featuredDaos_2e024c5",
         "parameters": [
           {
@@ -12684,8 +12975,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "gov > decodedProposal",
-        "description": "retrieves and decodes a chain governance proposal",
+        "summary": "retrieves and decodes a chain governance proposal",
         "operationId": "gov_decodedProposal_b649571",
         "parameters": [
           {
@@ -12722,8 +13012,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "gov > decodedVote",
-        "description": "retrieves and decodes a vote for a specific chain governance proposal and voter",
+        "summary": "retrieves and decodes a vote for a specific chain governance proposal and voter",
         "operationId": "gov_decodedVote_bcbeb14",
         "parameters": [
           {
@@ -12769,8 +13058,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "gov > proposal",
-        "description": "retrieves a chain governance proposal",
+        "summary": "retrieves a chain governance proposal",
         "operationId": "gov_proposal_fd2b26d",
         "parameters": [
           {
@@ -12807,8 +13095,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "gov > proposals",
-        "description": "retrieves a list of chain governance proposals in ascending order",
+        "summary": "retrieves a list of chain governance proposals in ascending order",
         "operationId": "gov_proposals_1a7a4e5",
         "parameters": [
           {
@@ -12854,8 +13141,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "gov > reverseProposals",
-        "description": "retrieves a list of chain governance proposals in descending order",
+        "summary": "retrieves a list of chain governance proposals in descending order",
         "operationId": "gov_reverseProposals_8570f90",
         "parameters": [
           {
@@ -12901,8 +13187,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "gov > reverseVotes",
-        "description": "retrieves a list of votes for a specific chain governance proposal in descending order",
+        "summary": "retrieves a list of votes for a specific chain governance proposal in descending order",
         "operationId": "gov_reverseVotes_b22de24",
         "parameters": [
           {
@@ -12957,8 +13242,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "gov > vote",
-        "description": "retrieves a vote for a specific chain governance proposal and voter",
+        "summary": "retrieves a vote for a specific chain governance proposal and voter",
         "operationId": "gov_vote_8328cd4",
         "parameters": [
           {
@@ -13004,8 +13288,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "gov > votes",
-        "description": "retrieves a list of votes for a specific chain governance proposal in ascending order",
+        "summary": "retrieves a list of votes for a specific chain governance proposal in ascending order",
         "operationId": "gov_votes_c083074",
         "parameters": [
           {
@@ -13060,8 +13343,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "stats > daos",
-        "description": "counts the number of DAOs created",
+        "summary": "counts the number of DAOs created",
         "operationId": "stats_daos_6eb23c9",
         "parameters": [
           {
@@ -13098,8 +13380,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "stats > proposals",
-        "description": "counts the number of proposals created",
+        "summary": "counts the number of proposals created",
         "operationId": "stats_proposals_908892d",
         "parameters": [
           {
@@ -13136,8 +13417,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "stats > uniqueVoters",
-        "description": "counts the number of unique voters",
+        "summary": "counts the number of unique voters",
         "operationId": "stats_uniqueVoters_9379b11",
         "parameters": [
           {
@@ -13174,8 +13454,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "stats > votes",
-        "description": "counts the number of votes cast",
+        "summary": "counts the number of votes cast",
         "operationId": "stats_votes_749565d",
         "parameters": [
           {
@@ -13212,8 +13491,7 @@
         "tags": [
           "generic"
         ],
-        "summary": "token > daos",
-        "description": "retrieves DAOs that use a native token as their governance token",
+        "summary": "retrieves DAOs that use a native token as their governance token",
         "operationId": "token_daos_f048a4a",
         "parameters": [
           {

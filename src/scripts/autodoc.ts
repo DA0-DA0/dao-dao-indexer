@@ -88,8 +88,7 @@ const makeFormulaDoc = (
     {
       get: {
         tags: [type],
-        summary: path.replace(/\//g, ' > '),
-        description: formula.docs?.description || '`' + path + '`',
+        summary: formula.docs?.description || path.replace(/\//g, ' > '),
         operationId,
         parameters: [
           {
