@@ -11,3 +11,5 @@ requests.json
 
 # meilisearch
 data.ms
+
+.idea/
