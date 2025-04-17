@@ -32,7 +32,7 @@
     }
   ],
   "paths": {
-    "/{chainId}/contract/{address}/abstract/account/accountId": {
+    "/{chainId}/contract/{contractAddress}/abstract/account/accountId": {
       "get": {
         "tags": [
           "contract"
@@ -50,7 +50,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -66,7 +66,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/account/info": {
+    "/{chainId}/contract/{contractAddress}/abstract/account/info": {
       "get": {
         "tags": [
           "contract"
@@ -84,7 +84,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -100,7 +100,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/account/moduleInfos": {
+    "/{chainId}/contract/{contractAddress}/abstract/account/moduleInfos": {
       "get": {
         "tags": [
           "contract"
@@ -118,7 +118,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -134,7 +134,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/account/owner": {
+    "/{chainId}/contract/{contractAddress}/abstract/account/owner": {
       "get": {
         "tags": [
           "contract"
@@ -152,7 +152,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -168,7 +168,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/account/subAccountIds": {
+    "/{chainId}/contract/{contractAddress}/abstract/account/subAccountIds": {
       "get": {
         "tags": [
           "contract"
@@ -186,7 +186,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -202,7 +202,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/account/suspensionStatus": {
+    "/{chainId}/contract/{contractAddress}/abstract/account/suspensionStatus": {
       "get": {
         "tags": [
           "contract"
@@ -220,7 +220,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -236,7 +236,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/account/whitelistedModules": {
+    "/{chainId}/contract/{contractAddress}/abstract/account/whitelistedModules": {
       "get": {
         "tags": [
           "contract"
@@ -254,7 +254,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -270,7 +270,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/registry/accountsByModule": {
+    "/{chainId}/contract/{contractAddress}/abstract/registry/accountsByModule": {
       "get": {
         "tags": [
           "contract"
@@ -288,7 +288,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -304,7 +304,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/registry/localAccounts": {
+    "/{chainId}/contract/{contractAddress}/abstract/registry/localAccounts": {
       "get": {
         "tags": [
           "contract"
@@ -322,7 +322,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -338,7 +338,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/registry/module": {
+    "/{chainId}/contract/{contractAddress}/abstract/registry/module": {
       "get": {
         "tags": [
           "contract"
@@ -356,7 +356,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -402,7 +402,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/registry/moduleConfig": {
+    "/{chainId}/contract/{contractAddress}/abstract/registry/moduleConfig": {
       "get": {
         "tags": [
           "contract"
@@ -420,7 +420,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -466,7 +466,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/abstract/registry/registeredModules": {
+    "/{chainId}/contract/{contractAddress}/abstract/registry/registeredModules": {
       "get": {
         "tags": [
           "contract"
@@ -484,7 +484,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -500,7 +500,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw1Whitelist/adminList": {
+    "/{chainId}/contract/{contractAddress}/cw1Whitelist/adminList": {
       "get": {
         "tags": [
           "contract"
@@ -518,7 +518,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -534,7 +534,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/allAccounts": {
+    "/{chainId}/contract/{contractAddress}/cw20/allAccounts": {
       "get": {
         "tags": [
           "contract"
@@ -552,7 +552,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -589,7 +589,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/allowance": {
+    "/{chainId}/contract/{contractAddress}/cw20/allowance": {
       "get": {
         "tags": [
           "contract"
@@ -607,7 +607,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -644,7 +644,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/balance": {
+    "/{chainId}/contract/{contractAddress}/cw20/balance": {
       "get": {
         "tags": [
           "contract"
@@ -662,7 +662,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -690,7 +690,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/daos": {
+    "/{chainId}/contract/{contractAddress}/cw20/daos": {
       "get": {
         "tags": [
           "contract"
@@ -708,7 +708,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -724,7 +724,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/logoUrl": {
+    "/{chainId}/contract/{contractAddress}/cw20/logoUrl": {
       "get": {
         "tags": [
           "contract"
@@ -742,7 +742,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -758,7 +758,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/marketingInfo": {
+    "/{chainId}/contract/{contractAddress}/cw20/marketingInfo": {
       "get": {
         "tags": [
           "contract"
@@ -776,7 +776,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -792,7 +792,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/minter": {
+    "/{chainId}/contract/{contractAddress}/cw20/minter": {
       "get": {
         "tags": [
           "contract"
@@ -810,7 +810,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -826,7 +826,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/ownerAllowances": {
+    "/{chainId}/contract/{contractAddress}/cw20/ownerAllowances": {
       "get": {
         "tags": [
           "contract"
@@ -844,7 +844,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -890,7 +890,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/spenderAllowances": {
+    "/{chainId}/contract/{contractAddress}/cw20/spenderAllowances": {
       "get": {
         "tags": [
           "contract"
@@ -908,7 +908,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -954,7 +954,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/tokenInfo": {
+    "/{chainId}/contract/{contractAddress}/cw20/tokenInfo": {
       "get": {
         "tags": [
           "contract"
@@ -972,7 +972,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -988,7 +988,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20/topAccountBalances": {
+    "/{chainId}/contract/{contractAddress}/cw20/topAccountBalances": {
       "get": {
         "tags": [
           "contract"
@@ -1006,7 +1006,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1034,7 +1034,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/claims": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/claims": {
       "get": {
         "tags": [
           "contract"
@@ -1052,7 +1052,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1080,7 +1080,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/config": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/config": {
       "get": {
         "tags": [
           "contract"
@@ -1098,7 +1098,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1114,7 +1114,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/getHooks": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/getHooks": {
       "get": {
         "tags": [
           "contract"
@@ -1132,7 +1132,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1148,7 +1148,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/listStakers": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/listStakers": {
       "get": {
         "tags": [
           "contract"
@@ -1166,7 +1166,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1203,7 +1203,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/stakedBalance": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/stakedBalance": {
       "get": {
         "tags": [
           "contract"
@@ -1221,7 +1221,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1258,7 +1258,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/stakedBalanceAtHeight": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/stakedBalanceAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -1276,7 +1276,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1313,7 +1313,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/stakedValue": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/stakedValue": {
       "get": {
         "tags": [
           "contract"
@@ -1331,7 +1331,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1359,7 +1359,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/topStakers": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/topStakers": {
       "get": {
         "tags": [
           "contract"
@@ -1377,7 +1377,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1405,7 +1405,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/totalStaked": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/totalStaked": {
       "get": {
         "tags": [
           "contract"
@@ -1423,7 +1423,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1451,7 +1451,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/totalStakedAtHeight": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/totalStakedAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -1469,7 +1469,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1497,7 +1497,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw20Stake/totalValue": {
+    "/{chainId}/contract/{contractAddress}/cw20Stake/totalValue": {
       "get": {
         "tags": [
           "contract"
@@ -1515,7 +1515,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1531,7 +1531,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw4Group/admin": {
+    "/{chainId}/contract/{contractAddress}/cw4Group/admin": {
       "get": {
         "tags": [
           "contract"
@@ -1549,7 +1549,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1565,7 +1565,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw4Group/hooks": {
+    "/{chainId}/contract/{contractAddress}/cw4Group/hooks": {
       "get": {
         "tags": [
           "contract"
@@ -1583,7 +1583,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1599,7 +1599,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw4Group/listMembers": {
+    "/{chainId}/contract/{contractAddress}/cw4Group/listMembers": {
       "get": {
         "tags": [
           "contract"
@@ -1617,7 +1617,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1654,7 +1654,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw4Group/member": {
+    "/{chainId}/contract/{contractAddress}/cw4Group/member": {
       "get": {
         "tags": [
           "contract"
@@ -1672,7 +1672,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1709,7 +1709,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw4Group/totalWeight": {
+    "/{chainId}/contract/{contractAddress}/cw4Group/totalWeight": {
       "get": {
         "tags": [
           "contract"
@@ -1727,7 +1727,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1755,7 +1755,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/allNftInfo": {
+    "/{chainId}/contract/{contractAddress}/cw721/allNftInfo": {
       "get": {
         "tags": [
           "contract"
@@ -1773,7 +1773,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1801,7 +1801,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/allOperators": {
+    "/{chainId}/contract/{contractAddress}/cw721/allOperators": {
       "get": {
         "tags": [
           "contract"
@@ -1819,7 +1819,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1865,7 +1865,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/allTokens": {
+    "/{chainId}/contract/{contractAddress}/cw721/allTokens": {
       "get": {
         "tags": [
           "contract"
@@ -1883,7 +1883,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1920,7 +1920,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/approvals": {
+    "/{chainId}/contract/{contractAddress}/cw721/approvals": {
       "get": {
         "tags": [
           "contract"
@@ -1938,7 +1938,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -1966,7 +1966,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/approvalsForSpender": {
+    "/{chainId}/contract/{contractAddress}/cw721/approvalsForSpender": {
       "get": {
         "tags": [
           "contract"
@@ -1984,7 +1984,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2021,7 +2021,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/contractInfo": {
+    "/{chainId}/contract/{contractAddress}/cw721/contractInfo": {
       "get": {
         "tags": [
           "contract"
@@ -2039,7 +2039,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2055,7 +2055,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/minter": {
+    "/{chainId}/contract/{contractAddress}/cw721/minter": {
       "get": {
         "tags": [
           "contract"
@@ -2073,7 +2073,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2089,7 +2089,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/nftInfo": {
+    "/{chainId}/contract/{contractAddress}/cw721/nftInfo": {
       "get": {
         "tags": [
           "contract"
@@ -2107,7 +2107,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2135,7 +2135,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/numTokens": {
+    "/{chainId}/contract/{contractAddress}/cw721/numTokens": {
       "get": {
         "tags": [
           "contract"
@@ -2153,7 +2153,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2169,7 +2169,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/ownerOf": {
+    "/{chainId}/contract/{contractAddress}/cw721/ownerOf": {
       "get": {
         "tags": [
           "contract"
@@ -2187,7 +2187,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2215,7 +2215,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cw721/tokens": {
+    "/{chainId}/contract/{contractAddress}/cw721/tokens": {
       "get": {
         "tags": [
           "contract"
@@ -2233,7 +2233,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2279,7 +2279,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwPayrollFactory/codeId": {
+    "/{chainId}/contract/{contractAddress}/cwPayrollFactory/codeId": {
       "get": {
         "tags": [
           "contract"
@@ -2297,7 +2297,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2313,7 +2313,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwPayrollFactory/listVestingContracts": {
+    "/{chainId}/contract/{contractAddress}/cwPayrollFactory/listVestingContracts": {
       "get": {
         "tags": [
           "contract"
@@ -2331,7 +2331,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2368,7 +2368,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwPayrollFactory/listVestingContractsByInstantiator": {
+    "/{chainId}/contract/{contractAddress}/cwPayrollFactory/listVestingContractsByInstantiator": {
       "get": {
         "tags": [
           "contract"
@@ -2386,7 +2386,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2432,7 +2432,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwPayrollFactory/listVestingContractsByInstantiatorReverse": {
+    "/{chainId}/contract/{contractAddress}/cwPayrollFactory/listVestingContractsByInstantiatorReverse": {
       "get": {
         "tags": [
           "contract"
@@ -2450,7 +2450,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2496,7 +2496,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwPayrollFactory/listVestingContractsByRecipient": {
+    "/{chainId}/contract/{contractAddress}/cwPayrollFactory/listVestingContractsByRecipient": {
       "get": {
         "tags": [
           "contract"
@@ -2514,7 +2514,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2560,7 +2560,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwPayrollFactory/listVestingContractsByRecipientReverse": {
+    "/{chainId}/contract/{contractAddress}/cwPayrollFactory/listVestingContractsByRecipientReverse": {
       "get": {
         "tags": [
           "contract"
@@ -2578,7 +2578,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2624,7 +2624,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwPayrollFactory/listVestingContractsReverse": {
+    "/{chainId}/contract/{contractAddress}/cwPayrollFactory/listVestingContractsReverse": {
       "get": {
         "tags": [
           "contract"
@@ -2642,7 +2642,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2679,7 +2679,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwPayrollFactory/ownership": {
+    "/{chainId}/contract/{contractAddress}/cwPayrollFactory/ownership": {
       "get": {
         "tags": [
           "contract"
@@ -2697,7 +2697,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2713,7 +2713,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwTokenSwap/status": {
+    "/{chainId}/contract/{contractAddress}/cwTokenSwap/status": {
       "get": {
         "tags": [
           "contract"
@@ -2731,7 +2731,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2747,7 +2747,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwVesting/info": {
+    "/{chainId}/contract/{contractAddress}/cwVesting/info": {
       "get": {
         "tags": [
           "contract"
@@ -2765,7 +2765,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2781,7 +2781,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwVesting/ownership": {
+    "/{chainId}/contract/{contractAddress}/cwVesting/ownership": {
       "get": {
         "tags": [
           "contract"
@@ -2799,7 +2799,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2815,7 +2815,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwVesting/totalToVest": {
+    "/{chainId}/contract/{contractAddress}/cwVesting/totalToVest": {
       "get": {
         "tags": [
           "contract"
@@ -2833,7 +2833,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2849,7 +2849,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwVesting/unbondingDurationSeconds": {
+    "/{chainId}/contract/{contractAddress}/cwVesting/unbondingDurationSeconds": {
       "get": {
         "tags": [
           "contract"
@@ -2867,7 +2867,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2883,7 +2883,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwVesting/validatorStakes": {
+    "/{chainId}/contract/{contractAddress}/cwVesting/validatorStakes": {
       "get": {
         "tags": [
           "contract"
@@ -2901,7 +2901,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2917,7 +2917,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwVesting/vestDuration": {
+    "/{chainId}/contract/{contractAddress}/cwVesting/vestDuration": {
       "get": {
         "tags": [
           "contract"
@@ -2935,7 +2935,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2951,7 +2951,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/cwVesting/vested": {
+    "/{chainId}/contract/{contractAddress}/cwVesting/vested": {
       "get": {
         "tags": [
           "contract"
@@ -2969,7 +2969,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -2997,7 +2997,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/activeProposalModules": {
+    "/{chainId}/contract/{contractAddress}/daoCore/activeProposalModules": {
       "get": {
         "tags": [
           "contract"
@@ -3015,7 +3015,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3031,7 +3031,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/admin": {
+    "/{chainId}/contract/{contractAddress}/daoCore/admin": {
       "get": {
         "tags": [
           "contract"
@@ -3049,7 +3049,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3065,7 +3065,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/adminNomination": {
+    "/{chainId}/contract/{contractAddress}/daoCore/adminNomination": {
       "get": {
         "tags": [
           "contract"
@@ -3083,7 +3083,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3099,7 +3099,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/approvalDaos": {
+    "/{chainId}/contract/{contractAddress}/daoCore/approvalDaos": {
       "get": {
         "tags": [
           "contract"
@@ -3117,7 +3117,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3133,7 +3133,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/config": {
+    "/{chainId}/contract/{contractAddress}/daoCore/config": {
       "get": {
         "tags": [
           "contract"
@@ -3151,7 +3151,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3167,7 +3167,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/cw20Balances": {
+    "/{chainId}/contract/{contractAddress}/daoCore/cw20Balances": {
       "get": {
         "tags": [
           "contract"
@@ -3185,7 +3185,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3201,7 +3201,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/cw20List": {
+    "/{chainId}/contract/{contractAddress}/daoCore/cw20List": {
       "get": {
         "tags": [
           "contract"
@@ -3219,7 +3219,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3235,7 +3235,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/cw721List": {
+    "/{chainId}/contract/{contractAddress}/daoCore/cw721List": {
       "get": {
         "tags": [
           "contract"
@@ -3253,7 +3253,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3269,7 +3269,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/daoUri": {
+    "/{chainId}/contract/{contractAddress}/daoCore/daoUri": {
       "get": {
         "tags": [
           "contract"
@@ -3287,7 +3287,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3303,7 +3303,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/initialActions": {
+    "/{chainId}/contract/{contractAddress}/daoCore/initialActions": {
       "get": {
         "tags": [
           "contract"
@@ -3321,7 +3321,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3337,7 +3337,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/item": {
+    "/{chainId}/contract/{contractAddress}/daoCore/item": {
       "get": {
         "tags": [
           "contract"
@@ -3355,7 +3355,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3383,7 +3383,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/listItems": {
+    "/{chainId}/contract/{contractAddress}/daoCore/listItems": {
       "get": {
         "tags": [
           "contract"
@@ -3401,7 +3401,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3417,7 +3417,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/listSubDaos": {
+    "/{chainId}/contract/{contractAddress}/daoCore/listSubDaos": {
       "get": {
         "tags": [
           "contract"
@@ -3435,7 +3435,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3451,7 +3451,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/pauseInfo": {
+    "/{chainId}/contract/{contractAddress}/daoCore/pauseInfo": {
       "get": {
         "tags": [
           "contract"
@@ -3469,7 +3469,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3485,7 +3485,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/paused": {
+    "/{chainId}/contract/{contractAddress}/daoCore/paused": {
       "get": {
         "tags": [
           "contract"
@@ -3503,7 +3503,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3519,7 +3519,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/polytoneProxies": {
+    "/{chainId}/contract/{contractAddress}/daoCore/polytoneProxies": {
       "get": {
         "tags": [
           "contract"
@@ -3537,7 +3537,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3553,7 +3553,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/potentialSubDaos": {
+    "/{chainId}/contract/{contractAddress}/daoCore/potentialSubDaos": {
       "get": {
         "tags": [
           "contract"
@@ -3571,7 +3571,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3587,7 +3587,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/proposalModules": {
+    "/{chainId}/contract/{contractAddress}/daoCore/proposalModules": {
       "get": {
         "tags": [
           "contract"
@@ -3605,7 +3605,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3621,7 +3621,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/totalPower": {
+    "/{chainId}/contract/{contractAddress}/daoCore/totalPower": {
       "get": {
         "tags": [
           "contract"
@@ -3639,7 +3639,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3655,7 +3655,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/totalPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoCore/totalPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -3673,7 +3673,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3701,7 +3701,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/votingModule": {
+    "/{chainId}/contract/{contractAddress}/daoCore/votingModule": {
       "get": {
         "tags": [
           "contract"
@@ -3719,7 +3719,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3735,7 +3735,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/votingPower": {
+    "/{chainId}/contract/{contractAddress}/daoCore/votingPower": {
       "get": {
         "tags": [
           "contract"
@@ -3753,7 +3753,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3781,7 +3781,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/votingPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoCore/votingPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -3799,7 +3799,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3836,7 +3836,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/dumpState": {
+    "/{chainId}/contract/{contractAddress}/daoCore/dumpState": {
       "get": {
         "tags": [
           "contract"
@@ -3854,7 +3854,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3870,7 +3870,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/junoHomeMetadata": {
+    "/{chainId}/contract/{contractAddress}/daoCore/junoHomeMetadata": {
       "get": {
         "tags": [
           "contract"
@@ -3888,7 +3888,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3904,7 +3904,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/allMembers": {
+    "/{chainId}/contract/{contractAddress}/daoCore/allMembers": {
       "get": {
         "tags": [
           "contract"
@@ -3922,7 +3922,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3950,7 +3950,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/lastMembershipChange": {
+    "/{chainId}/contract/{contractAddress}/daoCore/lastMembershipChange": {
       "get": {
         "tags": [
           "contract"
@@ -3968,7 +3968,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -3984,7 +3984,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/listMembers": {
+    "/{chainId}/contract/{contractAddress}/daoCore/listMembers": {
       "get": {
         "tags": [
           "contract"
@@ -4002,7 +4002,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4018,7 +4018,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/memberCount": {
+    "/{chainId}/contract/{contractAddress}/daoCore/memberCount": {
       "get": {
         "tags": [
           "contract"
@@ -4036,7 +4036,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4064,7 +4064,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/allProposals": {
+    "/{chainId}/contract/{contractAddress}/daoCore/allProposals": {
       "get": {
         "tags": [
           "contract"
@@ -4082,7 +4082,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4119,7 +4119,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/lastActivity": {
+    "/{chainId}/contract/{contractAddress}/daoCore/lastActivity": {
       "get": {
         "tags": [
           "contract"
@@ -4137,7 +4137,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4153,7 +4153,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/openProposals": {
+    "/{chainId}/contract/{contractAddress}/daoCore/openProposals": {
       "get": {
         "tags": [
           "contract"
@@ -4171,7 +4171,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4199,7 +4199,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoCore/proposalCount": {
+    "/{chainId}/contract/{contractAddress}/daoCore/proposalCount": {
       "get": {
         "tags": [
           "contract"
@@ -4217,7 +4217,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4233,7 +4233,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/approver": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/approver": {
       "get": {
         "tags": [
           "contract"
@@ -4251,7 +4251,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4267,7 +4267,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/completedProposalIdForCreatedProposalId": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/completedProposalIdForCreatedProposalId": {
       "get": {
         "tags": [
           "contract"
@@ -4285,7 +4285,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4313,7 +4313,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/completedProposals": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/completedProposals": {
       "get": {
         "tags": [
           "contract"
@@ -4331,7 +4331,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4368,7 +4368,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/config": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/config": {
       "get": {
         "tags": [
           "contract"
@@ -4386,7 +4386,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4402,7 +4402,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/dao": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/dao": {
       "get": {
         "tags": [
           "contract"
@@ -4420,7 +4420,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4436,7 +4436,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/depositInfo": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/depositInfo": {
       "get": {
         "tags": [
           "contract"
@@ -4454,7 +4454,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4482,7 +4482,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/pendingProposals": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/pendingProposals": {
       "get": {
         "tags": [
           "contract"
@@ -4500,7 +4500,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4537,7 +4537,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/proposal": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/proposal": {
       "get": {
         "tags": [
           "contract"
@@ -4555,7 +4555,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4583,7 +4583,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/proposalCompletedAt": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/proposalCompletedAt": {
       "get": {
         "tags": [
           "contract"
@@ -4601,7 +4601,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4629,7 +4629,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/proposalCreatedAt": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/proposalCreatedAt": {
       "get": {
         "tags": [
           "contract"
@@ -4647,7 +4647,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4675,7 +4675,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/proposalModule": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/proposalModule": {
       "get": {
         "tags": [
           "contract"
@@ -4693,7 +4693,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4709,7 +4709,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/reverseCompletedProposals": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/reverseCompletedProposals": {
       "get": {
         "tags": [
           "contract"
@@ -4727,7 +4727,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4764,7 +4764,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalMultiple/reversePendingProposals": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalMultiple/reversePendingProposals": {
       "get": {
         "tags": [
           "contract"
@@ -4782,7 +4782,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4819,7 +4819,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/approver": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/approver": {
       "get": {
         "tags": [
           "contract"
@@ -4837,7 +4837,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4853,7 +4853,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/completedProposalIdForCreatedProposalId": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/completedProposalIdForCreatedProposalId": {
       "get": {
         "tags": [
           "contract"
@@ -4871,7 +4871,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4899,7 +4899,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/completedProposals": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/completedProposals": {
       "get": {
         "tags": [
           "contract"
@@ -4917,7 +4917,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4954,7 +4954,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/config": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/config": {
       "get": {
         "tags": [
           "contract"
@@ -4972,7 +4972,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -4988,7 +4988,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/dao": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/dao": {
       "get": {
         "tags": [
           "contract"
@@ -5006,7 +5006,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5022,7 +5022,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/depositInfo": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/depositInfo": {
       "get": {
         "tags": [
           "contract"
@@ -5040,7 +5040,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5068,7 +5068,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/pendingProposals": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/pendingProposals": {
       "get": {
         "tags": [
           "contract"
@@ -5086,7 +5086,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5123,7 +5123,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/proposal": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/proposal": {
       "get": {
         "tags": [
           "contract"
@@ -5141,7 +5141,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5169,7 +5169,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/proposalCompletedAt": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/proposalCompletedAt": {
       "get": {
         "tags": [
           "contract"
@@ -5187,7 +5187,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5215,7 +5215,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/proposalCreatedAt": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/proposalCreatedAt": {
       "get": {
         "tags": [
           "contract"
@@ -5233,7 +5233,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5261,7 +5261,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/proposalModule": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/proposalModule": {
       "get": {
         "tags": [
           "contract"
@@ -5279,7 +5279,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5295,7 +5295,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/reverseCompletedProposals": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/reverseCompletedProposals": {
       "get": {
         "tags": [
           "contract"
@@ -5313,7 +5313,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5350,7 +5350,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprovalSingle/reversePendingProposals": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprovalSingle/reversePendingProposals": {
       "get": {
         "tags": [
           "contract"
@@ -5368,7 +5368,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5405,7 +5405,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprover/approverProposalIdForPreProposeApprovalId": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprover/approverProposalIdForPreProposeApprovalId": {
       "get": {
         "tags": [
           "contract"
@@ -5423,7 +5423,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5451,7 +5451,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprover/config": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprover/config": {
       "get": {
         "tags": [
           "contract"
@@ -5469,7 +5469,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5485,7 +5485,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprover/dao": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprover/dao": {
       "get": {
         "tags": [
           "contract"
@@ -5503,7 +5503,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5519,7 +5519,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprover/depositInfo": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprover/depositInfo": {
       "get": {
         "tags": [
           "contract"
@@ -5537,7 +5537,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5565,7 +5565,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprover/preProposeApprovalContract": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprover/preProposeApprovalContract": {
       "get": {
         "tags": [
           "contract"
@@ -5583,7 +5583,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5599,7 +5599,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprover/preProposeApprovalIdForApproverProposalId": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprover/preProposeApprovalIdForApproverProposalId": {
       "get": {
         "tags": [
           "contract"
@@ -5617,7 +5617,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5645,7 +5645,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeApprover/proposalModule": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeApprover/proposalModule": {
       "get": {
         "tags": [
           "contract"
@@ -5663,7 +5663,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5679,7 +5679,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeMultiple/config": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeMultiple/config": {
       "get": {
         "tags": [
           "contract"
@@ -5697,7 +5697,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5713,7 +5713,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeMultiple/dao": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeMultiple/dao": {
       "get": {
         "tags": [
           "contract"
@@ -5731,7 +5731,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5747,7 +5747,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeMultiple/depositInfo": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeMultiple/depositInfo": {
       "get": {
         "tags": [
           "contract"
@@ -5765,7 +5765,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5793,7 +5793,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeMultiple/proposalModule": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeMultiple/proposalModule": {
       "get": {
         "tags": [
           "contract"
@@ -5811,7 +5811,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5827,7 +5827,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeSingle/config": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeSingle/config": {
       "get": {
         "tags": [
           "contract"
@@ -5845,7 +5845,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5861,7 +5861,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeSingle/dao": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeSingle/dao": {
       "get": {
         "tags": [
           "contract"
@@ -5879,7 +5879,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5895,7 +5895,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeSingle/depositInfo": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeSingle/depositInfo": {
       "get": {
         "tags": [
           "contract"
@@ -5913,7 +5913,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5941,7 +5941,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoPreProposeSingle/proposalModule": {
+    "/{chainId}/contract/{contractAddress}/daoPreProposeSingle/proposalModule": {
       "get": {
         "tags": [
           "contract"
@@ -5959,7 +5959,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -5975,7 +5975,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/config": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/config": {
       "get": {
         "tags": [
           "contract"
@@ -5993,7 +5993,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6009,7 +6009,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/creationPolicy": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/creationPolicy": {
       "get": {
         "tags": [
           "contract"
@@ -6027,7 +6027,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6043,7 +6043,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/dao": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/dao": {
       "get": {
         "tags": [
           "contract"
@@ -6061,7 +6061,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6077,7 +6077,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/delegationModule": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/delegationModule": {
       "get": {
         "tags": [
           "contract"
@@ -6095,7 +6095,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6111,7 +6111,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/listProposals": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/listProposals": {
       "get": {
         "tags": [
           "contract"
@@ -6129,7 +6129,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6175,7 +6175,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/listVotes": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/listVotes": {
       "get": {
         "tags": [
           "contract"
@@ -6193,7 +6193,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6239,7 +6239,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/nextProposalId": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/nextProposalId": {
       "get": {
         "tags": [
           "contract"
@@ -6257,7 +6257,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6273,7 +6273,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/openProposals": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/openProposals": {
       "get": {
         "tags": [
           "contract"
@@ -6291,7 +6291,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6319,7 +6319,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/proposal": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/proposal": {
       "get": {
         "tags": [
           "contract"
@@ -6337,7 +6337,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6365,7 +6365,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/proposalCount": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/proposalCount": {
       "get": {
         "tags": [
           "contract"
@@ -6383,7 +6383,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6399,7 +6399,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/proposalCreatedAt": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/proposalCreatedAt": {
       "get": {
         "tags": [
           "contract"
@@ -6417,7 +6417,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6445,7 +6445,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/reverseProposals": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/reverseProposals": {
       "get": {
         "tags": [
           "contract"
@@ -6463,7 +6463,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6500,7 +6500,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalMultiple/vote": {
+    "/{chainId}/contract/{contractAddress}/daoProposalMultiple/vote": {
       "get": {
         "tags": [
           "contract"
@@ -6518,7 +6518,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6555,7 +6555,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/config": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/config": {
       "get": {
         "tags": [
           "contract"
@@ -6573,7 +6573,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6589,7 +6589,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/creationPolicy": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/creationPolicy": {
       "get": {
         "tags": [
           "contract"
@@ -6607,7 +6607,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6623,7 +6623,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/dao": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/dao": {
       "get": {
         "tags": [
           "contract"
@@ -6641,7 +6641,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6657,7 +6657,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/delegationModule": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/delegationModule": {
       "get": {
         "tags": [
           "contract"
@@ -6675,7 +6675,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6691,7 +6691,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/listProposals": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/listProposals": {
       "get": {
         "tags": [
           "contract"
@@ -6709,7 +6709,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6755,7 +6755,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/listVotes": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/listVotes": {
       "get": {
         "tags": [
           "contract"
@@ -6773,7 +6773,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6819,7 +6819,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/nextProposalId": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/nextProposalId": {
       "get": {
         "tags": [
           "contract"
@@ -6837,7 +6837,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6853,7 +6853,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/openProposals": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/openProposals": {
       "get": {
         "tags": [
           "contract"
@@ -6871,7 +6871,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6899,7 +6899,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/proposal": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/proposal": {
       "get": {
         "tags": [
           "contract"
@@ -6917,7 +6917,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6945,7 +6945,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/proposalCount": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/proposalCount": {
       "get": {
         "tags": [
           "contract"
@@ -6963,7 +6963,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -6979,7 +6979,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/proposalCreatedAt": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/proposalCreatedAt": {
       "get": {
         "tags": [
           "contract"
@@ -6997,7 +6997,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7025,7 +7025,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/reverseProposals": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/reverseProposals": {
       "get": {
         "tags": [
           "contract"
@@ -7043,7 +7043,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7080,7 +7080,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoProposalSingle/vote": {
+    "/{chainId}/contract/{contractAddress}/daoProposalSingle/vote": {
       "get": {
         "tags": [
           "contract"
@@ -7098,7 +7098,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7135,7 +7135,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoRewardsDistributor/distribution": {
+    "/{chainId}/contract/{contractAddress}/daoRewardsDistributor/distribution": {
       "get": {
         "tags": [
           "contract"
@@ -7153,7 +7153,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7181,7 +7181,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoRewardsDistributor/distributions": {
+    "/{chainId}/contract/{contractAddress}/daoRewardsDistributor/distributions": {
       "get": {
         "tags": [
           "contract"
@@ -7199,7 +7199,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7236,7 +7236,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoteDelegation/config": {
+    "/{chainId}/contract/{contractAddress}/daoVoteDelegation/config": {
       "get": {
         "tags": [
           "contract"
@@ -7254,7 +7254,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7270,7 +7270,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoteDelegation/delegates": {
+    "/{chainId}/contract/{contractAddress}/daoVoteDelegation/delegates": {
       "get": {
         "tags": [
           "contract"
@@ -7288,7 +7288,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7325,7 +7325,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoteDelegation/delegations": {
+    "/{chainId}/contract/{contractAddress}/daoVoteDelegation/delegations": {
       "get": {
         "tags": [
           "contract"
@@ -7343,7 +7343,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7398,7 +7398,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoteDelegation/info": {
+    "/{chainId}/contract/{contractAddress}/daoVoteDelegation/info": {
       "get": {
         "tags": [
           "contract"
@@ -7416,7 +7416,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7432,7 +7432,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoteDelegation/proposalModules": {
+    "/{chainId}/contract/{contractAddress}/daoVoteDelegation/proposalModules": {
       "get": {
         "tags": [
           "contract"
@@ -7450,7 +7450,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7487,7 +7487,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoteDelegation/registration": {
+    "/{chainId}/contract/{contractAddress}/daoVoteDelegation/registration": {
       "get": {
         "tags": [
           "contract"
@@ -7505,7 +7505,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7542,7 +7542,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoteDelegation/unvotedDelegatedVotingPower": {
+    "/{chainId}/contract/{contractAddress}/daoVoteDelegation/unvotedDelegatedVotingPower": {
       "get": {
         "tags": [
           "contract"
@@ -7560,7 +7560,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7615,7 +7615,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoteDelegation/votingPowerCap": {
+    "/{chainId}/contract/{contractAddress}/daoVoteDelegation/votingPowerCap": {
       "get": {
         "tags": [
           "contract"
@@ -7633,7 +7633,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7661,7 +7661,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoteDelegation/votingPowerHookCallers": {
+    "/{chainId}/contract/{contractAddress}/daoVoteDelegation/votingPowerHookCallers": {
       "get": {
         "tags": [
           "contract"
@@ -7679,7 +7679,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7716,7 +7716,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVoting/activeThreshold": {
+    "/{chainId}/contract/{contractAddress}/daoVoting/activeThreshold": {
       "get": {
         "tags": [
           "contract"
@@ -7734,7 +7734,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7750,7 +7750,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw20Staked/activeThreshold": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw20Staked/activeThreshold": {
       "get": {
         "tags": [
           "contract"
@@ -7768,7 +7768,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7784,7 +7784,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw20Staked/dao": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw20Staked/dao": {
       "get": {
         "tags": [
           "contract"
@@ -7802,7 +7802,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7818,7 +7818,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw20Staked/stakingContract": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw20Staked/stakingContract": {
       "get": {
         "tags": [
           "contract"
@@ -7836,7 +7836,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7852,7 +7852,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw20Staked/tokenContract": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw20Staked/tokenContract": {
       "get": {
         "tags": [
           "contract"
@@ -7870,7 +7870,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7886,7 +7886,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw20Staked/topStakers": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw20Staked/topStakers": {
       "get": {
         "tags": [
           "contract"
@@ -7904,7 +7904,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7932,7 +7932,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw20Staked/totalPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw20Staked/totalPower": {
       "get": {
         "tags": [
           "contract"
@@ -7950,7 +7950,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -7966,7 +7966,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw20Staked/totalPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw20Staked/totalPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -7984,7 +7984,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8012,7 +8012,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw20Staked/votingPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw20Staked/votingPower": {
       "get": {
         "tags": [
           "contract"
@@ -8030,7 +8030,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8058,7 +8058,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw20Staked/votingPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw20Staked/votingPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -8076,7 +8076,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8113,7 +8113,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw4/dao": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw4/dao": {
       "get": {
         "tags": [
           "contract"
@@ -8131,7 +8131,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8147,7 +8147,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw4/groupContract": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw4/groupContract": {
       "get": {
         "tags": [
           "contract"
@@ -8165,7 +8165,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8181,7 +8181,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw4/totalPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw4/totalPower": {
       "get": {
         "tags": [
           "contract"
@@ -8199,7 +8199,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8215,7 +8215,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw4/totalPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw4/totalPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -8233,7 +8233,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8261,7 +8261,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw4/votingPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw4/votingPower": {
       "get": {
         "tags": [
           "contract"
@@ -8279,7 +8279,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8307,7 +8307,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw4/votingPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw4/votingPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -8325,7 +8325,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8362,7 +8362,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/activeThreshold": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/activeThreshold": {
       "get": {
         "tags": [
           "contract"
@@ -8380,7 +8380,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8396,7 +8396,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/config": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/config": {
       "get": {
         "tags": [
           "contract"
@@ -8414,7 +8414,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8430,7 +8430,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/dao": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/dao": {
       "get": {
         "tags": [
           "contract"
@@ -8448,7 +8448,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8464,7 +8464,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/hooks": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/hooks": {
       "get": {
         "tags": [
           "contract"
@@ -8482,7 +8482,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8498,7 +8498,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/nftClaims": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/nftClaims": {
       "get": {
         "tags": [
           "contract"
@@ -8516,7 +8516,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8544,7 +8544,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/ownersOfStakedNfts": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/ownersOfStakedNfts": {
       "get": {
         "tags": [
           "contract"
@@ -8562,7 +8562,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8578,7 +8578,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/stakedNfts": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/stakedNfts": {
       "get": {
         "tags": [
           "contract"
@@ -8596,7 +8596,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8642,7 +8642,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/staker": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/staker": {
       "get": {
         "tags": [
           "contract"
@@ -8660,7 +8660,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8688,7 +8688,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/topStakers": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/topStakers": {
       "get": {
         "tags": [
           "contract"
@@ -8706,7 +8706,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8734,7 +8734,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/totalPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/totalPower": {
       "get": {
         "tags": [
           "contract"
@@ -8752,7 +8752,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8768,7 +8768,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/totalPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/totalPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -8786,7 +8786,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8814,7 +8814,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/votingPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/votingPower": {
       "get": {
         "tags": [
           "contract"
@@ -8832,7 +8832,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8860,7 +8860,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingCw721Staked/votingPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingCw721Staked/votingPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -8878,7 +8878,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8915,7 +8915,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/activeThreshold": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/activeThreshold": {
       "get": {
         "tags": [
           "contract"
@@ -8933,7 +8933,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8949,7 +8949,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/claims": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/claims": {
       "get": {
         "tags": [
           "contract"
@@ -8967,7 +8967,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -8995,7 +8995,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/config": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/config": {
       "get": {
         "tags": [
           "contract"
@@ -9013,7 +9013,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9029,7 +9029,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/dao": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/dao": {
       "get": {
         "tags": [
           "contract"
@@ -9047,7 +9047,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9063,7 +9063,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/getHooks": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/getHooks": {
       "get": {
         "tags": [
           "contract"
@@ -9081,7 +9081,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9097,7 +9097,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/listStakers": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/listStakers": {
       "get": {
         "tags": [
           "contract"
@@ -9115,7 +9115,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9152,7 +9152,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/topStakers": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/topStakers": {
       "get": {
         "tags": [
           "contract"
@@ -9170,7 +9170,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9186,7 +9186,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/totalPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/totalPower": {
       "get": {
         "tags": [
           "contract"
@@ -9204,7 +9204,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9220,7 +9220,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/totalPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/totalPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -9238,7 +9238,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9266,7 +9266,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/votingPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/votingPower": {
       "get": {
         "tags": [
           "contract"
@@ -9284,7 +9284,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9312,7 +9312,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingNativeStaked/votingPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingNativeStaked/votingPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -9330,7 +9330,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9367,7 +9367,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/activeThreshold": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/activeThreshold": {
       "get": {
         "tags": [
           "contract"
@@ -9385,7 +9385,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9401,7 +9401,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/config": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/config": {
       "get": {
         "tags": [
           "contract"
@@ -9419,7 +9419,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9435,7 +9435,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/dao": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/dao": {
       "get": {
         "tags": [
           "contract"
@@ -9453,7 +9453,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9469,7 +9469,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/hooks": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/hooks": {
       "get": {
         "tags": [
           "contract"
@@ -9487,7 +9487,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9503,7 +9503,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/nftClaims": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/nftClaims": {
       "get": {
         "tags": [
           "contract"
@@ -9521,7 +9521,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9549,7 +9549,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/ownersOfStakedNfts": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/ownersOfStakedNfts": {
       "get": {
         "tags": [
           "contract"
@@ -9567,7 +9567,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9583,7 +9583,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/stakedNfts": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/stakedNfts": {
       "get": {
         "tags": [
           "contract"
@@ -9601,7 +9601,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9647,7 +9647,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/staker": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/staker": {
       "get": {
         "tags": [
           "contract"
@@ -9665,7 +9665,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9693,7 +9693,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/topStakers": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/topStakers": {
       "get": {
         "tags": [
           "contract"
@@ -9711,7 +9711,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9739,7 +9739,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/totalPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/totalPower": {
       "get": {
         "tags": [
           "contract"
@@ -9757,7 +9757,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9773,7 +9773,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/totalPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/totalPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -9791,7 +9791,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9819,7 +9819,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/votingPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/votingPower": {
       "get": {
         "tags": [
           "contract"
@@ -9837,7 +9837,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9865,7 +9865,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingOnftStaked/votingPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingOnftStaked/votingPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -9883,7 +9883,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9920,7 +9920,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/allVotersWithVotingPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/allVotersWithVotingPower": {
       "get": {
         "tags": [
           "contract"
@@ -9938,7 +9938,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -9966,7 +9966,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/dao": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/dao": {
       "get": {
         "tags": [
           "contract"
@@ -9984,7 +9984,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10000,7 +10000,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/hooks": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/hooks": {
       "get": {
         "tags": [
           "contract"
@@ -10018,7 +10018,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10034,7 +10034,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/listVoters": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/listVoters": {
       "get": {
         "tags": [
           "contract"
@@ -10052,7 +10052,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10089,7 +10089,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/nftContract": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/nftContract": {
       "get": {
         "tags": [
           "contract"
@@ -10107,7 +10107,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10123,7 +10123,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/registeredNft": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/registeredNft": {
       "get": {
         "tags": [
           "contract"
@@ -10141,7 +10141,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10169,7 +10169,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/totalPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/totalPower": {
       "get": {
         "tags": [
           "contract"
@@ -10187,7 +10187,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10203,7 +10203,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/totalPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/totalPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -10221,7 +10221,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10249,7 +10249,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/votingPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/votingPower": {
       "get": {
         "tags": [
           "contract"
@@ -10267,7 +10267,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10295,7 +10295,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingSgCommunityNft/votingPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingSgCommunityNft/votingPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -10313,7 +10313,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10350,7 +10350,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/activeThreshold": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/activeThreshold": {
       "get": {
         "tags": [
           "contract"
@@ -10368,7 +10368,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10384,7 +10384,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/claims": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/claims": {
       "get": {
         "tags": [
           "contract"
@@ -10402,7 +10402,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10430,7 +10430,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/config": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/config": {
       "get": {
         "tags": [
           "contract"
@@ -10448,7 +10448,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10464,7 +10464,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/dao": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/dao": {
       "get": {
         "tags": [
           "contract"
@@ -10482,7 +10482,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10498,7 +10498,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/denom": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/denom": {
       "get": {
         "tags": [
           "contract"
@@ -10516,7 +10516,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10532,7 +10532,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/getHooks": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/getHooks": {
       "get": {
         "tags": [
           "contract"
@@ -10550,7 +10550,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10566,7 +10566,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/listStakers": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/listStakers": {
       "get": {
         "tags": [
           "contract"
@@ -10584,7 +10584,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10621,7 +10621,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/tokenIssuerContract": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/tokenIssuerContract": {
       "get": {
         "tags": [
           "contract"
@@ -10639,7 +10639,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10655,7 +10655,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/topStakers": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/topStakers": {
       "get": {
         "tags": [
           "contract"
@@ -10673,7 +10673,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10689,7 +10689,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/totalPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/totalPower": {
       "get": {
         "tags": [
           "contract"
@@ -10707,7 +10707,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10723,7 +10723,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/totalPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/totalPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -10741,7 +10741,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10769,7 +10769,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/votingPower": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/votingPower": {
       "get": {
         "tags": [
           "contract"
@@ -10787,7 +10787,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10815,7 +10815,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/daoVotingTokenStaked/votingPowerAtHeight": {
+    "/{chainId}/contract/{contractAddress}/daoVotingTokenStaked/votingPowerAtHeight": {
       "get": {
         "tags": [
           "contract"
@@ -10833,7 +10833,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10870,7 +10870,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/info": {
+    "/{chainId}/contract/{contractAddress}/info": {
       "get": {
         "tags": [
           "contract"
@@ -10888,7 +10888,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10904,7 +10904,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/instantiatedAt": {
+    "/{chainId}/contract/{contractAddress}/instantiatedAt": {
       "get": {
         "tags": [
           "contract"
@@ -10922,7 +10922,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -10938,7 +10938,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/item": {
+    "/{chainId}/contract/{contractAddress}/item": {
       "get": {
         "tags": [
           "contract"
@@ -10956,7 +10956,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11007,7 +11007,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/map": {
+    "/{chainId}/contract/{contractAddress}/map": {
       "get": {
         "tags": [
           "contract"
@@ -11025,7 +11025,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11081,7 +11081,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdPreProposeSingleOverrule/config": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdPreProposeSingleOverrule/config": {
       "get": {
         "tags": [
           "contract"
@@ -11099,7 +11099,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11115,7 +11115,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdPreProposeSingleOverrule/dao": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdPreProposeSingleOverrule/dao": {
       "get": {
         "tags": [
           "contract"
@@ -11133,7 +11133,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11149,7 +11149,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdPreProposeSingleOverrule/depositInfo": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdPreProposeSingleOverrule/depositInfo": {
       "get": {
         "tags": [
           "contract"
@@ -11167,7 +11167,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11195,7 +11195,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdPreProposeSingleOverrule/overruleProposalId": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdPreProposeSingleOverrule/overruleProposalId": {
       "get": {
         "tags": [
           "contract"
@@ -11213,7 +11213,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11250,7 +11250,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdPreProposeSingleOverrule/proposalModule": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdPreProposeSingleOverrule/proposalModule": {
       "get": {
         "tags": [
           "contract"
@@ -11268,7 +11268,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11284,7 +11284,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdSubdaoPreProposeSingle/config": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdSubdaoPreProposeSingle/config": {
       "get": {
         "tags": [
           "contract"
@@ -11302,7 +11302,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11318,7 +11318,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdSubdaoPreProposeSingle/dao": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdSubdaoPreProposeSingle/dao": {
       "get": {
         "tags": [
           "contract"
@@ -11336,7 +11336,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11352,7 +11352,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdSubdaoPreProposeSingle/depositInfo": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdSubdaoPreProposeSingle/depositInfo": {
       "get": {
         "tags": [
           "contract"
@@ -11370,7 +11370,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11398,7 +11398,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdSubdaoPreProposeSingle/proposalModule": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdSubdaoPreProposeSingle/proposalModule": {
       "get": {
         "tags": [
           "contract"
@@ -11416,7 +11416,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11432,7 +11432,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdSubdaoPreProposeSingle/timelockAddress": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdSubdaoPreProposeSingle/timelockAddress": {
       "get": {
         "tags": [
           "contract"
@@ -11450,7 +11450,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11466,7 +11466,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdSubdaoTimelockSingle/config": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdSubdaoTimelockSingle/config": {
       "get": {
         "tags": [
           "contract"
@@ -11484,7 +11484,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11500,7 +11500,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdSubdaoTimelockSingle/listProposals": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdSubdaoTimelockSingle/listProposals": {
       "get": {
         "tags": [
           "contract"
@@ -11518,7 +11518,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11555,7 +11555,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdSubdaoTimelockSingle/proposal": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdSubdaoTimelockSingle/proposal": {
       "get": {
         "tags": [
           "contract"
@@ -11573,7 +11573,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11601,7 +11601,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/neutron/cwdSubdaoTimelockSingle/proposalExecutionError": {
+    "/{chainId}/contract/{contractAddress}/neutron/cwdSubdaoTimelockSingle/proposalExecutionError": {
       "get": {
         "tags": [
           "contract"
@@ -11619,7 +11619,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11647,7 +11647,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/ownership": {
+    "/{chainId}/contract/{contractAddress}/ownership": {
       "get": {
         "tags": [
           "contract"
@@ -11665,7 +11665,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11681,7 +11681,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/polytone/note/remoteAddress": {
+    "/{chainId}/contract/{contractAddress}/polytone/note/remoteAddress": {
       "get": {
         "tags": [
           "contract"
@@ -11699,7 +11699,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11727,7 +11727,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/polytone/listener/note": {
+    "/{chainId}/contract/{contractAddress}/polytone/listener/note": {
       "get": {
         "tags": [
           "contract"
@@ -11745,7 +11745,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11761,7 +11761,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/polytone/listener/result": {
+    "/{chainId}/contract/{contractAddress}/polytone/listener/result": {
       "get": {
         "tags": [
           "contract"
@@ -11779,7 +11779,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11816,7 +11816,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/polytone/proxy/instantiator": {
+    "/{chainId}/contract/{contractAddress}/polytone/proxy/instantiator": {
       "get": {
         "tags": [
           "contract"
@@ -11834,7 +11834,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11850,7 +11850,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/polytone/voice/remoteController": {
+    "/{chainId}/contract/{contractAddress}/polytone/voice/remoteController": {
       "get": {
         "tags": [
           "contract"
@@ -11868,7 +11868,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11896,7 +11896,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/polytone/voice/senderInfoForProxy": {
+    "/{chainId}/contract/{contractAddress}/polytone/voice/senderInfoForProxy": {
       "get": {
         "tags": [
           "contract"
@@ -11914,7 +11914,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11942,7 +11942,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/valence/account/admin": {
+    "/{chainId}/contract/{contractAddress}/valence/account/admin": {
       "get": {
         "tags": [
           "contract"
@@ -11960,7 +11960,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -11976,7 +11976,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/valence/account/data": {
+    "/{chainId}/contract/{contractAddress}/valence/account/data": {
       "get": {
         "tags": [
           "contract"
@@ -11994,7 +11994,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12010,7 +12010,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/valence/account/fundsInAuction": {
+    "/{chainId}/contract/{contractAddress}/valence/account/fundsInAuction": {
       "get": {
         "tags": [
           "contract"
@@ -12028,7 +12028,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12044,7 +12044,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/valence/account/rebalancerConfig": {
+    "/{chainId}/contract/{contractAddress}/valence/account/rebalancerConfig": {
       "get": {
         "tags": [
           "contract"
@@ -12062,7 +12062,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12078,7 +12078,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/valence/account/rebalancerTargets": {
+    "/{chainId}/contract/{contractAddress}/valence/account/rebalancerTargets": {
       "get": {
         "tags": [
           "contract"
@@ -12096,7 +12096,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12112,7 +12112,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/valence/auction/config": {
+    "/{chainId}/contract/{contractAddress}/valence/auction/config": {
       "get": {
         "tags": [
           "contract"
@@ -12130,7 +12130,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12146,7 +12146,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/valence/oracle/allPrices": {
+    "/{chainId}/contract/{contractAddress}/valence/oracle/allPrices": {
       "get": {
         "tags": [
           "contract"
@@ -12164,7 +12164,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12180,7 +12180,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/valence/oracle/price": {
+    "/{chainId}/contract/{contractAddress}/valence/oracle/price": {
       "get": {
         "tags": [
           "contract"
@@ -12198,7 +12198,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12226,7 +12226,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/valence/oracle/pricesOfDenom": {
+    "/{chainId}/contract/{contractAddress}/valence/oracle/pricesOfDenom": {
       "get": {
         "tags": [
           "contract"
@@ -12244,7 +12244,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12272,7 +12272,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/wasmswap/price": {
+    "/{chainId}/contract/{contractAddress}/wasmswap/price": {
       "get": {
         "tags": [
           "contract"
@@ -12290,7 +12290,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12306,7 +12306,7 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/wasmswap/summary": {
+    "/{chainId}/contract/{contractAddress}/wasmswap/summary": {
       "get": {
         "tags": [
           "contract"
@@ -12324,7 +12324,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12340,7 +12340,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/abstract/accountsOwnedBy": {
+    "/{chainId}/account/{accountAddress}/abstract/accountsOwnedBy": {
       "get": {
         "tags": [
           "account"
@@ -12358,7 +12358,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12386,7 +12386,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/bank/balance": {
+    "/{chainId}/account/{accountAddress}/bank/balance": {
       "get": {
         "tags": [
           "account"
@@ -12404,7 +12404,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12432,7 +12432,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/bank/balances": {
+    "/{chainId}/account/{accountAddress}/bank/balances": {
       "get": {
         "tags": [
           "account"
@@ -12450,7 +12450,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12466,7 +12466,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/contract/ownedBy": {
+    "/{chainId}/account/{accountAddress}/contract/ownedBy": {
       "get": {
         "tags": [
           "account"
@@ -12484,7 +12484,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12512,7 +12512,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/daos/adminOf": {
+    "/{chainId}/account/{accountAddress}/daos/adminOf": {
       "get": {
         "tags": [
           "account"
@@ -12530,7 +12530,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12546,7 +12546,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/daos/memberOf": {
+    "/{chainId}/account/{accountAddress}/daos/memberOf": {
       "get": {
         "tags": [
           "account"
@@ -12564,7 +12564,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12580,7 +12580,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/nft/collections": {
+    "/{chainId}/account/{accountAddress}/nft/collections": {
       "get": {
         "tags": [
           "account"
@@ -12598,7 +12598,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12614,7 +12614,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/nft/stakedWithDaos": {
+    "/{chainId}/account/{accountAddress}/nft/stakedWithDaos": {
       "get": {
         "tags": [
           "account"
@@ -12632,7 +12632,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12648,7 +12648,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/polytone/proxies": {
+    "/{chainId}/account/{accountAddress}/polytone/proxies": {
       "get": {
         "tags": [
           "account"
@@ -12666,7 +12666,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12682,7 +12682,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/proposals/created": {
+    "/{chainId}/account/{accountAddress}/proposals/created": {
       "get": {
         "tags": [
           "account"
@@ -12700,7 +12700,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12716,7 +12716,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/proposals/stats": {
+    "/{chainId}/account/{accountAddress}/proposals/stats": {
       "get": {
         "tags": [
           "account"
@@ -12734,7 +12734,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12750,7 +12750,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/proposals/votesCast": {
+    "/{chainId}/account/{accountAddress}/proposals/votesCast": {
       "get": {
         "tags": [
           "account"
@@ -12768,7 +12768,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12784,7 +12784,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/tokens/list": {
+    "/{chainId}/account/{accountAddress}/tokens/list": {
       "get": {
         "tags": [
           "account"
@@ -12802,7 +12802,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12818,7 +12818,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/valence/accounts": {
+    "/{chainId}/account/{accountAddress}/valence/accounts": {
       "get": {
         "tags": [
           "account"
@@ -12836,7 +12836,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12852,7 +12852,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/vesting/ownerOf": {
+    "/{chainId}/account/{accountAddress}/vesting/ownerOf": {
       "get": {
         "tags": [
           "account"
@@ -12870,7 +12870,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,
@@ -12886,7 +12886,7 @@
         }
       }
     },
-    "/{chainId}/account/{address}/veto/vetoableProposals": {
+    "/{chainId}/account/{accountAddress}/veto/vetoableProposals": {
       "get": {
         "tags": [
           "account"
@@ -12904,7 +12904,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "accountAddress",
             "in": "path",
             "description": "account address",
             "required": true,

@@ -74,6 +74,14 @@ const makeFormulaDoc = (
   formula: Formula<any, any>
 ): [string, OpenAPIV3_1.PathItemObject] => {
   const hasAddress = type !== FormulaType.Generic
+  const addressPathName =
+    type === FormulaType.Contract
+      ? 'contractAddress'
+      : type === FormulaType.Account
+      ? 'accountAddress'
+      : type === FormulaType.Validator
+      ? 'validatorAddress'
+      : ''
 
   // tools must follow the regex: ^[a-zA-Z0-9_-]{1,64}$
   // so slice to 48 characters, hash it, and add an 8-character suffix
@@ -84,7 +92,7 @@ const makeFormulaDoc = (
     crypto.createHash('sha256').update(base).digest('hex').slice(0, 7)
 
   return [
-    `/{chainId}/${type}/${hasAddress ? '{address}' : '_'}/${path}`,
+    `/{chainId}/${type}/${hasAddress ? `{${addressPathName}}` : '_'}/${path}`,
     {
       get: {
         tags: [type],
@@ -103,7 +111,7 @@ const makeFormulaDoc = (
           ...(hasAddress
             ? [
                 {
-                  name: 'address',
+                  name: addressPathName,
                   in: 'path',
                   description: `${type} address`,
                   required: true,
