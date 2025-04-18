@@ -16,21 +16,13 @@ export const grantConfigs: ContractFormula<Map<String, GrantConfig>> = {
   },
   compute: async (env) => {
     const { contractAddress, getMap } = env
+
     const grantConfigsMap = (await getMap<string, GrantConfig>(
       contractAddress,
       TreasuryStorageKeys.GRANT_CONFIGS,
     )) ?? {}
 
-    let responseMap = new Map<string, GrantConfig>
-
-    Object.entries(grantConfigsMap)
-      .map(
-        ([msgTypeURL, grantConfig]) => {
-          responseMap.set(msgTypeURL, grantConfig)
-        },
-      )
-
-    return responseMap
+    return grantConfigsMap
   },
 }
 
