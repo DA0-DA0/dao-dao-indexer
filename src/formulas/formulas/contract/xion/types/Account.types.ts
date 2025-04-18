@@ -58,11 +58,15 @@ export type ExecuteMsg = {
   emit: {
     data: string;
   };
+};
+export type QueryMsg = {
+  authenticator_i_ds: {};
 } | {
-  unused: {
-    authenticator: Authenticator;
+  authenticator_by_i_d: {
+    id: number;
   };
 };
+export interface MigrateMsg {}
 export type Authenticator = {
   secp256_k1: {
     pubkey: Binary;
@@ -90,11 +94,4 @@ export type Authenticator = {
     url: string;
   };
 };
-export type QueryMsg = {
-  authenticator_i_ds: {};
-} | {
-  authenticator_by_i_d: {
-    id: number;
-  };
-};
-export interface MigrateMsg {}
+export type ArrayOfUint8 = number[];
