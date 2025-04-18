@@ -12031,6 +12031,181 @@
         }
       }
     },
+    "/{chainId}/contract/{address}/xion/treasury/admin": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "xion > treasury > admin",
+        "description": "Get the curent admin for the treasury",
+        "operationId": "xion_treasury_admin_87af756",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/xion/treasury/feeConfig": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "xion > treasury > feeConfig",
+        "description": "Get the fee sponsorship configuration for the treasury",
+        "operationId": "xion_treasury_feeConfig_b514e76",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/xion/treasury/grantConfigs": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "xion > treasury > grantConfigs",
+        "description": "Get the treasury's grant configs by msg type url",
+        "operationId": "xion_treasury_grantConfigs_09399cc",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/xion/treasury/params": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "xion > treasury > params",
+        "description": "Get the params for the treasury",
+        "operationId": "xion_treasury_params_973187c",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/xion/treasury/pendingAdmin": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "xion > treasury > pendingAdmin",
+        "description": "Get the pending admin for the treasury",
+        "operationId": "xion_treasury_pendingAdmin_ae4396a",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
     "/{chainId}/account/{address}/abstract/accountsOwnedBy": {
       "get": {
         "tags": [

@@ -24,7 +24,7 @@ export const authenticators: ContractFormula<Map<number, Authenticator>> = {
 
     Object.entries(authenticatorMap)
       .map(([index, authenticator]) => {
-          responseMap.set(index, authenticator)
+          responseMap.set(+index, authenticator)
         },
       )
 
