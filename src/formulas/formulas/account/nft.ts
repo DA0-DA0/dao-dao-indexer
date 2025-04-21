@@ -28,17 +28,21 @@ export const collections: AccountFormula<CollectionWithTokens[]> = {
     const uniqueAddresses = Array.from(new Set(matchingContracts))
 
     // Filter by those with 721 in the contract name.
-    const cw721ContractInfos = await Promise.all(
-      uniqueAddresses.map((contractAddress) =>
-        info.compute({
+    const cw721ContractInfos = await Promise.allSettled(
+      uniqueAddresses.map(async (contractAddress) => ({
+        contractAddress,
+        info: await info.compute({
           ...env,
           contractAddress,
-        })
-      )
+        }),
+      }))
     )
 
-    const cw721Contracts = uniqueAddresses.filter((_, index) =>
-      cw721ContractInfos[index]?.contract?.includes('721')
+    const cw721Contracts = cw721ContractInfos.flatMap((promise) =>
+      promise.status === 'fulfilled' &&
+      promise.value?.info?.contract?.includes('721')
+        ? promise.value.contractAddress
+        : []
     )
 
     // Get all tokens for each contract.
