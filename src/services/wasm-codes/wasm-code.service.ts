@@ -22,7 +22,7 @@ export class WasmCodeService implements WasmCodeAdapter {
    * Wasm codes that are always added to the list, even when wasm codes are
    * reloaded from the DB.
    */
-  private defaultWasmCodes: WasmCode[]
+  private defaultWasmCodes: WasmCode[] = []
 
   /**
    * List of all active wasm codes, including the defaults and those loaded from
@@ -41,9 +41,7 @@ export class WasmCodeService implements WasmCodeAdapter {
      */
     configWasmCodes: Config['codeIds']
   ) {
-    this.defaultWasmCodes = Object.entries(configWasmCodes || {}).flatMap(
-      ([key, codeIds]) => (codeIds ? new WasmCode(key, codeIds) : [])
-    )
+    this.setDefaultWasmCodes(configWasmCodes)
     this.wasmCodes = [...this.defaultWasmCodes]
   }
 
@@ -78,7 +76,17 @@ export class WasmCodeService implements WasmCodeAdapter {
       return this.instance
     }
 
-    const config = loadConfig()
+    const config = loadConfig(
+      undefined,
+      // Update default wasm codes when config changes.
+      withUpdater
+        ? (config) => {
+            if (this.instance) {
+              this.instance.setDefaultWasmCodes(config.codeIds)
+            }
+          }
+        : undefined
+    )
 
     this.instance = new WasmCodeService(config.codeIds)
     if (withUpdater) {
@@ -99,6 +107,23 @@ export class WasmCodeService implements WasmCodeAdapter {
     }
 
     return input.split(',').map((key: string) => key.trim())
+  }
+
+  /**
+   * Set default wasm codes and merge them into the existing list of wasm codes.
+   */
+  setDefaultWasmCodes(
+    /**
+     * Wasm codes from the config.
+     */
+    configWasmCodes: Config['codeIds']
+  ): void {
+    this.defaultWasmCodes = Object.entries(configWasmCodes || {}).flatMap(
+      ([key, codeIds]) => (codeIds ? new WasmCode(key, codeIds) : [])
+    )
+
+    // Merge new default wasm codes into existing list.
+    this.mergeWasmCodes(this.defaultWasmCodes, this.wasmCodes)
   }
 
   /**

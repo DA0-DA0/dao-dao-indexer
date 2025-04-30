@@ -36,64 +36,63 @@ export const getProcessedWebhooks = (
       // config).
       .filter((webhook): webhook is Webhook => !!webhook)
 
-    processedWebhooks = _webhooks.map(({ filter, ...webhook }) => {
-      const allCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-        ...(filter.codeIdsKeys ?? [])
-      )
+    processedWebhooks = _webhooks.map(({ filter, ...webhook }) => ({
+      ...webhook,
+      filter: (event, env) => {
+        // Filter for event type. This is necessary since the rest of the
+        // webhook's functions expect to receive the correct type.
+        if (!(event instanceof filter.EventType)) {
+          return false
+        }
 
-      return {
-        ...webhook,
-        filter: (event, env) => {
-          // Filter for event type. This is necessary since the rest of the
-          // webhook's functions expect to receive the correct type.
-          if (!(event instanceof filter.EventType)) {
+        // Filters specific to WasmStateEvent types.
+        if (event instanceof WasmStateEvent) {
+          const allCodeIds =
+            WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+              ...(filter.codeIdsKeys ?? [])
+            )
+
+          if (
+            allCodeIds?.length &&
+            !allCodeIds.includes(event.contract.codeId)
+          ) {
             return false
           }
 
-          // Filters specific to WasmStateEvent types.
-          if (event instanceof WasmStateEvent) {
-            if (
-              allCodeIds?.length &&
-              !allCodeIds.includes(event.contract.codeId)
-            ) {
-              return false
-            }
-
-            if (
-              filter.contractAddresses?.length &&
-              !filter.contractAddresses.includes(event.contractAddress)
-            ) {
-              return false
-            }
+          if (
+            filter.contractAddresses?.length &&
+            !filter.contractAddresses.includes(event.contractAddress)
+          ) {
+            return false
           }
+        }
 
-          if (filter.matches) {
-            // Wrap in try/catch in case a webhook errors. Don't want to prevent
-            // other webhooks from sending.
-            try {
-              return filter.matches(event, env)
-            } catch (error) {
-              console.error(
-                `Error matching webhook for ${event.constructor.name} ID ${event.id} at height ${event.block.height}: ${error}`
-              )
-              Sentry.captureException(error, {
-                tags: {
-                  type: 'failed-webhook-match',
-                },
-                extra: {
-                  event,
-                },
-              })
+        if (filter.matches) {
+          // Wrap in try/catch in case a webhook errors. Don't want to prevent
+          // other webhooks from sending.
+          try {
+            return filter.matches(event, env)
+          } catch (error) {
+            console.error(
+              `Error matching webhook for ${event.constructor.name} ID ${event.id} at height ${event.block.height}: ${error}`
+            )
+            Sentry.captureException(error, {
+              tags: {
+                type: 'failed-webhook-match',
+              },
+              extra: {
+                event,
+              },
+            })
 
-              // On error, do not match.
-              return false
-            }
+            // On error, do not match.
+            return false
           }
+        }
 
-          return true
-        },
-      }
-    })
+        return true
+      },
+    }))
   }
 
   return processedWebhooks

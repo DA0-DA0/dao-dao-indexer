@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 import Koa from 'koa'
 
-import { loadConfig } from '@/config'
+import { loadConfig, stopConfigWatch } from '@/config'
 import { closeDb, loadDb } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
 import { DbType } from '@/types'
@@ -120,6 +120,8 @@ const cleanup = async () => {
   if (wasmCodeService) {
     wasmCodeService.stopUpdater()
   }
+
+  stopConfigWatch()
 
   await closeDb()
 }

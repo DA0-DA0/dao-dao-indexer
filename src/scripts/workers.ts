@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
-import { loadConfig } from '@/config'
+import { loadConfig, stopConfigWatch } from '@/config'
 import { State, loadDb } from '@/db'
 import { QueueOptions, queues as queues } from '@/queues'
 import { WasmCodeService } from '@/services/wasm-codes'
@@ -84,6 +84,9 @@ const main = async () => {
         // Close DB connections.
         await dataSequelize.close()
         await accountsSequelize.close()
+
+        // Stop config watch.
+        stopConfigWatch()
 
         // Exit.
         process.exit(0)
