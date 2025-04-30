@@ -16,11 +16,19 @@ let lastRpc: string | undefined
 export const getStargateClient = async () => {
   if (!stargateClient) {
     lastRpc = ConfigManager.load().rpc
+    if (!lastRpc) {
+      throw new Error('RPC not configured')
+    }
+
     stargateClient = await StargateClient.connect(lastRpc)
 
     // Update the stargate client when the config changes.
     ConfigManager.instance.onChange(async (config) => {
       if (config.rpc !== lastRpc) {
+        if (!config.rpc) {
+          throw new Error('RPC not configured')
+        }
+
         stargateClient = await StargateClient.connect(config.rpc)
         lastRpc = config.rpc
       }
