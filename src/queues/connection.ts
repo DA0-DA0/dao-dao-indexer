@@ -15,7 +15,7 @@ const getBullConnection = (): ConnectionOptions | undefined => {
   return (
     redis && {
       host: redis.host,
-      port: redis.port,
+      port: Number(redis.port),
       password: redis.password,
     }
   )
