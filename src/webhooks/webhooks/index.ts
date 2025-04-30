@@ -99,7 +99,9 @@ export const getProcessedWebhooks = async (
     }
 
     // Re-process webhooks when config changes.
-    ConfigManager.instance.onChange((config) => processWebhooks(config))
+    ConfigManager.instance.onChange((config) => {
+      processWebhooks(config)
+    })
 
     // Process webhooks for initial config.
     return processWebhooks(ConfigManager.load())

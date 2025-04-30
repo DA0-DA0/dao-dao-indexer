@@ -1,6 +1,6 @@
 import Redis, { RedisOptions } from 'ioredis'
 
-import { ConfigManager } from './config'
+import { ConfigManager } from './manager'
 
 export const getRedisConfig = (): RedisOptions | undefined => {
   const { redis } = ConfigManager.load()

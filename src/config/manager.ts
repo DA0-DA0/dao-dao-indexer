@@ -50,7 +50,7 @@ export class ConfigManager {
   /**
    * Callbacks to call when the config changes.
    */
-  private onChangeCallbacks: ((config: Config) => void)[] = []
+  private onChangeCallbacks: ((config: Config) => void | Promise<void>)[] = []
 
   private constructor() {
     this.configFile = process.env.CONFIG_FILE ?? DEFAULT_CONFIG_FILE
@@ -117,7 +117,6 @@ export class ConfigManager {
 
     this.config = JSON.parse(fs.readFileSync(this.configFile, 'utf-8'))
 
-    // Notify listeners that the config has changed.
     this.notifyListeners()
 
     return this.config
@@ -127,13 +126,15 @@ export class ConfigManager {
    * Notify listeners that the config has changed.
    */
   private notifyListeners() {
-    this.onChangeCallbacks.forEach((callback) => {
-      try {
-        callback(this.config)
-      } catch (err) {
-        console.error('Error calling config change callback:', err)
-      }
-    })
+    return Promise.all(
+      this.onChangeCallbacks.map(async (callback) => {
+        try {
+          await callback(this.config)
+        } catch (err) {
+          console.error('Error calling config change callback:', err)
+        }
+      })
+    )
   }
 
   /**
@@ -141,7 +142,7 @@ export class ConfigManager {
    *
    * Returns a function that can be used to remove the callback.
    */
-  onChange(callback: (config: Config) => void) {
+  onChange(callback: (config: Config) => void | Promise<void>) {
     this.onChangeCallbacks.push(callback)
     return () => this.removeOnChange(callback)
   }
@@ -150,7 +151,7 @@ export class ConfigManager {
    * Remove a callback from the list of callbacks to be called when the config
    * changes.
    */
-  removeOnChange(callback: (config: Config) => void) {
+  removeOnChange(callback: (config: Config) => void | Promise<void>) {
     this.onChangeCallbacks = this.onChangeCallbacks.filter(
       (cb) => cb !== callback
     )
