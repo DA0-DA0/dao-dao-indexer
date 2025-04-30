@@ -1,4 +1,4 @@
-# dao-dao-indexer
+# Argus
 
 A state-based indexer and API builder for the Cosmos SDK built by and for [DAO
 DAO](https://daodao.zone).

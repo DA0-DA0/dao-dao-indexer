@@ -1,5 +1,5 @@
 {
-  "name": "dao-dao-indexer",
+  "name": "argus",
   "version": "0.0.1",
   "description": "",
   "license": "AGPL-3.0-only",
@@ -44,13 +44,13 @@
     "console": "node dist/scripts/console.js",
     "dumpContracts": "node dist/scripts/dumpContracts.js",
     "autodoc": "node dist/scripts/autodoc.js",
-    "docker:build": "docker build -t dao-dao-indexer .",
-    "k8s:deploy": "kubectl apply -f k8s/configmap.yaml && kubectl apply -f k8s/deployment.yaml && kubectl apply -f k8s/service.yaml",
-    "k8s:delete": "kubectl delete -f k8s/configmap.yaml && kubectl delete -f k8s/deployment.yaml && kubectl delete -f k8s/service.yaml",
-    "k8s:logs": "kubectl logs -l app=dao-dao-indexer -f",
-    "k8s:restart": "kubectl rollout restart deployment dao-dao-indexer",
-    "k8s:status": "kubectl get pods -l app=dao-dao-indexer && kubectl get services -l app=dao-dao-indexer",
-    "k8s:create-config": "kubectl create configmap dao-dao-indexer-config-file --from-file=config.json=k8s/config.json.template -o yaml --dry-run=client > k8s/configmap-file.yaml"
+    "docker:build": "docker build -t argus .",
+    "k8s:deploy": "kubectl apply -f k8s/configmap-file.yaml && kubectl apply -f k8s/deployment.yaml && kubectl apply -f k8s/service.yaml",
+    "k8s:delete": "kubectl delete -f k8s/configmap-file.yaml && kubectl delete -f k8s/deployment.yaml && kubectl delete -f k8s/service.yaml",
+    "k8s:logs": "kubectl logs -l app=argus -f --tail 100",
+    "k8s:restart": "kubectl rollout restart deployment argus",
+    "k8s:status": "kubectl get pods -l app=argus && kubectl get services -l app=argus",
+    "k8s:create-config": "node k8s/create-k8s-config.js"
   },
   "author": "Noah Saso <noah@noah.zone>",
   "devDependencies": {
@@ -74,6 +74,7 @@
     "@types/ws": "^8.5.5",
     "@typescript-eslint/eslint-plugin": "^7.13.0",
     "@typescript-eslint/parser": "^7.13.0",
+    "chalk": "^5.4.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",

@@ -6,6 +6,7 @@ fake/
 
 config.json
 config.*.json
+configmap-file.yaml
 *.crt
 requests.json
 

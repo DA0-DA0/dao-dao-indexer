@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dao-dao-indexer
+  name: argus
   labels:
-    app: dao-dao-indexer
+    app: argus
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: dao-dao-indexer
+      app: argus
   template:
     metadata:
       labels:
-        app: dao-dao-indexer
+        app: argus
     spec:
       containers:
-        - name: dao-dao-indexer
-          image: dao-dao-indexer:latest
+        - name: argus
+          image: argus:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3420
@@ -48,4 +48,4 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: dao-dao-indexer-config-file
+            name: argus-config-file
