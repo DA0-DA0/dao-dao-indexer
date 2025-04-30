@@ -1,4 +1,4 @@
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { WasmCodeKey } from '@/db/models/WasmCodeKey'
 import { WasmCodeKeyId } from '@/db/models/WasmCodeKeyId'
 import { Config } from '@/types'
@@ -16,7 +16,7 @@ export class WasmCodeService implements WasmCodeAdapter {
   /**
    * Singleton instance.
    */
-  static instance: WasmCodeService
+  static instance: WasmCodeService | undefined
 
   /**
    * Wasm codes that are always added to the list, even when wasm codes are
@@ -76,17 +76,11 @@ export class WasmCodeService implements WasmCodeAdapter {
       return this.instance
     }
 
-    const config = loadConfig(
-      undefined,
-      // Update default wasm codes when config changes.
-      withUpdater
-        ? (config) => {
-            if (this.instance) {
-              this.instance.setDefaultWasmCodes(config.codeIds)
-            }
-          }
-        : undefined
-    )
+    const config = ConfigManager.load()
+    // Update default wasm codes when config changes.
+    ConfigManager.instance.onChange((config) => {
+      this.instance?.setDefaultWasmCodes(config.codeIds)
+    })
 
     this.instance = new WasmCodeService(config.codeIds)
     if (withUpdater) {

@@ -5,7 +5,7 @@ import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 import Koa from 'koa'
 
-import { loadConfig, stopConfigWatch } from '@/config'
+import { ConfigManager } from '@/config'
 import { closeDb, loadDb } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
 import { DbType } from '@/types'
@@ -24,8 +24,8 @@ program.option('-a, --accounts', 'run account server instead of indexer server')
 program.parse()
 const options = program.opts()
 
-// Load config with config option.
-const config = loadConfig(options.config)
+// Load config from specific config file.
+const config = ConfigManager.load(options.config)
 
 const accounts = !!options.accounts
 
@@ -69,16 +69,16 @@ app.use(async (ctx, next) => {
   ctx.set('X-Response-Time', `${ms}ms`)
 })
 
-// Add routes.
-setUpRouter(app, {
-  config,
-  accounts,
-})
-
 let wasmCodeService: WasmCodeService | null = null
 
 // Start.
 const main = async () => {
+  // Add routes.
+  await setUpRouter(app, {
+    config,
+    accounts,
+  })
+
   // All servers need to connect to the accounts DB.
   await loadDb({
     type: DbType.Accounts,
@@ -111,35 +111,41 @@ const main = async () => {
   })
 }
 
-main()
-
 // On exit, stop services and close DB connection.
-const cleanup = async () => {
-  console.log('Shutting down...')
-
+const cleanUp = async () => {
   if (wasmCodeService) {
     wasmCodeService.stopUpdater()
   }
 
-  stopConfigWatch()
-
-  await closeDb()
+  await closeDb().catch((err) => {
+    console.error('Error closing DB:', err)
+  })
 }
 
-process.on('exit', async (code) => {
-  await cleanup()
-  process.exit(code)
+main().catch((err) => {
+  console.error('Main error:', err)
+  process.exit(1)
 })
-// Cleanup by calling exit.
+
+process.on('exit', async (code) => {
+  console.log(`Exiting due to ${code}...`)
+  await cleanUp()
+})
+
+// Clean up by calling exit.
 process.on('SIGINT', async () => {
+  console.log('SIGINT received.')
   process.exit()
 })
 process.on('SIGTERM', async () => {
+  console.log('SIGTERM received.')
   process.exit()
 })
 process.on('SIGUSR1', async () => {
+  console.log('SIGUSR1 received.')
   process.exit()
 })
 process.on('SIGUSR2', async () => {
+  console.log('SIGUSR2 received.')
   process.exit()
 })

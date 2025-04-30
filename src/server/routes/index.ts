@@ -14,7 +14,7 @@ export type SetupRouterOptions = {
   accounts: boolean
 }
 
-export const setUpRouter = (
+export const setUpRouter = async (
   app: Koa,
   { config, accounts }: SetupRouterOptions
 ) => {
@@ -40,7 +40,7 @@ export const setUpRouter = (
     router.use(accountRouter.routes(), accountRouter.allowedMethods())
   } else {
     // Background jobs dashboard.
-    setUpBullBoard(app, config)
+    await setUpBullBoard(app, config)
 
     // Swagger API docs.
     setUpDocs(app)

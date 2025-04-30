@@ -5,7 +5,7 @@
 import { Command } from 'commander'
 import { Op } from 'sequelize'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { Contract, loadDb } from '@/db'
 import { WasmCodeService } from '@/services'
 import { DbType } from '@/types'
@@ -26,8 +26,8 @@ const { config: _config, codeIdsKeys } = program.opts()
 const main = async () => {
   console.log(`\n[${new Date().toISOString()}] Dumping contracts...`)
 
-  // Load config with config option.
-  loadConfig(_config)
+  // Load config from specific config file.
+  ConfigManager.load(_config)
 
   // Load DB on start.
   const sequelize = await loadDb({

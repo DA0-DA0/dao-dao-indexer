@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import {
   AccountWebhookEvent,
   AccountWebhookEventAttempt,
@@ -27,7 +27,7 @@ program.option(
 program.parse()
 const { config: _config, batch } = program.opts()
 
-const config = loadConfig(_config)
+const config = ConfigManager.load(_config)
 
 // Add Sentry error reporting.
 if (config.sentryDsn) {

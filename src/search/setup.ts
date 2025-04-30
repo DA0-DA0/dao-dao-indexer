@@ -1,4 +1,4 @@
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { State } from '@/db'
 
 import { loadMeilisearch } from './client'
@@ -6,7 +6,7 @@ import { meilisearchIndexers } from './indexers'
 import { getMeilisearchIndexName } from './utils'
 
 export const setupMeilisearch = async () => {
-  const { meilisearch } = loadConfig()
+  const { meilisearch } = ConfigManager.load()
 
   // If no meilisearch in config, nothing to setup.
   if (!meilisearch) {

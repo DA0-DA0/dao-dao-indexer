@@ -1,4 +1,4 @@
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 
 // Export config for .sequelizerc.
-module.exports = loadConfig().db
+module.exports = ConfigManager.load().db

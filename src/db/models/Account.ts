@@ -12,7 +12,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 
 import { AccountCodeIdSet } from './AccountCodeIdSet'
 import { AccountKey } from './AccountKey'
@@ -97,7 +97,7 @@ export class Account extends Model {
 
   // Get JWT token for login. Expires in 30 days.
   public getAuthToken() {
-    const { accountsJwtSecret } = loadConfig()
+    const { accountsJwtSecret } = ConfigManager.load()
     if (!accountsJwtSecret) {
       throw new Error('JWT not configured.')
     }

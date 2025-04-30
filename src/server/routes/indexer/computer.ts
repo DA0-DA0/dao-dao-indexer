@@ -1,7 +1,7 @@
 import Router from '@koa/router'
 import { Op } from 'sequelize'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import {
   AccountKey,
   AccountKeyCredit,
@@ -29,7 +29,7 @@ const testRateLimit = new Map<string, number>()
 const testCooldownSeconds = 10
 
 export const computer: Router.Middleware = async (ctx) => {
-  const { ignoreApiKey } = loadConfig()
+  const { ignoreApiKey } = ConfigManager.load()
 
   let state
   try {

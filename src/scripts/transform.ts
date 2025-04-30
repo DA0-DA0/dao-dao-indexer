@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { loadDb } from '@/db'
 import { TransformationsQueue } from '@/queues/queues/transformations'
 import { WasmCodeService } from '@/services/wasm-codes'
@@ -44,8 +44,8 @@ const main = async () => {
     forceAll,
   } = program.opts()
 
-  // Load config with config option.
-  loadConfig(_config)
+  // Load config from specific config file.
+  ConfigManager.load(_config)
 
   // Load DB on start.
   const sequelize = await loadDb()

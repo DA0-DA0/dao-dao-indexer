@@ -8,13 +8,23 @@ import {
   connectComet,
 } from '@cosmjs/tendermint-rpc'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 
 let stargateClient: StargateClient | undefined
+let lastRpc: string | undefined
+
 export const getStargateClient = async () => {
   if (!stargateClient) {
-    const { rpc } = loadConfig()
-    stargateClient = await StargateClient.connect(rpc)
+    lastRpc = ConfigManager.load().rpc
+    stargateClient = await StargateClient.connect(lastRpc)
+
+    // Update the stargate client when the config changes.
+    ConfigManager.instance.onChange(async (config) => {
+      if (config.rpc !== lastRpc) {
+        stargateClient = await StargateClient.connect(config.rpc)
+        lastRpc = config.rpc
+      }
+    })
   }
 
   return stargateClient

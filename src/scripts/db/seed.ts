@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import {
   Account,
   AccountKey,
@@ -20,8 +20,8 @@ export const main = async () => {
   program.parse()
   const { config: _config } = program.opts()
 
-  // Load config with config option.
-  loadConfig(_config)
+  // Load config from specific config file.
+  ConfigManager.load(_config)
 
   const accountsSequelize = await loadDb({
     type: DbType.Accounts,

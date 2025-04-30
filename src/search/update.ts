@@ -1,4 +1,4 @@
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { State } from '@/db'
 import { compute, getTypedFormula } from '@/formulas'
 
@@ -16,7 +16,7 @@ type UpdateIndexesOptions = {
 export const updateIndexes = async ({
   index: filterIndex,
 }: UpdateIndexesOptions = {}): Promise<number> => {
-  const config = loadConfig()
+  const config = ConfigManager.load()
 
   // If no meilisearch in config, nothing to update.
   if (!config.meilisearch) {

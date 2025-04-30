@@ -1,25 +1,8 @@
 import * as Sentry from '@sentry/node'
-import {
-  ConnectionOptions,
-  Processor,
-  Queue,
-  QueueEvents,
-  Worker,
-} from 'bullmq'
+import { Processor, Queue, QueueEvents, Worker } from 'bullmq'
 
-import { loadConfig } from '@/config'
+import { getRedisConfig } from '@/config/redis'
 import { State } from '@/db/models'
-
-const getBullConnection = (): ConnectionOptions | undefined => {
-  const { redis } = loadConfig()
-  return (
-    redis && {
-      host: redis.host,
-      port: Number(redis.port),
-      password: redis.password,
-    }
-  )
-}
 
 /**
  * Cache bull queues by name so we don't make duplicates and can close all at
@@ -30,7 +13,7 @@ export const activeBullQueues: Partial<Record<string, Queue>> = {}
 export const getBullQueue = <T extends unknown>(name: string): Queue<T> => {
   if (!activeBullQueues[name]) {
     activeBullQueues[name] = new Queue<T>(name, {
-      connection: getBullConnection(),
+      connection: getRedisConfig(),
       defaultJobOptions: {
         attempts: 3,
         backoff: {
@@ -55,7 +38,7 @@ export const getBullQueue = <T extends unknown>(name: string): Queue<T> => {
 }
 
 export const getBullQueueEvents = (name: string): QueueEvents =>
-  new QueueEvents(name, { connection: getBullConnection() })
+  new QueueEvents(name, { connection: getRedisConfig() })
 
 /**
  * Close all active bull queues.
@@ -80,7 +63,7 @@ export const getBullWorker = <T extends unknown>(
   processor: Processor<T>
 ) =>
   new Worker<T>(name, processor, {
-    connection: getBullConnection(),
+    connection: getRedisConfig(),
     removeOnComplete: {
       // Keep last 3 days of successful jobs.
       age: 3 * 24 * 60 * 60,

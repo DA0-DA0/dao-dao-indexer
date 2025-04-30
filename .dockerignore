@@ -12,7 +12,6 @@ compose.*.yml
 *.log
 .env*
 config*.json
-!config.json.example
 requests.json
 
 # meilisearch

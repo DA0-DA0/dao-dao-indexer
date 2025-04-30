@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { Computation, loadDb } from '@/db'
 
 // Deletes computations.
@@ -22,8 +22,8 @@ export const main = async () => {
   program.parse()
   const options = program.opts()
 
-  // Load config with config option.
-  loadConfig(options.config)
+  // Load config from specific config file.
+  ConfigManager.load(options.config)
 
   // Log when altering.
   const sequelize = await loadDb({ logging: true })

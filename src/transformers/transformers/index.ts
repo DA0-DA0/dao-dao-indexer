@@ -1,12 +1,7 @@
 import * as Sentry from '@sentry/node'
 
 import { WasmCodeService } from '@/services/wasm-codes'
-import {
-  Config,
-  ProcessedTransformer,
-  Transformer,
-  TransformerMaker,
-} from '@/types'
+import { ProcessedTransformer, Transformer } from '@/types'
 
 import common from './common'
 import dao from './dao'
@@ -21,14 +16,8 @@ import valence from './valence'
 import voting from './voting'
 
 let processedTransformers: ProcessedTransformer[] | undefined
-export const getProcessedTransformers = (
-  config: Config
-): ProcessedTransformer[] => {
+export const getProcessedTransformers = (): ProcessedTransformer[] => {
   if (!processedTransformers) {
-    const transformerMakers: TransformerMaker[] = [
-      // Add transformer makers here.
-    ]
-
     const _transformers: Transformer[] = [
       // Add transformers here.
       ...common,
@@ -42,9 +31,6 @@ export const getProcessedTransformers = (
       ...staking,
       ...valence,
       ...voting,
-
-      // Makers.
-      ...transformerMakers.map((maker) => maker(config)),
     ]
 
     processedTransformers = _transformers.map(({ filter, ...webhook }) => ({

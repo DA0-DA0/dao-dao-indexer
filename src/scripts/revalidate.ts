@@ -4,7 +4,7 @@
 import { Command } from 'commander'
 import { Op } from 'sequelize'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { Computation, Contract, loadDb } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
 
@@ -49,8 +49,8 @@ const main = async () => {
   console.log(`\n[${new Date().toISOString()}] Revalidating computations...`)
   const start = Date.now()
 
-  // Load config with config option.
-  loadConfig(_config)
+  // Load config from specific config file.
+  ConfigManager.load(_config)
 
   // Load DB on start.
   const sequelize = await loadDb()

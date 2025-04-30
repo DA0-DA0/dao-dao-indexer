@@ -1,4 +1,3 @@
-import { Config } from './config'
 import { RequireAtLeastOne } from './misc'
 import { ParsedWasmStateEvent } from './tracer'
 
@@ -22,8 +21,6 @@ export type Transformer<V = any> = {
   // value returned will be used instead, as if it were not a delete event.
   manuallyTransformDeletes?: boolean
 }
-
-export type TransformerMaker = (config: Config) => Transformer
 
 export type ProcessedTransformer<V = any> = Omit<Transformer<V>, 'filter'> & {
   filter: (event: ParsedWasmStateEvent) => boolean

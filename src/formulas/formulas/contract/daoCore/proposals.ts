@@ -1,4 +1,4 @@
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { ContractFormula } from '@/types'
 
 import {
@@ -47,7 +47,7 @@ export const openProposals: ContractFormula<
   // This formula depends on the block height/time to check expiration.
   dynamic: true,
   compute: async (env) => {
-    const { daoDaoBase } = loadConfig()
+    const { daoDaoBase } = ConfigManager.load()
     const proposalModules = await activeProposalModules.compute(env)
 
     if (!proposalModules) {

@@ -5,7 +5,7 @@ import { Command } from 'commander'
 import { Op, Sequelize, fn } from 'sequelize'
 
 import * as Config from '@/config'
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { loadDb } from '@/db'
 import * as Models from '@/db/models'
 import { queues } from '@/queues'
@@ -35,8 +35,8 @@ program.option('-l, --logging', 'enable db query logging', false)
 program.parse()
 const { config, logging } = program.opts()
 
-// Load config with config option.
-loadConfig(config)
+// Load config from specific config file.
+ConfigManager.load(config)
 
 const main = async () => {
   // Setup both DBs.

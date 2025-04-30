@@ -5,7 +5,7 @@ import CryptoJS from 'crypto-js'
 import jwt from 'jsonwebtoken'
 import { Middleware } from 'koa'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { Account } from '@/db'
 
 import { AccountState, AuthRequestBody } from './types'
@@ -15,7 +15,7 @@ import { AccountState, AuthRequestBody } from './types'
 // on the request object, accessible by successive middleware and route
 // handlers.
 export const authMiddleware: Middleware<AccountState> = async (ctx, next) => {
-  const { accountsJwtSecret } = loadConfig()
+  const { accountsJwtSecret } = ConfigManager.load()
   if (!accountsJwtSecret) {
     ctx.status = 500
     ctx.body = {

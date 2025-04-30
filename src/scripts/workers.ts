@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/node'
 import { Command } from 'commander'
 
-import { loadConfig, stopConfigWatch } from '@/config'
+import { ConfigManager } from '@/config'
 import { State, loadDb } from '@/db'
 import { QueueOptions, queues } from '@/queues'
 import { WasmCodeService } from '@/services/wasm-codes'
@@ -26,8 +26,8 @@ program.option(
 program.parse()
 const { config: _config, update, webhooks } = program.opts()
 
-// Load config with config option.
-const config = loadConfig(_config)
+// Load config from specific config file.
+const config = ConfigManager.load(_config)
 
 // Add Sentry error reporting.
 if (config.sentryDsn) {
@@ -84,9 +84,6 @@ const main = async () => {
         // Close DB connections.
         await dataSequelize.close()
         await accountsSequelize.close()
-
-        // Stop config watch.
-        stopConfigWatch()
 
         // Exit.
         process.exit(0)
