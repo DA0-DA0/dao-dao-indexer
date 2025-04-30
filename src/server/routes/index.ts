@@ -26,6 +26,15 @@ export const setUpRouter = (
     ctx.body = 'pong'
   })
 
+  // Health check for Kubernetes probes
+  router.get('/health', (ctx) => {
+    ctx.status = 200
+    ctx.body = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    }
+  })
+
   if (accounts) {
     // Account API.
     router.use(accountRouter.routes(), accountRouter.allowedMethods())

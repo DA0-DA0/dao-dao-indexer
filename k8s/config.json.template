@@ -1,0 +1,44 @@
+{
+  "rpc": "https://rpc.example.com",
+  "bech32Prefix": "{{ bech32_prefix }}",
+  "redis": {
+    "host" : "{{ redis_host }}",
+    "password": "{{ redis_password }}"
+  },
+  "exporterDashboardPassword": "{{ exporter_dashboard_password }}",
+  "db": {
+    "data": {
+      "dialect": "postgres",
+      "dialectOptions": {
+        "ssl": {
+          "require": true,
+          "rejectUnauthorized": false
+        }
+      },
+      "host": "{{ data_db_host }}",
+      "port": "{{ data_db_port }}",
+      "database": "{{ data_db_name }}",
+      "username": "{{ data_db_user }}",
+      "password": "{{ data_db_password }}"
+    },
+    "accounts": {
+      "dialect": "postgres",
+      "dialectOptions": {
+        "ssl": {
+          "require": true,
+          "rejectUnauthorized": false
+        }
+      },
+      "host": "{{ accounts_db_host }}",
+      "port": "{{ accounts_db_port }}",
+      "database": "{{ accounts_db_name }}",
+      "username": "{{ accounts_db_user }}",
+      "password": "{{ accounts_db_password }}"
+    }
+  },
+  "codeIds": {
+    
+  },
+  "daoDaoBase": "{{ daodao_base }}",
+  "sentryDsn": "{{ sentry_dsn }}"
+}

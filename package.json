@@ -43,7 +43,14 @@
     "search:update": "node dist/scripts/searchUpdate.js",
     "console": "node dist/scripts/console.js",
     "dumpContracts": "node dist/scripts/dumpContracts.js",
-    "autodoc": "node dist/scripts/autodoc.js"
+    "autodoc": "node dist/scripts/autodoc.js",
+    "docker:build": "docker build -t dao-dao-indexer .",
+    "k8s:deploy": "kubectl apply -f k8s/configmap.yaml && kubectl apply -f k8s/deployment.yaml && kubectl apply -f k8s/service.yaml",
+    "k8s:delete": "kubectl delete -f k8s/configmap.yaml && kubectl delete -f k8s/deployment.yaml && kubectl delete -f k8s/service.yaml",
+    "k8s:logs": "kubectl logs -l app=dao-dao-indexer -f",
+    "k8s:restart": "kubectl rollout restart deployment dao-dao-indexer",
+    "k8s:status": "kubectl get pods -l app=dao-dao-indexer && kubectl get services -l app=dao-dao-indexer",
+    "k8s:create-config": "kubectl create configmap dao-dao-indexer-config-file --from-file=config.json=k8s/config.json.template -o yaml --dry-run=client > k8s/configmap-file.yaml"
   },
   "author": "Noah Saso <noah@noah.zone>",
   "devDependencies": {
