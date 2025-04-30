@@ -14,7 +14,7 @@ This directory contains Kubernetes manifests for deploying the Argus API.
 1. From the project root, build the Docker image:
 
 ```bash
-docker build -t argus:latest .
+npm run docker:build
 ```
 
 2. Optionally tag and push to a container registry:
@@ -54,14 +54,11 @@ kubectl create secret generic argus-secrets \
 1. Apply the Kubernetes manifests:
 
 ```bash
-kubectl apply -f k8s/configmap-file.yaml
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+npm run k8s:apply
 ```
 
 2. Check the status of your deployment:
 
 ```bash
-kubectl get pods -l app=argus
-kubectl get services -l app=argus
+npm run k8s:status
 ```
