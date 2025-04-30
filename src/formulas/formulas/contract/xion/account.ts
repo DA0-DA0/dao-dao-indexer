@@ -6,7 +6,7 @@ const AccountStorageKeys = {
   AUTHENTICATORS: 'authenticators',
 }
 
-export const authenticators: ContractFormula<Record<number, Authenticator>> = {
+export const authenticators: ContractFormula<Authenticator[]> = {
   docs: {
     description: 'Get authenticator map for account',
   },
@@ -16,12 +16,9 @@ export const authenticators: ContractFormula<Record<number, Authenticator>> = {
     const authenticatorMap =
       (await getMap<number, Authenticator>(
         contractAddress,
-        AccountStorageKeys.AUTHENTICATORS,
-        {
-          keyType: 'number',
-        }
+        AccountStorageKeys.AUTHENTICATORS
       )) ?? {}
 
-    return authenticatorMap
+    return Object.values(authenticatorMap)
   },
 }

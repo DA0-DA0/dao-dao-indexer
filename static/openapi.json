@@ -12340,6 +12340,41 @@
         }
       }
     },
+    "/{chainId}/contract/{address}/xion/account/authenticators": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "xion > account > authenticators",
+        "description": "Get authenticator map for account",
+        "operationId": "xion_account_authenticators_72d9d64",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{address}/xion/treasury/admin": {
       "get": {
         "tags": [
@@ -12348,6 +12383,41 @@
         "summary": "xion > treasury > admin",
         "description": "Get the curent admin for the treasury",
         "operationId": "xion_treasury_admin_87af756",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{address}/xion/treasury/all": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "xion > treasury > all",
+        "description": "Get all treasury data in a single endpoint",
+        "operationId": "xion_treasury_all_42b12f8",
         "parameters": [
           {
             "name": "chainId",

@@ -1,6 +1,12 @@
-import { makeSimpleContractFormula } from '../../utils'
-import { Addr, FeeConfig, GrantConfig, Params } from '@/formulas/formulas/contract/xion/types/Treasury.types'
+import {
+  Addr,
+  FeeConfig,
+  GrantConfig,
+  Params,
+} from '@/formulas/formulas/contract/xion/types/Treasury.types'
 import { ContractFormula } from '@/types'
+
+import { makeSimpleContractFormula } from '../../utils'
 
 const TreasuryStorageKeys = {
   GRANT_CONFIGS: 'grant_configs',
@@ -10,37 +16,46 @@ const TreasuryStorageKeys = {
   PARAMS: 'params',
 }
 
-export const grantConfigs: ContractFormula<Map<String, GrantConfig>> = {
+export const grantConfigs: ContractFormula<Record<string, GrantConfig>> = {
   docs: {
-    description: 'Get the treasury\'s grant configs by msg type url',
+    description: "Get the treasury's grant configs by msg type url",
   },
   compute: async (env) => {
     const { contractAddress, getMap } = env
 
-    const grantConfigsMap = (await getMap<string, GrantConfig>(
-      contractAddress,
-      TreasuryStorageKeys.GRANT_CONFIGS,
-    )) ?? {}
-
-    return grantConfigsMap
+    return (
+      (await getMap<string, GrantConfig>(
+        contractAddress,
+        TreasuryStorageKeys.GRANT_CONFIGS
+      )) ?? {}
+    )
   },
 }
 
-export const feeConfig = makeSimpleContractFormula<FeeConfig | null>({
+export const feeConfig: ContractFormula<FeeConfig | null> = {
   docs: {
     description: 'Get the fee sponsorship configuration for the treasury',
   },
-  transformation: TreasuryStorageKeys.FEE_CONFIG,
-  fallback: null,
-})
+  compute: async (env) => {
+    const { contractAddress, get } = env
 
-export const admin = makeSimpleContractFormula<Addr | null>({
+    return (
+      (await get<FeeConfig>(contractAddress, TreasuryStorageKeys.FEE_CONFIG)) ??
+      null
+    )
+  },
+}
+
+export const admin: ContractFormula<Addr | null> = {
   docs: {
     description: 'Get the curent admin for the treasury',
   },
-  transformation: TreasuryStorageKeys.ADMIN,
-  fallback: null,
-})
+  compute: async (env) => {
+    const { contractAddress, get } = env
+
+    return (await get<Addr>(contractAddress, TreasuryStorageKeys.ADMIN)) ?? null
+  },
+}
 
 export const pendingAdmin = makeSimpleContractFormula<Addr | null>({
   docs: {
@@ -50,11 +65,52 @@ export const pendingAdmin = makeSimpleContractFormula<Addr | null>({
   fallback: null,
 })
 
-export const params = makeSimpleContractFormula<Params | null>({
+export const params: ContractFormula<Record<string, Params>> = {
   docs: {
     description: 'Get the params for the treasury',
   },
-  transformation: TreasuryStorageKeys.PARAMS,
-  fallback: null,
-})
+  compute: async (env) => {
+    const { contractAddress, get } = env
 
+    return (
+      (await get<Params>(contractAddress, TreasuryStorageKeys.PARAMS)) ?? {}
+    )
+  },
+}
+
+export const all: ContractFormula<{
+  grantConfigs: Record<string, GrantConfig>
+  feeConfig: FeeConfig | null
+  admin: Addr | null
+  pendingAdmin: Addr | null
+  params: Record<string, Params>
+}> = {
+  docs: {
+    description: 'Get all treasury data in a single endpoint',
+  },
+  compute: async (env) => {
+    // Call all the individual endpoints
+    const [
+      grantConfigsData,
+      feeConfigData,
+      adminData,
+      pendingAdminData,
+      paramsData,
+    ] = await Promise.all([
+      grantConfigs.compute(env),
+      feeConfig.compute(env),
+      admin.compute(env),
+      pendingAdmin.compute(env),
+      params.compute(env),
+    ])
+
+    // Combine all results into a single object
+    return {
+      grantConfigs: grantConfigsData,
+      feeConfig: feeConfigData,
+      admin: adminData,
+      pendingAdmin: pendingAdminData,
+      params: paramsData,
+    }
+  },
+}
