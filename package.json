@@ -50,7 +50,7 @@
     "k8s:logs": "kubectl logs -l app=argus -f --tail 100",
     "k8s:restart": "kubectl rollout restart deployment argus",
     "k8s:status": "kubectl get pods -l app=argus && kubectl get services -l app=argus",
-    "k8s:create-config": "node k8s/create-k8s-config.js"
+    "k8s:config": "node k8s/create-k8s-config.js"
   },
   "author": "Noah Saso <noah@noah.zone>",
   "devDependencies": {

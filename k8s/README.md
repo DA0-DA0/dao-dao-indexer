@@ -37,7 +37,7 @@ cp k8s/config.json.template k8s/config.json
 vim k8s/config.json
 
 # Create the ConfigMap
-npm run k8s:create-config
+npm run k8s:config
 ```
 
 2. For sensitive information, consider using Kubernetes Secrets:
