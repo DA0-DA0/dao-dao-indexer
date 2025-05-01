@@ -5,7 +5,7 @@ metadata:
   labels:
     app: argus
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: argus
@@ -27,12 +27,12 @@ spec:
             - name: config-volume
               mountPath: /app/config
           resources:
-            limits:
-              cpu: '1'
-              memory: '1Gi'
             requests:
-              cpu: '500m'
-              memory: '512Mi'
+              cpu: '800m'
+              memory: '1536Mi'
+            limits:
+              cpu: '1600m'
+              memory: '3072Mi'
           livenessProbe:
             httpGet:
               path: /health
