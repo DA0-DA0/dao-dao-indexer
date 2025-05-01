@@ -1,3 +1,5 @@
+import { beforeAll, describe, expect, test } from 'vitest'
+
 import { WasmCodeKeyId } from '@/db'
 import { WasmCodeKey } from '@/db/models/WasmCodeKey'
 

@@ -38,7 +38,7 @@ import { Computation } from './Computation'
 export class ComputationDependency extends Model {
   @AllowNull(false)
   @ForeignKey(() => Computation)
-  @Column
+  @Column(DataType.INTEGER)
   declare computationId: number
 
   @BelongsTo(() => Computation)
@@ -53,7 +53,7 @@ export class ComputationDependency extends Model {
   // keys that start with the map prefix.
   @AllowNull(false)
   @Default(false)
-  @Column
+  @Column(DataType.BOOLEAN)
   declare prefix: boolean
 
   get dependentKey(): ComputationDependentKey {

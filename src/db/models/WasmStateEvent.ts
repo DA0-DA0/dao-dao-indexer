@@ -52,7 +52,7 @@ import { Contract } from './Contract'
 export class WasmStateEvent extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
-  @Column
+  @Column(DataType.STRING)
   declare contractAddress: string
 
   @BelongsTo(() => Contract)
@@ -89,7 +89,7 @@ export class WasmStateEvent extends DependableEventModel {
   declare valueJson: any | null
 
   @AllowNull(false)
-  @Column
+  @Column(DataType.BOOLEAN)
   declare delete: boolean
 
   get block(): Block {

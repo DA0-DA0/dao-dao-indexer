@@ -11,3 +11,7 @@ requests.json
 
 # meilisearch
 data.ms
+
+# dump and tests
+*.pipe
+src/test/dump/**/*.test.ts

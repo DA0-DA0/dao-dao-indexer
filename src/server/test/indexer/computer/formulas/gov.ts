@@ -1,4 +1,5 @@
 import request from 'supertest'
+import { beforeEach, describe, it } from 'vitest'
 
 import { GovProposal, GovProposalVote, State } from '@/db'
 

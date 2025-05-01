@@ -45,7 +45,7 @@ import { Contract } from './Contract'
 export class WasmTxEvent extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
-  @Column
+  @Column(DataType.STRING)
   declare contractAddress: string
 
   @BelongsTo(() => Contract)
@@ -72,11 +72,11 @@ export class WasmTxEvent extends DependableEventModel {
   declare messageId: string
 
   @AllowNull(false)
-  @Column
+  @Column(DataType.STRING)
   declare action: string
 
   @AllowNull(false)
-  @Column
+  @Column(DataType.STRING)
   declare sender: string
 
   // JSON encoded value. Empty string if `reply` is not null.

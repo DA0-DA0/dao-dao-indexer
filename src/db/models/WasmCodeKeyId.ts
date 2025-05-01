@@ -2,6 +2,7 @@ import {
   AllowNull,
   BelongsTo,
   Column,
+  DataType,
   Model,
   Table,
 } from 'sequelize-typescript'
@@ -19,11 +20,11 @@ import { WasmCodeKey } from './WasmCodeKey'
 })
 export class WasmCodeKeyId extends Model {
   @AllowNull(false)
-  @Column
+  @Column(DataType.STRING)
   declare codeKey: string
 
   @AllowNull(false)
-  @Column
+  @Column(DataType.INTEGER)
   declare codeKeyId: number
 
   @BelongsTo(() => WasmCodeKey, 'codeKey')

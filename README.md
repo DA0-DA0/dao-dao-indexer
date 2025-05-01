@@ -48,7 +48,7 @@ DAO](https://daodao.zone).
 Test the indexer:
 
 ```bash
-npm run test
+npm run docker:test
 ```
 
 Build the indexer:
@@ -73,6 +73,27 @@ Spawn a console to interact with the various database models and API formulas:
 
 ```bash
 npm run console
+```
+
+### Testing transformations with a dump file
+
+To test transformations with a dump file:
+
+1. Place `dump.trace.pipe` in the root of the project.
+
+2. Create `config.dump-test.json`, making sure to set `rpc`, `bech32Prefix`, and
+   any `codeIds` you need to test:
+
+   ```bash
+   cp config.dump-test.json.example config.dump-test.json
+   ```
+
+3. Add your `*.test.ts` test files to `src/test/dump`.
+
+4. Run:
+
+```bash
+npm run docker:test:dump
 ```
 
 ## Documentation

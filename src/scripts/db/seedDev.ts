@@ -106,6 +106,8 @@ export const main = async () => {
 
   await accountsSequelize.close()
   await dataSequelize.close()
+
+  process.exit(0)
 }
 
 main()

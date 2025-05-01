@@ -1,4 +1,5 @@
 import request from 'supertest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Contract } from '@/db'
 import { WasmCode, WasmCodeService } from '@/services/wasm-codes'

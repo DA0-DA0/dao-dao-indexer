@@ -1,10 +1,16 @@
-import { Column, Model, PrimaryKey, Table } from 'sequelize-typescript'
+import {
+  Column,
+  DataType,
+  Model,
+  PrimaryKey,
+  Table,
+} from 'sequelize-typescript'
 
 @Table({
   timestamps: true,
 })
 export class Validator extends Model {
   @PrimaryKey
-  @Column
+  @Column(DataType.STRING)
   declare operatorAddress: string
 }

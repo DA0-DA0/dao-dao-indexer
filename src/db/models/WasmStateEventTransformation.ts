@@ -50,7 +50,7 @@ import { Contract } from './Contract'
 export class WasmStateEventTransformation extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Contract)
-  @Column
+  @Column(DataType.STRING)
   declare contractAddress: string
 
   @BelongsTo(() => Contract)

@@ -1,0 +1,17 @@
+import { describe, expect, it } from 'vitest'
+
+import { WasmStateEventTransformation } from '@/db'
+
+describe('common transformers', () => {
+  it('info', async () => {
+    const transformation = await WasmStateEventTransformation.findOne({
+      where: {
+        contractAddress:
+          'xion1xeuhnnwgad2hfql0k39w999s4wqc0qt0xmhhjwgmzs7rs3j9e7jswhw23f',
+        name: 'info',
+      },
+    })
+
+    expect(transformation).not.toBeNull()
+  })
+})

@@ -1,4 +1,10 @@
-import { Column, ForeignKey, Model, Table } from 'sequelize-typescript'
+import {
+  Column,
+  DataType,
+  ForeignKey,
+  Model,
+  Table,
+} from 'sequelize-typescript'
 
 import { AccountCodeIdSet } from './AccountCodeIdSet'
 import { AccountWebhook } from './AccountWebhook'
@@ -8,10 +14,10 @@ import { AccountWebhook } from './AccountWebhook'
 })
 export class AccountWebhookCodeIdSet extends Model {
   @ForeignKey(() => AccountWebhook)
-  @Column
+  @Column(DataType.INTEGER)
   declare webhookId: number
 
   @ForeignKey(() => AccountCodeIdSet)
-  @Column
+  @Column(DataType.INTEGER)
   declare codeIdSetId: number
 }

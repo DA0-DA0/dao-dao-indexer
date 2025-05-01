@@ -1,4 +1,5 @@
 import request from 'supertest'
+import { describe, expect, it } from 'vitest'
 
 import { State } from '@/db'
 import { serializeBlock } from '@/utils'

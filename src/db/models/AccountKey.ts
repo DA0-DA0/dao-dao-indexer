@@ -37,14 +37,14 @@ export type AccountKeyApiJson = {
 export class AccountKey extends Model {
   @AllowNull(false)
   @ForeignKey(() => Account)
-  @Column
+  @Column(DataType.STRING)
   declare accountPublicKey: string
 
   @BelongsTo(() => Account)
   declare account: Account
 
   @AllowNull(false)
-  @Column
+  @Column(DataType.STRING)
   declare name: string
 
   @AllowNull
@@ -52,7 +52,7 @@ export class AccountKey extends Model {
   declare description: string | null
 
   @AllowNull(false)
-  @Column
+  @Column(DataType.STRING)
   declare hashedKey: string
 
   @HasMany(() => AccountKeyCredit, 'accountKeyId')

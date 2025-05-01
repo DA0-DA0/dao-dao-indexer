@@ -3,7 +3,7 @@ import { Command } from 'commander'
 
 import { loadConfig, stopConfigWatch } from '@/config'
 import { State, loadDb } from '@/db'
-import { QueueOptions, queues as queues } from '@/queues'
+import { QueueOptions, queues } from '@/queues'
 import { WasmCodeService } from '@/services/wasm-codes'
 import { DbType } from '@/types'
 

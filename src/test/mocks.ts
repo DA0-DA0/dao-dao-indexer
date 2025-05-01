@@ -1,6 +1,8 @@
+import { vi } from 'vitest'
+
 import * as utils from '@/formulas/utils'
 
-export const getTypedFormula = jest.spyOn(utils, 'getTypedFormula')
+export const getTypedFormula = vi.spyOn(utils, 'getTypedFormula')
 
 // Creates mocks with default implementations.
 export const restoreOriginalMocks = () => {

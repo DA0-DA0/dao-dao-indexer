@@ -47,7 +47,7 @@ export enum AccountWebhookStateKeyType {
 export class AccountWebhook extends Model {
   @AllowNull(false)
   @ForeignKey(() => Account)
-  @Column
+  @Column(DataType.STRING)
   declare accountPublicKey: string
 
   @BelongsTo(() => Account)
@@ -55,7 +55,7 @@ export class AccountWebhook extends Model {
 
   @AllowNull
   @ForeignKey(() => AccountKey)
-  @Column
+  @Column(DataType.INTEGER)
   declare accountKeyId: number
 
   @BelongsTo(() => AccountKey)

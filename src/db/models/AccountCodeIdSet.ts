@@ -22,7 +22,7 @@ export type AccountCodeIdSetApiJson = {
 export class AccountCodeIdSet extends Model {
   @AllowNull(false)
   @ForeignKey(() => Account)
-  @Column
+  @Column(DataType.STRING)
   declare accountPublicKey: string
 
   @BelongsTo(() => Account)

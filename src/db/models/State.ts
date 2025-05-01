@@ -21,7 +21,7 @@ import { Block } from '@/types'
 })
 export class State extends Model {
   @AllowNull(false)
-  @Column
+  @Column(DataType.BOOLEAN)
   declare singleton: boolean
 
   @AllowNull(false)

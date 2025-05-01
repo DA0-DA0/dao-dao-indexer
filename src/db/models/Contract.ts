@@ -15,11 +15,11 @@ import { ContractJson } from '@/types'
 })
 export class Contract extends Model {
   @PrimaryKey
-  @Column
+  @Column(DataType.STRING)
   declare address: string
 
   @AllowNull(false)
-  @Column
+  @Column(DataType.INTEGER)
   declare codeId: number
 
   @AllowNull

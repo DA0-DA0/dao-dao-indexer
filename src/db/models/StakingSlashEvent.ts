@@ -45,7 +45,7 @@ import { Validator } from './Validator'
 export class StakingSlashEvent extends DependableEventModel {
   @AllowNull(false)
   @ForeignKey(() => Validator)
-  @Column
+  @Column(DataType.STRING)
   declare validatorOperatorAddress: string
 
   @BelongsTo(() => Validator)

@@ -27,7 +27,7 @@ export type AccountWebhookEventAttemptApiJson = {
 export class AccountWebhookEventAttempt extends Model {
   @AllowNull(false)
   @ForeignKey(() => AccountWebhookEvent)
-  @Column
+  @Column(DataType.INTEGER)
   declare webhookEventId: number
 
   @BelongsTo(() => AccountWebhookEvent)

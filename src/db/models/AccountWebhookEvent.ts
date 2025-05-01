@@ -60,7 +60,7 @@ const MAX_ATTEMPTS = 3
 export class AccountWebhookEvent extends Model {
   @AllowNull(false)
   @ForeignKey(() => AccountWebhook)
-  @Column
+  @Column(DataType.INTEGER)
   declare webhookId: number
 
   @BelongsTo(() => AccountWebhook)

@@ -1,0 +1,25 @@
+{
+  "home": "/usr/src/app",
+  "rpc": "https://juno-testnet-rpc.polkachu.com",
+  "bech32Prefix": "juno",
+  "redis": {
+    "host": "redis"
+  },
+  "db": {
+    "data": {
+      "dialect": "postgres",
+      "host": "db_data",
+      "database": "dev_data",
+      "username": "dev",
+      "password": "dev"
+    },
+    "accounts": {
+      "dialect": "postgres",
+      "host": "db_accounts",
+      "database": "dev_accounts",
+      "username": "dev",
+      "password": "dev"
+    }
+  },
+  "codeIds": {}
+}

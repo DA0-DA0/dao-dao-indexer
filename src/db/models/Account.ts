@@ -29,7 +29,7 @@ import { AccountWebhook } from './AccountWebhook'
 })
 export class Account extends Model {
   @PrimaryKey
-  @Column
+  @Column(DataType.STRING)
   declare publicKey: string
 
   @AllowNull(false)

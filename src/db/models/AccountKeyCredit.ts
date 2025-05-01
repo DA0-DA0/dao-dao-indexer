@@ -42,7 +42,7 @@ export type AccountKeyCreditApiJson = {
 export class AccountKeyCredit extends Model {
   @AllowNull(false)
   @ForeignKey(() => AccountKey)
-  @Column
+  @Column(DataType.INTEGER)
   declare accountKeyId: number
 
   @BelongsTo(() => AccountKey)

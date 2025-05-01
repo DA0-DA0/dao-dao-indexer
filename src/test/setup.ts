@@ -1,16 +1,22 @@
 // Import before anything else so the mocks take precedence.
 import './mocks'
 
+import { afterAll, beforeEach, vi } from 'vitest'
+
 import { loadConfig } from '@/config'
 import { closeDb, loadDb, setup } from '@/db'
 import { closeAllBullQueues } from '@/queues'
 import { WasmCodeService } from '@/services/wasm-codes'
 import { DbType } from '@/types'
 
+const noTestDbReset =
+  process.env.NO_TEST_DB_RESET === 'true' ||
+  process.env.NO_TEST_DB_RESET === '1'
+
 loadConfig()
 
-// Don't log errors during tests.
-jest.spyOn(console, 'error').mockImplementation()
+// Don't log errors to the console during tests.
+vi.spyOn(console, 'error').mockImplementation(() => {})
 
 // Wipe databases before each test.
 beforeEach(async () => {
@@ -21,8 +27,11 @@ beforeEach(async () => {
     type: DbType.Accounts,
   })
 
-  await setup(dataSequelize)
-  await setup(accountsSequelize)
+  // Set up will reset the databases.
+  if (!noTestDbReset) {
+    await setup(dataSequelize)
+    await setup(accountsSequelize)
+  }
 
   // Set up wasm code service.
   await WasmCodeService.setUpInstance()

@@ -45,7 +45,7 @@ import { State } from './State'
 })
 export class Computation extends Model {
   @AllowNull(false)
-  @Column
+  @Column(DataType.STRING)
   declare targetAddress: string
 
   @AllowNull(false)

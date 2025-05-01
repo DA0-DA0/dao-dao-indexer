@@ -21,7 +21,7 @@ import { WasmCodeKeyId } from './WasmCodeKeyId'
 })
 export class WasmCodeKey extends Model {
   @PrimaryKey
-  @Column
+  @Column(DataType.STRING)
   declare codeKey: string
 
   @AllowNull(true)

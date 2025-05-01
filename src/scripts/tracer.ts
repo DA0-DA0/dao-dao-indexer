@@ -38,8 +38,14 @@ program.option(
   '-o, --output <path>',
   'optionally write streamed state to another file, acting as a passthrough'
 )
+program.option('--allow-no-fifo', 'allow trace file to not be a FIFO file')
 program.parse()
-const { config: _config, output, ws: webSocketEnabled } = program.opts()
+const {
+  config: _config,
+  output,
+  ws: webSocketEnabled,
+  allowNoFifo,
+} = program.opts()
 
 // Load config with config option.
 const config = loadConfig(_config)
@@ -66,16 +72,13 @@ const main = async () => {
   }
 
   // Verify trace file is FIFOs.
-  const stat = fs.statSync(traceFile)
-  if (!stat.isFIFO()) {
-    throw new Error(`Trace file is not a FIFO: ${traceFile}.`)
+  if (!allowNoFifo) {
+    const stat = fs.statSync(traceFile)
+    if (!stat.isFIFO()) {
+      throw new Error(`Trace file is not a FIFO: ${traceFile}.`)
+    }
   }
 
-  // Read from trace file.
-  await trace()
-}
-
-const trace = async () => {
   const dataSequelize = await loadDb({
     type: DbType.Data,
   })

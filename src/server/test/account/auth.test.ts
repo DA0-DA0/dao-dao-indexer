@@ -1,8 +1,9 @@
-import { createMockContext } from '@shopify/jest-koa-mocks'
 import jwt from 'jsonwebtoken'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadConfig } from '@/config'
 import { Account } from '@/db'
+import { createMockContext } from '@/test/createMockContext'
 import { getAccountWithAuth } from '@/test/utils'
 
 import { authMiddleware } from '../../routes/account/auth'
@@ -137,7 +138,7 @@ describe('authMiddleware', () => {
       },
     })
 
-    const next = jest.fn()
+    const next = vi.fn()
     await authMiddleware(ctx, next)
 
     // Next function is called on success.
