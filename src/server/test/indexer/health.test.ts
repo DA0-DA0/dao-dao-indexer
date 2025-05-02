@@ -8,9 +8,9 @@ describe('health', () => {
     await request(app.callback())
       .get('/health')
       .expect(200)
-      .expect({
-        status: 'ok',
-        timestamp: expect.any(String),
+      .expect((res) => {
+        expect(res.body.status).toBe('ok')
+        expect(res.body.timestamp).toBeTypeOf('string')
       })
   })
 })
