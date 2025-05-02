@@ -1,14 +1,11 @@
-node_modules/
-dist/
-/scripts/
+# build stuff
+node_modules
+dist
 
-fake/
-
-config.json
-config.*.json
-configmap-file.yaml
-*.crt
+# config
 requests.json
+.env*
+config*.json
 
 # meilisearch
 data.ms
@@ -17,4 +14,8 @@ data.ms
 *.pipe
 src/test/dump/**/*.test.ts
 
+# misc
+/scripts
 .DS_Store
+*.crt
+*.log

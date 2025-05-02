@@ -1,18 +1,30 @@
+# build stuff
+node_modules
+dist
+
+# git and IDE stuff
 .git
+.gitignore
 .github
 .vscode
-dist
-docs
-node_modules
-state-dump
 
+# config
 compose.*.yml
-.gitignore
-*.crt
-*.log
+requests.json
 .env*
 config*.json
-requests.json
 
 # meilisearch
 data.ms
+
+# dump and tests
+*.pipe
+src/test/dump/**/*.test.ts
+
+# misc
+/scripts
+/state-dump
+/docs
+*.crt
+*.log
+.DS_Store
