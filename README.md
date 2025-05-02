@@ -96,6 +96,21 @@ To test transformations with a dump file:
 npm run docker:test:dump
 ```
 
+## Docker
+
+To build the Docker image, run:
+
+```bash
+npm run docker:build
+```
+
+To tag and push to a container registry, run:
+
+```bash
+docker tag argus:latest your-registry/argus:latest
+docker push your-registry/argus:latest
+```
+
 ## Documentation
 
 To understand how this indexer works and why it exists, read through the
