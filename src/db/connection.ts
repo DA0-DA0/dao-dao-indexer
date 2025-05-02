@@ -1,7 +1,11 @@
+import fs from 'fs'
+import path from 'path'
+
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
 import { ConfigManager } from '@/config'
 import { DbType } from '@/types'
+import { objectMatchesStructure } from '@/utils'
 
 import {
   Account,
@@ -95,6 +99,28 @@ export const loadDb = async ({
 
     // Tell Sequelize what models we have.
     models: getModelsForType(type),
+  }
+
+  // Read the SSL CA certificate file if present.
+  if (
+    objectMatchesStructure(dbConfig, {
+      dialectOptions: {
+        ssl: {
+          ca: {},
+        },
+      },
+    })
+  ) {
+    const ca = (dbConfig.dialectOptions as any).ssl.ca
+    if (ca && typeof ca === 'string' && !ca.includes('BEGIN CERTIFICATE')) {
+      // If file, read it.
+      const file = path.resolve(ca)
+      if (fs.existsSync(file)) {
+        ;(options.dialectOptions as any).ssl.ca = fs
+          .readFileSync(file)
+          .toString()
+      }
+    }
   }
 
   // If URI present, use it. Otherwise, use options directly.
