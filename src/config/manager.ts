@@ -6,7 +6,11 @@ import { Config } from '@/types'
 const DEFAULT_CONFIG_FILE = path.join(process.cwd(), './config.json')
 
 /**
- * A config manager that supports reloading config from a file automatically.
+ * A config manager that supports reloading config from a file automatically and
+ * using environment variables when desired.
+ *
+ * If a config value is set to `env:KEY`, it will be replaced with the value of
+ * the environment variable `KEY`.
  *
  * Usage:
  *
@@ -52,15 +56,16 @@ export class ConfigManager {
    */
   private onChangeCallbacks: ((config: Config) => void | Promise<void>)[] = []
 
-  private constructor() {
-    this.configFile = process.env.CONFIG_FILE ?? DEFAULT_CONFIG_FILE
+  private constructor(configFile?: string) {
+    this.configFile =
+      configFile ?? process.env.CONFIG_FILE ?? DEFAULT_CONFIG_FILE
     // Redundant set since loadConfig() sets this.config, this just resolves a
     // class type error.
     this.config = this.loadConfig()
     this.watchConfigFile()
   }
 
-  static get instance() {
+  static get instance(): ConfigManager {
     if (!this._instance) {
       this._instance = new ConfigManager()
     }
@@ -73,12 +78,14 @@ export class ConfigManager {
    *
    * Returns the config.
    */
-  static load(updateFile?: string) {
-    const manager = ConfigManager.instance
-    if (updateFile) {
-      return manager.updateConfigFile(path.resolve(updateFile))
+  static load(updateFile?: string): Config {
+    if (!this._instance) {
+      this._instance = new ConfigManager(updateFile)
+      return this._instance.config
+    } else if (updateFile) {
+      return this._instance.updateConfigFile(path.resolve(updateFile))
     } else {
-      return manager.config
+      return this._instance.config
     }
   }
 
@@ -88,7 +95,7 @@ export class ConfigManager {
    *
    * Returns the new config.
    */
-  updateConfigFile(file: string) {
+  updateConfigFile(file: string): Config {
     // If the config file did not change, do nothing.
     if (this.configFile === file) {
       return this.config
@@ -110,16 +117,52 @@ export class ConfigManager {
   /**
    * Load config from the config file, notify listeners, and return it.
    */
-  loadConfig() {
+  loadConfig(): Config {
     if (!fs.existsSync(this.configFile)) {
       throw new Error(`Config not found at ${this.configFile}.`)
     }
 
     this.config = JSON.parse(fs.readFileSync(this.configFile, 'utf-8'))
+    this.replaceEnvVars(this.config)
 
     this.notifyListeners()
 
     return this.config
+  }
+
+  /**
+   * Replace any values in the object that are set to `env:KEY` with the value
+   * of the environment variable `KEY`, throwing an error if the environment
+   * variable is empty. Use `envOptional:KEY` instead to allow empty
+   *
+   * Recursively replaces values in nested objects.
+   */
+  private replaceEnvVars(obj: any) {
+    Object.entries(obj).forEach(([key, value]) => {
+      if (!value) {
+        return
+      }
+
+      if (typeof value === 'string') {
+        if (value.startsWith('env:')) {
+          const envKey = value.slice('env:'.length)
+          const envValue = process.env[envKey]
+          if (envValue) {
+            obj[key] = envValue
+          } else {
+            throw new Error(
+              `Environment variable ${envKey} required by config but not set.`
+            )
+          }
+        } else if (value.startsWith('envOptional:')) {
+          const envKey = value.slice('envOptional:'.length)
+          const envValue = process.env[envKey]
+          obj[key] = envValue
+        }
+      } else if (typeof value === 'object') {
+        this.replaceEnvVars(value)
+      }
+    })
   }
 
   /**
