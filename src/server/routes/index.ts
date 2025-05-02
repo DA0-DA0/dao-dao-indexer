@@ -14,7 +14,7 @@ export type SetupRouterOptions = {
   accounts: boolean
 }
 
-export const setUpRouter = (
+export const setUpRouter = async (
   app: Koa,
   { config, accounts }: SetupRouterOptions
 ) => {
@@ -26,12 +26,21 @@ export const setUpRouter = (
     ctx.body = 'pong'
   })
 
+  // Health check for Kubernetes probes
+  router.get('/health', (ctx) => {
+    ctx.status = 200
+    ctx.body = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    }
+  })
+
   if (accounts) {
     // Account API.
     router.use(accountRouter.routes(), accountRouter.allowedMethods())
   } else {
     // Background jobs dashboard.
-    setUpBullBoard(app, config)
+    await setUpBullBoard(app, config)
 
     // Swagger API docs.
     setUpDocs(app)

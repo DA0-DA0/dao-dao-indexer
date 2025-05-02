@@ -1,6 +1,6 @@
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { DbType } from '@/types'
 
 import {
@@ -78,7 +78,7 @@ export const loadDb = async ({
     return sequelizeInstances[type]!
   }
 
-  const { db } = loadConfig()
+  const { db } = ConfigManager.load()
 
   const dbConfig = db[type]
   if (!dbConfig) {

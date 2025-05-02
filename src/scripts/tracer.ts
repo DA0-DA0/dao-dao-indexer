@@ -7,7 +7,7 @@ import { Command } from 'commander'
 import { LRUCache } from 'lru-cache'
 import waitPort from 'wait-port'
 
-import { loadConfig, stopConfigWatch } from '@/config'
+import { ConfigManager } from '@/config'
 import { State, loadDb } from '@/db'
 import { ExportQueue } from '@/queues/queues/export'
 import { setupMeilisearch } from '@/search'
@@ -47,8 +47,8 @@ const {
   allowNoFifo,
 } = program.opts()
 
-// Load config with config option.
-const config = loadConfig(_config)
+// Load config from specific config file.
+const config = ConfigManager.load(_config)
 
 if (!config.home) {
   throw new Error('Config missing home directory.')
@@ -655,9 +655,6 @@ const main = async () => {
 
   // Close queue.
   await ExportQueue.close()
-
-  // Stop config watch.
-  stopConfigWatch()
 
   process.exit(0)
 }

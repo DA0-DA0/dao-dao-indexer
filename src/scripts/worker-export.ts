@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { State, loadDb } from '@/db'
 import { QueueOptions } from '@/queues'
 import { ExportQueue } from '@/queues/queues'
@@ -17,7 +17,7 @@ program.parse()
 const { config: _config } = program.opts()
 
 // Load config with config option.
-const config = loadConfig(_config)
+const config = ConfigManager.load(_config)
 
 const main = async () => {
   // Load DB on start.

@@ -1,7 +1,7 @@
 import Router from '@koa/router'
 import { DefaultContext, DefaultState } from 'koa'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { AccountKeyCredit } from '@/db'
 
 type GetConfigResponse =
@@ -22,7 +22,7 @@ export const getConfig: Router.Middleware<
   DefaultContext,
   GetConfigResponse
 > = async (ctx) => {
-  const { payment } = loadConfig()
+  const { payment } = ConfigManager.load()
   if (!payment) {
     ctx.status = 400
     ctx.body = {

@@ -1,7 +1,6 @@
 import * as Sentry from '@sentry/node'
 import { Op } from 'sequelize'
 
-import { loadConfig } from '@/config'
 import { State, WasmStateEventTransformation } from '@/db'
 import {
   ParsedWasmStateEvent,
@@ -19,7 +18,7 @@ export const transformParsedStateEvents = async (
   }
 
   const chainId = (await State.getSingleton())?.chainId || 'unknown'
-  const transformers = getProcessedTransformers(loadConfig())
+  const transformers = getProcessedTransformers()
   if (transformers.length === 0) {
     return []
   }

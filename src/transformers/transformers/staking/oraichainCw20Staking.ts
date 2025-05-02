@@ -1,6 +1,6 @@
 import { toBech32 } from '@cosmjs/encoding'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 
 import { makeTransformersForSnapshotMap } from '../../utils'
 
@@ -14,7 +14,7 @@ const stakedBalance = makeTransformersForSnapshotMap({
   namer: {
     input: ['bytes', 'string'],
     transform: ([assetKeyRaw, address]) => {
-      const { bech32Prefix } = loadConfig()
+      const { bech32Prefix } = ConfigManager.load()
       const tokenAddress = toBech32(bech32Prefix, assetKeyRaw as Uint8Array)
       return `${tokenAddress}:${address}`
     },
@@ -29,7 +29,7 @@ const stakedTotal = makeTransformersForSnapshotMap({
   namer: {
     input: 'bytes',
     transform: ([assetKeyRaw]) => {
-      const { bech32Prefix } = loadConfig()
+      const { bech32Prefix } = ConfigManager.load()
       const tokenAddress = toBech32(bech32Prefix, assetKeyRaw as Uint8Array)
       return tokenAddress
     },

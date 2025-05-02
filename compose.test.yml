@@ -1,6 +1,6 @@
 services:
   test:
-    image: node:18-alpine
+    image: node:22-alpine
     command: npm run test
     working_dir: /usr/src/app
     ports:

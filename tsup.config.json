@@ -3,6 +3,7 @@
     "src/server/serve.ts",
     "src/scripts/**/*.ts",
     "src/db/config.ts",
+    "src/db/connection.ts",
     "src/db/migrations/*.ts",
     "src/config/index.ts"
   ],

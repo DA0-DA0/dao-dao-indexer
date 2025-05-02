@@ -1,4 +1,4 @@
-# dao-dao-indexer
+# Argus
 
 A state-based indexer and API builder for the Cosmos SDK built by and for [DAO
 DAO](https://daodao.zone).
@@ -94,6 +94,21 @@ To test transformations with a dump file:
 
 ```bash
 npm run docker:test:dump
+```
+
+## Docker
+
+To build the Docker image, run:
+
+```bash
+npm run docker:build
+```
+
+To tag and push to a container registry, run:
+
+```bash
+docker tag argus:latest your-registry/argus:latest
+docker push your-registry/argus:latest
 ```
 
 ## Documentation

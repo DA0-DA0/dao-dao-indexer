@@ -1,6 +1,6 @@
 services:
   server:
-    image: node:18-alpine
+    image: node:22-alpine
     command: sh -c "npm install && npm run build; npm run db:migrate:data; npm run db:setup -- -f -d && npm run db:seed:dev && npm run serve:dev:nodocker"
     working_dir: /usr/src/app
     ports:
@@ -31,6 +31,10 @@ services:
       POSTGRES_DB: dev_accounts
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev
+    volumes:
+      - db_accounts_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -d dev_accounts -U dev']
       interval: 1s
@@ -44,6 +48,10 @@ services:
       POSTGRES_DB: dev_data
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev
+    volumes:
+      - db_data_data:/var/lib/postgresql/data
+    ports:
+      - '5433:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -d dev_data -U dev']
       interval: 1s
@@ -52,11 +60,26 @@ services:
 
   redis:
     image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ['CMD-SHELL', 'redis-cli ping']
       interval: 1s
       timeout: 3s
       retries: 5
 
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    environment:
+      - MEILI_MASTER_KEY=masterKey
+    ports:
+      - '7700:7700'
+    volumes:
+      - meilisearch_data:/meili_data
+
 volumes:
   node_modules:
+  redis_data:
+  meilisearch_data:

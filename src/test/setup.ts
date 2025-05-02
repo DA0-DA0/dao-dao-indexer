@@ -3,7 +3,7 @@ import './mocks'
 
 import { afterAll, beforeEach, vi } from 'vitest'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { closeDb, loadDb, setup } from '@/db'
 import { closeAllBullQueues } from '@/queues'
 import { WasmCodeService } from '@/services/wasm-codes'
@@ -13,7 +13,7 @@ const noTestDbReset =
   process.env.NO_TEST_DB_RESET === 'true' ||
   process.env.NO_TEST_DB_RESET === '1'
 
-loadConfig()
+ConfigManager.load()
 
 // Don't log errors to the console during tests.
 vi.spyOn(console, 'error').mockImplementation(() => {})

@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { loadDb } from '@/db'
 import { DbType } from '@/types'
 
@@ -20,8 +20,8 @@ if (type !== 'data' && type !== 'accounts' && type !== 'both') {
   process.exit(1)
 }
 
-// Load config with config option.
-loadConfig(config)
+// Load config from specific config file.
+ConfigManager.load(config)
 
 export const main = async () => {
   // Log when altering.

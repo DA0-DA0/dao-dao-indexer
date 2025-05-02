@@ -29,7 +29,7 @@ export type Config = {
   }
   redis?: {
     host?: string
-    port?: number
+    port?: number | string
     password: string
   }
   meilisearch?: {

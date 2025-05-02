@@ -4,7 +4,7 @@ import * as readline from 'readline'
 
 import { Command } from 'commander'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { loadDb, setup as setupDb } from '@/db'
 import { DbType } from '@/types'
 
@@ -20,8 +20,8 @@ export const main = async () => {
   program.parse()
   const { config: _config, force, destroy = false } = program.opts()
 
-  // Load config with config option.
-  loadConfig(_config)
+  // Load config from specific config file.
+  ConfigManager.load(_config)
 
   const dataSequelize = await loadDb({
     type: DbType.Data,

@@ -1,14 +1,14 @@
 import request from 'supertest'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { AccountKey, AccountKeyCreditPaymentSource } from '@/db'
 import { getAccountWithAuth } from '@/test/utils'
 
 import { app } from './app'
 
 describe('POST /payment-webhook/:paymentSource', () => {
-  const { payment } = loadConfig()
+  const { payment } = ConfigManager.load()
 
   let unpaidAccountKey: AccountKey
   beforeEach(async () => {

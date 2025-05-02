@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { Account } from '@/db'
 import { createMockContext } from '@/test/createMockContext'
 import { getAccountWithAuth } from '@/test/utils'
@@ -51,7 +51,7 @@ describe('authMiddleware', () => {
   })
 
   it('expects the token to be an object', async () => {
-    const { accountsJwtSecret } = loadConfig()
+    const { accountsJwtSecret } = ConfigManager.load()
     const token = jwt.sign('not an object', accountsJwtSecret!)
 
     const ctx = createMockContext({
@@ -67,7 +67,7 @@ describe('authMiddleware', () => {
   })
 
   it('expects the token to contain a public key', async () => {
-    const { accountsJwtSecret } = loadConfig()
+    const { accountsJwtSecret } = ConfigManager.load()
     const token = jwt.sign(
       {
         nope: 'not a public key',
@@ -88,7 +88,7 @@ describe('authMiddleware', () => {
   })
 
   it('expects the token to contain a valid public key', async () => {
-    const { accountsJwtSecret } = loadConfig()
+    const { accountsJwtSecret } = ConfigManager.load()
     const token = jwt.sign(
       {
         publicKey: 'invalid',
@@ -109,7 +109,7 @@ describe('authMiddleware', () => {
   })
 
   it('expects the token to use the correct secret', async () => {
-    const { accountsJwtSecret } = loadConfig()
+    const { accountsJwtSecret } = ConfigManager.load()
     const token = jwt.sign(
       {
         publicKey: account.publicKey,

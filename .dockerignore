@@ -1,0 +1,18 @@
+.git
+.github
+.vscode
+dist
+docs
+node_modules
+state-dump
+
+compose.*.yml
+.gitignore
+*.crt
+*.log
+.env*
+config*.json
+requests.json
+
+# meilisearch
+data.ms

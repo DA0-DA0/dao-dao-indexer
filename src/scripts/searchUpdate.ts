@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 
-import { loadConfig } from '@/config'
+import { ConfigManager } from '@/config'
 import { loadDb } from '@/db'
 import { setupMeilisearch, updateIndexes } from '@/search'
 import { WasmCodeService } from '@/services/wasm-codes'
@@ -19,8 +19,8 @@ const main = async () => {
   program.parse()
   const options = program.opts()
 
-  // Load config with config option.
-  loadConfig(options.config)
+  // Load config from specific config file.
+  ConfigManager.load(options.config)
 
   // Connect to db.
   const sequelize = await loadDb()
