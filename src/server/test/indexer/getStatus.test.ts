@@ -8,7 +8,7 @@ import { app } from './app'
 
 describe('GET /status', () => {
   it('returns the status', async () => {
-    const state = await State.getSingleton()
+    const state = (await State.getSingleton())!
     expect(state).toBeDefined()
 
     await request(app.callback())
@@ -16,17 +16,18 @@ describe('GET /status', () => {
       .expect(200)
       .expect('Content-Type', /json/)
       .expect({
-        latestBlock: serializeBlock(state!.latestBlock),
+        chainId: state.chainId,
+        latestBlock: serializeBlock(state.latestBlock),
         lastStakingBlockHeightExported:
-          state!.lastStakingBlockHeightExported?.toString() || null,
+          state.lastStakingBlockHeightExported?.toString() || null,
         lastWasmBlockHeightExported:
-          state!.lastWasmBlockHeightExported?.toString() || null,
+          state.lastWasmBlockHeightExported?.toString() || null,
         lastBankBlockHeightExported:
-          state!.lastBankBlockHeightExported?.toString() || null,
+          state.lastBankBlockHeightExported?.toString() || null,
         lastGovBlockHeightExported:
-          state!.lastGovBlockHeightExported?.toString() || null,
+          state.lastGovBlockHeightExported?.toString() || null,
         lastDistributionBlockHeightExported:
-          state!.lastDistributionBlockHeightExported?.toString() || null,
+          state.lastDistributionBlockHeightExported?.toString() || null,
       })
   })
 })

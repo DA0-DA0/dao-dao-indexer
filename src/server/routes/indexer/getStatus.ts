@@ -7,6 +7,7 @@ import { serializeBlock } from '@/utils'
 
 type GetStatusResponse =
   | {
+      chainId: string
       latestBlock: SerializedBlock
       lastStakingBlockHeightExported: string | null
       lastWasmBlockHeightExported: string | null
@@ -34,6 +35,7 @@ export const getStatus: Router.Middleware<
 
   ctx.status = 200
   ctx.body = {
+    chainId: state.chainId,
     latestBlock: serializeBlock(state.latestBlock),
     lastStakingBlockHeightExported:
       state.lastStakingBlockHeightExported?.toString() || null,

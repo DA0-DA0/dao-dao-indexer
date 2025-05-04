@@ -12,6 +12,7 @@ type UpBlock = {
 
 type UpResponse =
   | {
+      chainId: string
       chainBlock: UpBlock
       indexerBlock: UpBlock
       caughtUp: boolean
@@ -63,6 +64,7 @@ export const up: Router.Middleware<
 
   ctx.status = caughtUp ? 200 : 412
   ctx.body = {
+    chainId: state.chainId,
     chainBlock,
     indexerBlock,
     caughtUp,
