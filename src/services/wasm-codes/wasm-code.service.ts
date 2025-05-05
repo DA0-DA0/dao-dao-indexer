@@ -28,7 +28,7 @@ export class WasmCodeService implements WasmCodeAdapter {
    * List of all active wasm codes, including the defaults and those loaded from
    * the DB.
    */
-  private wasmCodes: WasmCode[]
+  private wasmCodes: WasmCode[] = []
 
   /**
    * Interval that updates the list of wasm codes from the DB.
@@ -42,7 +42,6 @@ export class WasmCodeService implements WasmCodeAdapter {
     configWasmCodes: Config['codeIds']
   ) {
     this.setDefaultWasmCodes(configWasmCodes)
-    this.wasmCodes = [...this.defaultWasmCodes]
   }
 
   /**
