@@ -43,6 +43,42 @@ DAO](https://daodao.zone).
    pm2 startup
    ```
 
+### Config
+
+Config defaults to loading from `config.json` in the root of the project, though
+it supports loading from environment variables:
+
+`env:KEY_NAME` in a field inside `config.json` will be replaced with the value of
+the `KEY_NAME` environment variable, erroring if the variable is not set.
+
+`envOptional:KEY_NAME` will not error if the variable is not set.
+
+Environment variables/secrets are managed via
+[Infisical](https://infisical.com) and used when deploying production servers.
+
+```bash
+# Log in via web browser (set INFISICAL_TOKEN in .env)
+npx @infisical/cli login
+
+# Log in via Infisical Universal Auth and save the token to .env
+echo "INFISICAL_TOKEN=$(npx @infisical/cli login --method universal-auth --client-id <client-id> --client-secret <client-secret> --plain)" >> .env
+# Save the project ID to .env
+echo "INFISICAL_PROJECT_ID=$(cat .infisical.json | jq -r '.workspaceId')" >> .env
+# Save the environment to .env
+echo "INFISICAL_ENVIRONMENT=$(cat .infisical.json | jq -r '.defaultEnvironment')" >> .env
+
+# Run a command with the environment variables set
+npm run with-infisical -- <command>
+
+# e.g. run the server
+npm run with-infisical -- npm run serve
+
+# if you need to run a command that uses inline env variables in the cmd, wrap
+# it in `bash -c '...'` to avoid eager shell expansion since the variables
+# aren't defined until the script is run
+npm run with-infisical -- bash -c 'echo $INFISICAL_ENVIRONMENT'
+```
+
 ## Usage
 
 Test the indexer:
