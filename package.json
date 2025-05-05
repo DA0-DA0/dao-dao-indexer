@@ -15,6 +15,7 @@
     "build": "tsup",
     "build:watch": "tsup --watch",
     "postbuild": "npm run autodoc",
+    "db:init": "npm run db:migrate:data; npm run db:setup -- -f",
     "db:setup": "node dist/scripts/db/setup.js",
     "db:seed": "node dist/scripts/db/seed.js",
     "db:seed:dev": "node dist/scripts/db/seedDev.js",

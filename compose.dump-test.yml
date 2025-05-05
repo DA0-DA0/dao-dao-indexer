@@ -1,7 +1,7 @@
 services:
   test:
     image: node:22-alpine
-    command: sh -c "npm install && npm run build; npm run db:migrate:data; npm run db:setup -- -f -d && npm run db:seed:dev && npm run tracer -- --no-ws --allow-no-fifo && npm run workers:export && npm run test -- -c vitest.config.dump.mts"
+    command: sh -c "npm install && npm run build; npm run db:init -- -d && npm run db:seed:dev && npm run tracer -- --no-ws --allow-no-fifo && npm run workers:export && npm run test -- -c vitest.config.dump.mts"
     working_dir: /usr/src/app
     volumes:
       # use local files as source
