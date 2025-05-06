@@ -5,6 +5,7 @@ import {
   Column,
   DataType,
   ForeignKey,
+  PrimaryKey,
   Table,
 } from 'sequelize-typescript'
 
@@ -22,17 +23,17 @@ import { Contract } from './Contract'
 @Table({
   timestamps: true,
   indexes: [
-    // Only one event can happen to a key for a given contract at a given block
-    // height. This ensures events are not duplicated if they attempt exporting
-    // multiple times.
+    // Take advantage of TimescaleDB SkipScan. No need for a unique index since
+    // the primary key is a composite key of these fields already.
     {
-      unique: true,
-      fields: ['blockHeight', 'contractAddress', 'key'],
-    },
-    {
-      // Speeds up queries finding latest key for a contract. Composite indexes
-      // are most efficient when equality tests are first and ranges second.
-      fields: ['contractAddress', 'blockHeight'],
+      fields: [
+        'key',
+        'contractAddress',
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
     },
     {
       // Speeds up queries finding first newer dependent key to validate a
@@ -48,8 +49,20 @@ import { Contract } from './Contract'
       fields: ['blockTimeUnixMs'],
     },
   ],
+  hooks: {
+    afterSync: async () => {
+      if (!WasmStateEvent.sequelize) {
+        throw new Error('Sequelize instance not found after sync.')
+      }
+
+      const createHypertableQuery = `SELECT create_hypertable('"${WasmStateEvent.tableName}"', by_range('blockHeight'), if_not_exists => true, migrate_data => true);`
+
+      await WasmStateEvent.sequelize.query(createHypertableQuery)
+    },
+  },
 })
 export class WasmStateEvent extends DependableEventModel {
+  @PrimaryKey
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column(DataType.STRING)
@@ -58,6 +71,7 @@ export class WasmStateEvent extends DependableEventModel {
   @BelongsTo(() => Contract)
   declare contract: Contract
 
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockHeight: string
@@ -75,6 +89,7 @@ export class WasmStateEvent extends DependableEventModel {
   // have to manually encode binary data in a format that allows for
   // database-level prefix queries (i.e. LIKE prefix%). We want database-level
   // prefixing so we can efficiently query for all values in a map.
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.TEXT)
   declare key: string

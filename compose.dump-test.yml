@@ -24,7 +24,7 @@ services:
     tty: true
 
   db_accounts:
-    image: postgres:14-alpine
+    image: postgres:17-alpine
     # matches config in config.dump-test.json
     environment:
       POSTGRES_DB: dev_accounts
@@ -37,7 +37,7 @@ services:
       retries: 5
 
   db_data:
-    image: postgres:14-alpine
+    image: timescale/timescaledb:2.18.1-pg17
     # matches config in config.dump-test.json
     environment:
       POSTGRES_DB: dev_data

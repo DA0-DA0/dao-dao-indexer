@@ -5,6 +5,7 @@ import {
   Column,
   DataType,
   ForeignKey,
+  PrimaryKey,
   Table,
 } from 'sequelize-typescript'
 
@@ -21,12 +22,17 @@ import { Contract } from './Contract'
 @Table({
   timestamps: true,
   indexes: [
-    // Transformers are deterministic and names must be unique so they can be
-    // found, so only one output can exist for a name on a contract at a given
-    // block height.
+    // Take advantage of TimescaleDB SkipScan. No need for a unique index since
+    // the primary key is a composite key of these fields already.
     {
-      unique: true,
-      fields: ['contractAddress', 'name', 'blockHeight'],
+      fields: [
+        'name',
+        'contractAddress',
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
     },
     {
       // Speeds up queries. Use trigram index for string name to speed up
@@ -46,8 +52,20 @@ import { Contract } from './Contract'
       fields: ['blockHeight'],
     },
   ],
+  hooks: {
+    afterSync: async () => {
+      if (!WasmStateEventTransformation.sequelize) {
+        throw new Error('Sequelize instance not found after sync.')
+      }
+
+      const createHypertableQuery = `SELECT create_hypertable('"${WasmStateEventTransformation.tableName}"', by_range('blockHeight'), if_not_exists => true, migrate_data => true);`
+
+      await WasmStateEventTransformation.sequelize.query(createHypertableQuery)
+    },
+  },
 })
 export class WasmStateEventTransformation extends DependableEventModel {
+  @PrimaryKey
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column(DataType.STRING)
@@ -56,6 +74,7 @@ export class WasmStateEventTransformation extends DependableEventModel {
   @BelongsTo(() => Contract)
   declare contract: Contract
 
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockHeight: string
@@ -64,6 +83,7 @@ export class WasmStateEventTransformation extends DependableEventModel {
   @Column(DataType.BIGINT)
   declare blockTimeUnixMs: string
 
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.TEXT)
   declare name: string

@@ -22,7 +22,7 @@ services:
     tty: true
 
   db:
-    image: postgres:14-alpine
+    image: timescale/timescaledb:2.18.1-pg17
     # matches config in config-test.json
     environment:
       POSTGRES_DB: test
