@@ -1,4 +1,5 @@
 export * as abstract from './abstract'
+export * as xion from './xion'
 export * from './daoCore'
 export * from './delegation'
 export * from './distribution'

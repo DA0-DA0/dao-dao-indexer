@@ -6,7 +6,6 @@ services:
     volumes:
       # use local files as source
       - .:/usr/src/app
-      - ./dump.trace.pipe:/usr/src/app/trace.pipe
     environment:
       NODE_ENV: development
       # contains db connection info that matches db service setup below

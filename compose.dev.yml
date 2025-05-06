@@ -69,6 +69,8 @@ services:
       interval: 1s
       timeout: 3s
       retries: 5
+    ports:
+      - 6379:6379 # server
 
   meilisearch:
     image: getmeili/meilisearch:latest
