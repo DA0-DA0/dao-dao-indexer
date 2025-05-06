@@ -12340,13 +12340,12 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/xion/account/authenticators": {
+    "/{chainId}/contract/{contractAddress}/xion/account/authenticators": {
       "get": {
         "tags": [
           "contract"
         ],
-        "summary": "xion > account > authenticators",
-        "description": "Get authenticator map for account",
+        "summary": "Get authenticator map for account",
         "operationId": "xion_account_authenticators_72d9d64",
         "parameters": [
           {
@@ -12359,7 +12358,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12375,13 +12374,12 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/xion/treasury/admin": {
+    "/{chainId}/contract/{contractAddress}/xion/treasury/admin": {
       "get": {
         "tags": [
           "contract"
         ],
-        "summary": "xion > treasury > admin",
-        "description": "Get the curent admin for the treasury",
+        "summary": "Get the curent admin for the treasury",
         "operationId": "xion_treasury_admin_87af756",
         "parameters": [
           {
@@ -12394,7 +12392,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12410,13 +12408,12 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/xion/treasury/all": {
+    "/{chainId}/contract/{contractAddress}/xion/treasury/all": {
       "get": {
         "tags": [
           "contract"
         ],
-        "summary": "xion > treasury > all",
-        "description": "Get all treasury data in a single endpoint",
+        "summary": "Get all treasury data in a single endpoint",
         "operationId": "xion_treasury_all_42b12f8",
         "parameters": [
           {
@@ -12429,7 +12426,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12445,13 +12442,12 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/xion/treasury/feeConfig": {
+    "/{chainId}/contract/{contractAddress}/xion/treasury/feeConfig": {
       "get": {
         "tags": [
           "contract"
         ],
-        "summary": "xion > treasury > feeConfig",
-        "description": "Get the fee sponsorship configuration for the treasury",
+        "summary": "Get the fee sponsorship configuration for the treasury",
         "operationId": "xion_treasury_feeConfig_b514e76",
         "parameters": [
           {
@@ -12464,7 +12460,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12480,13 +12476,12 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/xion/treasury/grantConfigs": {
+    "/{chainId}/contract/{contractAddress}/xion/treasury/grantConfigs": {
       "get": {
         "tags": [
           "contract"
         ],
-        "summary": "xion > treasury > grantConfigs",
-        "description": "Get the treasury's grant configs by msg type url",
+        "summary": "Get the treasury's grant configs by msg type url",
         "operationId": "xion_treasury_grantConfigs_09399cc",
         "parameters": [
           {
@@ -12499,7 +12494,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12515,13 +12510,12 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/xion/treasury/params": {
+    "/{chainId}/contract/{contractAddress}/xion/treasury/params": {
       "get": {
         "tags": [
           "contract"
         ],
-        "summary": "xion > treasury > params",
-        "description": "Get the params for the treasury",
+        "summary": "Get the params for the treasury",
         "operationId": "xion_treasury_params_973187c",
         "parameters": [
           {
@@ -12534,7 +12528,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
@@ -12550,13 +12544,12 @@
         }
       }
     },
-    "/{chainId}/contract/{address}/xion/treasury/pendingAdmin": {
+    "/{chainId}/contract/{contractAddress}/xion/treasury/pendingAdmin": {
       "get": {
         "tags": [
           "contract"
         ],
-        "summary": "xion > treasury > pendingAdmin",
-        "description": "Get the pending admin for the treasury",
+        "summary": "Get the pending admin for the treasury",
         "operationId": "xion_treasury_pendingAdmin_ae4396a",
         "parameters": [
           {
@@ -12569,7 +12562,7 @@
             }
           },
           {
-            "name": "address",
+            "name": "contractAddress",
             "in": "path",
             "description": "contract address",
             "required": true,
