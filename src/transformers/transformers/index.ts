@@ -14,6 +14,7 @@ import proposal from './proposal'
 import staking from './staking'
 import valence from './valence'
 import voting from './voting'
+import xion from './xion'
 
 let processedTransformers: ProcessedTransformer[] | undefined
 export const getProcessedTransformers = (): ProcessedTransformer[] => {
@@ -31,6 +32,7 @@ export const getProcessedTransformers = (): ProcessedTransformer[] => {
       ...staking,
       ...valence,
       ...voting,
+      ...xion,
     ]
 
     processedTransformers = _transformers.map(({ filter, ...webhook }) => ({
