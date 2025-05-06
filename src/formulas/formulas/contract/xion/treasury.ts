@@ -78,12 +78,24 @@ export const params: ContractFormula<Record<string, Params>> = {
   },
 }
 
+export const balances: ContractFormula<Record<string, string>> = {
+  docs: {
+    description: 'Get the balance of the treasury',
+  },
+  compute: async (env) => {
+    const { contractAddress, getBalances } = env
+
+    return (await getBalances(contractAddress)) || {}
+  },
+}
+
 export const all: ContractFormula<{
   grantConfigs: Record<string, GrantConfig>
   feeConfig: FeeConfig | null
   admin: Addr | null
   pendingAdmin: Addr | null
   params: Record<string, Params>
+  balances: Record<string, string>
 }> = {
   docs: {
     description: 'Get all treasury data in a single endpoint',
@@ -96,12 +108,14 @@ export const all: ContractFormula<{
       adminData,
       pendingAdminData,
       paramsData,
+      balanceData,
     ] = await Promise.all([
       grantConfigs.compute(env),
       feeConfig.compute(env),
       admin.compute(env),
       pendingAdmin.compute(env),
       params.compute(env),
+      balances.compute(env),
     ])
 
     // Combine all results into a single object
@@ -111,6 +125,7 @@ export const all: ContractFormula<{
       admin: adminData,
       pendingAdmin: pendingAdminData,
       params: paramsData,
+      balances: balanceData,
     }
   },
 }

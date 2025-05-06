@@ -12374,6 +12374,40 @@
         }
       }
     },
+    "/{chainId}/contract/{contractAddress}/xion/account/treasuries": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "retrieves treasury contracts where the passed account is the admin",
+        "operationId": "xion_account_treasuries_5cbc2d6",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "contractAddress",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
     "/{chainId}/contract/{contractAddress}/xion/treasury/admin": {
       "get": {
         "tags": [
@@ -12415,6 +12449,40 @@
         ],
         "summary": "Get all treasury data in a single endpoint",
         "operationId": "xion_treasury_all_42b12f8",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "path",
+            "description": "chain ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "contractAddress",
+            "in": "path",
+            "description": "contract address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success"
+          }
+        }
+      }
+    },
+    "/{chainId}/contract/{contractAddress}/xion/treasury/balances": {
+      "get": {
+        "tags": [
+          "contract"
+        ],
+        "summary": "Get the balance of the treasury",
+        "operationId": "xion_treasury_balances_7bfe4e9",
         "parameters": [
           {
             "name": "chainId",
