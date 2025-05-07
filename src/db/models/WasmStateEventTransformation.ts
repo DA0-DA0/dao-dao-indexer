@@ -35,6 +35,16 @@ import { Contract } from './Contract'
       ],
     },
     {
+      fields: [
+        'name',
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
+    },
+    {
+      name: 'wasm_state_event_transformations_name_trgm_idx',
       // Speeds up queries. Use trigram index for string name to speed up
       // partial matches (LIKE).
       fields: [Sequelize.literal('name gin_trgm_ops')],
@@ -58,13 +68,19 @@ import { Contract } from './Contract'
         throw new Error('Sequelize instance not found after sync.')
       }
 
-      const createHypertableQuery = `SELECT create_hypertable('"${WasmStateEventTransformation.tableName}"', by_range('blockHeight'), if_not_exists => true, migrate_data => true);`
+      const createHypertableQuery = `SELECT create_hypertable('"${WasmStateEventTransformation.tableName}"', by_range('blockHeight', 100000), if_not_exists => true, migrate_data => true);`
 
       await WasmStateEventTransformation.sequelize.query(createHypertableQuery)
     },
   },
 })
 export class WasmStateEventTransformation extends DependableEventModel {
+  // Place this first so it's first in the composite primary key.
+  @PrimaryKey
+  @AllowNull(false)
+  @Column(DataType.TEXT)
+  declare name: string
+
   @PrimaryKey
   @AllowNull(false)
   @ForeignKey(() => Contract)
@@ -82,11 +98,6 @@ export class WasmStateEventTransformation extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockTimeUnixMs: string
-
-  @PrimaryKey
-  @AllowNull(false)
-  @Column(DataType.TEXT)
-  declare name: string
 
   @AllowNull
   @Column(DataType.JSONB)

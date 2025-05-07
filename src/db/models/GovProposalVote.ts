@@ -1,5 +1,11 @@
 import { Op, WhereOptions } from 'sequelize'
-import { AllowNull, Column, DataType, Table } from 'sequelize-typescript'
+import {
+  AllowNull,
+  Column,
+  DataType,
+  PrimaryKey,
+  Table,
+} from 'sequelize-typescript'
 
 import {
   Block,
@@ -12,15 +18,8 @@ import { getDependentKey } from '@/utils'
 @Table({
   timestamps: true,
   indexes: [
-    // Only one vote can be cast for a proposal ID by a voter at a given block
-    // height. This ensures events are not duplicated if they attempt exporting
-    // multiple times.
     {
-      unique: true,
-      fields: ['blockHeight', 'proposalId', 'voterAddress'],
-    },
-    {
-      fields: ['proposalId'],
+      fields: ['proposalId', 'blockHeight'],
     },
     {
       fields: ['voterAddress'],
@@ -36,14 +35,17 @@ import { getDependentKey } from '@/utils'
   ],
 })
 export class GovProposalVote extends DependableEventModel {
-  @AllowNull(false)
-  @Column(DataType.BIGINT)
-  declare proposalId: string
-
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.STRING)
   declare voterAddress: string
 
+  @PrimaryKey
+  @AllowNull(false)
+  @Column(DataType.BIGINT)
+  declare proposalId: string
+
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockHeight: string
