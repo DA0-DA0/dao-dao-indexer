@@ -510,7 +510,6 @@ export const getEnv = ({
               // beginning of the query. This ensures we use the most recent
               // version of the name for each contract.
               Sequelize.literal(`DISTINCT ON("name") ''`) as unknown as string,
-              'id',
               'name',
               'contractAddress',
               'blockHeight',
@@ -629,7 +628,6 @@ export const getEnv = ({
               Sequelize.literal(
                 'DISTINCT ON("name") \'\''
               ) as unknown as string,
-              'id',
               'name',
               'contractAddress',
               'blockHeight',
@@ -746,7 +744,6 @@ export const getEnv = ({
         // the query. This ensures we use the most recent version of the name
         // for each contract.
         Sequelize.literal('DISTINCT ON("name") \'\'') as unknown as string,
-        'id',
         'name',
         'contractAddress',
         'blockHeight',
@@ -1193,7 +1190,6 @@ export const getEnv = ({
                 'DISTINCT ON("proposalId") \'\''
               ) as unknown as string,
               'proposalId',
-              'id',
               'blockHeight',
               'blockTimeUnixMs',
             ],
@@ -1229,7 +1225,10 @@ export const getEnv = ({
 
     const eventsWithData = await GovProposal.findAll({
       where: {
-        id: filteredEvents.map((event) => event.id),
+        [Op.or]: filteredEvents.map((event) => ({
+          proposalId: event.proposalId,
+          blockHeight: event.blockHeight,
+        })),
       },
       order: [['proposalId', ascending ? 'ASC' : 'DESC']],
     })
@@ -1279,7 +1278,6 @@ export const getEnv = ({
                 'DISTINCT ON("proposalId") \'\''
               ) as unknown as string,
               'proposalId',
-              'id',
               'blockHeight',
               'blockTimeUnixMs',
             ],
@@ -1401,7 +1399,6 @@ export const getEnv = ({
               ) as unknown as string,
               'proposalId',
               'voterAddress',
-              'id',
               'blockHeight',
               'blockTimeUnixMs',
             ],
@@ -1439,7 +1436,11 @@ export const getEnv = ({
 
     const eventsWithData = await GovProposalVote.findAll({
       where: {
-        id: filteredEvents.map((event) => event.id),
+        [Op.or]: filteredEvents.map((event) => ({
+          voterAddress: event.voterAddress,
+          proposalId: event.proposalId,
+          blockHeight: event.blockHeight,
+        })),
       },
       order: [['blockHeight', ascending ? 'ASC' : 'DESC']],
     })
@@ -1493,7 +1494,6 @@ export const getEnv = ({
               ) as unknown as string,
               'proposalId',
               'voterAddress',
-              'id',
               'blockHeight',
               'blockTimeUnixMs',
             ],

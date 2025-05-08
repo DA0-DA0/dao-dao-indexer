@@ -129,7 +129,11 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
 
     saveProgress()
 
-    let latestBlockEventIdsSeen: number[] = []
+    // Track the last seen event's composite key for pagination
+    let lastSeenKey: string | undefined
+    let lastSeenContractAddress: string | undefined
+    let lastSeenBlockHeight: string | undefined
+
     while (processed < total) {
       const events = await WasmStateEvent.findAll({
         where: {
@@ -141,14 +145,38 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
           blockHeight: {
             [Op.gte]: latestBlockHeight,
           },
-          ...(latestBlockEventIdsSeen.length > 0 && {
-            id: {
-              [Op.notIn]: latestBlockEventIdsSeen,
-            },
-          }),
+          // If we have a last seen event, use it for pagination
+          ...(lastSeenKey &&
+            lastSeenContractAddress &&
+            lastSeenBlockHeight && {
+              [Op.or]: [
+                {
+                  blockHeight: {
+                    [Op.gt]: lastSeenBlockHeight,
+                  },
+                },
+                {
+                  blockHeight: lastSeenBlockHeight,
+                  contractAddress: {
+                    [Op.gt]: lastSeenContractAddress,
+                  },
+                },
+                {
+                  blockHeight: lastSeenBlockHeight,
+                  contractAddress: lastSeenContractAddress,
+                  key: {
+                    [Op.gt]: lastSeenKey,
+                  },
+                },
+              ],
+            }),
         },
         limit: batchSize,
-        order: [['blockHeight', 'ASC']],
+        order: [
+          ['blockHeight', 'ASC'],
+          ['contractAddress', 'ASC'],
+          ['key', 'ASC'],
+        ],
         ...includeContract,
       })
 
@@ -157,25 +185,13 @@ export class TransformationsQueue extends BaseQueue<TransformationsQueuePayload>
         break
       }
 
-      const newLatestBlockHeight = events[events.length - 1].blockHeight
-
-      // If the latest block height is the same as the previous latest block
-      // height, we are still in the same block and should append the event IDs
-      // to the list instead of replacing it. This will only happen if the batch
-      // size is smaller than the maximum number of events in any one block.
-      // Otherwise, we're in a new block and should reset the list.
-      if (Number(newLatestBlockHeight) === latestBlockHeight) {
-        latestBlockEventIdsSeen = latestBlockEventIdsSeen.concat(
-          events.map((event) => event.id)
-        )
-      } else {
-        latestBlockEventIdsSeen = events
-          .filter((event) => event.blockHeight === newLatestBlockHeight)
-          .map((event) => event.id)
-      }
+      const lastEvent = events[events.length - 1]
+      lastSeenKey = lastEvent.key
+      lastSeenContractAddress = lastEvent.contractAddress
+      lastSeenBlockHeight = lastEvent.blockHeight
+      latestBlockHeight = Number(lastSeenBlockHeight)
 
       processed += events.length
-      latestBlockHeight = Number(newLatestBlockHeight)
 
       const transformations = await transformParsedStateEvents(
         events.map((event) => event.asParsedEvent)
