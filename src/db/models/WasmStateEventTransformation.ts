@@ -1,4 +1,4 @@
-import { Op, Sequelize, WhereOptions } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import {
   AllowNull,
   BelongsTo,
@@ -26,8 +26,11 @@ import { Contract } from './Contract'
     // the primary key is a composite key of these fields already.
     {
       fields: [
-        'name',
         'contractAddress',
+        {
+          name: 'name',
+          operator: 'text_pattern_ops',
+        },
         {
           name: 'blockHeight',
           order: 'DESC',
@@ -36,7 +39,10 @@ import { Contract } from './Contract'
     },
     {
       fields: [
-        'name',
+        {
+          name: 'name',
+          operator: 'text_pattern_ops',
+        },
         {
           name: 'blockHeight',
           order: 'DESC',
@@ -47,40 +53,18 @@ import { Contract } from './Contract'
       name: 'wasm_state_event_transformations_name_trgm_idx',
       // Speeds up queries. Use trigram index for string name to speed up
       // partial matches (LIKE).
-      fields: [Sequelize.literal('name gin_trgm_ops')],
+      fields: [
+        {
+          name: 'name',
+          operator: 'gin_trgm_ops',
+        },
+      ],
       concurrently: true,
       using: 'gin',
-    },
-    {
-      // Speeds up queries.
-      fields: ['value'],
-      concurrently: true,
-      using: 'gin',
-    },
-    {
-      // Speeds up queries.
-      fields: ['blockHeight'],
     },
   ],
-  hooks: {
-    afterSync: async () => {
-      if (!WasmStateEventTransformation.sequelize) {
-        throw new Error('Sequelize instance not found after sync.')
-      }
-
-      const createHypertableQuery = `SELECT create_hypertable('"${WasmStateEventTransformation.tableName}"', by_range('blockHeight', 100000), if_not_exists => true, migrate_data => true);`
-
-      await WasmStateEventTransformation.sequelize.query(createHypertableQuery)
-    },
-  },
 })
 export class WasmStateEventTransformation extends DependableEventModel {
-  // Place this first so it's first in the composite primary key.
-  @PrimaryKey
-  @AllowNull(false)
-  @Column(DataType.TEXT)
-  declare name: string
-
   @PrimaryKey
   @AllowNull(false)
   @ForeignKey(() => Contract)
@@ -89,6 +73,10 @@ export class WasmStateEventTransformation extends DependableEventModel {
 
   @BelongsTo(() => Contract)
   declare contract: Contract
+  @PrimaryKey
+  @AllowNull(false)
+  @Column(DataType.TEXT)
+  declare name: string
 
   @PrimaryKey
   @AllowNull(false)

@@ -39,14 +39,6 @@ import { getDependentKey } from '@/utils'
         },
       ],
     },
-    {
-      // Speed up ordering queries.
-      fields: ['blockHeight'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockTimeUnixMs'],
-    },
   ],
 })
 export class BankStateEvent extends DependableEventModel {

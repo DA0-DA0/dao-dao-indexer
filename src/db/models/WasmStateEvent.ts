@@ -1,4 +1,4 @@
-import { Op, Sequelize, WhereOptions } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import {
   AllowNull,
   BelongsTo,
@@ -27,8 +27,11 @@ import { Contract } from './Contract'
     // the primary key is a composite key of these fields already.
     {
       fields: [
-        'key',
         'contractAddress',
+        {
+          name: 'key',
+          operator: 'text_pattern_ops',
+        },
         {
           name: 'blockHeight',
           order: 'DESC',
@@ -37,7 +40,10 @@ import { Contract } from './Contract'
     },
     {
       fields: [
-        'key',
+        {
+          name: 'key',
+          operator: 'text_pattern_ops',
+        },
         {
           name: 'blockHeight',
           order: 'DESC',
@@ -48,34 +54,26 @@ import { Contract } from './Contract'
       name: 'wasm_state_events_key_trgm_idx',
       // Speeds up queries. Use trigram index for string key to speed up partial
       // matches (LIKE).
-      fields: [Sequelize.literal('key gin_trgm_ops')],
+      fields: [
+        {
+          name: 'key',
+          operator: 'gin_trgm_ops',
+        },
+      ],
       concurrently: true,
       using: 'gin',
     },
-    {
-      // Speed up ordering queries.
-      fields: ['blockHeight'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockTimeUnixMs'],
-    },
   ],
-  hooks: {
-    afterSync: async () => {
-      if (!WasmStateEvent.sequelize) {
-        throw new Error('Sequelize instance not found after sync.')
-      }
-
-      const createHypertableQuery = `SELECT create_hypertable('"${WasmStateEvent.tableName}"', by_range('blockHeight', 100000), if_not_exists => true, migrate_data => true);`
-
-      await WasmStateEvent.sequelize.query(createHypertableQuery)
-    },
-  },
 })
 export class WasmStateEvent extends DependableEventModel {
-  // Place this first so it's first in the composite primary key.
-  //
+  @PrimaryKey
+  @AllowNull(false)
+  @ForeignKey(() => Contract)
+  @Column(DataType.STRING)
+  declare contractAddress: string
+
+  @BelongsTo(() => Contract)
+  declare contract: Contract
   // Key is stored as a comma separated list of uint8 values that represents a
   // byte array. The byte array datatype doesn't allow for prefix queries, so we
   // have to manually encode binary data in a format that allows for
@@ -85,15 +83,6 @@ export class WasmStateEvent extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.TEXT)
   declare key: string
-
-  @PrimaryKey
-  @AllowNull(false)
-  @ForeignKey(() => Contract)
-  @Column(DataType.STRING)
-  declare contractAddress: string
-
-  @BelongsTo(() => Contract)
-  declare contract: Contract
 
   @PrimaryKey
   @AllowNull(false)

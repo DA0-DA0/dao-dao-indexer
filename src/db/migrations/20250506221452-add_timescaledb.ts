@@ -11,33 +11,38 @@ ALTER TABLE "BankStateEvents" ADD PRIMARY KEY ("address", "denom", "blockHeight"
 ALTER TABLE "BankStateEvents" DROP COLUMN "id";
 DROP INDEX bank_state_events_block_height_address_denom;
 DROP INDEX bank_state_events_denom;
+DROP INDEX bank_state_events_block_height;
+DROP INDEX bank_state_events_block_time_unix_ms;
 CREATE INDEX bank_state_events_address_denom_block_height ON "BankStateEvents" USING btree ("address", "denom", "blockHeight" DESC);
 CREATE INDEX bank_state_events_address_block_height ON "BankStateEvents" USING btree ("address", "blockHeight" DESC);
-SELECT create_hypertable('"BankStateEvents"', by_range('blockHeight', 100000), if_not_exists => true, migrate_data => true);
 
 ALTER TABLE "WasmStateEvents" DROP CONSTRAINT "WasmStateEvents_pkey";
-ALTER TABLE "WasmStateEvents" ADD PRIMARY KEY ("key", "contractAddress", "blockHeight");
+ALTER TABLE "WasmStateEvents" ADD PRIMARY KEY ("contractAddress", "key", "blockHeight");
 ALTER TABLE "WasmStateEvents" DROP COLUMN "id";
 DROP INDEX wasm_state_events_block_height_contract_address_key;
 DROP INDEX wasm_state_events_contract_address_block_height;
-CREATE INDEX wasm_state_events_key_block_height ON "WasmStateEvents" USING btree ("key", "blockHeight" DESC);
-CREATE INDEX wasm_state_events_key_contract_address_block_height ON "WasmStateEvents" USING btree ("key", "contractAddress", "blockHeight" DESC);
-SELECT create_hypertable('"WasmStateEvents"', by_range('blockHeight', 100000), if_not_exists => true, migrate_data => true);
+DROP INDEX wasm_state_events_key;
+DROP INDEX wasm_state_events_block_height;
+DROP INDEX wasm_state_events_block_time_unix_ms;
+CREATE INDEX wasm_state_events_key_block_height ON "WasmStateEvents" USING btree ("key" text_pattern_ops, "blockHeight" DESC);
+CREATE INDEX wasm_state_events_contract_address_key_block_height ON "WasmStateEvents" USING btree ("contractAddress", "key" text_pattern_ops, "blockHeight" DESC);
+CREATE INDEX wasm_state_events_key_trgm_idx ON "WasmStateEvents" USING gin ("key" gin_trgm_ops);
 
 ALTER TABLE "WasmStateEventTransformations" DROP CONSTRAINT "WasmStateEventTransformations_pkey";
-ALTER TABLE "WasmStateEventTransformations" ADD PRIMARY KEY ("name", "contractAddress", "blockHeight");
+ALTER TABLE "WasmStateEventTransformations" ADD PRIMARY KEY ("contractAddress", "name", "blockHeight");
 ALTER TABLE "WasmStateEventTransformations" DROP COLUMN "id";
 DROP INDEX wasm_state_event_transformations_contract_address_name_block_height;
-CREATE INDEX wasm_state_event_transformations_name_block_height ON "WasmStateEventTransformations" USING btree ("name", "blockHeight" DESC);
-CREATE INDEX wasm_state_event_transformations_name_contract_address_block_height ON "WasmStateEventTransformations" USING btree ("name", "contractAddress", "blockHeight" DESC);
-SELECT create_hypertable('"WasmStateEventTransformations"', by_range('blockHeight', 100000), if_not_exists => true, migrate_data => true);
+DROP INDEX wasm_state_event_transformations_contract_address_name_block_he;
+DROP INDEX wasm_state_event_transformations_;
+DROP INDEX wasm_state_event_transformations_block_height;
+CREATE INDEX wasm_state_event_transformations_name_block_height ON "WasmStateEventTransformations" USING btree ("name" text_pattern_ops, "blockHeight" DESC);
+CREATE INDEX wasm_state_event_transformations_contract_address_name_block_height ON "WasmStateEventTransformations" USING btree ("contractAddress", "name" text_pattern_ops, "blockHeight" DESC);
 
 ALTER TABLE "GovProposals" DROP CONSTRAINT "GovProposals_pkey";
 ALTER TABLE "GovProposals" ADD PRIMARY KEY ("proposalId", "blockHeight");
 ALTER TABLE "GovProposals" DROP COLUMN "id";
 DROP INDEX gov_proposals_block_height_proposal_id;
 CREATE INDEX gov_proposals_proposal_id_block_height ON "GovProposals" USING btree ("proposalId", "blockHeight" DESC);
-SELECT create_hypertable('"GovProposals"', by_range('blockHeight', 100000), if_not_exists => true, migrate_data => true);
 
 ALTER TABLE "GovProposalVotes" DROP CONSTRAINT "GovProposalVotes_pkey";
 ALTER TABLE "GovProposalVotes" ADD PRIMARY KEY ("voterAddress", "proposalId", "blockHeight");
