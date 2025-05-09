@@ -3,17 +3,17 @@
 # nothing in it. This is to help build and test formulas against a remote DB.
 services:
   argus:
-    image: argus
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: node:22-alpine
+    command: sh -c "npm install && npm run build && npm run serve:dev:nodocker"
+    working_dir: /usr/src/app
     ports:
       - 3420:3420 # server
     environment:
       NODE_ENV: development
-      CONFIG_FILE: /app/config.json
+      CONFIG_FILE: config.remote.json
     volumes:
-      - ./config.remote.json:/app/config.json
+      # use local files as source
+      - .:/usr/src/app
     # waits for redis to start
     depends_on:
       redis:

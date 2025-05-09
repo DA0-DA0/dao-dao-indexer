@@ -5,7 +5,7 @@ import { Config } from '@/types'
 
 import { accountRouter } from './account'
 import { setUpDocs } from './docs'
-import { indexerRouter } from './indexer'
+import { setUpIndexerRouter } from './indexer'
 import { setUpBullBoard } from './jobs'
 
 export type SetupRouterOptions = {
@@ -46,7 +46,7 @@ export const setUpRouter = async (
     setUpDocs(app)
 
     // Indexer API.
-    router.use(indexerRouter.routes(), indexerRouter.allowedMethods())
+    await setUpIndexerRouter(router)
   }
 
   // Enable router.

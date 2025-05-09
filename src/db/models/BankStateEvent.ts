@@ -1,5 +1,11 @@
 import { Op, WhereOptions } from 'sequelize'
-import { AllowNull, Column, DataType, Table } from 'sequelize-typescript'
+import {
+  AllowNull,
+  Column,
+  DataType,
+  PrimaryKey,
+  Table,
+} from 'sequelize-typescript'
 
 import {
   Block,
@@ -12,33 +18,41 @@ import { getDependentKey } from '@/utils'
 @Table({
   timestamps: true,
   indexes: [
-    // Only one event can happen to a denom for a given address at a given block
-    // height. This ensures events are not duplicated if they attempt exporting
-    // multiple times.
+    // Take advantage of TimescaleDB SkipScan. No need for a unique index since
+    // the primary key is a composite key of these fields already.
     {
-      unique: true,
-      fields: ['blockHeight', 'address', 'denom'],
+      fields: [
+        'address',
+        'denom',
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
     },
     {
-      // Speeds up queries finding first newer dependent key to validate a
-      // computation.
-      fields: ['denom'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockHeight'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockTimeUnixMs'],
+      fields: [
+        'address',
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
     },
   ],
 })
 export class BankStateEvent extends DependableEventModel {
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.TEXT)
   declare address: string
 
+  @PrimaryKey
+  @AllowNull(false)
+  @Column(DataType.TEXT)
+  declare denom: string
+
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockHeight: string
@@ -50,10 +64,6 @@ export class BankStateEvent extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.DATE)
   declare blockTimestamp: Date
-
-  @AllowNull(false)
-  @Column(DataType.TEXT)
-  declare denom: string
 
   @AllowNull(false)
   @Column(DataType.TEXT)

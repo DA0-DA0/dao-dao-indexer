@@ -73,12 +73,6 @@ let wasmCodeService: WasmCodeService | null = null
 
 // Start.
 const main = async () => {
-  // Add routes.
-  await setUpRouter(app, {
-    config,
-    accounts,
-  })
-
   // All servers need to connect to the accounts DB.
   await loadDb({
     type: DbType.Accounts,
@@ -100,6 +94,12 @@ const main = async () => {
   if (!options.port || isNaN(options.port)) {
     throw new Error('Port must be a number')
   }
+
+  // Set up routes.
+  await setUpRouter(app, {
+    config,
+    accounts,
+  })
 
   app.listen(options.port, () => {
     console.log(`Listening on ${options.port}...`)

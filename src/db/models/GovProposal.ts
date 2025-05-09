@@ -1,5 +1,11 @@
 import { Op, WhereOptions } from 'sequelize'
-import { AllowNull, Column, DataType, Table } from 'sequelize-typescript'
+import {
+  AllowNull,
+  Column,
+  DataType,
+  PrimaryKey,
+  Table,
+} from 'sequelize-typescript'
 
 import {
   Block,
@@ -12,33 +18,26 @@ import { getDependentKey } from '@/utils'
 @Table({
   timestamps: true,
   indexes: [
-    // Only one event can happen to a proposal ID at a given block height. This
-    // ensures events are not duplicated if they attempt exporting multiple
-    // times.
+    // Take advantage of TimescaleDB SkipScan. No need for a unique index since
+    // the primary key is a composite key of these fields already.
     {
-      unique: true,
-      fields: ['blockHeight', 'proposalId'],
-    },
-    {
-      // Speeds up queries finding first newer dependent key to validate a
-      // computation.
-      fields: ['proposalId'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockHeight'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockTimeUnixMs'],
+      fields: [
+        'proposalId',
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
     },
   ],
 })
 export class GovProposal extends DependableEventModel {
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare proposalId: string
 
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockHeight: string

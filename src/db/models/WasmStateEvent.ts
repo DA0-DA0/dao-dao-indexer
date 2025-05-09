@@ -5,6 +5,7 @@ import {
   Column,
   DataType,
   ForeignKey,
+  PrimaryKey,
   Table,
 } from 'sequelize-typescript'
 
@@ -22,34 +23,50 @@ import { Contract } from './Contract'
 @Table({
   timestamps: true,
   indexes: [
-    // Only one event can happen to a key for a given contract at a given block
-    // height. This ensures events are not duplicated if they attempt exporting
-    // multiple times.
+    // Take advantage of TimescaleDB SkipScan. No need for a unique index since
+    // the primary key is a composite key of these fields already.
     {
-      unique: true,
-      fields: ['blockHeight', 'contractAddress', 'key'],
+      fields: [
+        'contractAddress',
+        {
+          name: 'key',
+          operator: 'text_pattern_ops',
+        },
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
     },
     {
-      // Speeds up queries finding latest key for a contract. Composite indexes
-      // are most efficient when equality tests are first and ranges second.
-      fields: ['contractAddress', 'blockHeight'],
+      fields: [
+        {
+          name: 'key',
+          operator: 'text_pattern_ops',
+        },
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
     },
     {
-      // Speeds up queries finding first newer dependent key to validate a
-      // computation.
-      fields: ['key'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockHeight'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockTimeUnixMs'],
+      name: 'wasm_state_events_key_trgm_idx',
+      // Speeds up queries. Use trigram index for string key to speed up partial
+      // matches (LIKE).
+      fields: [
+        {
+          name: 'key',
+          operator: 'gin_trgm_ops',
+        },
+      ],
+      concurrently: true,
+      using: 'gin',
     },
   ],
 })
 export class WasmStateEvent extends DependableEventModel {
+  @PrimaryKey
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column(DataType.STRING)
@@ -57,7 +74,17 @@ export class WasmStateEvent extends DependableEventModel {
 
   @BelongsTo(() => Contract)
   declare contract: Contract
+  // Key is stored as a comma separated list of uint8 values that represents a
+  // byte array. The byte array datatype doesn't allow for prefix queries, so we
+  // have to manually encode binary data in a format that allows for
+  // database-level prefix queries (i.e. LIKE prefix%). We want database-level
+  // prefixing so we can efficiently query for all values in a map.
+  @PrimaryKey
+  @AllowNull(false)
+  @Column(DataType.TEXT)
+  declare key: string
 
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockHeight: string
@@ -69,15 +96,6 @@ export class WasmStateEvent extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.DATE)
   declare blockTimestamp: Date
-
-  // Key is stored as a comma separated list of uint8 values that represents a
-  // byte array. The byte array datatype doesn't allow for prefix queries, so we
-  // have to manually encode binary data in a format that allows for
-  // database-level prefix queries (i.e. LIKE prefix%). We want database-level
-  // prefixing so we can efficiently query for all values in a map.
-  @AllowNull(false)
-  @Column(DataType.TEXT)
-  declare key: string
 
   // JSON encoded value. Empty string if `delete` is true.
   @AllowNull(false)

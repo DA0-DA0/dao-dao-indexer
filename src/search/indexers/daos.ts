@@ -155,7 +155,6 @@ export const daoProposals: MeilisearchIndexer = {
         Sequelize.literal(
           'DISTINCT ON("name", "contractAddress") \'\''
         ) as unknown as string,
-        'id',
         'name',
         'contractAddress',
         'blockHeight',

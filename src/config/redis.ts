@@ -13,6 +13,18 @@ export const getRedisConfig = (): RedisOptions | undefined => {
   )
 }
 
+export const getRedis = (options?: RedisOptions): Redis => {
+  const config = getRedisConfig()
+  if (!config) {
+    throw new Error('Redis config not found')
+  }
+
+  return new Redis({
+    ...config,
+    ...options,
+  })
+}
+
 /**
  * Test the connection to Redis.
  */

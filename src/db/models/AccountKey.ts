@@ -101,7 +101,10 @@ export class AccountKey extends Model {
 
   // Check if this account has compute credit, and increase used if found.
   // Returns whether credit was found and used.
-  public async useCredit(amount = 1): Promise<boolean> {
+  public async useCredit(
+    amount = 1,
+    waitForIncrement = true
+  ): Promise<boolean> {
     // Find credit that has enough remaining.
     const credits =
       (await this.$get('credits', {
@@ -130,10 +133,20 @@ export class AccountKey extends Model {
       return false
     }
 
-    // Use credit amount. On failure, just log and move on.
-    await credit.increment('used', { by: amount }).catch(console.error)
-    // Increment hits by one. On failure, just log and move on.
-    await credit.increment('hits').catch(console.error)
+    const promise = Promise.all([
+      // Use credit amount. On failure, just log and move on.
+      credit.increment('used', { by: amount }).catch((err) => {
+        console.error('Error incrementing used credit', err)
+      }),
+      // Increment hits by one. On failure, just log and move on.
+      credit.increment('hits').catch((err) => {
+        console.error('Error incrementing hits credit', err)
+      }),
+    ])
+    // Wait for the increments to complete.
+    if (waitForIncrement) {
+      await promise
+    }
 
     return true
   }

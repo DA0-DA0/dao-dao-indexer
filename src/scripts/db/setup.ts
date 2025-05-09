@@ -37,9 +37,9 @@ export const main = async () => {
 
   const setup = async () => {
     try {
-      await setupDb(dataSequelize, destroy)
+      await setupDb(dataSequelize, destroy, 'data')
       // Do not destroy accounts tables.
-      await setupDb(accountsSequelize, false)
+      await setupDb(accountsSequelize, false, 'accounts')
 
       // Add migrations to data database.
       const migrations = fs.readdirSync(

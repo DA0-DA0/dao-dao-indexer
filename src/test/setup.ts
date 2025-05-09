@@ -29,8 +29,8 @@ beforeEach(async () => {
 
   // Set up will reset the databases.
   if (!noTestDbReset) {
-    await setup(dataSequelize)
-    await setup(accountsSequelize)
+    await setup(dataSequelize, true, 'data')
+    await setup(accountsSequelize, true, 'accounts')
   }
 
   // Set up wasm code service.

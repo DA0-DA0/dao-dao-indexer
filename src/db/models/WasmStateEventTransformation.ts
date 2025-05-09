@@ -1,10 +1,11 @@
-import { Op, Sequelize, WhereOptions } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import {
   AllowNull,
   BelongsTo,
   Column,
   DataType,
   ForeignKey,
+  PrimaryKey,
   Table,
 } from 'sequelize-typescript'
 
@@ -21,33 +22,50 @@ import { Contract } from './Contract'
 @Table({
   timestamps: true,
   indexes: [
-    // Transformers are deterministic and names must be unique so they can be
-    // found, so only one output can exist for a name on a contract at a given
-    // block height.
+    // Take advantage of TimescaleDB SkipScan. No need for a unique index since
+    // the primary key is a composite key of these fields already.
     {
-      unique: true,
-      fields: ['contractAddress', 'name', 'blockHeight'],
+      fields: [
+        'contractAddress',
+        {
+          name: 'name',
+          operator: 'text_pattern_ops',
+        },
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
     },
     {
+      fields: [
+        {
+          name: 'name',
+          operator: 'text_pattern_ops',
+        },
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
+    },
+    {
+      name: 'wasm_state_event_transformations_name_trgm_idx',
       // Speeds up queries. Use trigram index for string name to speed up
       // partial matches (LIKE).
-      fields: [Sequelize.literal('name gin_trgm_ops')],
+      fields: [
+        {
+          name: 'name',
+          operator: 'gin_trgm_ops',
+        },
+      ],
       concurrently: true,
       using: 'gin',
-    },
-    {
-      // Speeds up queries.
-      fields: ['value'],
-      concurrently: true,
-      using: 'gin',
-    },
-    {
-      // Speeds up queries.
-      fields: ['blockHeight'],
     },
   ],
 })
 export class WasmStateEventTransformation extends DependableEventModel {
+  @PrimaryKey
   @AllowNull(false)
   @ForeignKey(() => Contract)
   @Column(DataType.STRING)
@@ -55,7 +73,12 @@ export class WasmStateEventTransformation extends DependableEventModel {
 
   @BelongsTo(() => Contract)
   declare contract: Contract
+  @PrimaryKey
+  @AllowNull(false)
+  @Column(DataType.TEXT)
+  declare name: string
 
+  @PrimaryKey
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockHeight: string
@@ -63,10 +86,6 @@ export class WasmStateEventTransformation extends DependableEventModel {
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockTimeUnixMs: string
-
-  @AllowNull(false)
-  @Column(DataType.TEXT)
-  declare name: string
 
   @AllowNull
   @Column(DataType.JSONB)

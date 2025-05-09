@@ -496,16 +496,6 @@ export const getEnv = ({
       prefix: false,
     })
 
-    // Columns we need to include in the DISTINCT ON clause.
-    const distinctOn = [
-      'name',
-      // We only need to add contractAddress to the DISTINCT ON clause if it's
-      // not defined. If it's defined, all fetched rows will be for the same
-      // contract. Otherwise, we retrieve all contracts matching the name and
-      // need to make sure only one name per contract is returned.
-      ...(contractAddress ? [] : ['contractAddress']),
-    ]
-
     // Check cache.
     const cachedTransformations = cache.events[dependentKey]
     let transformations =
@@ -519,10 +509,7 @@ export const getEnv = ({
               // to cast to unknown and back to string to insert this at the
               // beginning of the query. This ensures we use the most recent
               // version of the name for each contract.
-              Sequelize.literal(
-                `DISTINCT ON("${distinctOn.join('", "')}") ''`
-              ) as unknown as string,
-              'id',
+              Sequelize.literal(`DISTINCT ON("name") ''`) as unknown as string,
               'name',
               'contractAddress',
               'blockHeight',
@@ -546,7 +533,7 @@ export const getEnv = ({
             limit,
             order: [
               // Needs to be first so we can use DISTINCT ON.
-              ...distinctOn.map((key) => [key, 'ASC'] as [string, 'ASC']),
+              ['name', 'ASC'],
               // Descending block height ensures we get the most recent
               // transformation for the (contractAddress, name) pair.
               ['blockHeight', 'DESC'],
@@ -641,7 +628,6 @@ export const getEnv = ({
               Sequelize.literal(
                 'DISTINCT ON("name") \'\''
               ) as unknown as string,
-              'id',
               'name',
               'contractAddress',
               'blockHeight',
@@ -758,7 +744,6 @@ export const getEnv = ({
         // the query. This ensures we use the most recent version of the name
         // for each contract.
         Sequelize.literal('DISTINCT ON("name") \'\'') as unknown as string,
-        'id',
         'name',
         'contractAddress',
         'blockHeight',
@@ -1205,7 +1190,6 @@ export const getEnv = ({
                 'DISTINCT ON("proposalId") \'\''
               ) as unknown as string,
               'proposalId',
-              'id',
               'blockHeight',
               'blockTimeUnixMs',
             ],
@@ -1241,7 +1225,10 @@ export const getEnv = ({
 
     const eventsWithData = await GovProposal.findAll({
       where: {
-        id: filteredEvents.map((event) => event.id),
+        [Op.or]: filteredEvents.map((event) => ({
+          proposalId: event.proposalId,
+          blockHeight: event.blockHeight,
+        })),
       },
       order: [['proposalId', ascending ? 'ASC' : 'DESC']],
     })
@@ -1291,7 +1278,6 @@ export const getEnv = ({
                 'DISTINCT ON("proposalId") \'\''
               ) as unknown as string,
               'proposalId',
-              'id',
               'blockHeight',
               'blockTimeUnixMs',
             ],
@@ -1413,7 +1399,6 @@ export const getEnv = ({
               ) as unknown as string,
               'proposalId',
               'voterAddress',
-              'id',
               'blockHeight',
               'blockTimeUnixMs',
             ],
@@ -1451,7 +1436,11 @@ export const getEnv = ({
 
     const eventsWithData = await GovProposalVote.findAll({
       where: {
-        id: filteredEvents.map((event) => event.id),
+        [Op.or]: filteredEvents.map((event) => ({
+          voterAddress: event.voterAddress,
+          proposalId: event.proposalId,
+          blockHeight: event.blockHeight,
+        })),
       },
       order: [['blockHeight', ascending ? 'ASC' : 'DESC']],
     })
@@ -1505,7 +1494,6 @@ export const getEnv = ({
               ) as unknown as string,
               'proposalId',
               'voterAddress',
-              'id',
               'blockHeight',
               'blockTimeUnixMs',
             ],
