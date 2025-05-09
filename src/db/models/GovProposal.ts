@@ -29,19 +29,6 @@ import { getDependentKey } from '@/utils'
         },
       ],
     },
-    {
-      // Speeds up queries finding first newer dependent key to validate a
-      // computation.
-      fields: ['proposalId'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockHeight'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockTimeUnixMs'],
-    },
   ],
 })
 export class GovProposal extends DependableEventModel {

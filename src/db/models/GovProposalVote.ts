@@ -19,18 +19,14 @@ import { getDependentKey } from '@/utils'
   timestamps: true,
   indexes: [
     {
-      fields: ['proposalId', 'blockHeight'],
-    },
-    {
-      fields: ['voterAddress'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockHeight'],
-    },
-    {
-      // Speed up ordering queries.
-      fields: ['blockTimeUnixMs'],
+      fields: [
+        'proposalId',
+        'voterAddress',
+        {
+          name: 'blockHeight',
+          order: 'DESC',
+        },
+      ],
     },
   ],
 })

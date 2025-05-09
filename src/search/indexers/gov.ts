@@ -56,6 +56,7 @@ export const govProposals: MeilisearchIndexer = {
       order: [
         // Needs to be first so we can use DISTINCT ON.
         ['proposalId', 'ASC'],
+        ['blockHeight', 'DESC'],
       ],
     })
 
@@ -122,6 +123,7 @@ export const govProposalVotes: MeilisearchIndexer = {
         // Needs to be first so we can use DISTINCT ON.
         ['proposalId', 'ASC'],
         ['voterAddress', 'ASC'],
+        ['blockHeight', 'DESC'],
       ],
     })
 

@@ -37,6 +37,7 @@ DROP INDEX wasm_state_event_transformations_;
 DROP INDEX wasm_state_event_transformations_block_height;
 CREATE INDEX wasm_state_event_transformations_name_block_height ON "WasmStateEventTransformations" USING btree ("name" text_pattern_ops, "blockHeight" DESC);
 CREATE INDEX wasm_state_event_transformations_contract_address_name_block_height ON "WasmStateEventTransformations" USING btree ("contractAddress", "name" text_pattern_ops, "blockHeight" DESC);
+CREATE INDEX wasm_state_event_transformations_name_trgm_idx ON "WasmStateEventTransformations" USING gin ("name" gin_trgm_ops);
 
 ALTER TABLE "GovProposals" DROP CONSTRAINT "GovProposals_pkey";
 ALTER TABLE "GovProposals" ADD PRIMARY KEY ("proposalId", "blockHeight");
