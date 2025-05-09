@@ -43,13 +43,20 @@ ALTER TABLE "GovProposals" DROP CONSTRAINT "GovProposals_pkey";
 ALTER TABLE "GovProposals" ADD PRIMARY KEY ("proposalId", "blockHeight");
 ALTER TABLE "GovProposals" DROP COLUMN "id";
 DROP INDEX gov_proposals_block_height_proposal_id;
+DROP INDEX gov_proposals_block_height;
+DROP INDEX gov_proposals_block_time_unix_ms;
+DROP INDEX gov_proposals_proposal_id;
+DROP INDEX gov_proposals_proposal_id_block_height;
 CREATE INDEX gov_proposals_proposal_id_block_height ON "GovProposals" USING btree ("proposalId", "blockHeight" DESC);
 
 ALTER TABLE "GovProposalVotes" DROP CONSTRAINT "GovProposalVotes_pkey";
 ALTER TABLE "GovProposalVotes" ADD PRIMARY KEY ("voterAddress", "proposalId", "blockHeight");
 ALTER TABLE "GovProposalVotes" DROP COLUMN "id";
 DROP INDEX gov_proposal_votes_block_height_proposal_id_voter_address;
+DROP INDEX gov_proposal_votes_block_height;
+DROP INDEX gov_proposal_votes_block_time_unix_ms;
 DROP INDEX gov_proposal_votes_proposal_id;
+DROP INDEX gov_proposal_votes_voter_address;
 CREATE INDEX gov_proposal_votes_proposal_id_block_height ON "GovProposalVotes" USING btree ("proposalId", "blockHeight");
 `
   .trim()
