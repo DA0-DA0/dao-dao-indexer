@@ -25,6 +25,8 @@ import { validateBlockString } from '@/utils'
 
 import { captureSentryException } from '../../sentry'
 
+const IS_TEST = process.env.NODE_ENV === 'test'
+
 // Map IP address to last time it was used.
 const testRateLimit = new Map<string, number>()
 const testCooldownSeconds = 10
@@ -37,21 +39,23 @@ export const loadComputer = async () => {
 
   let state = _state
 
-  // Update state every 500ms.
-  setInterval(async () => {
-    try {
-      const newState = await State.getSingleton()
-      if (newState) {
-        state = newState
-      } else {
-        console.error(
-          '[computer] Failed to update state cache: state not found'
-        )
+  // Update state every 500ms if not in test mode.
+  if (!IS_TEST) {
+    setInterval(async () => {
+      try {
+        const newState = await State.getSingleton()
+        if (newState) {
+          state = newState
+        } else {
+          console.error(
+            '[computer] Failed to update state cache: state not found'
+          )
+        }
+      } catch (err) {
+        console.error('[computer] Unexpected error updating state cache', err)
       }
-    } catch (err) {
-      console.error('[computer] Unexpected error updating state cache', err)
-    }
-  }, 500)
+    }, 500)
+  }
 
   // Create Redis connection if available.
   let redis: Redis | undefined
@@ -83,6 +87,16 @@ export const loadComputer = async () => {
     let type: FormulaType | undefined
     let address: string | undefined
     let formulaName: string | undefined
+
+    // When testing, load State every time.
+    if (IS_TEST) {
+      const _state = await State.getSingleton()
+      if (!_state) {
+        throw new Error('State not found')
+      }
+
+      state = _state
+    }
 
     // if paths[0] is the current chainId, ignore it. this allows for
     // development backwards compatibility based on production proxy paths
@@ -749,20 +763,18 @@ export const loadComputer = async () => {
         // Parallelize credit check and computation. If credit check fails,
         // return failure immediately. Otherwise, continue with computation.
         const [creditResult, computationResult] = await Promise.allSettled([
-          Promise.race([
-            // If no account key, assume credit is available.
-            accountKey?.useCredit(undefined, false).catch((err) => {
+          // If no account key, assume credit is available.
+          accountKey
+            ?.useCredit(
+              undefined,
+              // Only wait for increment during testing. Otherwise let
+              // increment in background while we compute/respond.
+              IS_TEST
+            )
+            .catch((err) => {
               console.error('Error checking credit', err)
               return true
             }) || Promise.resolve(true),
-            // If credit check takes too long, assume it's available.
-            new Promise<boolean>((resolve) =>
-              setTimeout(() => {
-                console.warn('Credit check timed out, assuming valid')
-                resolve(true)
-              }, 5_000)
-            ),
-          ]),
 
           // Computation with proper block handling
           compute({
@@ -784,6 +796,7 @@ export const loadComputer = async () => {
 
         // Handle computation result.
         if (computationResult.status === 'rejected') {
+          console.error(computationResult.reason)
           ctx.status = 400
           ctx.body =
             computationResult.reason instanceof Error
