@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: timescale/timescaledb:2.18.1-pg17
+    environment:
+      POSTGRES_DB: dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./.pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dev']
+      interval: 1s
+      timeout: 3s
+      retries: 5

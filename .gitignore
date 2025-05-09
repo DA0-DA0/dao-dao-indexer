@@ -19,5 +19,6 @@ src/test/dump/**/*.test.ts
 .DS_Store
 *.crt
 *.log
+.pg_data*
 
 .idea/
