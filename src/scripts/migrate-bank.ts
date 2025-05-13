@@ -148,6 +148,11 @@ const main = async () => {
 
   saveProgress()
 
+  console.log('running VACUUM(FULL, ANALYZE, VERBOSE)...')
+  await sequelize.query(
+    'VACUUM(FULL, ANALYZE, VERBOSE) "BankStateEvents", "BankBalances"'
+  )
+
   const newHistoricalAccounts = Number(
     (
       (await sequelize.query(
