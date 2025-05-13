@@ -318,6 +318,11 @@ export const loadBankTests = (options: ComputerTestOptions) => {
             uanother: '3000',
             uagain: '4000',
           },
+          denomUpdateBlockHeights: {
+            utest: 2,
+            uanother: 3,
+            uagain: 4,
+          },
           blockHeight: 4,
           blockTimeUnixMs: 4,
           blockTimestamp: new Date(),

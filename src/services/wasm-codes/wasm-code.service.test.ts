@@ -14,12 +14,6 @@ describe('WasmCodeService tests', () => {
   test('WasmCodeService', async () => {
     const wasmCodeService = WasmCodeService.getInstance()
 
-    const codeIds = {
-      codeKey1: [1, 2, 3],
-      codeKey2: [4, 5, 6],
-      codeKey3: [1, 3, 5],
-    }
-
     await WasmCodeKey.createFromKeyAndIds('codeKey1', [1, 2, 3])
     await WasmCodeKey.createFromKeyAndIds('codeKey2', [4, 5, 6, 5, 5, 5])
     await WasmCodeKey.createFromKeyAndIds('codeKey3', [1, 3, 5])
@@ -30,9 +24,16 @@ describe('WasmCodeService tests', () => {
       new WasmCode('codeKey1', [1, 2, 3]),
       new WasmCode('codeKey2', [4, 5, 6]),
       new WasmCode('codeKey3', [1, 3, 5]),
+      // From config-test.json
+      new WasmCode('dao-dao-core', [1]),
     ])
 
-    expect(wasmCodeService.exportWasmCodes()).toEqual(codeIds)
+    expect(wasmCodeService.exportWasmCodes()).toEqual({
+      codeKey1: [1, 2, 3],
+      codeKey2: [4, 5, 6],
+      codeKey3: [1, 3, 5],
+      'dao-dao-core': [1],
+    })
 
     expect(wasmCodeService.findWasmCodeIdsByKeys('codeKey1')).toEqual([1, 2, 3])
     expect(wasmCodeService.findWasmCodeIdsByKeys('codeKey2')).toEqual([4, 5, 6])
@@ -41,6 +42,7 @@ describe('WasmCodeService tests', () => {
     ).toEqual([1, 2, 3, 4, 5, 6])
 
     expect(wasmCodeService.findWasmCodeKeysById(1)).toEqual([
+      'dao-dao-core',
       'codeKey1',
       'codeKey3',
     ])
@@ -68,20 +70,26 @@ describe('WasmCodeService tests', () => {
 
     await wasmCodeService.reloadWasmCodeIdsFromDB()
 
-    const wasmCodes = [
+    expect(wasmCodeService.getWasmCodes()).toEqual([
       new WasmCode('codeKey1', [1]),
       new WasmCode('codeKey2', [2, 3]),
       new WasmCode('codeKey3', []),
-    ]
 
-    expect(wasmCodeService.getWasmCodes()).toEqual(wasmCodes)
+      // From config-test.json
+      new WasmCode('dao-dao-core', [1]),
+    ])
 
     await WasmCodeKey.createFromKeyAndIds('codeKey4', [])
     await wasmCodeService.reloadWasmCodeIdsFromDB()
 
     expect(wasmCodeService.getWasmCodes()).toEqual([
-      ...wasmCodes,
+      new WasmCode('codeKey1', [1]),
+      new WasmCode('codeKey2', [2, 3]),
+      new WasmCode('codeKey3', []),
       new WasmCode('codeKey4', []),
+
+      // From config-test.json
+      new WasmCode('dao-dao-core', [1]),
     ])
   })
 })
