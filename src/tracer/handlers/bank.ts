@@ -16,7 +16,7 @@ import { batch } from '@/utils'
 
 const STORE_NAME = 'bank'
 // Keep all bank balance history for contracts matching these code IDs keys.
-export const BANK_HISTORY_CODE_IDS_KEYS = ['dao-dao-core']
+export const BANK_HISTORY_CODE_IDS_KEYS = ['dao-dao-core', 'xion-treasury']
 
 export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
   config: { bech32Prefix },
