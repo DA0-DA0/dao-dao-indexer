@@ -14,7 +14,7 @@ program.option(
   'path to config file, falling back to config.json'
 )
 program.option('-b, --batch <size>', 'batch size', '1000')
-program.option('-D, --no-delete-history', "don't delete history")
+program.option('--no-delete-history', "don't delete history")
 program.parse()
 const { config: _config, batch, deleteHistory } = program.opts()
 
@@ -34,23 +34,26 @@ const main = async () => {
   console.log(`\n[${new Date().toISOString()}] STARTING...\n`)
 
   // Find addresses to keep history for
-  const historyCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
-    ...BANK_HISTORY_CODE_IDS_KEYS
-  )
-  const addressesToKeepHistoryFor = historyCodeIds.length
-    ? (
-        await Contract.findAll({
-          where: {
-            codeId: historyCodeIds,
-          },
-          attributes: ['address'],
-          raw: true,
-        })
-      ).map((contract) => contract.address)
-    : []
-  console.log(
-    `keeping history for ${addressesToKeepHistoryFor.length.toLocaleString()} contracts`
-  )
+  let addressesToKeepHistoryFor: string[] = []
+  if (deleteHistory) {
+    const historyCodeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+      ...BANK_HISTORY_CODE_IDS_KEYS
+    )
+    addressesToKeepHistoryFor = historyCodeIds.length
+      ? (
+          await Contract.findAll({
+            where: {
+              codeId: historyCodeIds,
+            },
+            attributes: ['address'],
+            raw: true,
+          })
+        ).map((contract) => contract.address)
+      : []
+    console.log(
+      `keeping history for ${addressesToKeepHistoryFor.length.toLocaleString()} contracts`
+    )
+  }
 
   const getBankStateEventsSize = async () =>
     (
@@ -72,92 +75,106 @@ const main = async () => {
     `found ${totalAddresses.toLocaleString()} addresses to migrate in BankStateEvents table, size: ${bankStateEventsSizeBefore}\n`
   )
 
-  // Process in batches
-  const batchSize = Number(batch)
-  let offset = 0
-  let processedCount = 0
+  if (totalAddresses > 0) {
+    // Process in batches
+    const batchSize = Number(batch)
+    let processedCount = 0
+    let lastProcessedAddress = ''
 
-  const saveProgress = () =>
-    console.log(
-      `processed ${((processedCount / totalAddresses) * 100).toFixed(
-        4
-      )}% (${processedCount.toLocaleString()}/${totalAddresses.toLocaleString()}) addresses`
-    )
-  saveProgress()
+    const saveProgress = () =>
+      console.log(
+        `processed ${((processedCount / totalAddresses) * 100).toFixed(
+          4
+        )}% (${processedCount.toLocaleString()}/${totalAddresses.toLocaleString()}) addresses`
+      )
+    saveProgress()
 
-  while (processedCount < totalAddresses) {
-    const startTime = Date.now()
+    while (processedCount < totalAddresses) {
+      const startTime = Date.now()
 
-    // Process a batch of addresses using a CTE (Common Table Expression)
-    const [processedAddresses] = (await sequelize.query(`
+      // Process a batch of addresses using a CTE (Common Table Expression)
+      const [processedAddresses] = (await sequelize.query(`
       WITH addresses_batch AS (
         SELECT DISTINCT address
         FROM "BankStateEvents"
+        WHERE address > '${lastProcessedAddress}'
         ORDER BY address
-        LIMIT ${batchSize} OFFSET ${offset}
+        LIMIT ${batchSize}
+      ),
+      inserted AS (
+        INSERT INTO "BankBalances" (address, balances, "denomUpdateBlockHeights", "blockHeight", "blockTimeUnixMs", "blockTimestamp", "createdAt", "updatedAt")
+        SELECT
+          address,
+          jsonb_object_agg(denom, balance) as balances,
+          jsonb_object_agg(denom, "blockHeight") as "denomUpdateBlockHeights",
+          MAX("blockHeight") as "blockHeight",
+          MAX("blockTimeUnixMs") as "blockTimeUnixMs",
+          MAX("blockTimestamp") as "blockTimestamp",
+          NOW() as "createdAt",
+          NOW() as "updatedAt"
+        FROM (
+          SELECT DISTINCT ON (address, denom) 
+            address, denom, balance, "blockHeight", "blockTimeUnixMs", "blockTimestamp"
+          FROM "BankStateEvents"
+          WHERE address IN (SELECT address FROM addresses_batch)
+          ORDER BY address, denom, "blockHeight" DESC
+        ) latest_events
+        GROUP BY address
+        ON CONFLICT (address) DO UPDATE SET
+          balances = EXCLUDED.balances,
+          "denomUpdateBlockHeights" = EXCLUDED."denomUpdateBlockHeights",
+          "blockHeight" = EXCLUDED."blockHeight",
+          "blockTimeUnixMs" = EXCLUDED."blockTimeUnixMs",
+          "blockTimestamp" = EXCLUDED."blockTimestamp",
+          "updatedAt" = NOW()
+        RETURNING address
       )
-      INSERT INTO "BankBalances" (address, balances, "denomUpdateBlockHeights", "blockHeight", "blockTimeUnixMs", "blockTimestamp", "createdAt", "updatedAt")
-      SELECT
-        address,
-        jsonb_object_agg(denom, balance) as balances,
-        jsonb_object_agg(denom, "blockHeight") as "denomUpdateBlockHeights",
-        MAX("blockHeight") as "blockHeight",
-        MAX("blockTimeUnixMs") as "blockTimeUnixMs",
-        MAX("blockTimestamp") as "blockTimestamp",
-        NOW() as "createdAt",
-        NOW() as "updatedAt"
-      FROM (
-        SELECT DISTINCT ON (address, denom) 
-          address, denom, balance, "blockHeight", "blockTimeUnixMs", "blockTimestamp"
-        FROM "BankStateEvents"
-        WHERE address IN (SELECT address FROM addresses_batch)
-        ORDER BY address, denom, "blockHeight" DESC
-      ) latest_events
-      GROUP BY address
-      ON CONFLICT (address) DO UPDATE SET
-        balances = EXCLUDED.balances,
-        "denomUpdateBlockHeights" = EXCLUDED."denomUpdateBlockHeights",
-        "blockHeight" = EXCLUDED."blockHeight",
-        "blockTimeUnixMs" = EXCLUDED."blockTimeUnixMs",
-        "blockTimestamp" = EXCLUDED."blockTimestamp",
-        "updatedAt" = NOW()
-      RETURNING address
+      SELECT address FROM inserted
+      ORDER BY address;
     `)) as unknown as [{ address: string }[]]
 
-    // Check if we processed any addresses in this batch
-    if (!processedAddresses || processedAddresses.length === 0) {
-      break // No more addresses to process
+      // Check if we processed any addresses in this batch
+      if (!processedAddresses || processedAddresses.length === 0) {
+        break // No more addresses to process
+      }
+
+      processedCount += processedAddresses.length
+      lastProcessedAddress =
+        processedAddresses[processedAddresses.length - 1].address
+
+      const endTime = Date.now()
+      const duration = (endTime - startTime) / 1000
+
+      console.log(
+        `processed ${processedAddresses.length.toLocaleString()} addresses in ${duration.toLocaleString()} seconds`
+      )
+
+      saveProgress()
     }
 
-    // Delete events for addresses we don't need to keep history for
-    const deletedEvents = deleteHistory
-      ? await BankStateEvent.destroy({
-          where: {
-            address: {
-              [Op.in]: processedAddresses.map((row) => row.address),
-
-              ...(addressesToKeepHistoryFor.length > 0 && {
-                [Op.notIn]: addressesToKeepHistoryFor,
-              }),
-            },
-          },
-        })
-      : 0
-
-    processedCount += processedAddresses.length
-    offset += batchSize
-
-    const endTime = Date.now()
-    const duration = (endTime - startTime) / 1000
-
-    console.log(
-      `processed ${processedAddresses.length.toLocaleString()} addresses and deleted ${deletedEvents.toLocaleString()} historical events in ${duration.toLocaleString()} seconds`
-    )
-
     saveProgress()
-  }
 
-  saveProgress()
+    if (deleteHistory) {
+      console.log(
+        `\n[${new Date().toISOString()}] deleting history except for ${addressesToKeepHistoryFor.length.toLocaleString()} addresses...`
+      )
+      const deleteStart = Date.now()
+
+      // Delete events for addresses we don't need to keep history for.
+      const deleted = await BankStateEvent.destroy({
+        where: {
+          address: {
+            [Op.notIn]: addressesToKeepHistoryFor,
+          },
+        },
+      })
+
+      const deleteDuration = (Date.now() - deleteStart) / 1000
+      console.log(
+        `deleted ${deleted.toLocaleString()} rows in ${deleteDuration.toLocaleString()} seconds`
+      )
+    }
+  }
 
   console.log(
     `\n[${new Date().toISOString()}] running VACUUM(FULL, ANALYZE, VERBOSE)...`
