@@ -13,10 +13,10 @@ program.option(
   '-c, --config <path>',
   'path to config file, falling back to config.json'
 )
-program.option('-b, --batch-size <size>', 'batch size', '100')
-program.option('-d, --delete-history', 'delete history')
+program.option('-b, --batch <size>', 'batch size', '1000')
+program.option('-D, --no-delete-history', "don't delete history")
 program.parse()
-const { config: _config, batchSize: _batchSize, deleteHistory } = program.opts()
+const { config: _config, batch, deleteHistory } = program.opts()
 
 // Load config with config option.
 ConfigManager.load(_config)
@@ -52,6 +52,15 @@ const main = async () => {
     `keeping history for ${addressesToKeepHistoryFor.length.toLocaleString()} contracts`
   )
 
+  const getBankStateEventsSize = async () =>
+    (
+      (await sequelize.query(
+        `SELECT pg_size_pretty(pg_total_relation_size('"BankStateEvents"'))`
+      )) as unknown as [[{ pg_size_pretty: string }]]
+    )[0][0].pg_size_pretty
+
+  const bankStateEventsSizeBefore = await getBankStateEventsSize()
+
   const totalAddresses = Number(
     (
       (await sequelize.query(
@@ -59,10 +68,12 @@ const main = async () => {
       )) as unknown as [[{ count: string }]]
     )[0][0].count
   )
-  console.log(`found ${totalAddresses.toLocaleString()} addresses to migrate\n`)
+  console.log(
+    `found ${totalAddresses.toLocaleString()} addresses to migrate in BankStateEvents table, size: ${bankStateEventsSizeBefore}\n`
+  )
 
   // Process in batches
-  const batchSize = Number(_batchSize)
+  const batchSize = Number(batch)
   let offset = 0
   let processedCount = 0
 
@@ -148,9 +159,24 @@ const main = async () => {
 
   saveProgress()
 
-  console.log('running VACUUM(FULL, ANALYZE, VERBOSE)...')
+  console.log(
+    `\n[${new Date().toISOString()}] running VACUUM(FULL, ANALYZE, VERBOSE)...`
+  )
+  const vacuumStart = Date.now()
+
   await sequelize.query(
     'VACUUM(FULL, ANALYZE, VERBOSE) "BankStateEvents", "BankBalances"'
+  )
+  console.log(
+    `[${new Date().toISOString()}] VACUUM completed in ${(
+      (Date.now() - vacuumStart) /
+      1000
+    ).toLocaleString()} seconds`
+  )
+
+  const bankStateEventsSizeAfter = await getBankStateEventsSize()
+  console.log(
+    `BankStateEvents table size after migration: ${bankStateEventsSizeAfter}`
   )
 
   const newHistoricalAccounts = Number(
@@ -162,14 +188,13 @@ const main = async () => {
   )
 
   console.log(
-    `\nkept history for ${newHistoricalAccounts.toLocaleString()} addresses`
-  )
-
-  console.log(
-    `[${new Date().toISOString()}] FINISHED in ${(
+    `\n[${new Date().toISOString()}] FINISHED in ${(
       (Date.now() - allStartTime) /
       1000
     ).toLocaleString()} seconds`
+  )
+  console.log(
+    `kept history for ${newHistoricalAccounts.toLocaleString()} addresses`
   )
 
   // Close DB connections.
