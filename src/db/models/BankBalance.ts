@@ -28,6 +28,11 @@ export class BankBalance extends DependableEventModel {
   @Column(DataType.JSONB)
   declare balances: Record<string, string>
 
+  // The block height at which a denom's balance was updated.
+  @AllowNull(false)
+  @Column(DataType.JSONB)
+  declare denomUpdateBlockHeights: Record<string, string>
+
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare blockHeight: string

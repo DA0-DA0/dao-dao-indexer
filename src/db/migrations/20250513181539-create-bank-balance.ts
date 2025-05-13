@@ -13,6 +13,10 @@ module.exports = {
         allowNull: false,
         type: DataType.JSONB,
       },
+      denomUpdateBlockHeights: {
+        allowNull: false,
+        type: DataType.JSONB,
+      },
       blockHeight: {
         allowNull: false,
         type: DataType.BIGINT,

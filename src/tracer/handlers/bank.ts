@@ -123,18 +123,8 @@ export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
         return []
       }
 
-      // Build a map of address to balance updates.
-      const addressToBalanceUpdates = events.reduce((acc, event) => {
-        let existing = acc[event.address]
-        if (!existing) {
-          existing = {}
-          acc[event.address] = existing
-        }
-
-        existing[event.denom] = event.balance
-        return acc
-      }, {} as Record<string, Record<string, string>>)
-      const uniqueAddresses = Object.keys(addressToBalanceUpdates)
+      // Get unique addresses with balance updates.
+      const uniqueAddresses = [...new Set(events.map((event) => event.address))]
 
       // Find existing BankBalance records for all addresses and update by
       // adding the denoms.
@@ -163,15 +153,36 @@ export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
       } of events) {
         const existingBalance = addressToExistingBalance[address]
         if (existingBalance) {
-          existingBalance.balances[denom] = balance
-          existingBalance.blockHeight = blockHeight
-          existingBalance.blockTimeUnixMs = blockTimeUnixMs
-          existingBalance.blockTimestamp = blockTimestamp
+          // Only update if the current block height is greater than or equal to
+          // the last block height at which the denom's balance was updated.
+          if (
+            BigInt(blockHeight) >=
+            BigInt(existingBalance.denomUpdateBlockHeights[denom] || 0)
+          ) {
+            existingBalance.balances[denom] = balance
+            existingBalance.denomUpdateBlockHeights[denom] = blockHeight
+            existingBalance.blockHeight = BigInt(
+              Math.max(Number(existingBalance.blockHeight), Number(blockHeight))
+            ).toString()
+            existingBalance.blockTimeUnixMs = BigInt(
+              Math.max(
+                Number(existingBalance.blockTimeUnixMs),
+                Number(blockTimeUnixMs)
+              )
+            ).toString()
+            existingBalance.blockTimestamp =
+              blockTimestamp > existingBalance.blockTimestamp
+                ? blockTimestamp
+                : existingBalance.blockTimestamp
+          }
         } else {
           addressToExistingBalance[address] = BankBalance.build({
             address,
             balances: {
               [denom]: balance,
+            },
+            denomUpdateBlockHeights: {
+              [denom]: blockHeight,
             },
             blockHeight,
             blockTimeUnixMs,

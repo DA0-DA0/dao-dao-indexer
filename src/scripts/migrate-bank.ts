@@ -85,10 +85,11 @@ const main = async () => {
         ORDER BY address
         LIMIT ${batchSize} OFFSET ${offset}
       )
-      INSERT INTO "BankBalances" (address, balances, "blockHeight", "blockTimeUnixMs", "blockTimestamp", "createdAt", "updatedAt")
-      SELECT 
+      INSERT INTO "BankBalances" (address, balances, "denomUpdateBlockHeights", "blockHeight", "blockTimeUnixMs", "blockTimestamp", "createdAt", "updatedAt")
+      SELECT
         address,
         jsonb_object_agg(denom, balance) as balances,
+        jsonb_object_agg(denom, "blockHeight") as "denomUpdateBlockHeights",
         MAX("blockHeight") as "blockHeight",
         MAX("blockTimeUnixMs") as "blockTimeUnixMs",
         MAX("blockTimestamp") as "blockTimestamp",
@@ -104,6 +105,7 @@ const main = async () => {
       GROUP BY address
       ON CONFLICT (address) DO UPDATE SET
         balances = EXCLUDED.balances,
+        "denomUpdateBlockHeights" = EXCLUDED."denomUpdateBlockHeights",
         "blockHeight" = EXCLUDED."blockHeight",
         "blockTimeUnixMs" = EXCLUDED."blockTimeUnixMs",
         "blockTimestamp" = EXCLUDED."blockTimestamp",
