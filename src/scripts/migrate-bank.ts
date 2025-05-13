@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import { Op } from 'sequelize'
 
 import { ConfigManager } from '@/config'
-import { BankStateEvent, Contract, State, loadDb } from '@/db'
+import { BankStateEvent, Contract, loadDb } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
 import { BANK_HISTORY_CODE_IDS_KEYS } from '@/tracer/handlers/bank'
 import { DbType } from '@/types'
@@ -29,9 +29,6 @@ const main = async () => {
 
   // Set up wasm code service.
   await WasmCodeService.setUpInstance()
-
-  // Initialize state.
-  await State.createSingletonIfMissing()
 
   const allStartTime = Date.now()
   console.log(`\n[${new Date().toISOString()}] STARTING...\n`)
@@ -167,9 +164,6 @@ const main = async () => {
       1000
     ).toLocaleString()} seconds`
   )
-
-  // Stop services.
-  WasmCodeService.getInstance().stopUpdater()
 
   // Close DB connections.
   await sequelize.close()
