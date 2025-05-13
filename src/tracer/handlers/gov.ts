@@ -160,31 +160,24 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async ({
       exportedEvents[exportedEvents.length - 1].blockHeight
     const lastBlockTimeUnixMsExported =
       exportedEvents[exportedEvents.length - 1].blockTimeUnixMs
-    await State.update(
-      {
-        lastGovBlockHeightExported: Sequelize.fn(
-          'GREATEST',
-          Sequelize.col('lastGovBlockHeightExported'),
-          lastBlockHeightExported
-        ),
+    await State.updateSingleton({
+      lastGovBlockHeightExported: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('lastGovBlockHeightExported'),
+        lastBlockHeightExported
+      ),
 
-        latestBlockHeight: Sequelize.fn(
-          'GREATEST',
-          Sequelize.col('latestBlockHeight'),
-          lastBlockHeightExported
-        ),
-        latestBlockTimeUnixMs: Sequelize.fn(
-          'GREATEST',
-          Sequelize.col('latestBlockTimeUnixMs'),
-          lastBlockTimeUnixMsExported
-        ),
-      },
-      {
-        where: {
-          singleton: true,
-        },
-      }
-    )
+      latestBlockHeight: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('latestBlockHeight'),
+        lastBlockHeightExported
+      ),
+      latestBlockTimeUnixMs: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('latestBlockTimeUnixMs'),
+        lastBlockTimeUnixMsExported
+      ),
+    })
 
     return exportedEvents
   }

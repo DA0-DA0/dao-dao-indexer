@@ -43,7 +43,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           },
         ])
 
-        await (await State.getSingleton())!.update({
+        await State.updateSingleton({
           latestBlockHeight: 4,
           latestBlockTimeUnixMs: 4,
           lastGovBlockHeightExported: 4,
@@ -459,7 +459,7 @@ export const loadGovTests = (options: ComputerTestOptions) => {
           },
         ])
 
-        await (await State.getSingleton())!.update({
+        await State.updateSingleton({
           latestBlockHeight: 4,
           latestBlockTimeUnixMs: 4,
           lastGovBlockHeightExported: 4,

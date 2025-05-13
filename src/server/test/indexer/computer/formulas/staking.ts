@@ -53,7 +53,7 @@ export const loadStakingTests = (options: ComputerTestOptions) => {
         },
       ])
 
-      await (await State.getSingleton())!.update({
+      await State.updateSingleton({
         latestBlockHeight: 10,
         latestBlockTimeUnixMs: 10,
       })

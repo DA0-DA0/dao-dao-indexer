@@ -511,16 +511,11 @@ const main = async () => {
               )
 
               // Update state singleton with chain ID and latest block.
-              await State.update(
-                {
-                  chainId: chain_id,
-                  latestBlockHeight: BigInt(latestBlockHeight).toString(),
-                  latestBlockTimeUnixMs: BigInt(
-                    latestBlockTimeUnixMs
-                  ).toString(),
-                },
-                { where: { singleton: true } }
-              )
+              await State.updateSingleton({
+                chainId: chain_id,
+                latestBlockHeight: BigInt(latestBlockHeight).toString(),
+                latestBlockTimeUnixMs: BigInt(latestBlockTimeUnixMs).toString(),
+              })
             },
             onConnect: () => {
               stopTraceQueueUpdater()

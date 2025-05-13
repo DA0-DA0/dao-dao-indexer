@@ -24,5 +24,8 @@
     "nativeDenomAccepted": "nativeDenomAccepted",
     "creditScaleFactor": 50
   },
-  "accountsJwtSecret": "accountsJwtSecret"
+  "accountsJwtSecret": "accountsJwtSecret",
+  "codeIds": {
+    "dao-dao-core": [1]
+  }
 }

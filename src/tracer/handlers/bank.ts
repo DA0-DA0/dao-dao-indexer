@@ -4,13 +4,19 @@ import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
 import {
+  BankBalance,
   BankStateEvent,
+  Contract,
   State,
   updateComputationValidityDependentOnChanges,
 } from '@/db'
+import { WasmCodeService } from '@/services'
 import { Handler, HandlerMaker, ParsedBankStateEvent } from '@/types'
+import { batch } from '@/utils'
 
 const STORE_NAME = 'bank'
+// Keep all bank balance history for contracts matching these code IDs keys.
+export const BANK_HISTORY_CODE_IDS_KEYS = ['dao-dao-core', 'xion-treasury']
 
 export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
   config: { bech32Prefix },
@@ -112,23 +118,127 @@ export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
   }
 
   const process: Handler<ParsedBankStateEvent>['process'] = async (events) => {
-    const exportEvents = async () =>
+    const exportEvents = async () => {
+      if (events.length === 0) {
+        return []
+      }
+
+      // Get unique addresses with balance updates.
+      const uniqueAddresses = [...new Set(events.map((event) => event.address))]
+
+      // Find existing BankBalance records for all addresses and update by
+      // adding the denoms.
+      const existingBalances = await BankBalance.findAll({
+        where: {
+          address: uniqueAddresses,
+        },
+      })
+      // Map address to existing BankBalance record.
+      const addressToExistingBalance = existingBalances.reduce(
+        (acc, balance) => {
+          acc[balance.address] = balance
+          return acc
+        },
+        {} as Record<string, BankBalance>
+      )
+
+      // Update or build BankBalance records for each event.
+      for (const {
+        address,
+        denom,
+        balance,
+        blockHeight,
+        blockTimeUnixMs,
+        blockTimestamp,
+      } of events) {
+        const existingBalance = addressToExistingBalance[address]
+        if (existingBalance) {
+          // Only update if the current block height is greater than or equal to
+          // the last block height at which the denom's balance was updated.
+          if (
+            BigInt(blockHeight) >=
+            BigInt(existingBalance.denomUpdateBlockHeights[denom] || 0)
+          ) {
+            existingBalance.balances[denom] = balance
+            existingBalance.denomUpdateBlockHeights[denom] = blockHeight
+            existingBalance.blockHeight = BigInt(
+              Math.max(Number(existingBalance.blockHeight), Number(blockHeight))
+            ).toString()
+            existingBalance.blockTimeUnixMs = BigInt(
+              Math.max(
+                Number(existingBalance.blockTimeUnixMs),
+                Number(blockTimeUnixMs)
+              )
+            ).toString()
+            existingBalance.blockTimestamp =
+              blockTimestamp > existingBalance.blockTimestamp
+                ? blockTimestamp
+                : existingBalance.blockTimestamp
+          }
+        } else {
+          addressToExistingBalance[address] = BankBalance.build({
+            address,
+            balances: {
+              [denom]: balance,
+            },
+            denomUpdateBlockHeights: {
+              [denom]: blockHeight,
+            },
+            blockHeight,
+            blockTimeUnixMs,
+            blockTimestamp,
+          })
+        }
+      }
+
+      const bankBalances = Object.values(addressToExistingBalance)
+      // Save all BankBalance records in batches of 100.
+      await batch({
+        list: bankBalances,
+        batchSize: 100,
+        task: (balance) => balance.save(),
+      })
+
+      // Find contracts for all addresses matching code IDs so we know which
+      // addresses to save history for.
+      const codeIds = WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+        ...BANK_HISTORY_CODE_IDS_KEYS
+      )
+      const addressesToKeepHistoryFor = codeIds.length
+        ? (
+            await Contract.findAll({
+              where: {
+                address: uniqueAddresses,
+                codeId: codeIds,
+              },
+            })
+          ).map((contract) => contract.address)
+        : []
+
+      const keepHistoryEvents = events.filter((event) =>
+        addressesToKeepHistoryFor.includes(event.address)
+      )
       // Unique index on [blockHeight, address, denom] ensures that we don't
       // insert duplicate events. If we encounter a duplicate, we update the
       // `balance` field in case event processing for a block was batched
       // separately.
-      events.length > 0
-        ? await BankStateEvent.bulkCreate(events, {
+      const bankStateEvents = keepHistoryEvents.length
+        ? await BankStateEvent.bulkCreate(keepHistoryEvents, {
             updateOnDuplicate: ['balance'],
           })
         : []
 
+      return [...bankBalances, ...bankStateEvents].sort(
+        (a, b) => Number(a.blockHeight) - Number(b.blockHeight)
+      )
+    }
+
     // Retry 3 times with exponential backoff starting at 100ms delay.
-    const exportedEvents = (await retry(exportEvents, [], {
+    const exportedEvents = await retry(exportEvents, [], {
       retriesMax: 3,
       exponential: true,
       interval: 100,
-    })) as BankStateEvent[]
+    })
 
     if (updateComputations) {
       await updateComputationValidityDependentOnChanges(exportedEvents)
@@ -140,31 +250,24 @@ export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
       exportedEvents[exportedEvents.length - 1].blockHeight
     const lastBlockTimeUnixMsExported =
       exportedEvents[exportedEvents.length - 1].blockTimeUnixMs
-    await State.update(
-      {
-        lastBankBlockHeightExported: Sequelize.fn(
-          'GREATEST',
-          Sequelize.col('lastBankBlockHeightExported'),
-          lastBlockHeightExported
-        ),
+    await State.updateSingleton({
+      lastBankBlockHeightExported: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('lastBankBlockHeightExported'),
+        lastBlockHeightExported
+      ),
 
-        latestBlockHeight: Sequelize.fn(
-          'GREATEST',
-          Sequelize.col('latestBlockHeight'),
-          lastBlockHeightExported
-        ),
-        latestBlockTimeUnixMs: Sequelize.fn(
-          'GREATEST',
-          Sequelize.col('latestBlockTimeUnixMs'),
-          lastBlockTimeUnixMsExported
-        ),
-      },
-      {
-        where: {
-          singleton: true,
-        },
-      }
-    )
+      latestBlockHeight: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('latestBlockHeight'),
+        lastBlockHeightExported
+      ),
+      latestBlockTimeUnixMs: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('latestBlockTimeUnixMs'),
+        lastBlockTimeUnixMsExported
+      ),
+    })
 
     return exportedEvents
   }

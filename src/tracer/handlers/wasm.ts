@@ -526,31 +526,24 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
       exportedEvents[exportedEvents.length - 1].blockHeight
     const lastBlockTimeUnixMsExported =
       exportedEvents[exportedEvents.length - 1].blockTimeUnixMs
-    await State.update(
-      {
-        lastWasmBlockHeightExported: Sequelize.fn(
-          'GREATEST',
-          Sequelize.col('lastWasmBlockHeightExported'),
-          lastBlockHeightExported
-        ),
+    await State.updateSingleton({
+      lastWasmBlockHeightExported: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('lastWasmBlockHeightExported'),
+        lastBlockHeightExported
+      ),
 
-        latestBlockHeight: Sequelize.fn(
-          'GREATEST',
-          Sequelize.col('latestBlockHeight'),
-          lastBlockHeightExported
-        ),
-        latestBlockTimeUnixMs: Sequelize.fn(
-          'GREATEST',
-          Sequelize.col('latestBlockTimeUnixMs'),
-          lastBlockTimeUnixMsExported
-        ),
-      },
-      {
-        where: {
-          singleton: true,
-        },
-      }
-    )
+      latestBlockHeight: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('latestBlockHeight'),
+        lastBlockHeightExported
+      ),
+      latestBlockTimeUnixMs: Sequelize.fn(
+        'GREATEST',
+        Sequelize.col('latestBlockTimeUnixMs'),
+        lastBlockTimeUnixMsExported
+      ),
+    })
 
     return createdEvents
   }

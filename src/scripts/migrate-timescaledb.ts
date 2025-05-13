@@ -1,7 +1,85 @@
-import { QueryInterface } from 'sequelize'
+import { Command } from 'commander'
+
+import { ConfigManager } from '@/config'
+import { loadDb } from '@/db'
+import { DbType } from '@/types'
 
 // Set up TimescaleDB extension, replace primary keys with composite keys,
 // replace table indexes with better ones, and set up hypertables.
+
+// Parse arguments.
+const program = new Command()
+program.option(
+  '-c, --config <path>',
+  'path to config file, falling back to config.json'
+)
+program.parse()
+const { config: _config } = program.opts()
+
+// Load config with config option.
+ConfigManager.load(_config)
+
+const main = async () => {
+  // Load DB on start.
+  const sequelize = await loadDb({
+    type: DbType.Data,
+  })
+
+  const allStartTime = Date.now()
+  console.log(`\n[${new Date().toISOString()}] STARTING...\n`)
+
+  await sequelize.query('CREATE EXTENSION IF NOT EXISTS timescaledb;')
+
+  console.log(
+    '------------------------------------------------------------------------------------------------'
+  )
+  for (const query of queries) {
+    const startTime = new Date()
+    console.log('>', query)
+    console.log('[START]', startTime.toISOString())
+    try {
+      await sequelize.query(query)
+    } catch (err) {
+      console.error(
+        '[ERROR]',
+        typeof err === 'object' &&
+          err &&
+          'original' in err &&
+          err.original instanceof Error
+          ? err.original.message
+          : err
+      )
+    }
+    const endTime = new Date()
+    console.log('[END]', endTime.toISOString())
+    console.log(
+      '[DURATION]',
+      (endTime.getTime() - startTime.getTime()).toLocaleString(),
+      'ms'
+    )
+    console.log(
+      '------------------------------------------------------------------------------------------------'
+    )
+  }
+
+  console.log(
+    `[${new Date().toISOString()}] FINISHED in ${(
+      (Date.now() - allStartTime) /
+      1000
+    ).toLocaleString()} seconds`
+  )
+
+  // Close DB connections.
+  await sequelize.close()
+
+  // Exit.
+  process.exit(0)
+}
+
+main().catch((err) => {
+  console.error('Bank migration worker errored', err)
+  process.exit(1)
+})
 
 const queries = `
 CREATE EXTENSION IF NOT EXISTS timescaledb;
@@ -64,46 +142,3 @@ VACUUM ANALYZE;
   .trim()
   .split('\n')
   .filter(Boolean)
-
-module.exports = {
-  async up(queryInterface: QueryInterface) {
-    await queryInterface.sequelize.query(
-      'CREATE EXTENSION IF NOT EXISTS timescaledb;'
-    )
-
-    console.log(
-      '------------------------------------------------------------------------------------------------'
-    )
-    for (const query of queries) {
-      const startTime = new Date()
-      console.log('>', query)
-      console.log('[START]', startTime.toISOString())
-      try {
-        await queryInterface.sequelize.query(query)
-      } catch (err) {
-        console.error(
-          '[ERROR]',
-          typeof err === 'object' &&
-            err &&
-            'original' in err &&
-            err.original instanceof Error
-            ? err.original.message
-            : err
-        )
-      }
-      const endTime = new Date()
-      console.log('[END]', endTime.toISOString())
-      console.log(
-        '[DURATION]',
-        (endTime.getTime() - startTime.getTime()).toLocaleString(),
-        'ms'
-      )
-      console.log(
-        '------------------------------------------------------------------------------------------------'
-      )
-    }
-  },
-  async down() {
-    throw new Error('Cannot revert this migration.')
-  },
-}
