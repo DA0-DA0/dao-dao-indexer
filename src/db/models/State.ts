@@ -75,6 +75,23 @@ export class State extends Model {
     })
   }
 
+  static async updateSingleton(
+    updates: Parameters<typeof State.update>[0]
+  ): Promise<State> {
+    const [affectedCount, [state]] = await State.update(updates, {
+      where: {
+        singleton: true,
+      },
+      returning: true,
+    })
+
+    if (affectedCount !== 1) {
+      throw new Error('Expected 1 row to be updated.')
+    }
+
+    return state
+  }
+
   // If singleton does not exist after a sync (which is how the DB initially
   // gets set up), create it.
   @AfterSync

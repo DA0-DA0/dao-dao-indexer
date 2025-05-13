@@ -104,31 +104,24 @@ export const distribution: HandlerMaker<
         exportedEvents[exportedEvents.length - 1].blockHeight
       const lastBlockTimeUnixMsExported =
         exportedEvents[exportedEvents.length - 1].blockTimeUnixMs
-      await State.update(
-        {
-          lastDistributionBlockHeightExported: Sequelize.fn(
-            'GREATEST',
-            Sequelize.col('lastDistributionBlockHeightExported'),
-            lastBlockHeightExported
-          ),
+      await State.updateSingleton({
+        lastDistributionBlockHeightExported: Sequelize.fn(
+          'GREATEST',
+          Sequelize.col('lastDistributionBlockHeightExported'),
+          lastBlockHeightExported
+        ),
 
-          latestBlockHeight: Sequelize.fn(
-            'GREATEST',
-            Sequelize.col('latestBlockHeight'),
-            lastBlockHeightExported
-          ),
-          latestBlockTimeUnixMs: Sequelize.fn(
-            'GREATEST',
-            Sequelize.col('latestBlockTimeUnixMs'),
-            lastBlockTimeUnixMsExported
-          ),
-        },
-        {
-          where: {
-            singleton: true,
-          },
-        }
-      )
+        latestBlockHeight: Sequelize.fn(
+          'GREATEST',
+          Sequelize.col('latestBlockHeight'),
+          lastBlockHeightExported
+        ),
+        latestBlockTimeUnixMs: Sequelize.fn(
+          'GREATEST',
+          Sequelize.col('latestBlockTimeUnixMs'),
+          lastBlockTimeUnixMsExported
+        ),
+      })
 
       return exportedEvents
     }

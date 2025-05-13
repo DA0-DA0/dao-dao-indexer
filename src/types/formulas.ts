@@ -107,7 +107,12 @@ export type FormulaPrefetchTransformations = (
 ) => Promise<void>
 
 export type FormulaContractGetter = (
-  contractAddress: string
+  contractAddress: string,
+  /**
+   * Optionally only return a contract if it matches one of the code IDs or
+   * keys.
+   */
+  codeIdsKeysFilter?: string[]
 ) => Promise<ContractJson | undefined>
 
 export type FormulaContractCodeIdGetter = (

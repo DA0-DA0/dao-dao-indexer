@@ -44,7 +44,7 @@ export const loadWasmTests = (options: ComputerTestOptions) => {
         },
       ])
 
-      await (await State.getSingleton())!.update({
+      await State.updateSingleton({
         latestBlockHeight: 3,
         latestBlockTimeUnixMs: 3,
       })

@@ -1,6 +1,7 @@
 import { Op, QueryTypes, Sequelize } from 'sequelize'
 
 import {
+  BankBalance,
   BankStateEvent,
   Contract,
   DistributionCommunityPoolStateEvent,
@@ -13,6 +14,7 @@ import {
   loadDb,
 } from '@/db'
 import { WasmCodeService } from '@/services/wasm-codes'
+import { BANK_HISTORY_CODE_IDS_KEYS } from '@/tracer/handlers/bank'
 import {
   Cache,
   DbType,
@@ -872,17 +874,28 @@ export const getEnv = ({
     return date
   }
 
-  const getContract: FormulaContractGetter = async (contractAddress) => {
+  const getContract: FormulaContractGetter = async (
+    contractAddress,
+    codeIdsKeysFilter
+  ) => {
+    const codeIds = codeIdsKeysFilter?.length
+      ? getCodeIdsForKeys(...codeIdsKeysFilter)
+      : null
+
     // Get contract from cache.
     const cachedContract = cache.contracts[contractAddress]
 
-    // If found contract, return contract.
-    if (cachedContract) {
-      return cachedContract.json
-    }
-    // If contract was previously found to not exist, return undefined.
-    else if (cachedContract === null) {
+    // If contract was previously found to not exist, or exists but doesn't
+    // match code IDs filter, return undefined.
+    if (
+      cachedContract === null ||
+      (cachedContract && codeIds && !codeIds.includes(cachedContract.codeId))
+    ) {
       return
+    }
+    // If found contract and matches code IDs filter, return contract.
+    else if (cachedContract) {
+      return cachedContract.json
     }
 
     // Find contract in database.
@@ -895,17 +908,19 @@ export const getEnv = ({
     // Cache contract.
     cache.contracts[contractAddress] = contract
 
-    return contract?.json
+    // If contract exists and no code ID filter or matches code ID filter,
+    // return contract.
+    return contract && (!codeIds || codeIds.includes(contract.codeId))
+      ? contract.json
+      : undefined
   }
 
   const getCodeIdsForKeys = (...keys: string[]): number[] =>
     WasmCodeService.getInstance().findWasmCodeIdsByKeys(...keys)
 
   const contractMatchesCodeIdKeys: FormulaContractMatchesCodeIdKeysGetter =
-    async (contractAddress, ...keys) => {
-      const codeId = (await getContract(contractAddress))?.codeId
-      return codeId !== undefined && getCodeIdsForKeys(...keys).includes(codeId)
-    }
+    async (contractAddress, ...keys) =>
+      !!(await getContract(contractAddress, keys))
 
   // Tries to find the code ID of this contract in the code ID keys and returns
   // the first match.
@@ -1000,6 +1015,61 @@ export const getEnv = ({
   }
 
   const getBalance: FormulaBalanceGetter = async (address, denom) => {
+    // Use BankBalance if exists.
+    const bankBalanceDependentKey = getDependentKey(
+      BankBalance.dependentKeyNamespace,
+      address
+    )
+    const cachedBalance = cache.events[bankBalanceDependentKey]
+    if (
+      cachedBalance?.length === 1 &&
+      cachedBalance[0] instanceof BankBalance
+    ) {
+      // Call hook.
+      await onFetch?.(cachedBalance)
+
+      return cachedBalance[0].balances[denom]
+    }
+
+    // Only one bank balance exists per address, since it represents the latest
+    // set of all balances. Apply the block height filter to ensure we don't
+    // access future balances if we're querying a past block height.
+    const bankBalance =
+      // If undefined, we haven't tried to fetch it yet. If not undefined,
+      // either it exists or it doesn't (null).
+      cachedBalance !== undefined
+        ? cachedBalance?.[0]
+        : await BankBalance.findOne({
+            where: {
+              address,
+              blockHeight: blockHeightFilter,
+            },
+          })
+
+    // Cache bank balance, null if nonexistent.
+    if (cachedBalance === undefined) {
+      cache.events[bankBalanceDependentKey] = bankBalance ? [bankBalance] : null
+    }
+
+    // If bank balance found, return balance. Otherwise fall back to
+    // BankStateEvent.
+    if (bankBalance && bankBalance instanceof BankBalance) {
+      // Call hook.
+      await onFetch?.([bankBalance])
+
+      return bankBalance.balances[denom]
+    }
+
+    // Use BankStateEvent if no BankBalance and this address is a contract that
+    // we keep history for.
+    const historyExists = await contractMatchesCodeIdKeys(
+      address,
+      ...BANK_HISTORY_CODE_IDS_KEYS
+    )
+    if (!historyExists) {
+      return
+    }
+
     const dependentKey = getDependentKey(
       BankStateEvent.dependentKeyNamespace,
       address,
@@ -1049,6 +1119,61 @@ export const getEnv = ({
   }
 
   const getBalances: FormulaBalancesGetter = async (address) => {
+    // Use BankBalance if exists.
+    const bankBalanceDependentKey = getDependentKey(
+      BankBalance.dependentKeyNamespace,
+      address
+    )
+    const cachedBalance = cache.events[bankBalanceDependentKey]
+    if (
+      cachedBalance?.length === 1 &&
+      cachedBalance[0] instanceof BankBalance
+    ) {
+      // Call hook.
+      await onFetch?.(cachedBalance)
+
+      return cachedBalance[0].balances
+    }
+
+    // Only one bank balance exists per address, since it represents the latest
+    // set of all balances. Apply the block height filter to ensure we don't
+    // access future balances if we're querying a past block height.
+    const bankBalance =
+      // If undefined, we haven't tried to fetch it yet. If not undefined,
+      // either it exists or it doesn't (null).
+      cachedBalance !== undefined
+        ? cachedBalance?.[0]
+        : await BankBalance.findOne({
+            where: {
+              address,
+              blockHeight: blockHeightFilter,
+            },
+          })
+
+    // Cache bank balance, null if nonexistent.
+    if (cachedBalance === undefined) {
+      cache.events[bankBalanceDependentKey] = bankBalance ? [bankBalance] : null
+    }
+
+    // If bank balance found, return balance. Otherwise fall back to
+    // BankStateEvent.
+    if (bankBalance && bankBalance instanceof BankBalance) {
+      // Call hook.
+      await onFetch?.([bankBalance])
+
+      return bankBalance.balances
+    }
+
+    // Use BankStateEvent if no BankBalance and this address is a contract that
+    // we keep history for.
+    const historyExists = await contractMatchesCodeIdKeys(
+      address,
+      ...BANK_HISTORY_CODE_IDS_KEYS
+    )
+    if (!historyExists) {
+      return
+    }
+
     const dependentKey =
       getDependentKey(BankStateEvent.dependentKeyNamespace, address) + ':'
     dependentKeys?.push({

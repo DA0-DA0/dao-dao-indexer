@@ -1,17 +1,30 @@
 import request from 'supertest'
 import { beforeEach, describe, it } from 'vitest'
 
-import { BankStateEvent, State } from '@/db'
+import { BankBalance, BankStateEvent, Contract, State } from '@/db'
+import { WasmCodeService } from '@/services'
+import { BANK_HISTORY_CODE_IDS_KEYS } from '@/tracer/handlers/bank'
 
 import { app } from '../../app'
 import { ComputerTestOptions } from '../types'
 
 export const loadBankTests = (options: ComputerTestOptions) => {
   describe('bank', () => {
-    describe('basic', () => {
+    describe('history', () => {
       beforeEach(async () => {
-        // Set up bank.
         const blockTimestamp = new Date()
+
+        await Contract.create({
+          address: 'address',
+          // Code ID that we keep bank history for.
+          codeId: WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+            BANK_HISTORY_CODE_IDS_KEYS[0]
+          )[0],
+          instantiatedAtBlockHeight: 1,
+          instantiatedAtBlockTimeUnixMs: 1,
+          instantiatedAtBlockTimestamp: new Date(),
+        })
+
         await BankStateEvent.bulkCreate([
           {
             address: 'address',
@@ -47,7 +60,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           },
         ])
 
-        await (await State.getSingleton())!.update({
+        await State.updateSingleton({
           latestBlockHeight: 4,
           latestBlockTimeUnixMs: 4,
           lastBankBlockHeightExported: 4,
@@ -296,9 +309,81 @@ export const loadBankTests = (options: ComputerTestOptions) => {
       })
     })
 
-    // Real data from DAO DAO DAO.
-    describe('advanced', () => {
+    describe('no history', () => {
       beforeEach(async () => {
+        await BankBalance.create({
+          address: 'address',
+          balances: {
+            utest: '2000',
+            uanother: '3000',
+            uagain: '4000',
+          },
+          blockHeight: 4,
+          blockTimeUnixMs: 4,
+          blockTimestamp: new Date(),
+        })
+
+        await State.updateSingleton({
+          latestBlockHeight: 4,
+          latestBlockTimeUnixMs: 4,
+          lastBankBlockHeightExported: 4,
+        })
+      })
+
+      it('returns nothing for a block before the balance was last updated', async () => {
+        await request(app.callback())
+          .get('/account/address/bank/balance?block=1:1&denom=utest')
+          .set('x-api-key', options.apiKey)
+          .expect(400)
+          .expect('missing balance')
+
+        await request(app.callback())
+          .get('/account/address/bank/balances?block=1:1')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect({})
+      })
+
+      it('returns correct balance response', async () => {
+        await request(app.callback())
+          .get('/account/address/bank/balance?denom=utest')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect('"2000"')
+
+        await request(app.callback())
+          .get('/account/address/bank/balance?denom=uanother')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect('"3000"')
+
+        await request(app.callback())
+          .get('/account/address/bank/balances')
+          .set('x-api-key', options.apiKey)
+          .expect(200)
+          .expect({
+            utest: '2000',
+            uanother: '3000',
+            uagain: '4000',
+          })
+      })
+    })
+
+    // Real data from DAO DAO DAO.
+    describe('real data', () => {
+      beforeEach(async () => {
+        await Contract.create({
+          address:
+            'juno10h0hc64jv006rr8qy0zhlu4jsxct8qwa0vtaleayh0ujz0zynf2s2r7v8q',
+          // Code ID that we keep bank history for.
+          codeId: WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+            BANK_HISTORY_CODE_IDS_KEYS[0]
+          )[0],
+          instantiatedAtBlockHeight: 1,
+          instantiatedAtBlockTimeUnixMs: 1,
+          instantiatedAtBlockTimestamp: new Date(),
+        })
+
         // Set up bank.
         await BankStateEvent.bulkCreate([
           {
@@ -341,7 +426,7 @@ export const loadBankTests = (options: ComputerTestOptions) => {
           },
         ])
 
-        await (await State.getSingleton())!.update({
+        await State.updateSingleton({
           latestBlockHeight: 12090598,
           latestBlockTimeUnixMs: 1701717323952,
           lastBankBlockHeightExported: 12090598,
