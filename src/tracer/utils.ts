@@ -1,9 +1,5 @@
 import * as fs from 'fs'
 
-import { WebSocket } from 'ws'
-
-import { objectMatchesStructure } from '@/utils'
-
 type FifoJsonTracerOptions = {
   file: string
   onData: (data: unknown) => void
@@ -176,76 +172,4 @@ export const setUpFifoJsonTracer = ({
     promise,
     close: () => fifoRs.destroy(),
   }
-}
-
-type WebSocketNewBlockListenerOptions = {
-  rpc: string
-  onNewBlock: (block: unknown) => void | Promise<void>
-  onConnect?: () => void
-  onClose?: () => void
-  onError?: (error: Error) => void
-}
-
-export const setUpWebSocketNewBlockListener = ({
-  rpc,
-  onNewBlock,
-  onConnect,
-  onClose,
-  onError,
-}: WebSocketNewBlockListenerOptions): WebSocket => {
-  // Get new-block WebSocket.
-  const webSocket = new WebSocket(rpc.replace('http', 'ws') + '/websocket')
-
-  // Subscribe to new blocks once opened.
-  webSocket.on('open', () => {
-    webSocket!.send(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'subscribe',
-        id: 1,
-        params: ["tm.event = 'NewBlock'"],
-      })
-    )
-    onConnect?.()
-  })
-
-  // Listen for new blocks.
-  webSocket.on('message', async (data) => {
-    try {
-      const { result } = JSON.parse(data.toString())
-      if (
-        !objectMatchesStructure(result, {
-          data: {
-            value: {
-              block: {
-                header: {
-                  chain_id: {},
-                  height: {},
-                  time: {},
-                },
-              },
-            },
-          },
-        })
-      ) {
-        return
-      }
-
-      // Execute callback with block data.
-      await onNewBlock(result.data.value.block)
-    } catch {
-      // Fail silently.
-    }
-  })
-
-  // Log error and ignore.
-  webSocket.on('error', (error) => {
-    onError?.(error)
-  })
-
-  webSocket.on('close', () => {
-    onClose?.()
-  })
-
-  return webSocket
 }
