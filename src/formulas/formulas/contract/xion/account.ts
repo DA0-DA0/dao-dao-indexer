@@ -30,6 +30,10 @@ export const treasuries: ContractFormula<
   {
     contractAddress: string
     balances?: Record<string, string>
+    block: {
+      height: string
+      timeUnixMs: string
+    }
   }[]
 > = {
   docs: {
@@ -50,12 +54,20 @@ export const treasuries: ContractFormula<
       'admin',
       contractAddress,
       getCodeIdsForKeys('xion-treasury')
-    )
+    ).then((matches) => {
+      return (matches || []).sort((a, b) =>
+        a.block.height < b.block.height ? 1 : -1
+      )
+    })
 
     return Promise.all(
-      treasuryContracts?.map(async ({ contractAddress }) => ({
+      treasuryContracts.map(async ({ contractAddress, block }) => ({
         contractAddress,
         balances: await getBalances(contractAddress),
+        block: {
+          height: block.height.toString(),
+          timeUnixMs: block.timeUnixMs.toString(),
+        },
       })) ?? []
     )
   },
