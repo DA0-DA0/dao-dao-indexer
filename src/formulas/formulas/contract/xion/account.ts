@@ -1,9 +1,14 @@
 import { ContractFormula } from '@/types'
 
 import { Authenticator } from './types/Account.types'
+import { Params } from './types/Treasury.types'
 
 const AccountStorageKeys = {
   AUTHENTICATORS: 'authenticators',
+}
+
+const TreasuryStorageKeys = {
+  PARAMS: 'params',
 }
 
 export const authenticators: ContractFormula<Authenticator[]> = {
@@ -43,6 +48,7 @@ export const treasuries: ContractFormula<
   compute: async (env) => {
     const {
       contractAddress,
+      get,
       getBalances,
       getTransformationMatches,
       getCodeIdsForKeys,
@@ -61,13 +67,17 @@ export const treasuries: ContractFormula<
     })
 
     return Promise.all(
-      treasuryContracts.map(async ({ contractAddress, block }) => ({
+      treasuryContracts.map(async ({ contractAddress, block, codeId }) => ({
         contractAddress,
-        balances: await getBalances(contractAddress),
+        // balances: await getBalances(contractAddress),
         block: {
           height: block.height.toString(),
           timeUnixMs: block.timeUnixMs.toString(),
         },
+        codeId,
+        params:
+          (await get<Params>(contractAddress, TreasuryStorageKeys.PARAMS)) ??
+          {},
       })) ?? []
     )
   },
