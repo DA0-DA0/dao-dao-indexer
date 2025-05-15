@@ -69,7 +69,7 @@ export const treasuries: ContractFormula<
     return Promise.all(
       treasuryContracts.map(async ({ contractAddress, block, codeId }) => ({
         contractAddress,
-        // balances: await getBalances(contractAddress),
+        balances: await getBalances(contractAddress),
         block: {
           height: block.height.toString(),
           timeUnixMs: block.timeUnixMs.toString(),
