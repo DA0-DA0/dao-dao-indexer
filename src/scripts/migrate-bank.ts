@@ -108,24 +108,10 @@ const main = async () => {
     const batchSize = Number(batch)
     const parallelWorkers = Number(parallel)
     let totalProcessed = 0
-    const migrationStartTime = Date.now()
     const rangeSaveFile = path.join(
       process.cwd(),
       `migrate-bank-ranges.workers-${parallelWorkers}.json`
     )
-
-    const saveProgress = () =>
-      console.log(
-        `--- TOTAL: processed ${(
-          (totalProcessed / totalAddresses) *
-          100
-        ).toFixed(
-          4
-        )}% (${totalProcessed.toLocaleString()}/${totalAddresses.toLocaleString()}) addresses (total ${(
-          (Date.now() - migrationStartTime) /
-          1000
-        ).toLocaleString()} seconds)`
-      )
 
     // Get max address for the last range.
     const [{ maxAddress }] = (await sequelize.query(
@@ -216,6 +202,20 @@ const main = async () => {
       )
     }
 
+    const migrationStartTime = Date.now()
+    const saveProgress = () =>
+      console.log(
+        `--- TOTAL: processed ${(
+          (totalProcessed / totalAddresses) *
+          100
+        ).toFixed(
+          4
+        )}% (${totalProcessed.toLocaleString()}/${totalAddresses.toLocaleString()}) addresses (total ${(
+          (Date.now() - migrationStartTime) /
+          1000
+        ).toLocaleString()} seconds)`
+      )
+
     const processRange = async (range: Range, workerIndex: number) => {
       console.log(
         `[worker ${workerIndex + 1}] processing range from '${
@@ -234,7 +234,7 @@ const main = async () => {
       console.log(
         `[worker ${
           workerIndex + 1
-        }] found ${rangeTotalAddresses.toLocaleString()} unmigrated addresses\n`
+        }] found ${rangeTotalAddresses.toLocaleString()} unmigrated addresses`
       )
 
       const workerStartTime = Date.now()
