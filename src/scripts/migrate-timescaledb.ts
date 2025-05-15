@@ -91,8 +91,9 @@ DROP INDEX bank_state_events_block_height_address_denom;
 DROP INDEX bank_state_events_denom;
 DROP INDEX bank_state_events_block_height;
 DROP INDEX bank_state_events_block_time_unix_ms;
-CREATE INDEX bank_state_events_address_denom_block_height ON "BankStateEvents" USING btree ("address", "denom", "blockHeight" DESC);
-CREATE INDEX bank_state_events_address_block_height ON "BankStateEvents" USING btree ("address", "blockHeight" DESC);
+CREATE INDEX IF NOT EXISTS bank_state_events_address_denom_block_height ON "BankStateEvents" USING btree ("address", "denom", "blockHeight" DESC);
+CREATE INDEX IF NOT EXISTS bank_state_events_address_block_height ON "BankStateEvents" USING btree ("address", "blockHeight" DESC);
+CREATE INDEX IF NOT EXISTS bank_state_events_address ON "BankStateEvents" ("address");
 
 ALTER TABLE "WasmStateEvents" DROP CONSTRAINT "WasmStateEvents_pkey";
 ALTER TABLE "WasmStateEvents" ADD PRIMARY KEY ("contractAddress", "key", "blockHeight");
@@ -102,9 +103,9 @@ DROP INDEX wasm_state_events_contract_address_block_height;
 DROP INDEX wasm_state_events_key;
 DROP INDEX wasm_state_events_block_height;
 DROP INDEX wasm_state_events_block_time_unix_ms;
-CREATE INDEX wasm_state_events_key_block_height ON "WasmStateEvents" USING btree ("key" text_pattern_ops, "blockHeight" DESC);
-CREATE INDEX wasm_state_events_contract_address_key_block_height ON "WasmStateEvents" USING btree ("contractAddress", "key" text_pattern_ops, "blockHeight" DESC);
-CREATE INDEX wasm_state_events_key_trgm_idx ON "WasmStateEvents" USING gin ("key" gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS wasm_state_events_key_block_height ON "WasmStateEvents" USING btree ("key" text_pattern_ops, "blockHeight" DESC);
+CREATE INDEX IF NOT EXISTS wasm_state_events_contract_address_key_block_height ON "WasmStateEvents" USING btree ("contractAddress", "key" text_pattern_ops, "blockHeight" DESC);
+CREATE INDEX IF NOT EXISTS wasm_state_events_key_trgm_idx ON "WasmStateEvents" USING gin ("key" gin_trgm_ops);
 
 ALTER TABLE "WasmStateEventTransformations" DROP CONSTRAINT "WasmStateEventTransformations_pkey";
 ALTER TABLE "WasmStateEventTransformations" ADD PRIMARY KEY ("contractAddress", "name", "blockHeight");
@@ -113,9 +114,9 @@ DROP INDEX wasm_state_event_transformations_contract_address_name_block_height;
 DROP INDEX wasm_state_event_transformations_contract_address_name_block_he;
 DROP INDEX wasm_state_event_transformations_;
 DROP INDEX wasm_state_event_transformations_block_height;
-CREATE INDEX wasm_state_event_transformations_name_block_height ON "WasmStateEventTransformations" USING btree ("name" text_pattern_ops, "blockHeight" DESC);
-CREATE INDEX wasm_state_event_transformations_contract_address_name_block_height ON "WasmStateEventTransformations" USING btree ("contractAddress", "name" text_pattern_ops, "blockHeight" DESC);
-CREATE INDEX wasm_state_event_transformations_name_trgm_idx ON "WasmStateEventTransformations" USING gin ("name" gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS wasm_state_event_transformations_name_block_height ON "WasmStateEventTransformations" USING btree ("name" text_pattern_ops, "blockHeight" DESC);
+CREATE INDEX IF NOT EXISTS wasm_state_event_transformations_contract_address_name_block_height ON "WasmStateEventTransformations" USING btree ("contractAddress", "name" text_pattern_ops, "blockHeight" DESC);
+CREATE INDEX IF NOT EXISTS wasm_state_event_transformations_name_trgm_idx ON "WasmStateEventTransformations" USING gin ("name" gin_trgm_ops);
 
 ALTER TABLE "GovProposals" DROP CONSTRAINT "GovProposals_pkey";
 ALTER TABLE "GovProposals" ADD PRIMARY KEY ("proposalId", "blockHeight");
@@ -125,7 +126,7 @@ DROP INDEX gov_proposals_block_height;
 DROP INDEX gov_proposals_block_time_unix_ms;
 DROP INDEX gov_proposals_proposal_id;
 DROP INDEX gov_proposals_proposal_id_block_height;
-CREATE INDEX gov_proposals_proposal_id_block_height ON "GovProposals" USING btree ("proposalId", "blockHeight" DESC);
+CREATE INDEX IF NOT EXISTS gov_proposals_proposal_id_block_height ON "GovProposals" USING btree ("proposalId", "blockHeight" DESC);
 
 ALTER TABLE "GovProposalVotes" DROP CONSTRAINT "GovProposalVotes_pkey";
 ALTER TABLE "GovProposalVotes" ADD PRIMARY KEY ("voterAddress", "proposalId", "blockHeight");
@@ -135,7 +136,7 @@ DROP INDEX gov_proposal_votes_block_height;
 DROP INDEX gov_proposal_votes_block_time_unix_ms;
 DROP INDEX gov_proposal_votes_proposal_id;
 DROP INDEX gov_proposal_votes_voter_address;
-CREATE INDEX gov_proposal_votes_proposal_id_block_height ON "GovProposalVotes" USING btree ("proposalId", "blockHeight");
+CREATE INDEX IF NOT EXISTS gov_proposal_votes_proposal_id_block_height ON "GovProposalVotes" USING btree ("proposalId", "blockHeight");
 
 VACUUM ANALYZE;
 `
