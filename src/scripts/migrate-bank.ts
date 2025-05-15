@@ -80,12 +80,16 @@ const main = async () => {
     const batchSize = Number(batch)
     let processedCount = 0
     let lastProcessedAddress = ''
+    const migrationStartTime = Date.now()
 
     const saveProgress = () =>
       console.log(
         `processed ${((processedCount / totalAddresses) * 100).toFixed(
           4
-        )}% (${processedCount.toLocaleString()}/${totalAddresses.toLocaleString()}) addresses`
+        )}% (${processedCount.toLocaleString()}/${totalAddresses.toLocaleString()}) addresses (total ${(
+          (Date.now() - migrationStartTime) /
+          1000
+        ).toLocaleString()} seconds)`
       )
     saveProgress()
 
