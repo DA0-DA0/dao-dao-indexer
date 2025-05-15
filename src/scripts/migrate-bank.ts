@@ -1,3 +1,6 @@
+import fs from 'fs'
+import path from 'path'
+
 import { Command } from 'commander'
 import { Op } from 'sequelize'
 
@@ -13,13 +16,24 @@ program.option(
   '-c, --config <path>',
   'path to config file, falling back to config.json'
 )
-program.option('-b, --batch <size>', 'batch size', '1000')
+program.option('-b, --batch <size>', 'batch size', '500')
+program.option('-p, --parallel <count>', 'number of parallel workers', '5')
 program.option('--no-delete-history', "don't delete history")
 program.parse()
-const { config: _config, batch, deleteHistory } = program.opts()
+const { config: _config, batch, deleteHistory, parallel } = program.opts()
 
 // Load config with config option.
 ConfigManager.load(_config)
+
+type Range = {
+  startAfterAddress: string
+  /**
+   * Initialized to the startAfterAddress and updated as we process addresses.
+   * Saves the progress of the worker.
+   */
+  lastProcessedAddress: string
+  endAddress: string
+}
 
 const main = async () => {
   // Load DB on start.
@@ -32,6 +46,18 @@ const main = async () => {
 
   const allStartTime = Date.now()
   console.log(`\n[${new Date().toISOString()}] STARTING...\n`)
+
+  // Ensuring address index exists.
+  const indexStart = Date.now()
+  console.log('creating indexes...')
+  await sequelize.query(`
+    CREATE INDEX IF NOT EXISTS bank_state_events_address ON "BankStateEvents" ("address")
+  `)
+  await sequelize.query(`
+    CREATE INDEX IF NOT EXISTS bank_state_events_address_denom_block_height ON "BankStateEvents" ("address", "denom", "blockHeight" DESC)
+  `)
+  const indexDuration = (Date.now() - indexStart) / 1000
+  console.log(`created indexes in ${indexDuration.toLocaleString()} seconds\n`)
 
   // Find addresses to keep history for
   let addressesToKeepHistoryFor: string[] = []
@@ -58,18 +84,20 @@ const main = async () => {
   const getBankStateEventsSize = async () =>
     (
       (await sequelize.query(
-        `SELECT pg_size_pretty(pg_total_relation_size('"BankStateEvents"'))`
-      )) as unknown as [[{ pg_size_pretty: string }]]
-    )[0][0].pg_size_pretty
+        `SELECT pg_size_pretty(pg_total_relation_size('"BankStateEvents"'))`,
+        { type: 'SELECT' }
+      )) as unknown as [{ pg_size_pretty: string }]
+    )[0].pg_size_pretty
 
   const bankStateEventsSizeBefore = await getBankStateEventsSize()
 
   const totalAddresses = Number(
     (
       (await sequelize.query(
-        'SELECT COUNT(*) FROM (SELECT DISTINCT address FROM "BankStateEvents") AS temp;'
-      )) as unknown as [[{ count: string }]]
-    )[0][0].count
+        'SELECT COUNT(*) FROM (SELECT DISTINCT address FROM "BankStateEvents") AS temp',
+        { type: 'SELECT' }
+      )) as unknown as [{ count: string }]
+    )[0].count
   )
   console.log(
     `found ${totalAddresses.toLocaleString()} addresses to migrate in BankStateEvents table, size: ${bankStateEventsSizeBefore}\n`
@@ -78,85 +106,231 @@ const main = async () => {
   if (totalAddresses > 0) {
     // Process in batches
     const batchSize = Number(batch)
-    let processedCount = 0
-    let lastProcessedAddress = ''
+    const parallelWorkers = Number(parallel)
+    let totalProcessed = 0
     const migrationStartTime = Date.now()
+    const rangeSaveFile = path.join(
+      process.cwd(),
+      `migrate-bank-ranges.workers-${parallelWorkers}.json`
+    )
 
     const saveProgress = () =>
       console.log(
-        `processed ${((processedCount / totalAddresses) * 100).toFixed(
+        `--- TOTAL: processed ${(
+          (totalProcessed / totalAddresses) *
+          100
+        ).toFixed(
           4
-        )}% (${processedCount.toLocaleString()}/${totalAddresses.toLocaleString()}) addresses (total ${(
+        )}% (${totalProcessed.toLocaleString()}/${totalAddresses.toLocaleString()}) addresses (total ${(
           (Date.now() - migrationStartTime) /
           1000
         ).toLocaleString()} seconds)`
       )
-    saveProgress()
 
-    while (processedCount < totalAddresses) {
-      const startTime = Date.now()
+    // Get max address for the last range.
+    const [{ maxAddress }] = (await sequelize.query(
+      `SELECT MAX(address) as "maxAddress" FROM "BankStateEvents"`,
+      { type: 'SELECT' }
+    )) as unknown as [{ maxAddress: string }]
 
-      // Process a batch of addresses using a CTE (Common Table Expression)
-      const [processedAddresses] = (await sequelize.query(`
-      WITH addresses_batch AS (
-        SELECT DISTINCT address
-        FROM "BankStateEvents"
-        WHERE address > '${lastProcessedAddress}'
-        ORDER BY address
-        LIMIT ${batchSize}
-      ),
-      inserted AS (
-        INSERT INTO "BankBalances" (address, balances, "denomUpdateBlockHeights", "blockHeight", "blockTimeUnixMs", "blockTimestamp", "createdAt", "updatedAt")
-        SELECT
-          address,
-          jsonb_object_agg(denom, balance) as balances,
-          jsonb_object_agg(denom, "blockHeight") as "denomUpdateBlockHeights",
-          MAX("blockHeight") as "blockHeight",
-          MAX("blockTimeUnixMs") as "blockTimeUnixMs",
-          MAX("blockTimestamp") as "blockTimestamp",
-          NOW() as "createdAt",
-          NOW() as "updatedAt"
-        FROM (
-          SELECT DISTINCT ON (address, denom) 
-            address, denom, balance, "blockHeight", "blockTimeUnixMs", "blockTimestamp"
-          FROM "BankStateEvents"
-          WHERE address IN (SELECT address FROM addresses_batch)
-          ORDER BY address, denom, "blockHeight" DESC
-        ) latest_events
-        GROUP BY address
-        ON CONFLICT (address) DO UPDATE SET
-          balances = EXCLUDED.balances,
-          "denomUpdateBlockHeights" = EXCLUDED."denomUpdateBlockHeights",
-          "blockHeight" = EXCLUDED."blockHeight",
-          "blockTimeUnixMs" = EXCLUDED."blockTimeUnixMs",
-          "blockTimestamp" = EXCLUDED."blockTimestamp",
-          "updatedAt" = NOW()
-        RETURNING address
+    let ranges: Range[] = []
+    const saveRanges = () =>
+      fs.writeFileSync(rangeSaveFile, JSON.stringify(ranges, null, 2))
+    saveRanges()
+
+    // Load the saved ranges.
+    const savedRanges: Range[] = fs.existsSync(rangeSaveFile)
+      ? JSON.parse(fs.readFileSync(rangeSaveFile, 'utf8'))
+      : []
+
+    // If saved ranges have the correct max address, just use the saved ranges.
+    // No need to build new ranges.
+    if (
+      savedRanges.length > 0 &&
+      savedRanges[savedRanges.length - 1].endAddress === maxAddress
+    ) {
+      ranges = savedRanges
+    } else {
+      const buildRangeStart = Date.now()
+      console.log('building ranges...')
+
+      // Get address boundaries at percentiles (e.g. for 4 workers, get the 1/4,
+      // 2/4, 3/4 addresses).
+      const addressBoundaries = await Promise.all(
+        Array.from({ length: parallelWorkers - 1 }, async (_, i) => {
+          const percentile = (i + 1) / parallelWorkers
+
+          const [{ address }] = (await sequelize.query(
+            `
+              SELECT address FROM (
+                SELECT DISTINCT address FROM "BankStateEvents"
+              ) a
+              ORDER BY address
+              OFFSET floor(${percentile} * ${totalAddresses})
+              LIMIT 1
+            `,
+            { type: 'SELECT' }
+          )) as unknown as [{ address: string }]
+
+          return address
+        })
       )
-      SELECT address FROM inserted
-      ORDER BY address;
-    `)) as unknown as [{ address: string }[]]
 
-      // Check if we processed any addresses in this batch
-      if (!processedAddresses || processedAddresses.length === 0) {
-        break // No more addresses to process
+      // Build the ranges using the boundaries
+      let startAfterAddress = ''
+
+      // Add boundaries as end addresses for each range except the last
+      for (const endAddress of addressBoundaries) {
+        ranges.push({
+          startAfterAddress,
+          lastProcessedAddress: startAfterAddress,
+          endAddress,
+        })
+        startAfterAddress = endAddress
       }
 
-      processedCount += processedAddresses.length
-      lastProcessedAddress =
-        processedAddresses[processedAddresses.length - 1].address
+      // Add the final range
+      ranges.push({
+        startAfterAddress,
+        lastProcessedAddress: startAfterAddress,
+        endAddress: maxAddress,
+      })
 
-      const endTime = Date.now()
-      const duration = (endTime - startTime) / 1000
+      // Update the lastProcessedAddress for any saved ranges that exist.
+      savedRanges.forEach((savedRange: Range) => {
+        const matchingRange = ranges.find(
+          (range) =>
+            range.startAfterAddress === savedRange.startAfterAddress &&
+            range.endAddress === savedRange.endAddress
+        )
+        if (matchingRange) {
+          matchingRange.lastProcessedAddress = savedRange.lastProcessedAddress
+        }
+      })
 
+      saveRanges()
+
+      const buildRangeDuration = (Date.now() - buildRangeStart) / 1000
       console.log(
-        `processed ${processedAddresses.length.toLocaleString()} addresses in ${duration.toLocaleString()} seconds`
+        `built ranges in ${buildRangeDuration.toLocaleString()} seconds\n`
       )
-
-      saveProgress()
     }
 
+    const processRange = async (range: Range, workerIndex: number) => {
+      console.log(
+        `[worker ${workerIndex + 1}] processing range from '${
+          range.startAfterAddress
+        }' to '${range.endAddress}'...`
+      )
+
+      const rangeTotalAddresses = Number(
+        (
+          (await sequelize.query(
+            `SELECT COUNT(*) FROM (SELECT DISTINCT address FROM "BankStateEvents" WHERE address > '${range.lastProcessedAddress}' AND address <= '${range.endAddress}') AS temp`,
+            { type: 'SELECT' }
+          )) as unknown as [{ count: string }]
+        )[0].count
+      )
+      console.log(
+        `[worker ${
+          workerIndex + 1
+        }] found ${rangeTotalAddresses.toLocaleString()} unmigrated addresses\n`
+      )
+
+      const workerStartTime = Date.now()
+      let rangeProcessed = 0
+
+      while (range.lastProcessedAddress !== range.endAddress) {
+        const startTime = Date.now()
+
+        // Process a batch of addresses using a CTE (Common Table Expression)
+        const processedAddresses = (await sequelize.query(
+          `
+          WITH addresses_batch AS (
+            SELECT DISTINCT address
+            FROM "BankStateEvents"
+            WHERE address > '${range.lastProcessedAddress}' AND address <= '${range.endAddress}'
+            ORDER BY address
+            LIMIT ${batchSize}
+          ),
+          inserted AS (
+            INSERT INTO "BankBalances" (address, balances, "denomUpdateBlockHeights", "blockHeight", "blockTimeUnixMs", "blockTimestamp", "createdAt", "updatedAt")
+            SELECT
+              address,
+              jsonb_object_agg(denom, balance) as balances,
+              jsonb_object_agg(denom, "blockHeight") as "denomUpdateBlockHeights",
+              MAX("blockHeight") as "blockHeight",
+              MAX("blockTimeUnixMs") as "blockTimeUnixMs",
+              MAX("blockTimestamp") as "blockTimestamp",
+              NOW() as "createdAt",
+              NOW() as "updatedAt"
+            FROM (
+              SELECT DISTINCT ON (address, denom) 
+                address, denom, balance, "blockHeight", "blockTimeUnixMs", "blockTimestamp"
+              FROM "BankStateEvents"
+              WHERE address IN (SELECT address FROM addresses_batch)
+              ORDER BY address, denom, "blockHeight" DESC
+            ) latest_events
+            GROUP BY address
+            ON CONFLICT (address) DO UPDATE SET
+              balances = EXCLUDED.balances,
+              "denomUpdateBlockHeights" = EXCLUDED."denomUpdateBlockHeights",
+              "blockHeight" = EXCLUDED."blockHeight",
+              "blockTimeUnixMs" = EXCLUDED."blockTimeUnixMs",
+              "blockTimestamp" = EXCLUDED."blockTimestamp",
+              "updatedAt" = NOW()
+            RETURNING address
+          )
+          SELECT address FROM inserted
+          ORDER BY address
+        `,
+          { type: 'SELECT' }
+        )) as unknown as { address: string }[]
+
+        // Check if we processed any addresses in this batch
+        if (!processedAddresses || processedAddresses.length === 0) {
+          break // No more addresses to process
+        }
+
+        rangeProcessed += processedAddresses.length
+        totalProcessed += processedAddresses.length
+
+        range.lastProcessedAddress =
+          processedAddresses[processedAddresses.length - 1].address
+        saveRanges()
+
+        const endTime = Date.now()
+        const duration = (endTime - startTime) / 1000
+
+        console.log(
+          `[worker ${workerIndex + 1}] processed ${(
+            (processedAddresses.length / rangeTotalAddresses) *
+            100
+          ).toFixed(
+            4
+          )}% (${processedAddresses.length.toLocaleString()}/${rangeTotalAddresses.toLocaleString()}) addresses (total ${duration.toLocaleString()} seconds)`
+        )
+      }
+
+      const workerDuration = (Date.now() - workerStartTime) / 1000
+      console.log(
+        `[worker ${
+          workerIndex + 1
+        }] FINISHED processing ${rangeProcessed.toLocaleString()} addresses in ${workerDuration.toLocaleString()} seconds`
+      )
+    }
+
+    const saveProgressInterval = setInterval(saveProgress, 30_000)
+
+    // Start the workers.
+    await Promise.all(ranges.map((range, index) => processRange(range, index)))
+
+    clearInterval(saveProgressInterval)
     saveProgress()
+
+    console.log(
+      `\n[${new Date().toISOString()}] FINISHED processing all addresses`
+    )
 
     if (deleteHistory) {
       console.log(
@@ -180,16 +354,12 @@ const main = async () => {
     }
   }
 
-  console.log(
-    `\n[${new Date().toISOString()}] running VACUUM(FULL, ANALYZE, VERBOSE)...`
-  )
+  console.log(`\n[${new Date().toISOString()}] running vacuum...`)
   const vacuumStart = Date.now()
-
-  await sequelize.query(
-    'VACUUM(FULL, ANALYZE, VERBOSE) "BankStateEvents", "BankBalances"'
-  )
+  await sequelize.query('VACUUM(FULL, ANALYZE, VERBOSE) "BankStateEvents"')
+  await sequelize.query('VACUUM(ANALYZE, VERBOSE) "BankBalances"')
   console.log(
-    `[${new Date().toISOString()}] VACUUM completed in ${(
+    `[${new Date().toISOString()}] vacuum completed in ${(
       (Date.now() - vacuumStart) /
       1000
     ).toLocaleString()} seconds`
@@ -197,15 +367,16 @@ const main = async () => {
 
   const bankStateEventsSizeAfter = await getBankStateEventsSize()
   console.log(
-    `BankStateEvents table size after migration: ${bankStateEventsSizeAfter}`
+    `BankStateEvents table size before migration: ${bankStateEventsSizeBefore}, after migration: ${bankStateEventsSizeAfter}`
   )
 
   const newHistoricalAccounts = Number(
     (
       (await sequelize.query(
-        'SELECT COUNT(*) FROM (SELECT DISTINCT address FROM "BankStateEvents") AS temp;'
-      )) as unknown as [[{ count: string }]]
-    )[0][0].count
+        'SELECT COUNT(*) FROM (SELECT DISTINCT address FROM "BankStateEvents") AS temp',
+        { type: 'SELECT' }
+      )) as unknown as [{ count: string }]
+    )[0].count
   )
 
   console.log(
