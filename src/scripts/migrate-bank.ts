@@ -136,26 +136,40 @@ const main = async () => {
       const buildRangeStart = Date.now()
       console.log('building ranges...')
 
-      // Get address boundaries at percentiles (e.g. for 4 workers, get the 1/4,
-      // 2/4, 3/4 addresses).
-      const addressBoundaries = await Promise.all(
-        Array.from({ length: parallelWorkers - 1 }, async (_, i) => {
-          const percentile = (i + 1) / parallelWorkers
+      // Get address boundaries based on row counts, not distinct addresses.
+      const [addressBoundariesResult] = (await sequelize.query(
+        `
+        WITH address_counts AS (
+          SELECT
+            address,
+            COUNT(*) as row_count
+          FROM "BankStateEvents"
+          GROUP BY address
+          ORDER BY address
+        ),
+        address_with_running_total AS (
+          SELECT 
+            address,
+            row_count,
+            SUM(row_count) OVER (ORDER BY address) as running_total,
+            (SELECT SUM(row_count) FROM address_counts) as total_rows
+          FROM address_counts
+        )
+        SELECT address
+        FROM address_with_running_total
+        WHERE running_total > total_rows * generate_series(1, ${
+          parallelWorkers - 1
+        }, 1)::float / ${parallelWorkers}
+        AND running_total - row_count <= total_rows * generate_series(1, ${
+          parallelWorkers - 1
+        }, 1)::float / ${parallelWorkers}
+        ORDER BY running_total
+        `,
+        { type: 'SELECT' }
+      )) as unknown as [{ address: string }[]]
 
-          const [{ address }] = (await sequelize.query(
-            `
-              SELECT address FROM (
-                SELECT DISTINCT address FROM "BankStateEvents"
-              ) a
-              ORDER BY address
-              OFFSET floor(${percentile} * ${totalAddresses})
-              LIMIT 1
-            `,
-            { type: 'SELECT' }
-          )) as unknown as [{ address: string }]
-
-          return address
-        })
+      const addressBoundaries = addressBoundariesResult.map(
+        (result) => result.address
       )
 
       // Build the ranges using the boundaries
