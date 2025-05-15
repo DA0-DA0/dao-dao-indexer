@@ -17,7 +17,7 @@ program.option(
   'path to config file, falling back to config.json'
 )
 program.option('-b, --batch <size>', 'batch size', '500')
-program.option('-p, --parallel <count>', 'number of parallel workers', '5')
+program.option('-p, --parallel <count>', 'max number of parallel workers', '5')
 program.option('--no-delete-history', "don't delete history")
 program.parse()
 const { config: _config, batch, deleteHistory, parallel } = program.opts()
@@ -118,7 +118,6 @@ const main = async () => {
     let ranges: Range[] = []
     const saveRanges = () =>
       fs.writeFileSync(rangeSaveFile, JSON.stringify(ranges, null, 2))
-    saveRanges()
 
     // Load the saved ranges.
     const savedRanges: Range[] = fs.existsSync(rangeSaveFile)
@@ -137,6 +136,7 @@ const main = async () => {
       console.log('building ranges...')
 
       // Get address boundaries based on row counts, not distinct addresses.
+      const parallelWorkersMinusOne = parallelWorkers - 1
       const [addressBoundariesResult] = (await sequelize.query(
         `
         WITH address_counts AS (
@@ -145,38 +145,47 @@ const main = async () => {
             COUNT(*) as row_count
           FROM "BankStateEvents"
           GROUP BY address
-          ORDER BY address
+        ),
+        total AS (
+          SELECT SUM(row_count) AS total_rows FROM address_counts
         ),
         address_with_running_total AS (
           SELECT 
             address,
             row_count,
-            SUM(row_count) OVER (ORDER BY address) as running_total,
-            (SELECT SUM(row_count) FROM address_counts) as total_rows
+            SUM(row_count) OVER (ORDER BY address) as running_total
           FROM address_counts
+        ),
+        partition_points AS (
+          SELECT
+            gs.series_val,
+            (SELECT total_rows FROM total) * gs.series_val::float / ${parallelWorkers} as threshold
+          FROM 
+            (SELECT generate_series(1, ${parallelWorkersMinusOne}, 1) as series_val) gs
         )
-        SELECT address
-        FROM address_with_running_total
-        WHERE running_total > total_rows * generate_series(1, ${
-          parallelWorkers - 1
-        }, 1)::float / ${parallelWorkers}
-        AND running_total - row_count <= total_rows * generate_series(1, ${
-          parallelWorkers - 1
-        }, 1)::float / ${parallelWorkers}
-        ORDER BY running_total
+        SELECT DISTINCT ON (pp.series_val) awt.address
+        FROM partition_points pp
+        JOIN address_with_running_total awt ON 
+          awt.running_total > pp.threshold AND 
+          awt.running_total - awt.row_count <= pp.threshold
+        ORDER BY pp.series_val, awt.running_total ASC;
         `,
         { type: 'SELECT' }
       )) as unknown as [{ address: string }[]]
 
-      const addressBoundaries = addressBoundariesResult.map(
-        (result) => result.address
-      )
+      // Remove duplicates but keep original order.
+      const uniqueAddressBoundaries: string[] = []
+      for (const { address } of addressBoundariesResult) {
+        if (!uniqueAddressBoundaries.includes(address)) {
+          uniqueAddressBoundaries.push(address)
+        }
+      }
 
       // Build the ranges using the boundaries
       let startAfterAddress = ''
 
       // Add boundaries as end addresses for each range except the last
-      for (const endAddress of addressBoundaries) {
+      for (const endAddress of uniqueAddressBoundaries) {
         ranges.push({
           startAfterAddress,
           lastProcessedAddress: startAfterAddress,
@@ -254,8 +263,6 @@ const main = async () => {
       let rangeProcessed = 0
 
       while (range.lastProcessedAddress !== range.endAddress) {
-        const startTime = Date.now()
-
         // Process a batch of addresses using a CTE (Common Table Expression)
         const processedAddresses = (await sequelize.query(
           `
@@ -312,16 +319,14 @@ const main = async () => {
           processedAddresses[processedAddresses.length - 1].address
         saveRanges()
 
-        const endTime = Date.now()
-        const duration = (endTime - startTime) / 1000
-
+        const duration = (Date.now() - workerStartTime) / 1000
         console.log(
           `[worker ${workerIndex + 1}] processed ${(
-            (processedAddresses.length / rangeTotalAddresses) *
+            (rangeProcessed / rangeTotalAddresses) *
             100
           ).toFixed(
             4
-          )}% (${processedAddresses.length.toLocaleString()}/${rangeTotalAddresses.toLocaleString()}) addresses (total ${duration.toLocaleString()} seconds)`
+          )}% (${rangeProcessed.toLocaleString()}/${rangeTotalAddresses.toLocaleString()}) addresses in ${duration.toLocaleString()} seconds`
         )
       }
 
