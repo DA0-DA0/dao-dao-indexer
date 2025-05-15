@@ -136,7 +136,6 @@ DROP INDEX gov_proposal_votes_block_height;
 DROP INDEX gov_proposal_votes_block_time_unix_ms;
 DROP INDEX gov_proposal_votes_proposal_id;
 DROP INDEX gov_proposal_votes_voter_address;
-CREATE INDEX IF NOT EXISTS gov_proposal_votes_proposal_id_block_height ON "GovProposalVotes" USING btree ("proposalId", "blockHeight");
 
 VACUUM ANALYZE;
 `
