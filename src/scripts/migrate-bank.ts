@@ -91,14 +91,10 @@ const main = async () => {
 
   const bankStateEventsSizeBefore = await getBankStateEventsSize()
 
-  const totalAddresses = Number(
-    (
-      (await sequelize.query(
-        'SELECT COUNT(*) FROM (SELECT DISTINCT address FROM "BankStateEvents") AS temp',
-        { type: 'SELECT' }
-      )) as unknown as [{ count: string }]
-    )[0].count
-  )
+  const totalAddresses = await BankStateEvent.count({
+    distinct: true,
+    col: 'address',
+  })
   console.log(
     `found ${totalAddresses.toLocaleString()} addresses to migrate in BankStateEvents table, size: ${bankStateEventsSizeBefore}\n`
   )
@@ -223,14 +219,17 @@ const main = async () => {
         }' to '${range.endAddress}'...`
       )
 
-      const rangeTotalAddresses = Number(
-        (
-          (await sequelize.query(
-            `SELECT COUNT(*) FROM (SELECT DISTINCT address FROM "BankStateEvents" WHERE address > '${range.lastProcessedAddress}' AND address <= '${range.endAddress}') AS temp`,
-            { type: 'SELECT' }
-          )) as unknown as [{ count: string }]
-        )[0].count
-      )
+      const rangeTotalAddresses = await BankStateEvent.count({
+        where: {
+          address: {
+            [Op.gt]: range.lastProcessedAddress,
+            [Op.lte]: range.endAddress,
+          },
+        },
+        distinct: true,
+        col: 'address',
+      })
+
       console.log(
         `[worker ${
           workerIndex + 1
@@ -370,14 +369,10 @@ const main = async () => {
     `BankStateEvents table size before migration: ${bankStateEventsSizeBefore}, after migration: ${bankStateEventsSizeAfter}`
   )
 
-  const newHistoricalAccounts = Number(
-    (
-      (await sequelize.query(
-        'SELECT COUNT(*) FROM (SELECT DISTINCT address FROM "BankStateEvents") AS temp',
-        { type: 'SELECT' }
-      )) as unknown as [{ count: string }]
-    )[0].count
-  )
+  const newHistoricalAccounts = await BankStateEvent.count({
+    distinct: true,
+    col: 'address',
+  })
 
   console.log(
     `\n[${new Date().toISOString()}] FINISHED in ${(
