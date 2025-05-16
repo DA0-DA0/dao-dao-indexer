@@ -25,6 +25,9 @@ const { config: _config, batch, deleteHistory, parallel } = program.opts()
 // Load config with config option.
 ConfigManager.load(_config)
 
+/**
+ * A range of addresses to process.
+ */
 type Range = {
   startAfterAddress: string
   /**
@@ -33,6 +36,36 @@ type Range = {
    */
   lastProcessedAddress: string
   endAddress: string
+}
+
+/**
+ * The progress of a range.
+ */
+type RangeProgress = {
+  /**
+   * The range being processed.
+   */
+  range: Range
+  /**
+   * The number of addresses processed.
+   */
+  processed: number
+  /**
+   * The total number of addresses to process.
+   */
+  total: number
+  /**
+   * The start timestamp of the worker, if started.
+   */
+  startedAt?: number
+  /**
+   * The last update timestamp of the worker.
+   */
+  lastUpdatedAt?: number
+  /**
+   * The end timestamp of the worker, if finished.
+   */
+  endedAt?: number
 }
 
 const main = async () => {
@@ -103,7 +136,6 @@ const main = async () => {
     // Process in batches
     const batchSize = Number(batch)
     const parallelWorkers = Number(parallel)
-    let totalProcessed = 0
     const rangeSaveFile = path.join(
       process.cwd(),
       `migrate-bank-ranges.workers-${parallelWorkers}.json`
@@ -221,47 +253,20 @@ const main = async () => {
       )
     }
 
-    const migrationStartTime = Date.now()
-    const saveProgress = () =>
-      console.log(
-        `--- TOTAL: processed ${(
-          (totalProcessed / totalAddresses) *
-          100
-        ).toFixed(
-          4
-        )}% (${totalProcessed.toLocaleString()}/${totalAddresses.toLocaleString()}) addresses (total ${(
-          (Date.now() - migrationStartTime) /
-          1000
-        ).toLocaleString()} seconds)`
-      )
-
-    const processRange = async (range: Range, workerIndex: number) => {
-      console.log(
-        `[worker ${workerIndex + 1}] processing range from '${
-          range.startAfterAddress
-        }' to '${range.endAddress}'...`
-      )
-
-      const rangeTotalAddresses = await BankStateEvent.count({
-        where: {
-          address: {
-            [Op.gt]: range.lastProcessedAddress,
-            [Op.lte]: range.endAddress,
-          },
-        },
-        distinct: true,
-        col: 'address',
+    // Initialize progress display
+    const progressDisplay = new ProgressDisplay()
+    const rangeProgress = ranges.map(
+      (range): RangeProgress => ({
+        range,
+        processed: 0,
+        total: 0,
       })
+    )
 
-      console.log(
-        `[worker ${
-          workerIndex + 1
-        }] found ${rangeTotalAddresses.toLocaleString()} unmigrated addresses`
-      )
+    const updateProgress = () => progressDisplay.update(rangeProgress)
 
-      const workerStartTime = Date.now()
-      let rangeProcessed = 0
-
+    const processRange = async (range: Range, rangeIndex: number) => {
+      const progress = rangeProgress[rangeIndex]
       while (range.lastProcessedAddress !== range.endAddress) {
         // Process a batch of addresses using a CTE (Common Table Expression)
         const processedAddresses = (await sequelize.query(
@@ -312,39 +317,50 @@ const main = async () => {
           break // No more addresses to process
         }
 
-        rangeProcessed += processedAddresses.length
-        totalProcessed += processedAddresses.length
+        progress.processed += processedAddresses.length
+        progress.lastUpdatedAt = Date.now()
+        updateProgress()
 
         range.lastProcessedAddress =
           processedAddresses[processedAddresses.length - 1].address
         saveRanges()
-
-        const duration = (Date.now() - workerStartTime) / 1000
-        console.log(
-          `[worker ${workerIndex + 1}] processed ${(
-            (rangeProcessed / rangeTotalAddresses) *
-            100
-          ).toFixed(
-            4
-          )}% (${rangeProcessed.toLocaleString()}/${rangeTotalAddresses.toLocaleString()}) addresses in ${duration.toLocaleString()} seconds`
-        )
       }
 
-      const workerDuration = (Date.now() - workerStartTime) / 1000
-      console.log(
-        `[worker ${
-          workerIndex + 1
-        }] FINISHED processing ${rangeProcessed.toLocaleString()} addresses in ${workerDuration.toLocaleString()} seconds`
-      )
+      progress.endedAt = Date.now()
+      progress.lastUpdatedAt = Date.now()
+      updateProgress()
     }
 
-    const saveProgressInterval = setInterval(saveProgress, 30_000)
+    // Initialize progress.
+    await Promise.all(
+      ranges.map(async (range, index) => {
+        const progress = rangeProgress[index]
 
-    // Start the workers.
+        console.log(
+          `[worker ${index + 1}] processing range from '${
+            range.startAfterAddress
+          }' to '${range.endAddress}'...`
+        )
+
+        progress.total = await BankStateEvent.count({
+          where: {
+            address: {
+              [Op.gt]: range.lastProcessedAddress,
+              [Op.lte]: range.endAddress,
+            },
+          },
+          distinct: true,
+          col: 'address',
+        })
+        progress.startedAt = Date.now()
+        progress.lastUpdatedAt = Date.now()
+      })
+    )
+
+    // Process the ranges.
     await Promise.all(ranges.map((range, index) => processRange(range, index)))
 
-    clearInterval(saveProgressInterval)
-    saveProgress()
+    updateProgress()
 
     console.log(
       `\n[${new Date().toISOString()}] FINISHED processing all addresses`
@@ -414,3 +430,213 @@ main().catch((err) => {
   console.error('Bank migration worker errored', err)
   process.exit(1)
 })
+
+/**
+ * Simple progress manager to handle stats display with terminal control
+ */
+class ProgressDisplay {
+  private displayed = false
+  private lastLineCount = 0
+
+  /**
+   * Updates the progress display with current range information
+   */
+  update(progress: RangeProgress[]) {
+    // Clear previous output if any
+    if (this.displayed) {
+      this.clearLines(this.lastLineCount)
+    }
+
+    const output = this.formatProgress(progress)
+    this.lastLineCount = output.split('\n').length
+
+    // Add new line if not yet displayed.
+    if (!this.displayed) {
+      console.log()
+      this.displayed = true
+    }
+
+    // Write the formatted output
+    process.stdout.write(output)
+  }
+
+  /**
+   * Clears the specified number of lines from terminal. 1 line is the current
+   * line. 2 lines is the current line and the previous line. etc.
+   */
+  private clearLines(count: number) {
+    if (count === 0) {
+      return
+    }
+    process.stdout.write(`\x1b[${count - 1}A\r`) // Move cursor up and to the beginning of the line.
+    process.stdout.write('\x1b[J') // Clear to end of screen.
+  }
+
+  /**
+   * Formats range progress information
+   */
+  private formatProgress(progress: RangeProgress[]): string {
+    // Calculate total progress
+    const { processed, total, earliestStart } = progress.reduce(
+      (acc, p) => ({
+        processed: acc.processed + p.processed,
+        total: acc.total + p.total,
+        earliestStart: p.startedAt
+          ? Math.min(acc.earliestStart || p.startedAt, p.startedAt)
+          : acc.earliestStart,
+      }),
+      { processed: 0, total: 0, earliestStart: 0 } as {
+        processed: number
+        total: number
+        earliestStart: number
+      }
+    )
+
+    // Format range status lines
+    const rangeLines = progress.map((progress, index) => {
+      const prefix = `Worker ${index + 1}:`.padEnd(11)
+
+      if (!progress.startedAt) {
+        return (
+          prefix +
+          `Counting addresses between '${progress.range.startAfterAddress}' and '${progress.range.endAddress}'...`
+        )
+      }
+
+      const duration =
+        ((progress.endedAt || progress.lastUpdatedAt || Date.now()) -
+          progress.startedAt) /
+        1000
+      const avgSpeedMs = progress.processed
+        ? (duration / progress.processed) * 1000
+        : undefined
+
+      if (progress.endedAt) {
+        return (
+          prefix +
+          `Finished ${progress.processed.toLocaleString()} addresses in ${duration.toLocaleString(
+            undefined,
+            {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }
+          )}s (avg ${
+            avgSpeedMs?.toLocaleString(undefined, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) || '-'
+          }ms/address)`
+        )
+      }
+
+      const percent = ((progress.processed / progress.total) * 100).toFixed(2)
+      const etaMins =
+        avgSpeedMs !== undefined
+          ? ((progress.total - progress.processed) * avgSpeedMs) / 1000 / 60
+          : undefined
+
+      return (
+        prefix +
+        `${percent}% (${progress.processed.toLocaleString()}/${progress.total.toLocaleString()}) in ${duration.toLocaleString(
+          undefined,
+          {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          }
+        )}s (avg ${
+          avgSpeedMs?.toLocaleString(undefined, {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          }) || '-'
+        }ms/address) (eta in ${
+          etaMins?.toLocaleString(undefined, {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          }) || '-'
+        }mins @ ${
+          etaMins
+            ? new Date(Date.now() + etaMins * 60 * 1000).toLocaleString(
+                undefined,
+                {
+                  timeZoneName: 'short',
+                  second: undefined,
+                }
+              )
+            : '-'
+        })`
+      )
+    })
+
+    // Format total status line
+    let totalLine = 'Total:'.padEnd(11)
+    if (progress.some((p) => !p.startedAt)) {
+      totalLine += 'Waiting for workers to count addresses...'
+    } else if (progress.some((p) => !p.endedAt)) {
+      const percent = ((processed / total) * 100).toFixed(2)
+      const duration = (Date.now() - earliestStart) / 1000
+      const avgSpeedMs = processed ? (duration / processed) * 1000 : undefined
+      const etaMins =
+        avgSpeedMs !== undefined
+          ? ((total - processed) * avgSpeedMs) / 1000 / 60
+          : undefined
+      totalLine += `${percent}% (${processed.toLocaleString()}/${total.toLocaleString()}) in ${duration.toLocaleString(
+        undefined,
+        {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }
+      )}s (avg ${
+        avgSpeedMs?.toLocaleString(undefined, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }) || '-'
+      }ms/address) (eta in ${
+        etaMins?.toLocaleString(undefined, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }) || '-'
+      }mins @ ${
+        etaMins
+          ? new Date(Date.now() + etaMins * 60 * 1000).toLocaleString(
+              undefined,
+              {
+                timeZoneName: 'short',
+                second: undefined,
+              }
+            )
+          : '-'
+      })`
+    } else {
+      const duration = ((Date.now() - earliestStart) / 1000).toLocaleString(
+        undefined,
+        {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }
+      )
+      totalLine += `Completed ${processed.toLocaleString()} addresses in ${duration}s`
+    }
+
+    const lines = [...rangeLines, '', totalLine]
+    const longestLineLength = Math.max(...lines.map((line) => line.length))
+
+    // Create a progress bar as long as the longest line.
+    if (!progress.some((p) => !p.startedAt)) {
+      const filledWidth = Math.floor((longestLineLength * processed) / total)
+      const emptyWidth = longestLineLength - filledWidth
+      lines.push(`${'█'.repeat(filledWidth)}${'░'.repeat(emptyWidth)}`)
+    }
+
+    // Format the progress box
+    return `${'—'.repeat(longestLineLength + 6)}
+|${' '.repeat(longestLineLength + 4)}|
+${lines
+  .map(
+    (line) => `|  ${line}${' '.repeat(longestLineLength - line.length + 2)}|`
+  )
+  .join('\n')}
+|${' '.repeat(longestLineLength + 4)}|
+${'—'.repeat(longestLineLength + 6)}
+`
+  }
+}
