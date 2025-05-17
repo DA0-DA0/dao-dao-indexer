@@ -22,10 +22,29 @@ import {
   ParsedWasmStateEvent,
   WasmExportData,
 } from '@/types'
+import { dbKeyForKeys } from '@/utils'
 import { wasmCodeTrackers } from '@/wasmCodeTrackers'
 
 const STORE_NAME = 'wasm'
 const DEFAULT_CONTRACT_BYTE_LENGTH = 32
+
+// Only save specific state events for contracts matching these code IDs keys.
+const CONTRACT_STATE_EVENT_KEY_ALLOWLIST: Partial<
+  Record<
+    string,
+    {
+      codeIdsKeys: string[]
+      stateKeys: string[]
+    }[]
+  >
+> = {
+  'kaiyo-1': [
+    {
+      codeIdsKeys: ['kujira-fin'],
+      stateKeys: ['contract_info'],
+    },
+  ],
+}
 
 export const wasm: HandlerMaker<WasmExportData> = async ({
   config: { bech32Prefix },
@@ -45,6 +64,14 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
   // Get the wasm code trackers for this chain.
   const chainWasmCodeTrackers = wasmCodeTrackers.filter(
     (t) => t.chainId === chainId
+  )
+
+  // Get the contract state event allowlist.
+  const stateEventAllowlist = CONTRACT_STATE_EVENT_KEY_ALLOWLIST[chainId]?.map(
+    ({ codeIdsKeys, stateKeys }) => ({
+      codeIdsKeys,
+      stateKeys: stateKeys.map((key) => dbKeyForKeys(key)),
+    })
   )
 
   // Get code ID for contract, cached in memory.
@@ -389,6 +416,33 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
           where: {
             address: uniqueContracts,
           },
+        })
+      }
+
+      const allowlist = stateEventAllowlist
+        ?.map(({ codeIdsKeys, ...rest }) => ({
+          ...rest,
+          codeIds: WasmCodeService.getInstance().findWasmCodeIdsByKeys(
+            ...codeIdsKeys
+          ),
+        }))
+        .filter(({ codeIds }) => codeIds.length > 0)
+
+      // Keep events for contracts that do not exist in the allowlist or whose
+      // state keys are not in the allowlist.
+      if (allowlist?.length) {
+        stateEvents = stateEvents.filter((event) => {
+          const codeId = contracts.find(
+            (contract) => contract.address === event.contractAddress
+          )?.codeId
+
+          return (
+            !codeId ||
+            !allowlist.some(
+              ({ codeIds, stateKeys }) =>
+                codeIds.includes(codeId) && !stateKeys.includes(event.key)
+            )
+          )
         })
       }
 
