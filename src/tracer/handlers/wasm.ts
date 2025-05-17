@@ -9,11 +9,10 @@ import {
   AccountWebhook,
   Contract,
   State,
-  WasmCodeKey,
   WasmStateEvent,
   WasmStateEventTransformation,
-  updateComputationValidityDependentOnChanges,
 } from '@/db'
+import { WasmCodeTrackersQueue } from '@/queues/queues'
 import { WasmCodeService } from '@/services'
 import { transformParsedStateEvents } from '@/transformers'
 import {
@@ -23,7 +22,6 @@ import {
   WasmExportData,
 } from '@/types'
 import { dbKeyForKeys } from '@/utils'
-import { wasmCodeTrackers } from '@/wasmCodeTrackers'
 
 const STORE_NAME = 'wasm'
 const DEFAULT_CONTRACT_BYTE_LENGTH = 32
@@ -44,11 +42,23 @@ const CONTRACT_STATE_EVENT_KEY_ALLOWLIST: Partial<
       stateKeys: ['contract_info'],
     },
   ],
+  'osmosis-1': [
+    {
+      codeIdsKeys: [
+        'levana-finance',
+        'cl-vault',
+        'icns-resolver',
+        'skip-api',
+        'calc-dca',
+        'rate-limiter',
+      ],
+      stateKeys: ['contract_info'],
+    },
+  ],
 }
 
 export const wasm: HandlerMaker<WasmExportData> = async ({
   config: { bech32Prefix },
-  updateComputations,
   sendWebhooks,
   cosmWasmClient,
 }) => {
@@ -60,26 +70,6 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
   // https://github.com/classic-terra/wasmd/blob/v0.30.0-terra.3/x/wasm/types/keys.go#L31-L32
   const CONTRACT_KEY_PREFIX = isTerraClassic ? 0x04 : 0x02
   const CONTRACT_STORE_PREFIX = isTerraClassic ? 0x05 : 0x03
-
-  // Get the wasm code trackers for this chain.
-  const chainWasmCodeTrackers = wasmCodeTrackers
-    .filter((t) => t.chainId === chainId)
-    .map(({ contractAddresses = new Set(), stateKeys, ...rest }) => ({
-      ...rest,
-      contractAddresses,
-      stateKeys:
-        stateKeys?.map(({ key, ...rest }) => ({
-          dbKey: dbKeyForKeys(...[key].flat()),
-          ...rest,
-        })) || [],
-    }))
-  const uniqueChainWasmCodeTrackerStateKeys = [
-    ...new Set(
-      chainWasmCodeTrackers.flatMap((t) =>
-        t.stateKeys.map(({ dbKey }) => dbKey)
-      )
-    ),
-  ]
 
   // Get the contract state event allowlist.
   const stateEventAllowlist = CONTRACT_STATE_EVENT_KEY_ALLOWLIST[chainId]?.map(
@@ -293,88 +283,33 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
           updateOnDuplicate: ['codeId'],
         }
       )
-
-      // Check if any contracts are tracked, and save their code ID if so.
-      if (chainWasmCodeTrackers.length > 0) {
-        // Get all tracked state events for the contracts that are being
-        // exported.
-        const contractTrackedStateEvents =
-          uniqueChainWasmCodeTrackerStateKeys.length > 0
-            ? await WasmStateEvent.findAll({
-                where: {
-                  key: uniqueChainWasmCodeTrackerStateKeys,
-                  contractAddress: contractEvents.map(({ address }) => address),
-                },
-              })
-            : []
-
-        let updatedCodeKey = false
-        await Promise.all(
-          contractEvents.flatMap(({ address, codeId }) => {
-            const trackers = chainWasmCodeTrackers.filter(
-              (t) =>
-                t.contractAddresses.has(address) ||
-                t.stateKeys.some(({ dbKey, ...trackerFilter }) =>
-                  contractTrackedStateEvents.some(
-                    (wasmState) =>
-                      wasmState.contractAddress === address &&
-                      wasmState.key === dbKey &&
-                      ('value' in trackerFilter
-                        ? wasmState.value === trackerFilter.value
-                        : wasmState.value.includes(trackerFilter.partialValue))
-                  )
-                )
-            )
-
-            if (!trackers.length) {
-              return []
-            }
-
-            return trackers.map(async ({ codeKey }) => {
-              try {
-                await WasmCodeKey.createFromKeyAndIds(codeKey, codeId)
-                updatedCodeKey = true
-              } catch (err) {
-                // Capture failures and move on.
-                console.error(
-                  `Failed to save tracked wasm code for ${address} with code ID ${codeId} and code key ${codeKey}:`,
-                  err
-                )
-                Sentry.captureException(err, {
-                  tags: {
-                    type: 'failed-save-tracked-wasm-code',
-                    script: 'export',
-                    handler: 'wasm',
-                    chainId,
-                    codeKey,
-                    address,
-                    codeId,
-                  },
-                })
-              }
-            })
-          })
-        )
-
-        // Update service if any code keys were updated.
-        if (updatedCodeKey) {
-          await WasmCodeService.getInstance().reloadWasmCodeIdsFromDB()
-        }
-      }
     }
 
     // Export state.
-    let stateEvents = events
-      .flatMap((event) => (event.type === 'state' ? event.data : []))
-      .map(
-        (e): ParsedWasmStateEvent => ({
-          ...e,
-          blockTimestamp: new Date(Number(e.blockTimeUnixMs)),
-        })
-      )
+    let stateEvents = events.flatMap((event) =>
+      event.type === 'state' ? event.data : []
+    )
+
+    // Attempt to track code keys based on BOTH contract and state event
+    // updates, since a contract may be instantiated in the same block it sets
+    // tracked state keys.
+    if (contractEvents.length > 0) {
+      WasmCodeTrackersQueue.add(contractEvents[0].blockHeight, {
+        contractEvents,
+        stateEventUpdates: stateEvents,
+      })
+    }
+
     if (!stateEvents.length) {
       return []
     }
+
+    stateEvents = stateEvents.map(
+      (e): ParsedWasmStateEvent => ({
+        ...e,
+        blockTimestamp: new Date(Number(e.blockTimeUnixMs)),
+      })
+    )
 
     const state = await State.getSingleton()
     if (!state) {
@@ -589,10 +524,6 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
     )
 
     const createdEvents = [...exportedEvents, ...transformations]
-
-    if (updateComputations) {
-      await updateComputationValidityDependentOnChanges(createdEvents)
-    }
 
     // Queue webhooks as needed.
     if (sendWebhooks) {

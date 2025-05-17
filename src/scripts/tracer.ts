@@ -109,8 +109,6 @@ const main = async () => {
         handler: await handlerMaker({
           config,
           cosmWasmClient,
-          // These are only relevant when processing, not tracing.
-          updateComputations: false,
           sendWebhooks: false,
         }),
       })

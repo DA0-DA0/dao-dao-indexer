@@ -3,13 +3,7 @@ import { Coin } from '@dao-dao/types/protobuf/codegen/cosmos/base/v1beta1/coin'
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
-import {
-  BankBalance,
-  BankStateEvent,
-  Contract,
-  State,
-  updateComputationValidityDependentOnChanges,
-} from '@/db'
+import { BankBalance, BankStateEvent, Contract, State } from '@/db'
 import { WasmCodeService } from '@/services'
 import { Handler, HandlerMaker, ParsedBankStateEvent } from '@/types'
 import { batch } from '@/utils'
@@ -24,7 +18,6 @@ export const BANK_HISTORY_CODE_IDS_KEYS = [
 
 export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
   config: { bech32Prefix },
-  updateComputations,
 }) => {
   const match: Handler<ParsedBankStateEvent>['match'] = (trace) => {
     // BalancesPrefix = 0x02
@@ -243,10 +236,6 @@ export const bank: HandlerMaker<ParsedBankStateEvent> = async ({
       exponential: true,
       interval: 100,
     })
-
-    if (updateComputations) {
-      await updateComputationValidityDependentOnChanges(exportedEvents)
-    }
 
     // Store last block height exported, and update latest block
     // height/time if the last export is newer.

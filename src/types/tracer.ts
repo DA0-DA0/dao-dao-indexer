@@ -23,7 +23,6 @@ export type Handler<Data extends unknown = unknown> = {
 
 export type HandlerMakerOptions = {
   config: Config
-  updateComputations: boolean
   sendWebhooks: boolean
   cosmWasmClient: CosmWasmClient
 }

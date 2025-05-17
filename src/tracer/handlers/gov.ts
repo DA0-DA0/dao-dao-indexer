@@ -2,19 +2,13 @@ import { fromBase64, toBech32 } from '@cosmjs/encoding'
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
-import {
-  GovProposal,
-  GovProposalVote,
-  State,
-  updateComputationValidityDependentOnChanges,
-} from '@/db'
+import { GovProposal, GovProposalVote, State } from '@/db'
 import { Handler, HandlerMaker, ParsedGovStateEvent } from '@/types'
 
 const STORE_NAME = 'gov'
 
 export const gov: HandlerMaker<ParsedGovStateEvent> = async ({
   config: { bech32Prefix },
-  updateComputations,
 }) => {
   const match: Handler<ParsedGovStateEvent>['match'] = (trace) => {
     // ProposalsKeyPrefix = 0x00
@@ -149,10 +143,6 @@ export const gov: HandlerMaker<ParsedGovStateEvent> = async ({
       exponential: true,
       interval: 100,
     })) as (GovProposal | GovProposalVote)[]
-
-    if (updateComputations) {
-      await updateComputationValidityDependentOnChanges(exportedEvents)
-    }
 
     // Store last block height exported, and update latest block
     // height/time if the last export is newer.

@@ -4,11 +4,7 @@ import { FeePool } from '@dao-dao/types/protobuf/codegen/cosmos/distribution/v1b
 import retry from 'async-await-retry'
 import { Sequelize } from 'sequelize'
 
-import {
-  DistributionCommunityPoolStateEvent,
-  State,
-  updateComputationValidityDependentOnChanges,
-} from '@/db'
+import { DistributionCommunityPoolStateEvent, State } from '@/db'
 import {
   Handler,
   HandlerMaker,
@@ -19,7 +15,7 @@ const STORE_NAME = 'distribution'
 
 export const distribution: HandlerMaker<
   ParsedDistributionCommunityPoolStateEvent
-> = async ({ updateComputations }) => {
+> = async () => {
   const match: Handler<ParsedDistributionCommunityPoolStateEvent>['match'] = (
     trace
   ) => {
@@ -93,10 +89,6 @@ export const distribution: HandlerMaker<
         exponential: true,
         interval: 100,
       })) as DistributionCommunityPoolStateEvent[]
-
-      if (updateComputations) {
-        await updateComputationValidityDependentOnChanges(exportedEvents)
-      }
 
       // Store last block height exported, and update latest block
       // height/time if the last export is newer.
