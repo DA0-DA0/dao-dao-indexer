@@ -169,7 +169,7 @@ const main = async () => {
 
       // Get address boundaries based on row counts, not distinct addresses.
       const parallelWorkersMinusOne = parallelWorkers - 1
-      const [addressBoundariesResult] = (await sequelize.query(
+      const addressBoundariesResult = (await sequelize.query(
         `
         WITH address_counts AS (
           SELECT
@@ -203,7 +203,7 @@ const main = async () => {
         ORDER BY pp.series_val, awt.running_total ASC;
         `,
         { type: 'SELECT' }
-      )) as unknown as [{ address: string }[]]
+      )) as unknown as { address: string }[]
 
       // Remove duplicates but keep original order.
       const uniqueAddressBoundaries: string[] = []
