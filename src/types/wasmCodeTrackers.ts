@@ -1,3 +1,5 @@
+import { KeyInput } from './formulas'
+
 /**
  * Track contracts and save their code IDs to a specified wasm code key in the
  * DB when they are migrated so that other contracts are automatically detected.
@@ -14,5 +16,13 @@ export type WasmCodeTracker = {
   /**
    * The contract addresses to track.
    */
-  contractAddresses: Set<string>
+  contractAddresses?: Set<string>
+  /**
+   * Track contracts with matching state keys and values.
+   */
+  stateKeys?: (
+    | {
+        key: KeyInput | KeyInput[]
+      } & ({ value: string } | { partialValue: string })
+  )[]
 }

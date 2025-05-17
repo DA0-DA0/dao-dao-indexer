@@ -62,9 +62,24 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
   const CONTRACT_STORE_PREFIX = isTerraClassic ? 0x05 : 0x03
 
   // Get the wasm code trackers for this chain.
-  const chainWasmCodeTrackers = wasmCodeTrackers.filter(
-    (t) => t.chainId === chainId
-  )
+  const chainWasmCodeTrackers = wasmCodeTrackers
+    .filter((t) => t.chainId === chainId)
+    .map(({ contractAddresses = new Set(), stateKeys, ...rest }) => ({
+      ...rest,
+      contractAddresses,
+      stateKeys:
+        stateKeys?.map(({ key, ...rest }) => ({
+          dbKey: dbKeyForKeys(...[key].flat()),
+          ...rest,
+        })) || [],
+    }))
+  const uniqueChainWasmCodeTrackerStateKeys = [
+    ...new Set(
+      chainWasmCodeTrackers.flatMap((t) =>
+        t.stateKeys.map(({ dbKey }) => dbKey)
+      )
+    ),
+  ]
 
   // Get the contract state event allowlist.
   const stateEventAllowlist = CONTRACT_STATE_EVENT_KEY_ALLOWLIST[chainId]?.map(
@@ -281,11 +296,34 @@ export const wasm: HandlerMaker<WasmExportData> = async ({
 
       // Check if any contracts are tracked, and save their code ID if so.
       if (chainWasmCodeTrackers.length > 0) {
+        // Get all tracked state events for the contracts that are being
+        // exported.
+        const contractTrackedStateEvents =
+          uniqueChainWasmCodeTrackerStateKeys.length > 0
+            ? await WasmStateEvent.findAll({
+                where: {
+                  key: uniqueChainWasmCodeTrackerStateKeys,
+                  contractAddress: contractEvents.map(({ address }) => address),
+                },
+              })
+            : []
+
         let updatedCodeKey = false
         await Promise.all(
           contractEvents.flatMap(({ address, codeId }) => {
-            const trackers = chainWasmCodeTrackers.filter((t) =>
-              t.contractAddresses.has(address)
+            const trackers = chainWasmCodeTrackers.filter(
+              (t) =>
+                t.contractAddresses.has(address) ||
+                t.stateKeys.some(({ dbKey, ...trackerFilter }) =>
+                  contractTrackedStateEvents.some(
+                    (wasmState) =>
+                      wasmState.contractAddress === address &&
+                      wasmState.key === dbKey &&
+                      ('value' in trackerFilter
+                        ? wasmState.value === trackerFilter.value
+                        : wasmState.value.includes(trackerFilter.partialValue))
+                  )
+                )
             )
 
             if (!trackers.length) {
