@@ -46,7 +46,7 @@ export class WasmCodeTrackerManager {
   constructor(public readonly chainId: string) {
     this.trackers = Object.values(trackers)
       .flat()
-      .filter((t) => t.chainId === chainId)
+      .filter((t) => [t.chainId].flat().includes(chainId))
       .map(WasmCodeTrackerManager.processWasmCodeTracker)
   }
 

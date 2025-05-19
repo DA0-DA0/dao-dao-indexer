@@ -14,9 +14,9 @@ export type ProcessedWasmCodeTrackerStateKey = {
  */
 export type WasmCodeTracker = {
   /**
-   * The chain ID to apply this tracker to.
+   * The chain ID(s) to apply this tracker to.
    */
-  chainId: string
+  chainId: string | string[]
   /**
    * The code key to save the code IDs to.
    */
